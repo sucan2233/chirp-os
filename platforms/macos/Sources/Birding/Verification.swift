@@ -54,7 +54,27 @@ final class FixtureController {
 final class IntegrationCheck {
     unowned let desktop: DesktopController
     let folder: URL
-    var results: [String:Bool] = [:]
+    private static let expectedChecks = [
+        "readsOtherProcessWindow", "overlayNonactivatingAndClickThrough", "keepsOtherAppFocused",
+        "slowMoveFollows", "feetStayOnWindowEdge", "frontWindowMasksPartOfBird",
+        "renderedOcclusionHasNoPixelLeaks", "actualSpriteLayerHasVisiblePixelsAndNoLeaks",
+        "zOrderRefreshesWhenCoverHidden", "fastMoveStartles", "playsLandingState",
+        "flightLandsBackOnWindow", "hiddenHostReleasesBird"
+    ]
+    // Unreached checks remain failures, including when an observation times out.
+    var results = Dictionary(uniqueKeysWithValues: IntegrationCheck.expectedChecks.map { ($0, false) })
+    private enum ReturnPhase: String { case flying, landing, waitingForRelease }
+    private var returnPhase: ReturnPhase = .flying
+    private var observationTimer: Timer?
+    private var simulationDeadline = 0.0
+    private var wallDeadline = 0.0
+    private var lastObservationTime = 0.0
+    private var returnOrigin = CGPoint.zero
+    private var returnRevision: UInt64 = 0
+    private var landingsBeforeReturn = 0
+    private var startlesBeforeReturn = 0
+    private var sawFlightProgress = false
+    private var landingFrames: [String] = []
     var hostID: UInt32 = 0
     var fixturePID: Int32 = 0
     var initial = CGPoint.zero
@@ -103,19 +123,89 @@ final class IntegrationCheck {
         }
         after(4.4) {
             self.results["fastMoveStartles"] = self.bird.state == .flying && self.bird.startledCount == 1 && self.bird.hostID == nil
-            if let host = self.host() {
-                self.bird.fly(to:CGPoint(x:Geometry.perchX(0.5,rect:host.rect),y:host.rect.minY),host:host,duration:0.8,arc:40)
+            self.beginReturnObservation()
+        }
+    }
+    private func beginReturnObservation() {
+        guard let host = host() else { finish(error:"fixture host missing before return flight"); return }
+        returnOrigin = bird.position
+        landingsBeforeReturn = bird.landedCount
+        startlesBeforeReturn = bird.startledCount
+        bird.fly(to:CGPoint(x:Geometry.perchX(0.5,rect:host.rect),y:host.rect.minY),host:host,duration:0.8,arc:40)
+        returnRevision = bird.motionRevision
+        guard bird.flightDuration.isFinite && bird.flightDuration > 0 else {
+            finish(error:"invalid return flight duration"); return
+        }
+        // fly's duration argument is not the path planner's actual flight duration.
+        // Observe only normal desktop ticks; never advance the simulation here.
+        simulationDeadline = desktop.engine.time + bird.flightDuration + 2
+        wallDeadline = ProcessInfo.processInfo.systemUptime + min(30,max(5,bird.flightDuration*3+3))
+        lastObservationTime = desktop.engine.time
+        let timer = Timer(timeInterval:1.0/120,repeats:true) { [weak self] _ in self?.observeReturn() }
+        RunLoop.main.add(timer,forMode:.common)
+        observationTimer = timer
+    }
+    private func observeReturn() {
+        let now = desktop.engine.time
+        guard now < simulationDeadline && ProcessInfo.processInfo.systemUptime < wallDeadline else {
+            finish(error:"timed out during \(returnPhase.rawValue): state=\(bird.state.rawValue), frame=\(bird.frameName), observed landing frames=\(landingFrames)")
+            return
+        }
+        // Polling the same simulation frame twice is not evidence of progress.
+        guard now > lastObservationTime else { return }
+        lastObservationTime = now
+        if returnPhase == .waitingForRelease {
+            if host() == nil && bird.state == .flying && bird.hostID == nil && bird.depthID == nil &&
+                bird.startledCount == startlesBeforeReturn+1 && bird.startledCount == 2 &&
+                bird.landedCount == landingsBeforeReturn+1 && bird.motionRevision == (returnRevision &+ 1) {
+                results["hiddenHostReleasesBird"] = true
+                finish(error:nil)
             }
+            return
         }
-        after(5.0) { self.results["playsLandingState"] = self.bird.state == .landing }
-        after(5.9) {
-            self.results["flightLandsBackOnWindow"] = self.bird.state == .perched && self.bird.landedCount>0
-            self.command("hide")
+        guard let host = host(), bird.hostID == hostID, bird.motionRevision == returnRevision,
+              bird.startledCount == startlesBeforeReturn else {
+            finish(error:"return flight lost its fixture host or was replaced"); return
         }
-        after(6.4) {
-            self.results["hiddenHostReleasesBird"] = self.bird.state == .flying && self.bird.hostID == nil && self.bird.startledCount == 2
-            self.finish(error:nil)
+        switch bird.state {
+        case .flying:
+            guard returnPhase == .flying && bird.depthID == nil && bird.landedCount == landingsBeforeReturn else {
+                finish(error:"unexpected flight state during return landing"); return
+            }
+            if bird.stateTime > 0 && Geometry.distance(bird.position,returnOrigin) > 0.1 {
+                sawFlightProgress = true
+            }
+        case .landing:
+            guard sawFlightProgress && isOnReturnPerch(host) && bird.landedCount == landingsBeforeReturn+1 else {
+                finish(error:"landing did not follow observed flight onto the fixture edge"); return
+            }
+            returnPhase = .landing
+            let frame = bird.frameName
+            if landingFrames.last != frame {
+                let expected = ["land0", "land1", "land2"]
+                guard landingFrames.count < expected.count, frame == expected[landingFrames.count],
+                      desktop.arts[bird.profile.id]?.frames[frame] != nil else {
+                    finish(error:"missing or out-of-order landing pose: \(frame), observed=\(landingFrames)"); return
+                }
+                landingFrames.append(frame)
+            }
+            results["playsLandingState"] = landingFrames == ["land0", "land1", "land2"]
+        case .perched:
+            guard returnPhase == .landing, results["playsLandingState"] == true,
+                  isOnReturnPerch(host), bird.landedCount == landingsBeforeReturn+1 else {
+                finish(error:"return perch reached without the complete landing sequence or correct foot position"); return
+            }
+            results["flightLandsBackOnWindow"] = true
+            returnPhase = .waitingForRelease
+            simulationDeadline = now + 2
+            wallDeadline = ProcessInfo.processInfo.systemUptime + 5
+            command("hide")
         }
+    }
+    private func isOnReturnPerch(_ host: Surface) -> Bool {
+        bird.hostID == hostID && bird.depthID == hostID && bird.edge == .top &&
+            abs(bird.position.x-Geometry.perchX(0.5,rect:host.rect)) < 0.1 &&
+            abs(bird.position.y-host.rect.minY) < 0.1
     }
     func saveMaskedBird() {
         let bbox = desktop.bounds(of:bird)
@@ -168,8 +258,9 @@ final class IntegrationCheck {
         results["actualSpriteLayerHasVisiblePixelsAndNoLeaks"] = opaque>0 && leaked == 0
     }
     func finish(error:String?) {
+        observationTimer?.invalidate(); observationTimer = nil
         desktop.writeDiagnostics(to:folder.appendingPathComponent("diagnostics.json").path)
-        let passed = error == nil && !results.isEmpty && results.values.allSatisfy{$0}
+        let passed = error == nil && Set(results.keys) == Set(Self.expectedChecks) && results.values.allSatisfy{$0}
         saveJSON(["passed":passed,"checks":results,"error":error ?? "","os":ProcessInfo.processInfo.operatingSystemVersionString],to:folder.appendingPathComponent("report.json"))
         command("quit")
         print("Desktop integration: \(passed ? "PASS" : "FAIL") — \(results.count) checks")
