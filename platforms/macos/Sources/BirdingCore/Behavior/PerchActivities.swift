@@ -35,14 +35,25 @@ struct PerchActionPlan {
 final class PerchActivityPlanner {
     final class Rhythm {
         let random:EngineRandom
+        let ecologyRandom:EngineRandom
+        let temperament:BirdTemperament
         let cadence,restDuration,preenDuration,preenRate,landingDelay:Double
         var quiet=0.0,landingAge=0.0,nextRest:Double
         var pendingPreen=false
         var revision:UInt64
         var landings:Int
-        init(seed:UInt64,bird:Bird) {
+        var disturbance=0.0,quietTime=0.0
+        var cooldowns:[BehaviorKind:Double]=[:]
+        var active:Set<BehaviorKind>=[]
+        var previousNear=false,previousRange=false,previousFast=false,previousClick=false
+        var pendingAttention:AttentionKind?
+        var attentionRemaining=0.0
+        init(seed:UInt64,bird:Bird,temperament:BirdTemperament?=nil) {
             random=EngineRandom(seed:seed)
-            cadence=0.8+0.4*random.unit()
+            ecologyRandom=EngineRandom(seed:seed ^ 0x45434F4C4F475952)
+            let traits=temperament ?? BirdTemperament(seed:seed,birdID:BirdID(0))
+            self.temperament=traits
+            cadence=(0.8+0.4*random.unit())*(1.2-0.4*traits.activity)
             restDuration=3+2*random.unit();preenDuration=1.7+1.1*random.unit()
             preenRate=2.2+1.1*random.unit();landingDelay=0.3+0.6*random.unit()
             nextRest=(12+14*random.unit())*cadence
@@ -58,12 +69,113 @@ final class PerchActivityPlanner {
     private(set) var rhythms:[BirdID:Rhythm]=[:]
     init(seed:UInt64) {self.seed=seed;selection=EngineRandom(seed:seed ^ 0x504552434853454C)}
     func register(_ id:BirdID,bird:Bird) {
-        rhythms[id]=Rhythm(seed:seed ^ 0x5045524348524E47 ^ (id.rawValue &* 0x9E3779B97F4A7C15),bird:bird)
+        rhythms[id]=Rhythm(seed:seed ^ 0x5045524348524E47 ^ (id.rawValue &* 0x9E3779B97F4A7C15),bird:bird,
+            temperament:BirdTemperament(seed:seed,birdID:id))
     }
     func remove(_ id:BirdID) {rhythms.removeValue(forKey:id)}
     func suppress(_ id:BirdID) {rhythms[id]?.suppress()}
     func suppressAll() {for id in rhythms.keys.sorted() {suppress(id)}}
     func select(_ ids:[BirdID]) -> BirdID? {selection.element(ids)}
+    func ecology(_ id:BirdID) -> BirdEcologySnapshot? {
+        guard let rhythm=rhythms[id] else {return nil}
+        return BirdEcologySnapshot(temperament:rhythm.temperament,disturbance:rhythm.disturbance,
+            quietTime:rhythm.quietTime,cooldowns:rhythm.cooldowns)
+    }
+    func observe(_ id:BirdID,stimulus:BirdStimulus,dt:Double) {
+        guard let rhythm=rhythms[id],dt.isFinite,dt>=0 else {return}
+        rhythm.disturbance *= pow(0.5,dt/6)
+        for kind in Array(rhythm.cooldowns.keys) {
+            let remaining=(rhythm.cooldowns[kind] ?? 0)-dt
+            if remaining>0 {rhythm.cooldowns[kind]=remaining}
+            else {rhythm.cooldowns.removeValue(forKey:kind)}
+        }
+        rhythm.attentionRemaining=max(0,rhythm.attentionRemaining-dt)
+        if rhythm.attentionRemaining==0 {rhythm.pendingAttention=nil}
+        let entered=stimulus.inAttentionRange && !rhythm.previousRange
+        let fast=stimulus.fastPass && !rhythm.previousFast
+        let clicked=stimulus.click && !rhythm.previousClick
+        rhythm.previousNear=stimulus.near;rhythm.previousRange=stimulus.inAttentionRange
+        rhythm.previousFast=stimulus.fastPass;rhythm.previousClick=stimulus.click
+        if clicked {noteClick(id)}
+        else if fast && !stimulus.click {
+            rhythm.disturbance=min(1,rhythm.disturbance+0.65*(1-rhythm.temperament.boldness))
+            // A fast pass can replace a pending watch, but never retries while held.
+            rhythm.pendingAttention=nil;rhythm.attentionRemaining=0
+            if automaticWeight(id,kind:.alert)>0 {
+                rhythm.pendingAttention = .alert;rhythm.attentionRemaining=0.5
+            }
+        } else if entered && !stimulus.click && !stimulus.fastPass && !stimulus.near,
+                  automaticWeight(id,kind:.watch)>0,
+                  rhythm.ecologyRandom.unit()<rhythm.temperament.curiosity {
+            rhythm.pendingAttention = .watch;rhythm.attentionRemaining=0.5
+        }
+        if !stimulus.inAttentionRange && rhythm.pendingAttention == .watch {
+            rhythm.pendingAttention=nil;rhythm.attentionRemaining=0
+        }
+        if stimulus.near || stimulus.fastPass || stimulus.click || rhythm.disturbance>=0.35 {
+            rhythm.quietTime=0;rhythm.quiet=0;rhythm.pendingPreen=false
+        } else {rhythm.quietTime+=dt}
+    }
+    func noteClick(_ id:BirdID) {
+        guard let rhythm=rhythms[id] else {return}
+        // An explicit click command and the next held-button sample are one input.
+        rhythm.previousClick=true
+        rhythm.disturbance=min(1,rhythm.disturbance+0.8*(1-rhythm.temperament.boldness))
+        rhythm.quietTime=0;rhythm.quiet=0;rhythm.pendingPreen=false
+        rhythm.pendingAttention=nil;rhythm.attentionRemaining=0
+        for kind:BehaviorKind in [.watch,.alert] {rhythm.cooldowns[kind]=max(4,rhythm.cooldowns[kind] ?? 0)}
+    }
+    func resetPerception() {
+        for rhythm in rhythms.values {
+            rhythm.pendingAttention=nil;rhythm.attentionRemaining=0
+            rhythm.previousNear=false;rhythm.previousRange=false
+            rhythm.previousFast=false;rhythm.previousClick=false
+        }
+    }
+    /// Reading a candidate does not consume it; acceptance is acknowledged by didStart.
+    func attentionCandidate(_ id:BirdID) -> AttentionKind? {
+        guard let rhythm=rhythms[id],rhythm.attentionRemaining>0,
+              let pending=rhythm.pendingAttention else {return nil}
+        let kind:BehaviorKind=pending == .watch ? .watch:.alert
+        return automaticWeight(id,kind:kind)>0 ? pending:nil
+    }
+    func automaticWeight(_ id:BirdID,kind:BehaviorKind) -> Double {
+        guard let rhythm=rhythms[id],!rhythm.active.contains(kind),(rhythm.cooldowns[kind] ?? 0)<=0 else {return 0}
+        let traits=rhythm.temperament
+        if kind == .alert {
+            return rhythm.disturbance>=0.2 ? (1.2-traits.boldness)*(0.8+0.4*traits.activity):0
+        }
+        if rhythm.disturbance>=0.35 && (kind == .rest || kind == .preen || kind.isSocial || kind == .leafPlay || kind == .watch) {return 0}
+        if kind.isSocial {return (0.4+1.2*traits.sociability)*(0.8+0.4*traits.boldness)}
+        switch kind {
+        case .rest:return 1.2-0.4*traits.activity
+        case .preen:return (0.6+0.8*traits.boldness)*(0.9+0.2*traits.curiosity)
+        case .leafPlay:return (0.3+1.4*traits.curiosity)*(0.6+0.8*traits.activity)*(0.7+0.6*traits.boldness)
+        case .watch:return 0.4+1.2*traits.curiosity
+        default:return 1
+        }
+    }
+    func didStart(_ id:BirdID,kind:BehaviorKind) {
+        guard let rhythm=rhythms[id] else {return}
+        rhythm.active.insert(kind)
+        rhythm.pendingAttention=nil;rhythm.attentionRemaining=0
+        rhythm.quietTime=0;rhythm.quiet=0;rhythm.pendingPreen=false
+    }
+    func didFinish(_ id:BirdID,kind:BehaviorKind) {
+        guard let rhythm=rhythms[id],rhythm.active.remove(kind) != nil else {return}
+        let duration:Double
+        switch kind {
+        case .watch:duration=8
+        case .alert:duration=12
+        case .rest,.preen:duration=6
+        case .leafPlay:duration=90
+        default:duration=kind.isSocial ? 20:0
+        }
+        guard duration>0 else {return}
+        // Social opportunities share one recovery period across all variants.
+        let kinds:[BehaviorKind]=kind.isSocial ? [.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff]:[kind]
+        for cooled in kinds {rhythm.cooldowns[cooled]=max(duration,rhythm.cooldowns[cooled] ?? 0)}
+    }
     func plan(_ kind:PerchActionKind,for id:BirdID) -> PerchActionPlan? {
         guard let rhythm=rhythms[id] else {return nil}
         let base=kind == .rest ? rhythm.restDuration:rhythm.preenDuration
@@ -84,13 +196,13 @@ final class PerchActivityPlanner {
             rhythm.landingAge+=dt
             if rhythm.landingAge>2.5 {rhythm.pendingPreen=false}
         }
-        guard quiet else {rhythm.quiet=0;rhythm.pendingPreen=false;return nil}
+        guard quiet,rhythm.disturbance<0.35 else {rhythm.quiet=0;rhythm.pendingPreen=false;return nil}
         guard !occupied else {rhythm.quiet=0;return nil}
-        if rhythm.pendingPreen,rhythm.landingAge>=rhythm.landingDelay {
+        if rhythm.pendingPreen,rhythm.landingAge>=rhythm.landingDelay,automaticWeight(id,kind:.preen)>0 {
             rhythm.pendingPreen=false;rhythm.quiet=0;return .preen
         }
         rhythm.quiet+=dt
-        guard rhythm.quiet>=rhythm.nextRest else {return nil}
+        guard rhythm.quiet>=rhythm.nextRest,automaticWeight(id,kind:.rest)>0 else {return nil}
         rhythm.suppress();return .rest
     }
 }

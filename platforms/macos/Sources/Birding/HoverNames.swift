@@ -42,17 +42,24 @@ extension DesktopController {
         // Relocate before cancelling pointer visits so the clicked bird keeps priority.
         guard let point=event.cgEvent?.location else {return}
         relocateBird(at:point)
+        // Render/hit-test snapshots may resample the live pointer. Bind the
+        // stimulus to this event after those reads and before issuing the command.
+        syncWorld(at:point,buttonsDown:true)
         engine.handle(.pointerClick)
+    }
+    private func handleMouseEvent(_ event:NSEvent) {
+        if event.type == .leftMouseUp {syncWorld(at:event.cgEvent?.location,buttonsDown:false)}
+        else {handleMouseDown(event)}
     }
     func startMouseMonitoring() {
         stopMouseMonitoring()
         // Observe clicks without consuming them or activating the overlay.
-        globalMouseMonitor=NSEvent.addGlobalMonitorForEvents(matching:.leftMouseDown) { [weak self] event in
-            self?.handleMouseDown(event)
+        globalMouseMonitor=NSEvent.addGlobalMonitorForEvents(matching:[.leftMouseDown,.leftMouseUp]) { [weak self] event in
+            self?.handleMouseEvent(event)
         }
         // Global monitors exclude events sent to this application.
-        localMouseMonitor=NSEvent.addLocalMonitorForEvents(matching:.leftMouseDown) { [weak self] event in
-            self?.handleMouseDown(event)
+        localMouseMonitor=NSEvent.addLocalMonitorForEvents(matching:[.leftMouseDown,.leftMouseUp]) { [weak self] event in
+            self?.handleMouseEvent(event)
             return event
         }
     }

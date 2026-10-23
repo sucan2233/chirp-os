@@ -12,7 +12,7 @@ public enum AmbientFrequency: String, Codable, CaseIterable {
     }
 }
 
-public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting }
+public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay }
 
 /// One simulation clock for encounters. Missed opportunities are discarded,
 /// so busy periods, sleep and pause never build up a queue of animations.
@@ -30,8 +30,8 @@ public struct AmbientScheduler {
         stationaryTime = 0; pointerAnchor = nil
     }
     public mutating func tick(_ dt: Double, pointer: CGPoint, buttonsDown: Bool,
-                              pointerEnabled: Bool, flockEnabled: Bool, socialEnabled: Bool = false,
-                              frequency: AmbientFrequency, busy: Bool,
+                              pointerEnabled: Bool, flockEnabled: Bool, socialEnabled: Bool = false, leafEnabled: Bool = false,
+                              frequency: AmbientFrequency, busy: Bool, leafRandom: (() -> Double)? = nil,
                               random: () -> Double = { Double.random(in: 0..<1) }) -> AmbientEvent? {
         let step = min(0.1, max(0, dt))
         if buttonsDown || pointerAnchor == nil || Geometry.distance(pointer, pointerAnchor!) > 6 {
@@ -42,6 +42,9 @@ public struct AmbientScheduler {
         let interval = frequency.interval
         remaining = interval.lowerBound + (interval.upperBound - interval.lowerBound) * random()
         guard !busy, !buttonsDown else { return nil }
+        // Reserve a small share of existing opportunities, never a second timer.
+        // Failed leaf plans are discarded instead of falling through to another event.
+        if leafEnabled && (leafRandom.map{$0()} ?? random())<0.1 {return .leafPlay}
         var choices: [AmbientEvent] = []
         if pointerEnabled && stationaryTime >= 3 { choices.append(.pointerVisit) }
         if flockEnabled { choices.append(.flockPass) }

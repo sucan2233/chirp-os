@@ -3,7 +3,7 @@ import XCTest
 
 final class SocialMotionSchedulingTests:XCTestCase {
     private func fixture(seed:UInt64) -> BehaviorEngine {
-        var settings=BirdSettings();settings.pointerVisits=false;settings.flockPasses=false
+        var settings=BirdSettings();settings.ambientLeafPlayEnabled=false;settings.pointerVisits=false;settings.flockPasses=false
         settings.perchActions=false;settings.ambientFrequency = .high
         let e=BehaviorEngine(seed:seed,settings:settings);e.populationEnabled=false;e.autonomousRouting=false
         let screen=CGRect(x:-1200,y:-400,width:3000,height:1800)

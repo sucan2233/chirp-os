@@ -34,9 +34,13 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var previewPairedTakeoffButton:NSButton!
     var ambientFrequencyPopup:NSPopUpButton!
     var perchActionsButton:NSButton!
+    var passiveAttentionButton:NSButton!
+    var previewWatchButton:NSButton!
+    var previewAlertButton:NSButton!
     var previewRestButton:NSButton!
     var previewPreenButton:NSButton!
     var leafPlayButton:NSButton!
+    var ambientLeafPlayButton:NSButton!
     var releaseLeafButton:NSButton!
     var clearLeafButton:NSButton!
     private var debugEnabled=false
@@ -113,7 +117,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:1450))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:1620))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -141,7 +145,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         ambientFrequencyPopup.selectItem(at:AmbientFrequency.allCases.firstIndex(of:draft.ambientFrequency)!)
         ambientFrequencyPopup.target=self;ambientFrequencyPopup.action=#selector(ambientSettingsChanged)
         ambientFrequencyPopup.setAccessibilityLabel(t("偶发动作频率","Encounter frequency"));interactionView.addSubview(ambientFrequencyPopup)
-        label(t("绕飞、过境、双鸟互动三类共享频率，每次至多发生一种；条件不合适时跳过。绕飞需要鼠标静止 3 秒且周围有空间；默认移动或点击结束，开启跟随后移动继续、点击结束。过境鸟不占常驻数量。","Pointer visits, passing flocks and two-bird interactions share this frequency; at most one starts per attempt. Unsuitable opportunities are skipped. Circling needs 3 seconds of pointer stillness and space. Moving or clicking ends it; with following enabled, movement continues and clicking ends it. Passing birds do not count as residents."),NSRect(x:20,y:507,width:710,height:70),in:interactionView,size:12)
+        label(t("绕飞、过境、双鸟互动和少见的自动落叶共享出现频率，每次至多一种，条件不合适时跳过。绕飞需鼠标静止 3 秒且有空间；默认移动或点击结束，开启跟随后移动继续、点击结束。过境鸟不占常驻数量。","Pointer visits, passing flocks, two-bird interactions and rare automatic leaves share the encounter frequency: at most one per attempt; unsuitable conditions are skipped. Circling needs 3 seconds of stillness and space. Moving or clicking ends it; following allows movement until a click. Passing birds do not count as residents."),NSRect(x:20,y:507,width:710,height:70),in:interactionView,size:12)
         label(t("双鸟互动包括招呼、并排停靠、让座和结伴起飞，需要两只距离合适、在可见边缘停稳的小鸟及足够空间。四种动作共用此开关，默认开启，保存后生效。","Two-bird interactions include greetings, side-by-side perching, giving way and paired takeoff. They need two suitably spaced birds settled on visible edges, with room to move. This switch controls all four; on by default and applied after saving."),NSRect(x:20,y:584,width:710,height:76),in:interactionView,size:12)
         _=button(t("预览绕鼠标","Preview pointer visit"),#selector(previewPointerVisit),NSRect(x:20,y:674,width:210,height:32),in:interactionView)
         _=button(t("预览鸟群过境","Preview passing flock"),#selector(previewFlockPass),NSRect(x:250,y:674,width:210,height:32),in:interactionView)
@@ -154,18 +158,26 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         perchActionsButton=NSButton(checkboxWithTitle:t("停栖小动作","Perch activities"),target:self,action:#selector(perchSettingsChanged))
         perchActionsButton.frame=NSRect(x:20,y:916,width:710,height:26);perchActionsButton.state=draft.perchActions ? .on:.off
         interactionView.addSubview(perchActionsButton)
-        label(t("停稳后偶尔闭眼休息，着陆后可能整理羽毛。鼠标靠近或点击会结束动作；每只鸟的节奏错开。\n默认开启，保存后立即生效，同时控制自动动作和预览。","Birds occasionally rest with eyes closed once settled, and may preen after landing. Moving the pointer close or clicking ends the activity. Each bird follows its own timing.\nOn by default. Saving applies immediately to automatic activities and previews."),NSRect(x:20,y:954,width:710,height:78),in:interactionView,size:12)
-        previewRestButton=button(t("预览闭眼休息","Preview eyes-closed rest"),#selector(previewRest),NSRect(x:20,y:1046,width:230,height:32),in:interactionView)
-        previewPreenButton=button(t("预览整理羽毛","Preview preening"),#selector(previewPreen),NSRect(x:270,y:1046,width:210,height:32),in:interactionView)
-        label(t("预览使用已保存的设置，请先让小鸟停稳并把鼠标移开。条件不合适时会提示原因。","Previews use saved settings. Let a bird settle and move the pointer away. If it cannot start, the reason appears below."),NSRect(x:20,y:1094,width:710,height:44),in:interactionView,size:12)
-        label(t("落叶游戏","Leaf play"),NSRect(x:20,y:1162,width:710,height:30),in:interactionView,size:20)
+        passiveAttentionButton=NSButton(checkboxWithTitle:t("留意鼠标与短暂警觉","Watch the pointer and briefly become alert"),target:self,action:#selector(perchSettingsChanged))
+        passiveAttentionButton.frame=NSRect(x:40,y:952,width:690,height:26);passiveAttentionButton.state=draft.passiveAttentionEnabled ? .on:.off
+        passiveAttentionButton.isEnabled=draft.perchActions;interactionView.addSubview(passiveAttentionButton)
+        label(t("停稳后偶尔闭眼休息，着陆后可能整理羽毛；鼠标靠近或点击会结束这些动作。\n留意鼠标时只使用朝向、站立和眨眼；鼠标在附近快速移动会引起短暂警觉，安静后恢复，不会新增移动。\n两项默认开启，保存后生效；停栖总开关也控制留意与警觉。","Settled birds may rest with eyes closed or preen after landing; a nearby pointer or click ends these activities.\nObservation uses facing, standing and blinking. Fast nearby pointer movement causes brief alertness; quiet restores calm, without added movement.\nBoth default on and apply after saving. The perch master switch also controls observation and alertness."),NSRect(x:20,y:990,width:710,height:100),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("perchActivitiesHelp")
+        previewRestButton=button(t("预览闭眼休息","Preview eyes-closed rest"),#selector(previewRest),NSRect(x:20,y:1104,width:230,height:32),in:interactionView)
+        previewPreenButton=button(t("预览整理羽毛","Preview preening"),#selector(previewPreen),NSRect(x:270,y:1104,width:210,height:32),in:interactionView)
+        previewWatchButton=button(t("预览留意鼠标","Preview observation"),#selector(previewWatch),NSRect(x:20,y:1150,width:230,height:32),in:interactionView)
+        previewAlertButton=button(t("预览短暂警觉","Preview brief alert"),#selector(previewAlert),NSRect(x:270,y:1150,width:210,height:32),in:interactionView)
+        label(t("预览使用已保存的设置。请先让小鸟停稳；休息和理羽需把鼠标移开。\n留意和警觉可选中远离鼠标的可用小鸟，只展示朝向、站立和眨眼。条件不合适时在下方提示。","Previews use saved settings. Let a bird settle; move the pointer away for rest and preening.\nObservation and alert previews can use an available bird far from the pointer, showing facing, standing and blinking. If unavailable, the reason appears below."),NSRect(x:20,y:1196,width:710,height:60),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("perchPreviewHelp")
+        label(t("落叶游戏","Leaf play"),NSRect(x:20,y:1280,width:710,height:30),in:interactionView,size:20).identifier=NSUserInterfaceItemIdentifier("leafSectionTitle")
         leafPlayButton=NSButton(checkboxWithTitle:t("开启落叶游戏","Enable leaf play"),target:self,action:#selector(leafSettingsChanged))
-        leafPlayButton.frame=NSRect(x:20,y:1204,width:710,height:26);leafPlayButton.state=draft.leafPlayEnabled ? .on:.off
+        leafPlayButton.frame=NSRect(x:20,y:1322,width:710,height:26);leafPlayButton.state=draft.leafPlayEnabled ? .on:.off
         interactionView.addSubview(leafPlayButton)
-        label(t("手动放下一片落叶，让一只已停稳的小鸟观察、跟随落叶，再返回停靠处；不会生成小鸟。\n默认开启，保存后生效。落叶只由按钮触发，不会自动生成。","Release a leaf manually: a settled bird observes it, follows it, then returns to its perch. No birds are spawned.\nOn by default; applies after saving. Leaves appear only when requested, never automatically."),NSRect(x:20,y:1242,width:710,height:66),in:interactionView,size:12)
-        releaseLeafButton=button(t("放一片落叶","Release a leaf"),#selector(releaseLeaf),NSRect(x:20,y:1320,width:210,height:32),in:interactionView)
-        clearLeafButton=button(t("清除落叶","Clear leaf"),#selector(clearLeaf),NSRect(x:250,y:1320,width:210,height:32),in:interactionView)
-        label(t("预览使用已保存的设置。点击后有 3 秒准备时间，请把鼠标移到屏幕中部的空旷位置。\n清除落叶会取消等待中的预览和正在进行的落叶场景。条件不合适时会在下方提示原因。","Previews use saved settings. After clicking, move the pointer to a clear area near screen center within 3 seconds.\nClear leaf cancels both pending previews and the active leaf scene. If unavailable, the reason appears below."),NSRect(x:20,y:1368,width:710,height:66),in:interactionView,size:12)
+        ambientLeafPlayButton=NSButton(checkboxWithTitle:t("偶尔自动出现落叶游戏","Occasional automatic leaf play"),target:self,action:#selector(leafSettingsChanged))
+        ambientLeafPlayButton.frame=NSRect(x:40,y:1358,width:690,height:26);ambientLeafPlayButton.state=draft.ambientLeafPlayEnabled ? .on:.off
+        ambientLeafPlayButton.isEnabled=draft.leafPlayEnabled;interactionView.addSubview(ambientLeafPlayButton)
+        label(t("一只已停稳的小鸟会观察、跟随落叶，再返回停靠处；不会生成小鸟。\n自动落叶很少出现，与绕飞、过境和双鸟互动共享出现频率，条件不合适时跳过。\n两项默认开启，保存后生效。自动开关只控制自动落叶；手动预览仍可使用。","A settled bird observes and follows a leaf, then returns to its perch. No birds are spawned.\nAutomatic leaf play is rare and shares the encounter frequency with pointer visits, flocks and two-bird interactions; unsuitable conditions are skipped.\nBoth default on; save to apply. The automatic switch only controls automatic leaves; manual preview remains available."),NSRect(x:20,y:1396,width:710,height:78),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("leafPlayHelp")
+        releaseLeafButton=button(t("放一片落叶","Release a leaf"),#selector(releaseLeaf),NSRect(x:20,y:1488,width:210,height:32),in:interactionView)
+        clearLeafButton=button(t("清除落叶","Clear leaf"),#selector(clearLeaf),NSRect(x:250,y:1488,width:210,height:32),in:interactionView)
+        label(t("预览使用已保存的设置。点击后有 3 秒准备时间，请把鼠标移到屏幕中部的空旷位置。\n清除落叶会取消等待中的预览和正在进行的落叶场景。条件不合适时会在下方提示原因。","Previews use saved settings. After clicking, move the pointer to a clear area near screen center within 3 seconds.\nClear leaf cancels both pending previews and the active leaf scene. If unavailable, the reason appears below."),NSRect(x:20,y:1536,width:710,height:66),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("leafPreviewHelp")
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -205,10 +217,14 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     }
     @objc func perchSettingsChanged() {
         draft.perchActions=perchActionsButton.state == .on
+        draft.passiveAttentionEnabled=passiveAttentionButton.state == .on
+        passiveAttentionButton.isEnabled=draft.perchActions
         message.stringValue=t("尚未保存","Unsaved changes")
     }
     @objc func leafSettingsChanged() {
         draft.leafPlayEnabled=leafPlayButton.state == .on
+        draft.ambientLeafPlayEnabled=ambientLeafPlayButton.state == .on
+        ambientLeafPlayButton.isEnabled=draft.leafPlayEnabled
         message.stringValue=t("尚未保存","Unsaved changes")
     }
     @objc func releaseLeaf() {
@@ -244,6 +260,18 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             case .pairedTakeoff:message.stringValue=t("正在预览结伴起飞：两只小鸟会相继起飞，一起飞向新的停靠位置。","Previewing paired takeoff: two birds take off in sequence and fly to new perches together.")
             }
         }
+    }
+    @objc func previewWatch() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.attention(.watch,.preview))
+        if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
+        else {message.stringValue=t("正在预览留意鼠标：观察朝向、站立和眨眼；小鸟停稳即可，鼠标可以远离。","Previewing observation: watch facing, standing and blinking on a settled bird, even far from the pointer.")}
+    }
+    @objc func previewAlert() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.attention(.alert,.preview))
+        if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
+        else {message.stringValue=t("正在预览短暂警觉：小鸟保持停栖，安静后恢复；无需把鼠标移近。","Previewing brief alertness: the bird stays perched and settles when quiet; no need to move the pointer closer.")}
     }
     @objc func previewRest() { previewPerchAction(.rest) }
     @objc func previewPreen() { previewPerchAction(.preen) }
@@ -339,8 +367,12 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.flockPasses=flockPassesButton.state == .on
         draft.ambientFrequency=AmbientFrequency.allCases[ambientFrequencyPopup.indexOfSelectedItem]
         draft.perchActions=perchActionsButton.state == .on
+        draft.passiveAttentionEnabled=passiveAttentionButton.state == .on
+        passiveAttentionButton.isEnabled=draft.perchActions
         draft.socialInteractions=socialInteractionsButton.state == .on
         draft.leafPlayEnabled=leafPlayButton.state == .on
+        draft.ambientLeafPlayEnabled=ambientLeafPlayButton.state == .on
+        ambientLeafPlayButton.isEnabled=draft.leafPlayEnabled
         return true
     }
     @objc func save() {

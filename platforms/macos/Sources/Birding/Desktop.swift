@@ -312,6 +312,13 @@ final class DesktopController: NSObject {
                  "source":event.source.rawValue,"reason":event.reason?.rawValue ?? "",
                  "birds":event.participants.map(\.rawValue)] as [String:Any]
             },
+            "ecology":birds.compactMap { bird -> [String:Any]? in
+                guard let id=engine.id(of:bird),let state=engine.ecology(of:bird) else {return nil}
+                return ["bird":id.rawValue,"disturbance":state.disturbance,"quietTime":state.quietTime,
+                    "temperament":["boldness":state.temperament.boldness,"curiosity":state.temperament.curiosity,
+                        "sociability":state.temperament.sociability,"activity":state.temperament.activity],
+                    "cooldowns":Dictionary(uniqueKeysWithValues:state.cooldowns.map{($0.key.rawValue,$0.value)})]
+            },
             "arrivals":arrivalCount,"departures":departureCount,
             "spriteScale":scale, "flightSpeedMultiplier":Bird.flightSpeedMultiplier,
             "nonactivating":panels.allSatisfy{ !$0.canBecomeKey && !$0.canBecomeMain && $0.ignoresMouseEvents },

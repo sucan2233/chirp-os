@@ -27,6 +27,7 @@ struct LeafPlayPlan {
               let bird=engine.bird(id),engine.birds.contains(where:{$0 === bird}),
               engine.role(of:bird) == .resident,engine.behavior(of:bird)==nil,
               bird.state == .perched,bird.edge == .top,!bird.isDeparting,!bird.needsDestination,
+              bird.perchDuration-bird.stateTime>observeDuration+BehaviorEngine.step,
               requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
               let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),
               host.isGround || host.layer==0 else {return nil}

@@ -3,7 +3,7 @@ import XCTest
 
 final class SocialSchedulingTests: XCTestCase {
     func testAutomaticGreetingUsesTheSharedSchedulerAndPauseDoesNotAccumulateAttempts() {
-        var settings=BirdSettings()
+        var settings=BirdSettings();settings.ambientLeafPlayEnabled=false
         settings.pointerVisits=false;settings.flockPasses=false;settings.perchActions=false
         settings.socialInteractions=true;settings.ambientFrequency = .high
         let engine=BehaviorEngine(seed:73,settings:settings)

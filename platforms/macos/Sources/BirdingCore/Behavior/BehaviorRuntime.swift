@@ -67,7 +67,9 @@ final class BehaviorRuntime {
               }) else {return .rejected(.noSpace)}
         let id=BehaviorRunID(rawValue:nextID);nextID+=1
         runs[id]=Run(id:id,source:source,execution:execution)
-        for bird in execution.participants {owners[bird]=id}
+        for bird in execution.participants {
+            owners[bird]=id;engine.perchPlanner.didStart(bird,kind:execution.kind)
+        }
         execution.start(in:engine)
         engine.emit(.started,run:id,kind:execution.kind,source:source,participants:execution.participants)
         return .started(id)
@@ -107,6 +109,7 @@ final class BehaviorRuntime {
         }
         runs.removeValue(forKey:id)
         for bird in run.execution.participants where owners[bird]==id {owners.removeValue(forKey:bird)}
+        for bird in run.execution.participants {engine.perchPlanner.didFinish(bird,kind:run.execution.kind)}
         return run
     }
     private func finish(_ id:BehaviorRunID,result:BehaviorCompletion,in engine:BehaviorEngine) {

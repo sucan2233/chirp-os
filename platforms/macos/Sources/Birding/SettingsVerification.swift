@@ -259,6 +259,7 @@ enum SettingsVerification {
                 checks["manualMigrationScrollsToFirstNewBird"] = scroll.documentView!.visibleRect.intersects(w.fields[7].frame)
             }
             w.cancel()
+            try checkPassiveSettings(folder:folder,checks:&checks)
             try checkLeafSettings(folder:folder,checks:&checks)
             d.showSpeciesGallery()
             checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.title=="图鉴…"} && d.gallery?.window?.isVisible == true
@@ -293,6 +294,119 @@ enum SettingsVerification {
             saveJSON(["passed":false,"error":error.localizedDescription,"checks":checks],to:folder.appendingPathComponent("report.json"));exit(1)
         }
     }
+    private static func checkPassiveSettings(folder:URL,checks:inout [String:Bool]) throws {
+        let d=DesktopController();d.automaticPopulation=false
+        d.engine.populationEnabled=false;d.engine.ambientEnabled=false;d.engine.autonomousRouting=false
+        d.settingsURL=folder.appendingPathComponent("passive-settings.json")
+        d.legacyURL=folder.appendingPathComponent("passive-legacy.json")
+        let cancelled=SpeciesSettingsWindow(desktop:d)
+        cancelled.showWindow(nil);cancelled.passiveAttentionButton.performClick(nil);cancelled.cancel()
+        checks["passiveCancelDoesNotApplyOrSave"] = !cancelled.draft.passiveAttentionEnabled && d.settings.passiveAttentionEnabled && cancelled.window?.isVisible == false && !FileManager.default.fileExists(atPath:d.settingsURL.path)
+        let w=SpeciesSettingsWindow(desktop:d);d.settingsWindow=w
+        w.showWindow(nil)
+        defer {w.cancel()}
+        checks["passiveDefaultOnAndCancelledDraftDiscarded"] = w.draft.passiveAttentionEnabled && w.passiveAttentionButton.state == .on && w.passiveAttentionButton.isEnabled
+        for enabled in [false,true] {
+            w.passiveAttentionButton.performClick(nil)
+            checks["passiveToggleOnlyChangesDraft-\(enabled)"] = w.draft.passiveAttentionEnabled == enabled && d.settings.passiveAttentionEnabled
+            w.perchActionsButton.performClick(nil)
+            checks["passiveMasterDisablesWithoutClearingDraft-\(enabled)"] = !w.passiveAttentionButton.isEnabled && w.draft.passiveAttentionEnabled == enabled && w.passiveAttentionButton.state == (enabled ? .on:.off)
+            w.passiveAttentionButton.performClick(nil)
+            w.relocalize()
+            checks["disabledPassivePreferenceCannotBeToggledOrLostOnRebuild-\(enabled)"] = !w.passiveAttentionButton.isEnabled && w.draft.passiveAttentionEnabled == enabled && w.passiveAttentionButton.state == (enabled ? .on:.off)
+            w.perchActionsButton.performClick(nil)
+            checks["passiveMasterReenablesPreference-\(enabled)"] = w.passiveAttentionButton.isEnabled && w.draft.passiveAttentionEnabled == enabled && w.passiveAttentionButton.state == (enabled ? .on:.off)
+        }
+        w.passiveAttentionButton.performClick(nil);w.save()
+        let saved=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
+        checks["passiveSettingSavedAndAppliedImmediately"] = !saved.passiveAttentionEnabled && !d.settings.passiveAttentionEnabled && saved.perchActions && d.settings.perchActions
+        let reloaded=DesktopController();reloaded.settingsURL=d.settingsURL;reloaded.legacyURL=d.legacyURL
+        try reloaded.loadSpeciesConfig()
+        checks["passiveSettingSurvivesRestart"] = !reloaded.settings.passiveAttentionEnabled && reloaded.settings.perchActions
+        w.passiveAttentionButton.performClick(nil)
+        for language:AppLanguage in [.chinese,.english] {
+            d.language=language;w.relocalize();w.tabs.selectTabViewItem(at:2)
+            let suffix=language == .chinese ? "zh":"en"
+            checks["passiveDraftSurvivesRelocalization-\(suffix)"] = w.draft.passiveAttentionEnabled && w.passiveAttentionButton.state == .on && !d.settings.passiveAttentionEnabled
+            checks["passiveLabels-\(suffix)"] = w.passiveAttentionButton.title == w.t("留意鼠标与短暂警觉","Watch the pointer and briefly become alert") && w.previewWatchButton.title == w.t("预览留意鼠标","Preview observation") && w.previewAlertButton.title == w.t("预览短暂警觉","Preview brief alert")
+            checkAttentionRejections(w,reason:.disabled,suffix:suffix,checks:&checks)
+            d.paused=true
+            checkAttentionRejections(w,reason:.paused,suffix:suffix,checks:&checks)
+            d.paused=false
+            if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView,let document=scroll.documentView {
+                scroll.contentView.scroll(to:CGPoint(x:0,y:max(0,w.perchActionsButton.frame.minY-42)))
+                scroll.reflectScrolledClipView(scroll.contentView)
+                let controls=[w.perchActionsButton!,w.passiveAttentionButton!,w.previewRestButton!,w.previewPreenButton!,w.previewWatchButton!,w.previewAlertButton!]
+                checks["passiveControlsReachable-\(suffix)"] = controls.allSatisfy{document.visibleRect.contains($0.frame)}
+                checks["passiveTitlesFit-\(suffix)"] = controls.allSatisfy{$0.intrinsicContentSize.width <= $0.frame.width}
+                let helpIdentifiers:Set<String>=["perchActivitiesHelp","perchPreviewHelp"]
+                let help=document.subviews.compactMap{$0 as? NSTextField}.filter {
+                    $0.identifier.map{helpIdentifiers.contains($0.rawValue)} ?? false
+                }
+                checks["passiveHelpFullyVisible-\(suffix)"] = help.count == 2 && help.allSatisfy {
+                    document.visibleRect.contains($0.frame) && ($0.cell?.cellSize(forBounds:$0.bounds).height ?? .infinity) <= $0.frame.height
+                }
+                checks["passiveControlsDoNotOverlap-\(suffix)"] = document.subviews.enumerated().allSatisfy { index,view in
+                    document.bounds.contains(view.frame) && document.subviews.dropFirst(index+1).allSatisfy{!view.frame.intersects($0.frame)}
+                }
+                try snapshot(w.window!,to:folder.appendingPathComponent("passive-settings-\(suffix).png"))
+            } else {checks["passiveControlsReachable-\(suffix)"]=false}
+        }
+        let url=d.settingsURL;d.settingsURL=folder
+        w.save();d.settingsURL=url
+        let afterFailure=try BirdSettings.decode(Data(contentsOf:url))
+        checks["passiveFailedSavePreservesActiveAndStoredSettings"] = w.draft.passiveAttentionEnabled && !d.settings.passiveAttentionEnabled && !afterFailure.passiveAttentionEnabled && w.message.stringValue == "Could not save. Try again; active settings are unchanged."
+        w.perchActionsButton.performClick(nil);w.save()
+        let masterOff=try BirdSettings.decode(Data(contentsOf:url))
+        checks["passiveOnPreferenceSavedExactlyWithMasterOff"] = masterOff.passiveAttentionEnabled && !masterOff.perchActions && d.settings.passiveAttentionEnabled && !d.settings.perchActions && !w.passiveAttentionButton.isEnabled
+        w.perchActionsButton.performClick(nil)
+        checkAttentionRejections(w,reason:.disabled,suffix:"saved-master-off",checks:&checks)
+        w.resetDefaults()
+        checks["passiveDefaultsRestoredWithoutApplying"] = w.draft.passiveAttentionEnabled && w.draft.perchActions && w.passiveAttentionButton.state == .on && w.passiveAttentionButton.isEnabled && !d.settings.perchActions
+        w.save()
+        let restored=try BirdSettings.decode(Data(contentsOf:url))
+        checks["passiveDefaultsSaveAndReload"] = restored.passiveAttentionEnabled && restored.perchActions && d.settings.passiveAttentionEnabled && d.settings.perchActions
+        w.passiveAttentionButton.performClick(nil);w.perchActionsButton.performClick(nil)
+        // Native preview buttons use saved settings despite both draft gates being off.
+        // Use a real display with an isolated bird far from the pointer.
+        if let screen=d.screenRects.first {
+            let host=Surface(id:952,rect:CGRect(x:screen.minX+80,y:screen.midY+80,width:screen.width-160,height:100))
+            d.surfaces=[host]
+            let fraction:CGFloat=d.pointerPosition.x < screen.midX ? 0.8:0.2
+            let bird=Bird(position:.zero,fraction:fraction,profile:d.catalog.profile(.treeSparrow),random:{0.5})
+            bird.perch(on:host,spriteScale:d.spriteScale(for:bird));bird.perchDuration=600;bird.tick(2)
+            d.engine.installFixtureBirds([bird])
+            for language:AppLanguage in [.chinese,.english] {
+                d.language=language;w.relocalize();w.tabs.selectTabViewItem(at:2)
+                let suffix=language == .chinese ? "zh":"en"
+                let previews:[(kind:BehaviorKind,button:NSButton,message:String)] = [
+                    (.watch,w.previewWatchButton,w.t("正在预览留意鼠标：观察朝向、站立和眨眼；小鸟停稳即可，鼠标可以远离。","Previewing observation: watch facing, standing and blinking on a settled bird, even far from the pointer.")),
+                    (.alert,w.previewAlertButton,w.t("正在预览短暂警觉：小鸟保持停栖，安静后恢复；无需把鼠标移近。","Previewing brief alertness: the bird stays perched and settles when quiet; no need to move the pointer closer."))]
+                for preview in previews {
+                    let origin=bird.position,revision=bird.motionRevision,sequence=d.engine.events.last?.sequence
+                    preview.button.performClick(nil)
+                    let event=d.engine.events.last
+                    checks["attentionPreviewUsesSettledBirdAndSavedEnabledSettings-\(suffix)-\(preview.kind.rawValue)"] = !w.draft.passiveAttentionEnabled && !w.draft.perchActions && d.settings.passiveAttentionEnabled && d.settings.perchActions && event?.sequence != sequence && event?.type == .started && event?.kind == preview.kind && event?.source == .preview && d.engine.birds.count == 1 && d.engine.birds.first === bird
+                    checks["attentionPreviewAcceptsFarPointer-\(suffix)-\(preview.kind.rawValue)"] = Geometry.distance(d.engine.world.pointer,bird.position)>max(200,144*d.spriteScale(for:bird))*1.2 && event?.type == .started
+                    checks["attentionPreviewInstructions-\(suffix)-\(preview.kind.rawValue)"] = w.message.stringValue == preview.message
+                    checks["attentionPreviewDoesNotMoveBird-\(suffix)-\(preview.kind.rawValue)"] = bird.position == origin && bird.motionRevision == revision && bird.state == .perched
+                    checks["attentionPreviewMessageFits-\(suffix)-\(preview.kind.rawValue)"] = (w.message.cell?.cellSize(forBounds:w.message.bounds).height ?? .infinity) <= w.message.frame.height
+                    d.engine.handle(.cancelAmbient(.screensChanged))
+                }
+            }
+        } else {checks["attentionPreviewUsesSettledBirdAndSavedEnabledSettings"]=false}
+    }
+    private static func checkAttentionRejections(_ window:SpeciesSettingsWindow,reason:BehaviorReason,suffix:String,checks:inout [String:Bool]) {
+        let d=window.desktop
+        let previews:[(kind:BehaviorKind,button:NSButton)] = [(.watch,window.previewWatchButton),(.alert,window.previewAlertButton)]
+        for preview in previews {
+            let before=d.engine.birds.count,sequence=d.engine.events.last?.sequence
+            preview.button.performClick(nil)
+            let event=d.engine.events.last
+            checks["attentionPreviewRejection-\(suffix)-\(reason.rawValue)-\(preview.kind.rawValue)"] = event?.sequence != sequence && event?.kind == preview.kind && event?.type == .rejected && event?.source == .preview && event?.reason == reason && window.message.stringValue == d.behaviorMessage(reason)
+            checks["attentionRejectedPreviewPreservesPopulation-\(suffix)-\(reason.rawValue)-\(preview.kind.rawValue)"] = d.engine.birds.count == before && d.engine.activeRunCount == 0 && d.engine.leasedBirdCount == 0
+        }
+    }
     private static func checkLeafSettings(folder:URL,checks:inout [String:Bool]) throws {
         // Keep leaf fixtures independent of the existing settings checks.
         let d=DesktopController();d.automaticPopulation=false
@@ -301,14 +415,27 @@ enum SettingsVerification {
         d.legacyURL=folder.appendingPathComponent("leaf-legacy.json")
         let cancelled=SpeciesSettingsWindow(desktop:d)
         cancelled.showWindow(nil)
+        cancelled.ambientLeafPlayButton.performClick(nil)
+        checks["ambientLeafToggleOnlyChangesDraft"] = !cancelled.draft.ambientLeafPlayEnabled && d.settings.ambientLeafPlayEnabled
         cancelled.leafPlayButton.performClick(nil)
+        checks["ambientLeafDisabledOffDraftPreserved"] = !cancelled.ambientLeafPlayButton.isEnabled && cancelled.ambientLeafPlayButton.state == .off && !cancelled.draft.ambientLeafPlayEnabled
+        cancelled.ambientLeafPlayButton.performClick(nil)
+        checks["disabledAmbientLeafOffCannotBeToggled"] = !cancelled.draft.ambientLeafPlayEnabled && cancelled.ambientLeafPlayButton.state == .off
         checks["leafToggleOnlyChangesDraft"] = !cancelled.draft.leafPlayEnabled && d.settings.leafPlayEnabled
         cancelled.cancel()
-        checks["leafCancelDoesNotApplyOrSave"] = cancelled.window?.isVisible == false && d.settings.leafPlayEnabled && !FileManager.default.fileExists(atPath:d.settingsURL.path)
+        checks["leafCancelDoesNotApplyOrSave"] = cancelled.window?.isVisible == false && d.settings.ambientLeafPlayEnabled && d.settings.leafPlayEnabled && !FileManager.default.fileExists(atPath:d.settingsURL.path)
         let w=SpeciesSettingsWindow(desktop:d);d.settingsWindow=w
         w.showWindow(nil)
         defer {w.cancel()}
         checks["leafDefaultOnAndCancelledDraftDiscarded"] = w.draft.leafPlayEnabled && w.leafPlayButton.state == .on
+        checks["ambientLeafDefaultOnAndCancelledDraftDiscarded"] = w.draft.ambientLeafPlayEnabled && w.ambientLeafPlayButton.state == .on && w.ambientLeafPlayButton.isEnabled
+        w.leafPlayButton.performClick(nil)
+        checks["ambientLeafDisabledOnDraftPreserved"] = !w.ambientLeafPlayButton.isEnabled && w.ambientLeafPlayButton.state == .on && w.draft.ambientLeafPlayEnabled
+        w.ambientLeafPlayButton.performClick(nil)
+        checks["disabledAmbientLeafOnCannotBeToggled"] = w.draft.ambientLeafPlayEnabled && w.ambientLeafPlayButton.state == .on
+        w.leafPlayButton.performClick(nil)
+        checks["ambientLeafMasterReenablesPreference"] = w.ambientLeafPlayButton.isEnabled && w.ambientLeafPlayButton.state == .on
+        w.ambientLeafPlayButton.performClick(nil)
         w.leafPlayButton.performClick(nil)
         let before=d.engine.birds.count
         w.releaseLeafButton.performClick(nil)
@@ -321,15 +448,19 @@ enum SettingsVerification {
         w.save()
         let saved=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
         checks["leafSettingSavedAndAppliedImmediately"] = !saved.leafPlayEnabled && !d.settings.leafPlayEnabled
+        checks["ambientLeafSettingSavedWithMasterOff"] = !saved.ambientLeafPlayEnabled && !d.settings.ambientLeafPlayEnabled
         let reloaded=DesktopController();reloaded.settingsURL=d.settingsURL;reloaded.legacyURL=d.legacyURL
         try reloaded.loadSpeciesConfig()
         checks["leafSettingSurvivesRestart"] = !reloaded.settings.leafPlayEnabled
+        checks["ambientLeafSettingSurvivesRestart"] = !reloaded.settings.ambientLeafPlayEnabled
         w.leafPlayButton.performClick(nil)
+        w.ambientLeafPlayButton.performClick(nil)
         for language:AppLanguage in [.chinese,.english] {
             d.language=language;w.relocalize();w.tabs.selectTabViewItem(at:2)
             let suffix=language == .chinese ? "zh":"en"
             checks["leafDraftSurvivesRelocalization-\(suffix)"] = w.draft.leafPlayEnabled && w.leafPlayButton.state == .on && !d.settings.leafPlayEnabled
-            checks["leafLabels-\(suffix)"] = w.leafPlayButton.title == w.t("开启落叶游戏","Enable leaf play") && w.releaseLeafButton.title == w.t("放一片落叶","Release a leaf") && w.clearLeafButton.title == w.t("清除落叶","Clear leaf")
+            checks["ambientLeafDraftSurvivesRelocalization-\(suffix)"] = w.draft.ambientLeafPlayEnabled && w.ambientLeafPlayButton.state == .on && w.ambientLeafPlayButton.isEnabled && !d.settings.ambientLeafPlayEnabled
+            checks["leafLabels-\(suffix)"] = w.ambientLeafPlayButton.title == w.t("偶尔自动出现落叶游戏","Occasional automatic leaf play") && w.leafPlayButton.title == w.t("开启落叶游戏","Enable leaf play") && w.releaseLeafButton.title == w.t("放一片落叶","Release a leaf") && w.clearLeafButton.title == w.t("清除落叶","Clear leaf")
             let sequence=d.engine.events.last?.sequence
             w.releaseLeafButton.performClick(nil)
             let event=d.engine.events.last
@@ -338,14 +469,17 @@ enum SettingsVerification {
             if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView,let document=scroll.documentView {
                 scroll.contentView.scroll(to:CGPoint(x:0,y:document.bounds.height-scroll.contentView.bounds.height))
                 scroll.reflectScrolledClipView(scroll.contentView)
-                let controls=[w.leafPlayButton!,w.releaseLeafButton!,w.clearLeafButton!]
+                let controls=[w.leafPlayButton!,w.ambientLeafPlayButton!,w.releaseLeafButton!,w.clearLeafButton!]
                 checks["leafControlsReachable-\(suffix)"] = controls.allSatisfy{document.visibleRect.contains($0.frame)}
                 checks["leafControlTitlesFit-\(suffix)"] = controls.allSatisfy{$0.intrinsicContentSize.width <= $0.frame.width}
-                checks["leafSectionFollowsPerchActivities-\(suffix)"] = w.leafPlayButton.frame.minY > w.previewPreenButton.frame.maxY
+                checks["leafSectionFollowsPerchActivities-\(suffix)"] = w.leafPlayButton.frame.minY > max(w.previewPreenButton.frame.maxY,w.previewAlertButton.frame.maxY)
                 checks["leafLayoutDoesNotOverlap-\(suffix)"] = document.subviews.enumerated().allSatisfy { index,view in
                     document.bounds.contains(view.frame) && document.subviews.dropFirst(index+1).allSatisfy{!view.frame.intersects($0.frame)}
                 }
-                let leafLabels=document.subviews.compactMap{$0 as? NSTextField}.filter{$0.frame.minY >= 1162}
+                let leafIdentifiers:Set<String>=["leafSectionTitle","leafPlayHelp","leafPreviewHelp"]
+                let leafLabels=document.subviews.compactMap{$0 as? NSTextField}.filter {
+                    $0.identifier.map{leafIdentifiers.contains($0.rawValue)} ?? false
+                }
                 checks["leafHelpFullyVisible-\(suffix)"] = leafLabels.count == 3 && leafLabels.allSatisfy {
                     document.visibleRect.contains($0.frame) && ($0.cell?.cellSize(forBounds:$0.bounds).height ?? .infinity) <= $0.frame.height
                 }
@@ -356,17 +490,24 @@ enum SettingsVerification {
         w.save();d.settingsURL=url
         let afterFailure=try BirdSettings.decode(Data(contentsOf:url))
         checks["leafFailedSavePreservesActiveAndStoredSettings"] = w.draft.leafPlayEnabled && !d.settings.leafPlayEnabled && !afterFailure.leafPlayEnabled && w.message.stringValue == "Could not save. Try again; active settings are unchanged."
+        checks["ambientLeafFailedSavePreservesActiveAndStoredSettings"] = w.draft.ambientLeafPlayEnabled && !d.settings.ambientLeafPlayEnabled && !afterFailure.ambientLeafPlayEnabled
         w.resetDefaults()
+        checks["ambientLeafDefaultsRestoredWithoutApplying"] = w.draft.ambientLeafPlayEnabled && w.ambientLeafPlayButton.state == .on && w.ambientLeafPlayButton.isEnabled && !d.settings.ambientLeafPlayEnabled
         checks["leafDefaultsRestoredWithoutApplying"] = w.draft.leafPlayEnabled && w.leafPlayButton.state == .on && !d.settings.leafPlayEnabled
         w.save()
         let restored=try BirdSettings.decode(Data(contentsOf:url))
         checks["leafDefaultsSaveAndReload"] = d.settings.leafPlayEnabled && restored.leafPlayEnabled
+        checks["ambientLeafDefaultsSaveAndReload"] = d.settings.ambientLeafPlayEnabled && restored.ambientLeafPlayEnabled
+        w.ambientLeafPlayButton.performClick(nil);w.save()
+        let automaticOff=try BirdSettings.decode(Data(contentsOf:url))
+        checks["ambientLeafCanBeSavedOffWithMasterOn"] = d.settings.leafPlayEnabled && !d.settings.ambientLeafPlayEnabled && !automaticOff.ambientLeafPlayEnabled
         d.paused=true;w.releaseLeafButton.performClick(nil)
         checks["leafPausedPreviewExplained"] = !d.engine.hasLeafPreview && d.engine.events.last?.kind == .leafPlay && d.engine.events.last?.reason == .paused && w.message.stringValue == d.behaviorMessage(.paused)
         d.paused=false
         w.releaseLeafButton.performClick(nil)
         for _ in 0..<120 {d.engine.advance(BehaviorEngine.step)}
         checks["leafPreviewWaitsThreeSeconds"] = d.engine.hasLeafPreview && d.engine.scenePropCount == 0
+        checks["leafManualPreviewIgnoresAutomaticSwitch"] = !d.settings.ambientLeafPlayEnabled && d.engine.hasLeafPreview
         for _ in 0..<66 {d.engine.advance(BehaviorEngine.step)}
         d.consumeBehaviorEvents()
         checks["leafDelayedUnavailableBirdExplained"] = !d.engine.hasLeafPreview && d.engine.events.last(where:{$0.kind == .leafPlay && $0.type == .previewResult})?.reason == .unavailableBird && w.message.stringValue == d.behaviorMessage(.unavailableBird) && d.engine.birds.count == before

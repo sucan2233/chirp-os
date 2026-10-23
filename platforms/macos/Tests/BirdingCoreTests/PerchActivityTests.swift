@@ -6,7 +6,7 @@ final class PerchActivityTests: XCTestCase {
     private let host=Surface(id:71,rect:CGRect(x:-900,y:800,width:2300,height:400))
 
     private func fixture(seed:UInt64=73,count:Int=1,automatic:Bool=false,enabled:Bool=true) -> BehaviorEngine {
-        var settings=BirdSettings()
+        var settings=BirdSettings();settings.ambientLeafPlayEnabled=false
         settings.pointerVisits=false;settings.flockPasses=false;settings.perchActions=enabled
         let engine=BehaviorEngine(seed:seed,settings:settings)
         engine.populationEnabled=false;engine.ambientEnabled=automatic
