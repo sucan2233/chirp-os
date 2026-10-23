@@ -185,7 +185,7 @@ final class BehaviorRecordingTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let folder=root.appendingPathComponent("shared/behavior-fixtures/v1")
         let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="json"}.sorted{$0.path<$1.path}
-        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json"])
+        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
@@ -193,6 +193,11 @@ final class BehaviorRecordingTests:XCTestCase {
             XCTAssertEqual(reference.runs,0,file.lastPathComponent);XCTAssertEqual(reference.leases,0,file.lastPathComponent)
             XCTAssertEqual(reference.reservations,0,file.lastPathComponent);XCTAssertTrue(reference.props.isEmpty,file.lastPathComponent)
             let finished=reference.events.filter{$0.type=="completed"}.compactMap(\.kind)
+            if file.lastPathComponent=="activity-rhythm.json" {
+                XCTAssertTrue(finished.contains("rest"));XCTAssertTrue(finished.contains("flockPass"))
+                XCTAssertTrue(reference.events.contains{$0.kind=="flockPass" && $0.type=="rejected" && $0.reason=="disabled"})
+                XCTAssertFalse(reference.events.contains{$0.type=="started" && $0.source=="automatic" && $0.kind != "rest" && $0.kind != "preen"})
+            }
             if file.lastPathComponent=="attention.json" {XCTAssertTrue(finished.contains("watch"));XCTAssertTrue(finished.contains("alert"))}
             if file.lastPathComponent=="side-hop.json" {
                 XCTAssertTrue(finished.contains("sideHop"))

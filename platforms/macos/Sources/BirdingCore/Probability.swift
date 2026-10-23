@@ -111,6 +111,7 @@ public struct BirdSettings: Codable {
     public var ambientLeafPlayEnabled = true
     public var visitorMemoryEnabled = true
     public var ambientFrequency: AmbientFrequency = .low
+    public var activityRhythm: ActivityRhythmMode = .steady
     public var perchDefaultsVersion: Int? = nil
     public var pendingSpecies: [SpeciesID]? = nil
     public init(catalog:SpeciesCatalog = .standard) {
@@ -122,7 +123,7 @@ public struct BirdSettings: Codable {
         case catalog,probabilities,hoverDelay,perchDefaultsVersion,pendingSpecies
         case pointerVisits,pointerFollowEnabled,flockPasses,ambientFrequency,perchActions,socialInteractions,leafPlayEnabled
         case passiveAttentionEnabled,ambientLeafPlayEnabled,sideHopEnabled,takeoffPreparationEnabled
-        case visitorMemoryEnabled
+        case visitorMemoryEnabled,activityRhythm
     }
     private static func validateSchemaVersion(in values:KeyedDecodingContainer<CodingKeys>) throws {
         // Absence alone denotes version 0; null and malformed values are not legacy versions.
@@ -159,6 +160,7 @@ public struct BirdSettings: Codable {
         ambientLeafPlayEnabled=try values.decodeIfPresent(Bool.self,forKey:.ambientLeafPlayEnabled) ?? true
         visitorMemoryEnabled=try values.decodeIfPresent(Bool.self,forKey:.visitorMemoryEnabled) ?? true
         ambientFrequency=try values.decodeIfPresent(AmbientFrequency.self,forKey:.ambientFrequency) ?? .low
+        activityRhythm=try values.decodeIfPresent(ActivityRhythmMode.self,forKey:.activityRhythm) ?? .steady
         perchDefaultsVersion=try values.decodeIfPresent(Int.self,forKey:.perchDefaultsVersion)
         pendingSpecies=try values.decodeIfPresent([SpeciesID].self,forKey:.pendingSpecies)
         guard hoverDelay.isFinite,Self.hoverDelayRange.contains(hoverDelay) else {

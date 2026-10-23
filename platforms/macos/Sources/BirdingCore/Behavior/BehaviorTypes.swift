@@ -67,12 +67,15 @@ public struct BehaviorWorld {
     public var scale: CGFloat
     public var pointer: CGPoint
     public var buttonsDown: Bool
+    /// Local civil minute supplied by the platform; nil keeps clock-free simulations neutral.
+    public var localMinuteOfDay: Int?
     /// Optional poses require real renderer frames; an empty manifest opts out.
     public var availableFrames: [SpeciesID:Set<String>]
     public init(screens:[CGRect]=[],displays:[CGRect]=[],surfaces:[Surface]=[],scale:CGFloat=1,
-                pointer:CGPoint = .zero,buttonsDown:Bool=false,availableFrames:[SpeciesID:Set<String>]=[:]) {
+                pointer:CGPoint = .zero,buttonsDown:Bool=false,availableFrames:[SpeciesID:Set<String>]=[:],localMinuteOfDay:Int?=nil) {
         self.screens=screens;self.displays=displays;self.surfaces=surfaces
         self.scale=scale;self.pointer=pointer;self.buttonsDown=buttonsDown;self.availableFrames=availableFrames
+        self.localMinuteOfDay=localMinuteOfDay.flatMap{(0..<1440).contains($0) ? $0:nil}
     }
 }
 

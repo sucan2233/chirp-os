@@ -503,7 +503,8 @@ public final class BehaviorEngine {
             let bird=record.bird
             let enabled=ambientEnabled && settings.perchActions && PerchActionKind.allCases.contains{supports($0,bird:bird)}
             if let action=perchPlanner.candidate(id,bird:bird,dt:dt,enabled:enabled,occupied:runtime.owners[id] != nil,
-                quiet:!world.buttonsDown && !pointerNear(bird)),enabled,perchRejection(action,bird:bird)==nil {
+                quiet:!world.buttonsDown && !pointerNear(bird),
+                restRate:ActivityRhythmPolicy.restRate(mode:settings.activityRhythm,minute:world.localMinuteOfDay,species:bird.profile.id)),enabled,perchRejection(action,bird:bird)==nil {
                 candidates.append((id,action))
             }
         }
@@ -604,9 +605,10 @@ public final class BehaviorEngine {
         if !paused {
             if !updateAttention(),!updateSideHops() {updatePerchActivities(dt)}
         }
-        if !paused && ambientEnabled,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
+        let encounterRate=ActivityRhythmPolicy.ambientRate(mode:settings.activityRhythm,minute:world.localMinuteOfDay)
+        if !paused && ambientEnabled && encounterRate>0,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
             pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,socialEnabled:settings.socialInteractions,leafEnabled:settings.leafPlayEnabled && settings.ambientLeafPlayEnabled,frequency:settings.ambientFrequency,
-            busy:ambientBusy || scheduledEncounter != nil,leafRandom:ecologyRandom.unit,random:random.unit) {
+            busy:ambientBusy || scheduledEncounter != nil,cadenceRate:encounterRate,leafRandom:ecologyRandom.unit,random:random.unit) {
             switch event {
             case .pointerVisit:_=requestPointer(.automatic)
             case .flockPass:_=requestFlock(.automatic)

@@ -150,22 +150,27 @@ enum VisitorMemorySettingsVerification {
         w.tabs.selectTabViewItem(at:2)
         checks[prefix+"Labels"]=w.visitorMemoryButton.title==w.t("记住熟客与安静相处","Remember returning visitors")
         guard let scroll=w.tabs.tabViewItems[2].view as? NSScrollView,let document=scroll.documentView else {return}
-        scroll.contentView.scroll(to:CGPoint(x:0,y:max(0,document.bounds.height-scroll.contentView.bounds.height)))
-        scroll.reflectScrolledClipView(scroll.contentView)
-        w.window?.contentView?.layoutSubtreeIfNeeded()
         func label(_ identifier:String) -> NSTextField? {
             document.subviews.compactMap{$0 as? NSTextField}.first{$0.identifier?.rawValue==identifier}
         }
         let heading=label("visitorMemorySectionTitle"),help=label("visitorMemoryHelp")
+        guard let heading else {return}
+        // Rhythm settings follow this section; scrolling to the bottom would
+        // hide the visitor controls. Navigate by the section's stable heading.
+        let top=max(0,heading.frame.minY-12)
+        let limit=max(0,document.bounds.height-scroll.contentView.bounds.height)
+        scroll.contentView.scroll(to:CGPoint(x:0,y:min(top,limit)))
+        scroll.reflectScrolledClipView(scroll.contentView)
+        w.window?.contentView?.layoutSubtreeIfNeeded()
         checks[prefix+"ExistingPositions"]=label("leafSectionTitle")?.frame.minY==1600 &&
             w.leafPlayButton.frame.minY==1642 && w.releaseLeafButton.frame.minY==1808 &&
             w.sideHopButton.frame.minY==1322 && w.previewSideHopButton.frame.minY==1480 &&
-            heading?.frame.minY==1960 && document.bounds.height>1940
+            heading.frame.minY==1960 && document.bounds.height>1940
         checks[prefix+"Reachable"] = !w.visitorMemoryButton.isHidden && document.visibleRect.contains(w.visitorMemoryButton.frame) &&
-            heading.map{document.visibleRect.contains($0.frame)} == true
+            document.visibleRect.contains(heading.frame)
         checks[prefix+"TitlesFit"]=w.visitorMemoryButton.intrinsicContentSize.width<=w.visitorMemoryButton.frame.width &&
             w.visitorMemoryButton.intrinsicContentSize.height<=w.visitorMemoryButton.frame.height &&
-            heading.map{($0.cell?.cellSize(forBounds:$0.bounds).height ?? .infinity)<=$0.frame.height} == true
+            (heading.cell?.cellSize(forBounds:heading.bounds).height ?? .infinity)<=heading.frame.height
         checks[prefix+"HelpFits"]=help.map {
             !$0.stringValue.isEmpty && document.visibleRect.contains($0.frame) &&
                 ($0.cell?.cellSize(forBounds:$0.bounds).height ?? .infinity)<=$0.frame.height

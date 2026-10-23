@@ -48,6 +48,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var releaseLeafButton:NSButton!
     var clearLeafButton:NSButton!
     var visitorMemoryButton:NSButton!
+    var activityRhythmPopup:NSPopUpButton!
     private var debugEnabled=false
     private var debugButton:NSButton!
     var language: AppLanguage { desktop.language }
@@ -122,7 +123,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:2180))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:2580))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -200,6 +201,15 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         visitorMemoryButton.identifier=NSUserInterfaceItemIdentifier("visitorMemoryEnabled")
         interactionView.addSubview(visitorMemoryButton)
         label(t("记忆只保存在本机；鼠标在附近安静停留，会逐渐增加熟悉度，不改变小鸟原有的个性。\n点击换位仍立即响应。关闭后停止学习与熟悉度效果，已有记忆保留；重新开启后，熟客可继续相处。\n默认开启，独立于停栖小动作总开关，保存后生效。","Memory stays on this Mac. Calm pointer proximity gradually builds familiarity while each bird’s original traits stay unchanged.\nClicks still move birds immediately. Turning this off stops learning and familiarity effects; existing memories resume when reenabled.\nOn by default, independent of perch activities. Save to apply."),NSRect(x:20,y:2040,width:710,height:110),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("visitorMemoryHelp")
+        label(t("陪伴节奏","Companionship rhythm"),NSRect(x:20,y:2180,width:710,height:30),in:interactionView,size:20).identifier=NSUserInterfaceItemIdentifier("activityRhythmSectionTitle")
+        label(t("活动节奏","Activity rhythm"),NSRect(x:20,y:2228,width:120,height:26),in:interactionView).identifier=NSUserInterfaceItemIdentifier("activityRhythmLabel")
+        activityRhythmPopup=NSPopUpButton(frame:NSRect(x:145,y:2222,width:420,height:32),pullsDown:false)
+        activityRhythmPopup.addItems(withTitles:[t("保持日常","Keep everyday rhythm"),t("跟随本地昼夜","Follow local day/night"),t("安静陪伴","Quiet companionship")])
+        activityRhythmPopup.selectItem(at:ActivityRhythmMode.allCases.firstIndex(of:draft.activityRhythm)!)
+        activityRhythmPopup.target=self;activityRhythmPopup.action=#selector(activityRhythmSettingsChanged)
+        activityRhythmPopup.identifier=NSUserInterfaceItemIdentifier("activityRhythmPopup")
+        activityRhythmPopup.setAccessibilityLabel(t("活动节奏","Activity rhythm"));interactionView.addSubview(activityRhythmPopup)
+        label(t("跟随本地昼夜：按本机时段减少夜间显著互动，并按鸟种调整打盹节奏。\n\n安静陪伴：停止新触发的自动绕飞、鸟群过境、社交场景和落叶；正在进行的互动自然结束，手动预览不会取消。保留自然飞行、被动观察、警觉和侧跳；已有开关仍然适用。\n\n所有模式点击换位都立即响应。默认保持日常；保存后生效。不会强制入睡、改变鸟的数量或离线累计。","Local day/night uses this Mac’s local time to reduce noticeable interactions at night and adjusts dozing rhythms by species.\n\nQuiet companionship stops new automatic pointer visits, passing flocks, social scenes and leaves. Interactions already in progress finish naturally; manual previews are not cancelled. Natural flight, passive observation, alertness and side hops remain available, subject to their existing switches.\n\nClicks move birds immediately in every mode. Default: keep everyday rhythm. Save to apply. No forced sleep, bird count changes or offline accumulation."),NSRect(x:20,y:2270,width:710,height:234),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("activityRhythmHelp")
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -254,6 +264,12 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     }
     @objc func visitorMemorySettingsChanged() {
         draft.visitorMemoryEnabled=visitorMemoryButton.state == .on
+        message.stringValue=t("尚未保存","Unsaved changes")
+    }
+    @objc func activityRhythmSettingsChanged() {
+        let index=activityRhythmPopup.indexOfSelectedItem
+        guard ActivityRhythmMode.allCases.indices.contains(index) else {return}
+        draft.activityRhythm=ActivityRhythmMode.allCases[index]
         message.stringValue=t("尚未保存","Unsaved changes")
     }
     @objc func releaseLeaf() {
@@ -418,6 +434,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.ambientLeafPlayEnabled=ambientLeafPlayButton.state == .on
         ambientLeafPlayButton.isEnabled=draft.leafPlayEnabled
         draft.visitorMemoryEnabled=visitorMemoryButton.state == .on
+        draft.activityRhythm=ActivityRhythmMode.allCases[activityRhythmPopup.indexOfSelectedItem]
         return true
     }
     @objc func save() {

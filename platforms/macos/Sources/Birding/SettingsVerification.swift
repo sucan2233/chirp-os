@@ -262,6 +262,8 @@ enum SettingsVerification {
             try checkPassiveSettings(folder:folder,checks:&checks)
             try PassiveMotionSettingsVerification.run(into:&checks,folder:folder)
             try VisitorMemorySettingsVerification.run(into:&checks,folder:folder)
+            try ActivityRhythmSettingsVerification.run(into:&checks,folder:folder)
+            ActivityRhythmClockVerification.run(into:&checks)
             try VisitorMemoryPersistenceVerification.run(into:&checks,folder:folder)
             try checkLeafSettings(folder:folder,checks:&checks)
             d.showSpeciesGallery()

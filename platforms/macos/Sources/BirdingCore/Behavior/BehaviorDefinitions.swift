@@ -40,6 +40,7 @@ public struct BehaviorDefinition {
     /// Settings eligibility only; pause state and automatic scheduling eligibility
     /// (including ambientEnabled) are evaluated by the engine separately.
     public func isEnabled(settings:BirdSettings,source:BehaviorSource) -> Bool {
+        if source == .automatic,settings.activityRhythm == .quiet,occupiesEncounter {return false}
         switch kind {
         case .relocate:return true
         case .pointerVisit:return settings.pointerVisits

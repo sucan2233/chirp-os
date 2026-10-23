@@ -31,13 +31,16 @@ public struct AmbientScheduler {
     }
     public mutating func tick(_ dt: Double, pointer: CGPoint, buttonsDown: Bool,
                               pointerEnabled: Bool, flockEnabled: Bool, socialEnabled: Bool = false, leafEnabled: Bool = false,
-                              frequency: AmbientFrequency, busy: Bool, leafRandom: (() -> Double)? = nil,
+                              frequency: AmbientFrequency, busy: Bool, cadenceRate:Double=1, leafRandom: (() -> Double)? = nil,
                               random: () -> Double = { Double.random(in: 0..<1) }) -> AmbientEvent? {
         let step = min(0.1, max(0, dt))
         if buttonsDown || pointerAnchor == nil || Geometry.distance(pointer, pointerAnchor!) > 6 {
             pointerAnchor = pointer; stationaryTime = 0
         } else { stationaryTime += step }
-        remaining -= step
+        // Only opportunity cadence changes; pointer dwell and motion use real simulation time.
+        let rate=cadenceRate.isFinite ? min(1,max(0,cadenceRate)):1
+        remaining -= step*rate
+        guard rate>0 else {return nil}
         guard remaining <= 0 else { return nil }
         let interval = frequency.interval
         remaining = interval.lowerBound + (interval.upperBound - interval.lowerBound) * random()

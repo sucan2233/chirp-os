@@ -198,7 +198,7 @@ final class PerchActivityPlanner {
         let base=kind == .rest ? rhythm.restDuration:rhythm.preenDuration
         return PerchActionPlan(kind:kind,duration:base*(0.9+0.2*rhythm.random.unit()),rate:rhythm.preenRate)
     }
-    func candidate(_ id:BirdID,bird:Bird,dt:Double,enabled:Bool,occupied:Bool,quiet:Bool) -> PerchActionKind? {
+    func candidate(_ id:BirdID,bird:Bird,dt:Double,enabled:Bool,occupied:Bool,quiet:Bool,restRate:Double=1) -> PerchActionKind? {
         guard let rhythm=rhythms[id] else {return nil}
         if rhythm.revision != bird.motionRevision {
             rhythm.revision=bird.motionRevision;rhythm.quiet=0;rhythm.pendingPreen=false;rhythm.landingAge=0
@@ -218,7 +218,7 @@ final class PerchActivityPlanner {
         if rhythm.pendingPreen,rhythm.landingAge>=rhythm.landingDelay,automaticWeight(id,kind:.preen)>0 {
             rhythm.pendingPreen=false;rhythm.quiet=0;return .preen
         }
-        rhythm.quiet+=dt
+        rhythm.quiet+=dt*restRate
         guard rhythm.quiet>=rhythm.nextRest,automaticWeight(id,kind:.rest)>0 else {return nil}
         rhythm.suppress();return .rest
     }

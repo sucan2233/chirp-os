@@ -32,16 +32,18 @@ public struct RecordedWorld:Codable,Equatable {
     public var surfaces:[RecordedSurface]
     public var scale:Double,pointer:RecordedPoint
     public var buttonsDown:Bool
+    public var localMinuteOfDay:Int?
     public var availableFrames:[String:[String]]?
     public init(_ world:BehaviorWorld) {
         screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init)
         surfaces=world.surfaces.map(RecordedSurface.init);scale=Double(world.scale);pointer=RecordedPoint(world.pointer)
-        buttonsDown=world.buttonsDown
+        buttonsDown=world.buttonsDown;localMinuteOfDay=world.localMinuteOfDay
         availableFrames=Dictionary(uniqueKeysWithValues:world.availableFrames.map{($0.key.rawValue,$0.value.sorted())})
     }
     func validated(inheriting previous:BehaviorWorld?=nil) throws -> BehaviorWorld {
         let frames=availableFrames ?? previous.map{Dictionary(uniqueKeysWithValues:$0.availableFrames.map{($0.key.rawValue,$0.value.sorted())})} ?? [:]
-        guard screens.count<=16,displays.count<=16,surfaces.count<=256,
+        guard localMinuteOfDay.map({(0..<1440).contains($0)}) ?? true,
+              screens.count<=16,displays.count<=16,surfaces.count<=256,
               screens.allSatisfy({$0.valid && $0.height>0}),displays.allSatisfy({$0.valid && $0.height>0}),
               surfaces.allSatisfy({$0.rect.valid && ($0.isGround || $0.rect.height>0)}),
               Set(surfaces.map(\.id)).count==surfaces.count,
@@ -52,7 +54,8 @@ public struct RecordedWorld:Codable,Equatable {
         }
         return BehaviorWorld(screens:screens.map(\.value),displays:displays.map(\.value),surfaces:surfaces.map(\.value),
             scale:scale,pointer:pointer.value,buttonsDown:buttonsDown,
-            availableFrames:Dictionary(uniqueKeysWithValues:frames.map{(SpeciesID(rawValue:$0.key)!,Set($0.value))}))
+            availableFrames:Dictionary(uniqueKeysWithValues:frames.map{(SpeciesID(rawValue:$0.key)!,Set($0.value))}),
+            localMinuteOfDay:localMinuteOfDay)
     }
 }
 public struct RecordedSimulationOptions:Codable,Equatable {
@@ -195,7 +198,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=3,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=4,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

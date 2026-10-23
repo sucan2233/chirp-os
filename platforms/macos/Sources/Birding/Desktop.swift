@@ -181,6 +181,7 @@ final class DesktopController: NSObject {
     var status: NSStatusItem!
     var statusLine: NSMenuItem!
     var diagnosticPath: String?
+    var activityClock=LocalActivityClock()
     var recordingPath:String?
     var integration: IntegrationCheck?
     var primaryHeight: CGFloat { NSScreen.screens.first?.frame.height ?? 900 }
@@ -310,6 +311,7 @@ final class DesktopController: NSObject {
             "residentCount":residentCount,"departingCount":engine.departingCount,
             "passingCount":engine.passingCount,"pendingCount":engine.pendingCount,
             "behaviorSeed":String(engine.seed),"behaviorTime":engine.time,
+            "activityRhythm":settings.activityRhythm.rawValue,"localMinuteOfDay":engine.world.localMinuteOfDay ?? -1,
             "activeBehaviors":engine.activeRunCount,"leasedBirds":engine.leasedBirdCount,"reservedLandings":engine.reservedLandingCount,
             "sceneProps":engine.scenePropCount,"pendingLeafPlay":engine.hasLeafPreview,
             "behaviorEvents":engine.events.map {event in
