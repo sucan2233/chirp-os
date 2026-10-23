@@ -10,7 +10,9 @@ public final class BehaviorEngine {
     private var order:[BirdID]=[]
     private var nextBirdID:UInt64=1
     let runtime=BehaviorRuntime()
+    let poseMixer=PoseMixer()
     let random:EngineRandom
+    let perchPlanner:PerchActivityPlanner
     var scheduler=AmbientScheduler()
     private var previewDelay:Double?
     private var accumulator=0.0
@@ -33,6 +35,7 @@ public final class BehaviorEngine {
 
     public init(seed:UInt64=UInt64.random(in:0...UInt64.max),settings:BirdSettings=BirdSettings()) {
         self.seed=seed;self.random=EngineRandom(seed:seed);self.settings=settings
+        self.perchPlanner=PerchActivityPlanner(seed:seed)
         scheduler.reset(settings.ambientFrequency)
     }
     public var birds:[Bird] {order.compactMap{records[$0].flatMap{$0.visible ? $0.bird:nil}}}
@@ -56,6 +59,7 @@ public final class BehaviorEngine {
         let id=BirdID(nextBirdID);nextBirdID+=1
         records[id]=Record(bird:bird,role:role,visible:visible)
         identities[ObjectIdentifier(bird)]=id;order.append(id)
+        if role == .resident {perchPlanner.register(id,bird:bird)}
         return id
     }
     // Fixture bridge for the existing desktop verifiers. Production spawning
@@ -73,6 +77,7 @@ public final class BehaviorEngine {
     func removeRecord(_ id:BirdID) {
         guard let record=records.removeValue(forKey:id) else {return}
         identities.removeValue(forKey:ObjectIdentifier(record.bird));order.removeAll{$0==id}
+        perchPlanner.remove(id);poseMixer.remove(id)
         emit(.birdRemoved,participants:[id],reason:.removed)
     }
     func emit(_ type:BehaviorEventType,run:BehaviorRunID?=nil,kind:BehaviorKind?=nil,
@@ -84,9 +89,14 @@ public final class BehaviorEngine {
     public func updateWorld(_ value:BehaviorWorld,sampleDT:Double?=nil) {
         world=value
         if let sampleDT {for bird in birds {bird.updateHost(surfaces:world.surfaces,sampleDT:sampleDT,spriteScale:spriteScale(for:bird))}}
+        runtime.validate(in:self)
     }
     public func applySettings(_ value:BirdSettings) {
         settings=value;scheduler.reset(value.ambientFrequency)
+        if !value.perchActions {
+            runtime.cancel(where:{$0.kind == .rest || $0.kind == .preen},reason:.settingsChanged,in:self)
+            perchPlanner.suppressAll()
+        }
         if !value.pointerVisits {
             cancelPreview(.settingsChanged)
             runtime.cancel(where:{$0.kind == .pointerVisit},reason:.settingsChanged,in:self)
@@ -102,6 +112,7 @@ public final class BehaviorEngine {
         case .relocate(let id): return relocate(id)
         case .pointerVisit(let source): return requestPointer(source)
         case .flockPass(let source): return requestFlock(source)
+        case .perchAction(let kind,let source):return requestPerchAction(kind,source:source)
         case .previewPointerAfter(let delay):
             guard !paused else {return reject(.pointerVisit,.preview,.paused)}
             guard settings.pointerVisits else {return reject(.pointerVisit,.preview,.disabled)}
@@ -109,7 +120,8 @@ public final class BehaviorEngine {
             previewDelay=max(0,min(10,delay.isFinite ? delay:3));return .scheduled
         case .pointerClick:
             scheduler.suppress()
-            runtime.cancel(where:{$0.kind == .pointerVisit},reason:.userInput,in:self)
+            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind == .rest || $0.kind == .preen},reason:.userInput,in:self)
+            perchPlanner.suppressAll()
         case .pause(let value):
             guard paused != value else {return .accepted}
             paused=value;accumulator=0
@@ -118,11 +130,11 @@ public final class BehaviorEngine {
                 runtime.cancel(where:{$0.kind == .pointerVisit},reason:.paused,in:self)
             }
         case .cancelAmbient(let reason):
-            cancelPreview(reason);accumulator=0;scheduler.suppress()
+            cancelPreview(reason);accumulator=0;scheduler.suppress();perchPlanner.suppressAll()
             let all:[BehaviorReason]=[.sleep,.screensChanged,.spaceChanged,.shutdown]
             runtime.cancel(where:{all.contains(reason) || $0.occupiesEncounter},reason:reason,in:self)
         case .scatter:
-            cancelPreview(.userInput)
+            cancelPreview(.userInput);perchPlanner.suppressAll()
             runtime.cancel(where:{!$0.occupiesEncounter || $0.kind == .pointerVisit},reason:.replaced,in:self)
             scheduler.suppress()
             for bird in birds where !bird.isDeparting {_=route(bird)}
@@ -146,6 +158,7 @@ public final class BehaviorEngine {
         guard runtime.kind(for:id) != .relocate else {return reject(.relocate,.user,.busy)}
         guard let plan=plan(for:bird,avoiding:bird.position) else {return reject(.relocate,.user,.noSpace)}
         runtime.cancel(bird:id,reason:.replaced,in:self)
+        perchPlanner.suppress(id)
         scheduler.suppress()
         return runtime.start(RelocationExecution(id:id,origin:bird.position,plan:plan),source:.user,in:self)
     }
@@ -195,6 +208,57 @@ public final class BehaviorEngine {
         if !result.accepted {for (id,_) in members {removeRecord(id)}}
         return result
     }
+    func supports(_ action:PerchActionKind,bird:Bird) -> Bool {
+        action.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? [])
+    }
+    func pointerNear(_ bird:Bird) -> Bool {
+        Geometry.distance(world.pointer,bird.position)<max(100,72*spriteScale(for:bird))
+    }
+    func hasUsablePerch(_ bird:Bird) -> Bool {
+        guard let hostID=bird.hostID,bird.edge == .top,
+              world.surfaces.contains(where:{$0.id==hostID}) else {return false}
+        let footprint=Geometry.landingFootprint(at:bird.position,scale:spriteScale(for:bird))
+        return world.displays.contains(where:{$0.contains(footprint)}) &&
+            Geometry.isLandingVisible(on:hostID,at:bird.position,surfaces:world.surfaces,scale:spriteScale(for:bird))
+    }
+    private func perchRejection(_ action:PerchActionKind,bird:Bird) -> BehaviorReason? {
+        guard !bird.isDeparting,bird.state == .perched,bird.edge == .top,role(of:bird) == .resident,
+              !bird.needsDestination,bird.perchDuration-bird.stateTime>7 else {return .unavailableBird}
+        guard behavior(of:bird)==nil else {return .busy}
+        guard supports(action,bird:bird) else {return .missingFrames}
+        guard hasUsablePerch(bird) else {return .noSpace}
+        guard !world.buttonsDown else {return .userInput}
+        guard !pointerNear(bird) else {return .pointerNearby}
+        return nil
+    }
+    private func requestPerchAction(_ action:PerchActionKind,source:BehaviorSource,target:BirdID?=nil) -> BehaviorResult {
+        guard !paused else {return reject(action.behavior,source,.paused)}
+        guard settings.perchActions else {return reject(action.behavior,source,.disabled)}
+        let candidates=target.map{[$0]} ?? order
+        var reasons:[BehaviorReason]=[]
+        let eligible=candidates.filter {id in
+            guard let record=records[id],record.visible else {return false}
+            if let reason=perchRejection(action,bird:record.bird) {reasons.append(reason);return false}
+            return true
+        }
+        guard let id=perchPlanner.select(eligible),let plan=perchPlanner.plan(action,for:id) else {
+            let reason=([BehaviorReason.pointerNearby,.userInput,.missingFrames,.noSpace,.busy].first(where:{reasons.contains($0)})) ?? .unavailableBird
+            return reject(action.behavior,source,reason)
+        }
+        perchPlanner.suppress(id)
+        return runtime.start(PerchActivityExecution(id:id,plan:plan),source:source,in:self)
+    }
+    private func updatePerchActivities(_ dt:Double) {
+        for id in order {
+            guard let record=records[id],record.visible,record.role == .resident else {continue}
+            let bird=record.bird
+            let enabled=ambientEnabled && settings.perchActions && PerchActionKind.allCases.contains{supports($0,bird:bird)}
+            if let action=perchPlanner.candidate(id,bird:bird,dt:dt,enabled:enabled,occupied:runtime.owners[id] != nil,
+                quiet:!world.buttonsDown && !pointerNear(bird)),enabled {
+                _=requestPerchAction(action,source:.automatic,target:id)
+            }
+        }
+    }
     func plan(for bird:Bird,entering:Bool=false,avoiding:CGPoint?=nil) -> DestinationPlan? {
         DestinationPlanner.plan(for:bird,birds:birds,world:world,entering:entering,avoiding:avoiding,random:random)
     }
@@ -233,6 +297,7 @@ public final class BehaviorEngine {
     private func step(_ dt:Double) {
         time+=dt
         if !paused {
+            poseMixer.advance(dt)
             if populationEnabled,let event=population.tick(dt,residents:residentCount,total:residentCount+departingCount,random:random.unit) {
                 switch event {
                 case .arrive:bringInBird()
@@ -263,6 +328,7 @@ public final class BehaviorEngine {
                 removeRecord(id)
             } else if runtime.owners[id]==nil && !paused && autonomousRouting && bird.needsDestination {_=route(bird)}
         }
+        if !paused {updatePerchActivities(dt)}
         if !paused && ambientEnabled,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
             pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,frequency:settings.ambientFrequency,
             busy:ambientBusy || previewDelay != nil,random:random.unit) {
@@ -272,15 +338,25 @@ public final class BehaviorEngine {
             }
         }
     }
+    func baseHop(for id:BirdID,bird:Bird) -> CGFloat {poseMixer.hop(for:id,bird:bird)}
+    private func drawableFrame(_ requested:String,for bird:Bird) -> String {
+        // A missing manifest preserves legacy adapters. An explicit partial
+        // manifest must never hide a bird just because its idle frame is absent.
+        guard let frames=world.availableFrames[bird.profile.id],!frames.isEmpty,
+              !frames.contains(requested) else {return requested}
+        return frames.contains("stand") ? "stand":frames.sorted().first!
+    }
     public func bounds(of bird:Bird) -> CGRect {
         let scale=spriteScale(for:bird)
-        return CGRect(x:bird.position.x-(bird.facingRight ? 29:19)*scale,y:bird.position.y+(bird.hopOffset-39)*scale,width:48*scale,height:48*scale).insetBy(dx:-2,dy:-2)
+        let hop=id(of:bird).map{runtime.presentation(for:$0,in:self)?.hopOffset ?? baseHop(for:$0,bird:bird)} ?? bird.hopOffset
+        return CGRect(x:bird.position.x-(bird.facingRight ? 29:19)*scale,y:bird.position.y+(hop-39)*scale,width:48*scale,height:48*scale).insetBy(dx:-2,dy:-2)
     }
     public func renderSnapshot() -> [BirdRenderState] {
         birds.compactMap {bird in
             guard let id=id(of:bird) else {return nil}
+            let pose=runtime.presentation(for:id,in:self)
             return BirdRenderState(id:id,species:bird.profile.id,position:bird.position,facingRight:bird.facingRight,
-                scale:spriteScale(for:bird),hopOffset:bird.hopOffset,frameName:bird.frameName,
+                scale:spriteScale(for:bird),hopOffset:pose?.hopOffset ?? baseHop(for:id,bird:bird),frameName:drawableFrame(pose?.frameName ?? bird.frameName,for:bird),
                 blockers:bird.blockers(in:world.surfaces),hoverable:isHoverable(bird))
         }
     }

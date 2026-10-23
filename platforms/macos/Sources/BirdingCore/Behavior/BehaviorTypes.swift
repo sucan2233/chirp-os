@@ -11,10 +11,10 @@ public struct BehaviorRunID: Hashable, Codable, Comparable {
     public static func < (lhs:Self,rhs:Self) -> Bool {lhs.rawValue<rhs.rawValue}
 }
 public enum BirdRole: String {case resident, transient}
-public enum BehaviorKind: String {case relocate, pointerVisit, flockPass}
+public enum BehaviorKind: String {case relocate, pointerVisit, flockPass, rest, preen}
 public enum BehaviorSource: String {case user, preview, automatic}
 public enum BehaviorReason: String {
-    case paused, disabled, busy, missingBird, unavailableBird, noSpace, noSpecies
+    case paused, disabled, busy, missingBird, unavailableBird, noSpace, noSpecies, missingFrames, pointerNearby
     case userInput, pointerMoved, targetInvalid, replaced, timedOut, removed
     case sleep, screensChanged, spaceChanged, shutdown, settingsChanged
 }
@@ -37,6 +37,7 @@ public enum EngineCommand {
     case relocate(BirdID)
     case pointerVisit(BehaviorSource)
     case flockPass(BehaviorSource)
+    case perchAction(PerchActionKind,BehaviorSource)
     case previewPointerAfter(Double)
     case pointerClick
     case pause(Bool)
@@ -53,10 +54,12 @@ public struct BehaviorWorld {
     public var scale: CGFloat
     public var pointer: CGPoint
     public var buttonsDown: Bool
+    /// Optional poses require real renderer frames; an empty manifest opts out.
+    public var availableFrames: [SpeciesID:Set<String>]
     public init(screens:[CGRect]=[],displays:[CGRect]=[],surfaces:[Surface]=[],scale:CGFloat=1,
-                pointer:CGPoint = .zero,buttonsDown:Bool=false) {
+                pointer:CGPoint = .zero,buttonsDown:Bool=false,availableFrames:[SpeciesID:Set<String>]=[:]) {
         self.screens=screens;self.displays=displays;self.surfaces=surfaces
-        self.scale=scale;self.pointer=pointer;self.buttonsDown=buttonsDown
+        self.scale=scale;self.pointer=pointer;self.buttonsDown=buttonsDown;self.availableFrames=availableFrames
     }
 }
 

@@ -27,6 +27,9 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var pointerVisitsButton:NSButton!
     var flockPassesButton:NSButton!
     var ambientFrequencyPopup:NSPopUpButton!
+    var perchActionsButton:NSButton!
+    var previewRestButton:NSButton!
+    var previewPreenButton:NSButton!
     private var debugEnabled=false
     private var debugButton:NSButton!
     var language: AppLanguage { desktop.language }
@@ -101,7 +104,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:640))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:930))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -128,6 +131,14 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         _=button(t("预览绕鼠标","Preview pointer visit"),#selector(previewPointerVisit),NSRect(x:20,y:528,width:210,height:32),in:interactionView)
         _=button(t("预览鸟群过境","Preview passing flock"),#selector(previewFlockPass),NSRect(x:250,y:528,width:210,height:32),in:interactionView)
         label(t("预览使用已保存的设置。绕飞预览将在 3 秒后尝试，请把鼠标移到屏幕中部并停住。","Previews use saved settings. Pointer preview tries after 3 seconds; move the pointer near screen center and hold still."),NSRect(x:20,y:575,width:710,height:52),in:interactionView,size:12)
+        label(t("停栖时的小动作","While perched"),NSRect(x:20,y:650,width:710,height:30),in:interactionView,size:20)
+        perchActionsButton=NSButton(checkboxWithTitle:t("停栖小动作","Perch activities"),target:self,action:#selector(perchSettingsChanged))
+        perchActionsButton.frame=NSRect(x:20,y:692,width:710,height:26);perchActionsButton.state=draft.perchActions ? .on:.off
+        interactionView.addSubview(perchActionsButton)
+        label(t("停稳后偶尔闭眼休息，着陆后可能整理羽毛。鼠标靠近或点击会结束动作；每只鸟的节奏错开。\n默认开启，保存后立即生效，同时控制自动动作和预览。","Birds occasionally rest with eyes closed once settled, and may preen after landing. Moving the pointer close or clicking ends the activity. Each bird follows its own timing.\nOn by default. Saving applies immediately to automatic activities and previews."),NSRect(x:20,y:730,width:710,height:78),in:interactionView,size:12)
+        previewRestButton=button(t("预览闭眼休息","Preview eyes-closed rest"),#selector(previewRest),NSRect(x:20,y:822,width:230,height:32),in:interactionView)
+        previewPreenButton=button(t("预览整理羽毛","Preview preening"),#selector(previewPreen),NSRect(x:270,y:822,width:210,height:32),in:interactionView)
+        label(t("预览使用已保存的设置，请先让小鸟停稳并把鼠标移开。条件不合适时会提示原因。","Previews use saved settings. Let a bird settle and move the pointer away. If it cannot start, the reason appears below."),NSRect(x:20,y:870,width:710,height:44),in:interactionView,size:12)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -161,6 +172,23 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         let result=desktop.engine.handle(.flockPass(.preview))
         if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
         else {message.stringValue=t("鸟群即将飞过。","A flock is about to pass.")}
+    }
+    @objc func perchSettingsChanged() {
+        draft.perchActions=perchActionsButton.state == .on
+        message.stringValue=t("尚未保存","Unsaved changes")
+    }
+    @objc func previewRest() { previewPerchAction(.rest) }
+    @objc func previewPreen() { previewPerchAction(.preen) }
+    private func previewPerchAction(_ kind:PerchActionKind) {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.perchAction(kind,.preview))
+        if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
+        else {
+            switch kind {
+            case .rest:message.stringValue=t("正在预览闭眼休息。鼠标靠近或点击可结束。","Previewing eyes-closed rest. Move the pointer close or click to end it.")
+            case .preen:message.stringValue=t("正在预览整理羽毛。鼠标靠近或点击可结束。","Previewing preening. Move the pointer close or click to end it.")
+            }
+        }
     }
     @objc func selectPage(_ sender:NSButton) { window?.makeFirstResponder(nil); tabs.selectTabViewItem(at:sender.tag) }
     func scrollToSpecies(_ id:SpeciesID) {
@@ -240,6 +268,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.pointerVisits=pointerVisitsButton.state == .on
         draft.flockPasses=flockPassesButton.state == .on
         draft.ambientFrequency=AmbientFrequency.allCases[ambientFrequencyPopup.indexOfSelectedItem]
+        draft.perchActions=perchActionsButton.state == .on
         return true
     }
     @objc func save() {

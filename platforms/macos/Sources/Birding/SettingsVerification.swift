@@ -28,6 +28,10 @@ enum SettingsVerification {
             d.showSpeciesSettings()
             let w=d.settingsWindow!
             checks["hoverDelayDefaultsToOneSecond"] = w.hoverDelayField.doubleValue == 1 && w.hoverDelaySlider.doubleValue == 1
+            checks["perchActivitiesDefaultOn"] = w.draft.perchActions && d.settings.perchActions && w.perchActionsButton.state == .on
+            checks["perchActivitiesChineseLabels"] = w.perchActionsButton.title == "停栖小动作" && w.previewRestButton.title == "预览闭眼休息" && w.previewPreenButton.title == "预览整理羽毛"
+            w.perchActionsButton.performClick(nil)
+            checks["perchToggleOnlyChangesDraft"] = !w.draft.perchActions && w.perchActionsButton.state == .off && d.settings.perchActions
             w.hoverDelaySlider.doubleValue=0.5;w.hoverDelayChanged(w.hoverDelaySlider)
             checks["hoverDelaySliderUpdatesDraft"] = w.draft.hoverDelay == 0.5 && w.hoverDelayField.doubleValue == 0.5 && d.settings.hoverDelay == 1
             w.hoverDelayField.stringValue="0.25"
@@ -65,18 +69,44 @@ enum SettingsVerification {
             checks["loginEnglishLabel"] = d.loginItem?.title == "Launch at Login" && d.loginItem?.state == .on
             checks["englishMenuAndWindow"] = d.status.menu!.items.contains{$0.title == "中文"} && d.status.menu!.items.contains{$0.title=="Resume animation"} && w.window!.title == "Bird Settings"
             checks["languageKeepsUnsavedEdits"] = w.draft.probabilities == before && w.detailFields[0][2].stringValue == "1.25" && w.hoverDelayField.stringValue == "0.25"
+            checks["perchDraftSurvivesLanguageChange"] = !w.draft.perchActions && w.perchActionsButton.state == .off && d.settings.perchActions
+            checks["perchActivitiesEnglishLabels"] = w.perchActionsButton.title == "Perch activities" && w.previewRestButton.title == "Preview eyes-closed rest" && w.previewPreenButton.title == "Preview preening"
+            for (name,button) in [("rest",w.previewRestButton!),("preen",w.previewPreenButton!)] {
+                let sequence=d.engine.events.last?.sequence
+                button.performClick(nil)
+                checks["perchPreviewPaused-\(name)"] = d.engine.events.last?.sequence != sequence && d.engine.events.last?.reason == .paused && d.engine.events.last?.source == .preview && w.message.stringValue == d.behaviorMessage(.paused)
+            }
             w.save()
             let saved=try BirdSettings.decode(Data(contentsOf:d.settingsURL))
             checks["saveAndReloadPreserveProbabilitiesLocksAndBehavior"] = saved.probabilities == w.draft.probabilities && saved.catalog.profile(.redWhiskeredBulbul).speed == 1.25
             checks["hoverDelaySavedAndAppliedImmediately"] = saved.hoverDelay == 0.25 && d.settings.hoverDelay == 0.25
+            checks["perchSettingSavedAndAppliedImmediately"] = !saved.perchActions && !d.settings.perchActions
             let reloaded=DesktopController();reloaded.settingsURL=d.settingsURL;reloaded.legacyURL=d.legacyURL
             try reloaded.loadSpeciesConfig()
             checks["hoverDelaySurvivesRestart"] = reloaded.settings.hoverDelay == 0.25
+            checks["perchSettingSurvivesRestart"] = !reloaded.settings.perchActions
+            // The UI may contain an enabled draft while the saved switch is off.
+            // Both buttons must still go through the engine's saved-settings gate.
+            d.paused=false;w.perchActionsButton.performClick(nil)
+            for (name,button) in [("rest",w.previewRestButton!),("preen",w.previewPreenButton!)] {
+                let sequence=d.engine.events.last?.sequence
+                button.performClick(nil)
+                checks["perchPreviewUsesSavedSwitch-\(name)"] = w.draft.perchActions && !d.settings.perchActions && d.engine.events.last?.sequence != sequence && d.engine.events.last?.reason == .disabled && d.engine.events.last?.source == .preview && w.message.stringValue == d.behaviorMessage(.disabled)
+            }
+            let settingsURL=d.settingsURL
+            d.settingsURL=folder // Writing settings over an existing directory must fail.
+            w.save();d.settingsURL=settingsURL
+            let afterFailedSave=try BirdSettings.decode(Data(contentsOf:settingsURL))
+            checks["failedPerchSavePreservesActiveAndStoredSettings"] = w.draft.perchActions && !d.settings.perchActions && !afterFailedSave.perchActions && w.message.stringValue == "Could not save. Try again; active settings are unchanged."
+            w.perchActionsButton.performClick(nil);d.paused=true
             w.tabs.selectTabViewItem(at:2)
             try snapshot(w.window!,to:folder.appendingPathComponent("interaction-en.png"))
             if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView {
-                scroll.contentView.scroll(to:CGPoint(x:0,y:230));scroll.reflectScrolledClipView(scroll.contentView)
+                scroll.contentView.scroll(to:CGPoint(x:0,y:200));scroll.reflectScrolledClipView(scroll.contentView)
                 try snapshot(w.window!,to:folder.appendingPathComponent("encounters-en.png"))
+                scroll.contentView.scroll(to:CGPoint(x:0,y:scroll.documentView!.bounds.height-scroll.contentView.bounds.height));scroll.reflectScrolledClipView(scroll.contentView)
+                checks["perchPreviewsReachableEnglish"] = scroll.documentView!.visibleRect.contains(w.perchActionsButton.frame) && scroll.documentView!.visibleRect.contains(w.previewRestButton.frame) && scroll.documentView!.visibleRect.contains(w.previewPreenButton.frame)
+                try snapshot(w.window!,to:folder.appendingPathComponent("perch-activities-en.png"))
             }
             checks["languagePreferenceSaved"] = prefs.string(forKey:"appLanguage") == "en"
             w.tabs.selectTabViewItem(at:0)
@@ -85,11 +115,15 @@ enum SettingsVerification {
             try snapshot(w.window!,to:folder.appendingPathComponent("behavior-en.png"))
             d.toggleLanguage();w.tabs.selectTabViewItem(at:0)
             checks["chineseToggleRestored"] = d.status.menu!.items.contains{$0.title == "English"} && w.window!.title == "鸟种设置"
+            checks["perchChineseToggleRestored"] = !w.draft.perchActions && w.perchActionsButton.state == .off && w.perchActionsButton.title == "停栖小动作" && w.previewRestButton.title == "预览闭眼休息" && w.previewPreenButton.title == "预览整理羽毛"
             w.tabs.selectTabViewItem(at:2)
             try snapshot(w.window!,to:folder.appendingPathComponent("interaction-zh.png"))
             if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView {
-                scroll.contentView.scroll(to:CGPoint(x:0,y:230));scroll.reflectScrolledClipView(scroll.contentView)
+                scroll.contentView.scroll(to:CGPoint(x:0,y:200));scroll.reflectScrolledClipView(scroll.contentView)
                 try snapshot(w.window!,to:folder.appendingPathComponent("encounters-zh.png"))
+                scroll.contentView.scroll(to:CGPoint(x:0,y:scroll.documentView!.bounds.height-scroll.contentView.bounds.height));scroll.reflectScrolledClipView(scroll.contentView)
+                checks["perchPreviewsReachableChinese"] = scroll.documentView!.visibleRect.contains(w.perchActionsButton.frame) && scroll.documentView!.visibleRect.contains(w.previewRestButton.frame) && scroll.documentView!.visibleRect.contains(w.previewPreenButton.frame)
+                try snapshot(w.window!,to:folder.appendingPathComponent("perch-activities-zh.png"))
             }
             w.pointerVisitsButton.performClick(nil);w.flockPassesButton.performClick(nil)
             w.ambientFrequencyPopup.selectItem(at:2);w.ambientSettingsChanged()
@@ -98,6 +132,11 @@ enum SettingsVerification {
             w.save()
             let ambientSaved=try BirdSettings.decode(Data(contentsOf:d.settingsURL))
             checks["ambientSettingsPersistAndApply"] = !ambientSaved.pointerVisits && !d.settings.pointerVisits && !ambientSaved.flockPasses && ambientSaved.ambientFrequency == .high
+            checks["ambientEditsPreservePerchAndHoverSettings"] = !ambientSaved.perchActions && !d.settings.perchActions && ambientSaved.hoverDelay == 0.25 && d.settings.hoverDelay == 0.25
+            var oldObject=try JSONSerialization.jsonObject(with:Data(contentsOf:d.settingsURL)) as! [String:Any]
+            oldObject.removeValue(forKey:"perchActions")
+            let migrated=try BirdSettings.decode(JSONSerialization.data(withJSONObject:oldObject))
+            checks["oldSettingsEnablePerchWithoutLosingOtherEdits"] = migrated.perchActions && migrated.hoverDelay == ambientSaved.hoverDelay && migrated.pointerVisits == ambientSaved.pointerVisits && migrated.flockPasses == ambientSaved.flockPasses && migrated.ambientFrequency == ambientSaved.ambientFrequency && migrated.probabilities == ambientSaved.probabilities && migrated.catalog.species == ambientSaved.catalog.species
             w.tabs.selectTabViewItem(at:0)
             try snapshot(w.window!,to:folder.appendingPathComponent("settings-zh.png"))
             for i in w.locks.indices where w.locks[i].state == .off { w.locks[i].performClick(nil) }
@@ -117,6 +156,10 @@ enum SettingsVerification {
             w.resetDefaults()
             checks["ambientDefaultsRestored"] = w.draft.pointerVisits && w.draft.flockPasses && w.draft.ambientFrequency == .low
             checks["resetRestoresDefaultsAndUnlocks"] = w.draft.probabilities == BirdSettings().probabilities && w.draft.hoverDelay == 1 && w.hoverDelayField.doubleValue == 1
+            checks["perchDefaultsRestoredWithoutApplying"] = w.draft.perchActions && w.perchActionsButton.state == .on && !d.settings.perchActions
+            w.save()
+            let defaultsSaved=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
+            checks["perchDefaultsSaveAndReload"] = defaultsSaved.perchActions && d.settings.perchActions && defaultsSaved.hoverDelay == 1 && defaultsSaved.pointerVisits && defaultsSaved.flockPasses && defaultsSaved.ambientFrequency == .low
             w.scrollToSpecies(.nightHeron)
             if let scroll=w.tabs.tabViewItems[0].view as? NSScrollView {
                 checks["manualMigrationScrollsToFirstNewBird"] = scroll.documentView!.visibleRect.intersects(w.fields[7].frame)

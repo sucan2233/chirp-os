@@ -1,6 +1,6 @@
 # 开发指南 / Development
 
-行为扩展与架构规划见 [行为与互动引擎设计](BEHAVIOR-ENGINE-DESIGN.md)：包含动作储备、现有架构评估、运行时边界、迁移路线与验收标准。M0–M2 已实现，实际范围、迁移桥和验收状态见文档第 16 节；其余为后续设计。
+行为扩展与架构规划见 [行为与互动引擎设计](BEHAVIOR-ENGINE-DESIGN.md)：包含动作储备、现有架构评估、运行时边界、迁移路线与验收标准。M0–M3 实际范围、迁移桥和验收状态见文档第 16–17 节；社交与道具仍为后续设计。
 
 ## 项目结构 / Layout
 
@@ -64,7 +64,14 @@ macOS 行为统一从 `BirdingCore/Behavior/BehaviorEngine` 进入：平台先�
 `BehaviorEngineTests` 覆盖 30/60/120 Hz 重放、抢占、暂停、宿主失效、移除、预览、超时和资源释放；
 `AmbientTests` 保留配置兼容、路径连续性与鼠标安全距离；
 `--verify-birds` 验证真实绘制/命中与互动；`--verify-settings` 输出中英文界面截图。
-完整桌面集成中的 `playsLandingState` 存在迁移前已知时序不稳定，需单独记录当次结果。
+`PerchActivities.swift` 提供闭眼休息与着陆整理的执行、个体调度和独立随机流。
+`BehaviorExecution.presentation` 是可选姿态接口，结束后由 `PoseMixer` 短暂回混跳动偏移；
+`validate` 在暂停期间仍处理目标/能力失效。`BehaviorWorld.availableFrames`
+由平台实际素材提供，缺帧会拒绝新动作。`PerchActivityTests`、`PerchSettingsTests`
+与鸟 UI 检查覆盖新行为、保存兼容、姿态抢占及实际帧/命中。
+
+完整桌面检查已从固定时刻采样着陆改成观察正常仿真的完整 `land0 → land1 → land2` 序列，
+确认落脚后再隐藏宿主；缺帧、顺序错误、仿真停滞或超时均失败。
 
 ## Windows
 

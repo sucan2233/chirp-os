@@ -86,6 +86,7 @@ final class DesktopController: NSObject {
     var loginApprovalItem: NSMenuItem?
     let art = BirdArt()
     let arts = Dictionary(uniqueKeysWithValues: SpeciesID.allCases.map { ($0, BirdArt(species:$0)) })
+    lazy var frameCapabilities=arts.mapValues{Set($0.frames.keys)}
     let engine=BehaviorEngine()
     var settings:BirdSettings {
         get {engine.settings}
@@ -279,6 +280,7 @@ final class DesktopController: NSObject {
     }
     func writeDiagnostics(to path: String) {
         let grounds=Set(surfaces.filter(\.isGround).map(\.id))
+        let rendered=Dictionary(uniqueKeysWithValues:engine.renderSnapshot().map{($0.id,$0)})
         let obj: [String:Any] = ["windowCount": surfaces.filter{!$0.isGround}.count, "groundCount":surfaces.filter(\.isGround).count, "overlayCount":panels.count,
             "renderer":"Core Animation sprite layers",
             "populationRange":[population.range.lower,population.range.upper],
@@ -295,7 +297,7 @@ final class DesktopController: NSObject {
             "arrivals":arrivalCount,"departures":departureCount,
             "spriteScale":scale, "flightSpeedMultiplier":Bird.flightSpeedMultiplier,
             "nonactivating":panels.allSatisfy{ !$0.canBecomeKey && !$0.canBecomeMain && $0.ignoresMouseEvents },
-            "birds":birds.map{["id":engine.id(of:$0)?.rawValue ?? 0,"role":engine.role(of:$0)?.rawValue ?? "","behavior":engine.behavior(of:$0)?.rawValue ?? "","species":$0.profile.id.rawValue,"name":$0.profile.name,"relativeScale":$0.profile.relativeScale,"state":$0.state.rawValue,"departing":$0.isDeparting,"onGround":$0.hostID.map{grounds.contains($0)} ?? false,"host":$0.hostID ?? 0,"depth":$0.depthID ?? 0,"x":$0.position.x,"y":$0.position.y,"frame":$0.frameName,"followed":$0.followedDistance,"startles":$0.startledCount,"landings":$0.landedCount] as [String:Any]}]
+            "birds":birds.map{["id":engine.id(of:$0)?.rawValue ?? 0,"role":engine.role(of:$0)?.rawValue ?? "","behavior":engine.behavior(of:$0)?.rawValue ?? "","species":$0.profile.id.rawValue,"name":$0.profile.name,"relativeScale":$0.profile.relativeScale,"state":$0.state.rawValue,"departing":$0.isDeparting,"onGround":$0.hostID.map{grounds.contains($0)} ?? false,"host":$0.hostID ?? 0,"depth":$0.depthID ?? 0,"x":$0.position.x,"y":$0.position.y,"frame":engine.id(of:$0).flatMap{rendered[$0]?.frameName} ?? $0.frameName,"followed":$0.followedDistance,"startles":$0.startledCount,"landings":$0.landedCount] as [String:Any]}]
         if let data = try? JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted,.sortedKeys]) { try? data.write(to: URL(fileURLWithPath:path), options: .atomic) }
     }
     func makeMenu() {

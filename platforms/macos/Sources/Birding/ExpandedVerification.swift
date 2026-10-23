@@ -42,6 +42,7 @@ enum ExpandedVerification {
             view.updateSprites();try SettingsVerification.snapshot(window,to:folder.appendingPathComponent("night-heron-action.png"))
             checkRelocation(into:&checks,host:host)
             checkAmbient(into:&checks)
+            try PerchActivityVerification.run(into:&checks,folder:folder)
             window.orderOut(nil)
             saveJSON(["passed":checks.values.allSatisfy{$0},"checks":checks],to:folder.appendingPathComponent("report.json"))
             print("Expanded bird UI: \(checks.values.allSatisfy{$0} ? "PASS":"FAIL") — \(checks.count) checks")
@@ -50,11 +51,12 @@ enum ExpandedVerification {
     }
 
     static func visiblePoint(on bird:Bird,in d:DesktopController) -> CGPoint {
-        let s=d.spriteScale(for:bird),art=d.arts[bird.profile.id]!
-        let pixel=(0..<48*48).first{art.contains(frame:bird.frameName,x:$0%48,y:$0/48)}!
-        let x=bird.facingRight ? pixel%48:47-pixel%48
-        return CGPoint(x:bird.position.x+(CGFloat(x)+0.5-(bird.facingRight ? 29:19))*s,
-                       y:bird.position.y+(CGFloat(pixel/48)+0.5+bird.hopOffset-39)*s)
+        let state=d.renderSnapshot().first{$0.id==d.engine.id(of:bird)}!
+        let art=d.arts[state.species]!
+        let pixel=(0..<48*48).first{art.contains(frame:state.frameName,x:$0%48,y:$0/48)}!
+        let x=state.facingRight ? pixel%48:47-pixel%48
+        return CGPoint(x:state.rect.minX+(CGFloat(x)+0.5)*state.scale,
+                       y:state.rect.minY+(CGFloat(pixel/48)+0.5)*state.scale)
     }
     static func checkAmbient(into checks:inout [String:Bool]) {
         let d=DesktopController();d.automaticPopulation=false

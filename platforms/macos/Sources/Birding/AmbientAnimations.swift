@@ -10,7 +10,7 @@ extension DesktopController {
     var ambientBusy:Bool {engine.ambientBusy}
     func syncWorld(sampleDT:Double?=nil,at point:CGPoint?=nil,buttonsDown:Bool?=nil) {
         engine.updateWorld(BehaviorWorld(screens:screenRects,displays:displayRects,surfaces:surfaces,
-            scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? (NSEvent.pressedMouseButtons != 0)),sampleDT:sampleDT)
+            scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? (NSEvent.pressedMouseButtons != 0),availableFrames:frameCapabilities),sampleDT:sampleDT)
     }
     func renderSnapshot() -> [BirdRenderState] {syncWorld();return engine.renderSnapshot()}
     @discardableResult func startPointerVisit(at point:CGPoint) -> Bool {
@@ -36,8 +36,13 @@ extension DesktopController {
         case .paused:return t("请先继续动画。","Resume animation first.")
         case .disabled,.settingsChanged:return t("请先保存并开启对应互动。","Save and enable this interaction first.")
         case .busy:return t("请等待当前互动或预览结束。","Wait for the current encounter or preview to finish.")
+        case .missingFrames:return t("当前鸟种暂不支持这个动作。","This activity is not yet available for this bird.")
+        case .pointerNearby:return t("请先把鼠标移离小鸟，让它安静停留。","Move the pointer away from the bird so it can settle.")
         case .noSpecies:return t("请启用至少一种群飞鸟种。","Enable at least one flock species.")
-        case .noSpace,.unavailableBird,.missingBird:
+        case .unavailableBird,.missingBird:
+            return t("暂时没有合适的小鸟，请等它在可见位置停稳后再试。","No bird is ready yet. Wait for one to settle in a visible spot and try again.")
+        case .userInput:return t("请先松开鼠标，再试一次。","Release the mouse button and try again.")
+        case .noSpace:
             return t("暂时无法开始：请将鼠标放在屏幕中部，并等待同屏的小鸟停稳。","Not available yet. Place the pointer near screen center and wait for a bird to perch on that screen.")
         default:return t("预览已取消，可以稍后重试。","Preview cancelled. You can try again later.")
         }

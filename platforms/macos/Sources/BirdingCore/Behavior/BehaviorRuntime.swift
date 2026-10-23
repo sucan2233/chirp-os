@@ -11,8 +11,16 @@ protocol BehaviorExecution: AnyObject {
     var runsWhilePaused: Bool {get}
     var timeout: Double {get}
     func start(in engine:BehaviorEngine)
+    /// Pure validity checks also run while animation time is paused.
+    func validate(in engine:BehaviorEngine) -> BehaviorCompletion?
     func advance(_ dt:Double,in engine:BehaviorEngine) -> BehaviorCompletion?
     func cancel(_ reason:BehaviorReason,in engine:BehaviorEngine)
+    func presentation(for bird:BirdID,in engine:BehaviorEngine) -> BirdPose?
+}
+
+extension BehaviorExecution {
+    func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {nil}
+    func presentation(for bird:BirdID,in engine:BehaviorEngine) -> BirdPose? {nil}
 }
 
 final class BehaviorRuntime {
@@ -30,6 +38,9 @@ final class BehaviorRuntime {
     func canAdvance(_ bird:BirdID,paused:Bool) -> Bool {
         !paused || owners[bird].flatMap{runs[$0]?.execution.runsWhilePaused} == true
     }
+    func presentation(for bird:BirdID,in engine:BehaviorEngine) -> BirdPose? {
+        owners[bird].flatMap{runs[$0]?.execution.presentation(for:bird,in:engine)}
+    }
     func start(_ execution:BehaviorExecution,source:BehaviorSource,in engine:BehaviorEngine) -> BehaviorResult {
         guard !execution.participants.contains(where:{owners[$0] != nil}),
               !execution.occupiesEncounter || !encounterBusy else {return .rejected(.busy)}
@@ -40,7 +51,13 @@ final class BehaviorRuntime {
         engine.emit(.started,run:id,kind:execution.kind,source:source,participants:execution.participants)
         return .started(id)
     }
+    func validate(in engine:BehaviorEngine) {
+        for id in runs.keys.sorted() {
+            if let result=runs[id]?.execution.validate(in:engine) {finish(id,result:result,in:engine)}
+        }
+    }
     func advance(_ dt:Double,in engine:BehaviorEngine) {
+        validate(in:engine)
         for id in runs.keys.sorted() {
             guard var run=runs[id],!engine.paused || run.execution.runsWhilePaused else {continue}
             run.age+=dt;runs[id]=run
@@ -51,13 +68,19 @@ final class BehaviorRuntime {
         }
     }
     // Remove ownership before callbacks so cleanup/recovery cannot double-end a run.
-    private func detach(_ id:BehaviorRunID) -> Run? {
-        guard let run=runs.removeValue(forKey:id) else {return nil}
+    private func detach(_ id:BehaviorRunID,in engine:BehaviorEngine) -> Run? {
+        guard let run=runs[id] else {return nil}
+        for bird in run.execution.participants {
+            if let pose=run.execution.presentation(for:bird,in:engine),let model=engine.bird(bird) {
+                engine.poseMixer.release(pose,for:bird,bird:model)
+            }
+        }
+        runs.removeValue(forKey:id)
         for bird in run.execution.participants where owners[bird]==id {owners.removeValue(forKey:bird)}
         return run
     }
     private func finish(_ id:BehaviorRunID,result:BehaviorCompletion,in engine:BehaviorEngine) {
-        guard let run=detach(id) else {return}
+        guard let run=detach(id,in:engine) else {return}
         switch result {
         case .completed:
             engine.emit(.completed,run:id,kind:run.execution.kind,source:run.source,participants:run.execution.participants)
@@ -70,7 +93,7 @@ final class BehaviorRuntime {
         }
     }
     func cancel(_ id:BehaviorRunID,reason:BehaviorReason,in engine:BehaviorEngine) {
-        guard let run=detach(id) else {return}
+        guard let run=detach(id,in:engine) else {return}
         run.execution.cancel(reason,in:engine)
         engine.emit(.cancelled,run:id,kind:run.execution.kind,source:run.source,participants:run.execution.participants,reason:reason)
     }
