@@ -141,8 +141,9 @@ final class UpdateController: NSObject {
         guard pending != nil else { return image }
         let decorated=NSImage(size:image.size)
         decorated.lockFocus();image.draw(at:.zero,from:.zero,operation:.sourceOver,fraction:1)
-        NSColor.white.setFill();NSBezierPath(ovalIn:NSRect(x:16,y:16,width:8,height:8)).fill()
-        NSColor.systemRed.setFill();NSBezierPath(ovalIn:NSRect(x:17,y:17,width:6,height:6)).fill()
+        let badge=NSRect(x:max(0,image.size.width-8),y:max(0,image.size.height-8),width:8,height:8)
+        NSColor.white.setFill();NSBezierPath(ovalIn:badge).fill()
+        NSColor.systemRed.setFill();NSBezierPath(ovalIn:badge.insetBy(dx:1,dy:1)).fill()
         decorated.unlockFocus();return decorated
     }
     func addMenuItems(to menu:NSMenu) {

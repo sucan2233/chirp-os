@@ -44,8 +44,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             let d = DesktopController(); desktop = d
             d.diagnosticPath = argument("--diagnostics"); d.start()
-            UpdateInstaller.confirmHealthy(desktop:d)
-            if Bundle.main.bundleURL.pathExtension == "app" && !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {
+            if !d.isDevelopmentBuild {UpdateInstaller.confirmHealthy(desktop:d)}
+            if !d.isDevelopmentBuild && Bundle.main.bundleURL.pathExtension == "app" && !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {
                 d.updater=UpdateController(desktop:d);d.updater?.start();d.makeMenu()
             }
             if let path = argument("--verify-population") {
@@ -58,6 +58,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender:NSApplication) -> Bool { false }
+    func applicationShouldHandleReopen(_ sender:NSApplication,hasVisibleWindows flag:Bool) -> Bool {
+        // Overlay windows are always visible, so the usual hasVisibleWindows
+        // check would make a menu-bar-only app impossible to reopen reliably.
+        desktop?.restoreStatusItem()
+        desktop?.showSpeciesSettings()
+        return true
+    }
     func applicationWillTerminate(_ notification:Notification) {desktop?.engine.handle(.cancelAmbient(.shutdown));desktop?.stopMouseMonitoring()}
 }
 let delegate = AppDelegate()

@@ -2,6 +2,8 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+DEVELOPMENT_BUILD="${CHIRPOS_DEVELOPMENT_BUILD:-0}"
+[[ "$DEVELOPMENT_BUILD" == 0 || "$DEVELOPMENT_BUILD" == 1 ]] || { printf 'CHIRPOS_DEVELOPMENT_BUILD must be 0 or 1\n' >&2; exit 1; }
 swift build -c release
 APP="${CHIRPOS_APP_PATH:-$ROOT/dist/ChirpOS.app}"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$ROOT/Assets"
@@ -26,6 +28,12 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
 PLIST
+if [[ "$DEVELOPMENT_BUILD" == 1 ]]; then
+    /usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier dev.birding.desktop.development' "$APP/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c 'Set :CFBundleName ChirpOS Dev' "$APP/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c 'Set :CFBundleDisplayName ChirpOS Dev' "$APP/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c 'Add :ChirpOSDevelopmentBuild bool true' "$APP/Contents/Info.plist"
+fi
 "$ROOT/.build/release/Birding" --export-icon "$ROOT/Assets"
 "$ROOT/.build/release/Birding" --export-icon "$ROOT/.build/AppIcon-macOS" --macos-mask
 rm -rf "$APP/Contents/Resources/Birding_BirdingCore.bundle"
@@ -49,6 +57,10 @@ for language in en zh-Hans zh-Hant; do
     mkdir -p "$APP/Contents/Resources/$language.lproj"
     name="ChirpOS"
     if [[ "$language" != en ]]; then name="啾啾"; fi
+    if [[ "$DEVELOPMENT_BUILD" == 1 ]]; then
+        name="ChirpOS Dev"
+        if [[ "$language" != en ]]; then name="啾啾测试版"; fi
+    fi
     printf '"CFBundleName" = "%s";\n"CFBundleDisplayName" = "%s";\n' "$name" "$name" > "$APP/Contents/Resources/$language.lproj/InfoPlist.strings"
 done
 if [[ -n "${CHIRPOS_SIGNING_IDENTITY:-}" ]]; then

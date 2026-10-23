@@ -94,6 +94,7 @@ final class DesktopController: NSObject {
     }
     var catalog: SpeciesCatalog { settings.catalog }
     var preferences = UserDefaults.standard
+    var isDevelopmentBuild:Bool {Bundle.main.object(forInfoDictionaryKey:"ChirpOSDevelopmentBuild") as? Bool == true}
     var language = AppLanguage.chinese
     var gallery:SpeciesGallery?
     var updater:UpdateController?
@@ -185,6 +186,13 @@ final class DesktopController: NSObject {
     }
     var residentCount:Int {engine.residentCount}
     func start() {
+        // Keep existing local preferences when first switching to the isolated
+        // development bundle identity. Species settings already share one file.
+        if isDevelopmentBuild,let previous=preferences.persistentDomain(forName:"dev.birding.desktop") {
+            for key in ["appLanguage","populationLower","populationUpper"] where preferences.object(forKey:key) == nil {
+                if let value=previous[key] {preferences.set(value,forKey:key)}
+            }
+        }
         language = AppLanguage(rawValue:preferences.string(forKey:"appLanguage") ?? "zh") ?? .chinese
         if let saved = PopulationRange(lower: UserDefaults.standard.integer(forKey:"populationLower"), upper: UserDefaults.standard.integer(forKey:"populationUpper")) {
             population = Population(range:saved)
@@ -242,7 +250,7 @@ final class DesktopController: NSObject {
                   let raw = info[kCGWindowBounds as String] as? [String:Any],
                   let rect = CGRect(dictionaryRepresentation: raw as CFDictionary), rect.width > 1, rect.height > 1 else { return nil }
             if layer == NSWindow.Level.floating.rawValue,
-               NSRunningApplication(processIdentifier:pid)?.bundleIdentifier == "dev.birding.desktop" { return nil }
+               ["dev.birding.desktop","dev.birding.desktop.development"].contains(NSRunningApplication(processIdentifier:pid)?.bundleIdentifier ?? "") { return nil }
             return Surface(id: id, pid: pid, rect: rect, layer: layer)
         }
         surfaces += groundSurfaces()
@@ -281,7 +289,12 @@ final class DesktopController: NSObject {
     func writeDiagnostics(to path: String) {
         let grounds=Set(surfaces.filter(\.isGround).map(\.id))
         let rendered=Dictionary(uniqueKeysWithValues:engine.renderSnapshot().map{($0.id,$0)})
+        let statusFrame=status?.button?.window?.frame ?? .zero
         let obj: [String:Any] = ["windowCount": surfaces.filter{!$0.isGround}.count, "groundCount":surfaces.filter(\.isGround).count, "overlayCount":panels.count,
+            "bundlePath":Bundle.main.bundleURL.path,"developmentBuild":isDevelopmentBuild,
+            "statusItemVisible":status?.isVisible ?? false,"statusItemHasImage":status?.button?.image != nil,
+            "statusItemFrame":[statusFrame.minX,statusFrame.minY,statusFrame.width,statusFrame.height],
+            "statusItemOnScreen":NSScreen.screens.contains{$0.frame.intersects(statusFrame)},
             "renderer":"Core Animation sprite layers",
             "populationRange":[population.range.lower,population.range.upper],
             "residentCount":residentCount,"departingCount":engine.departingCount,
@@ -301,9 +314,20 @@ final class DesktopController: NSObject {
         if let data = try? JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted,.sortedKeys]) { try? data.write(to: URL(fileURLWithPath:path), options: .atomic) }
     }
     func makeMenu() {
-        if status == nil { status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength) }
-        let icon = NSImage(cgImage: art.frames["stand"]!, size: NSSize(width: 24,height: 24))
-        status.button?.image = updater?.decorate(icon) ?? icon; status.button?.toolTip = updater?.pending.map { t("啾啾 · 更新 \($0.release.version) 已就绪","ChirpOS · Update \($0.release.version) ready") } ?? t("啾啾 · 桌面观鸟","ChirpOS · Desktop Birdwatching")
+        if status == nil {
+            status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+            status.autosaveName="ChirpOS.Main"
+            status.isVisible=true
+        }
+        // Template artwork remains legible in light, dark and tinted menu bars.
+        let icon=NSImage(systemSymbolName:"bird.fill",accessibilityDescription:t("啾啾","ChirpOS"))
+            ?? NSImage(cgImage:art.frames["stand"]!,size:NSSize(width:18,height:18))
+        icon.size=NSSize(width:18,height:18);icon.isTemplate=true
+        status.button?.image = updater?.decorate(icon) ?? icon
+        status.button?.imageScaling = .scaleProportionallyDown
+        status.button?.toolTip = updater?.pending.map { t("啾啾 · 更新 \($0.release.version) 已就绪","ChirpOS · Update \($0.release.version) ready") }
+            ?? (isDevelopmentBuild ? t("啾啾测试版 · 桌面观鸟","ChirpOS Dev · Desktop Birdwatching"):t("啾啾 · 桌面观鸟","ChirpOS · Desktop Birdwatching"))
+        status.button?.setAccessibilityLabel(isDevelopmentBuild ? t("啾啾测试版菜单","ChirpOS Dev menu"):t("啾啾菜单","ChirpOS menu"))
         let menu = NSMenu()
         menu.delegate = self
         statusLine = NSMenuItem(title: t("桌面鸟群 · 等待第一只鸟飞来","Birds · Waiting for the first arrival"), action: nil, keyEquivalent: "")
@@ -331,6 +355,7 @@ final class DesktopController: NSObject {
         add(menu,t("退出啾啾","Quit ChirpOS"),#selector(quit),"q")
         status.menu = menu
         updateStatusLine()
+        if isDevelopmentBuild {menu.insertItem(NSMenuItem(title:t("啾啾测试版 · 本地开发","ChirpOS Dev · Local build"),action:nil,keyEquivalent:""),at:0)}
         let main=NSMenu()
         let application=NSMenuItem();main.addItem(application);application.submenu=NSMenu()
         add(application.submenu!,t("退出啾啾","Quit ChirpOS"),#selector(quit),"q")
@@ -340,6 +365,10 @@ final class DesktopController: NSObject {
             edit.addItem(NSMenuItem(title:title,action:Selector(action),keyEquivalent:key))
         }
         NSApp.mainMenu=main
+    }
+    func restoreStatusItem() {
+        makeMenu()
+        status.isVisible=true
     }
     func add(_ menu: NSMenu,_ title: String,_ action: Selector,_ key: String) {
         let item = NSMenuItem(title:title,action:action,keyEquivalent:key); item.target = self; menu.addItem(item)

@@ -270,8 +270,12 @@ public final class BehaviorEngine {
     public func bringInBird() {
         guard let point=Migration.outsidePoint(screens:world.displays,right:random.unit()<0.5,fraction:random.value(in:0.2...0.75),margin:80*world.scale*3+20) else {return}
         let bird=Bird(position:point,fraction:random.value(in:0.12...0.88),profile:settings.catalog.profile(settings.probabilities.choose(unit:random.unit())),random:random.unit)
+        // Publish an arrival only after it has a continuous route from its real
+        // offscreen origin. An incomplete display snapshot must not create an
+        // unplanned bird that becomes visible before a later routing attempt.
+        guard let plan=plan(for:bird,entering:true) else {return}
+        plan.apply(to:bird,random:random)
         register(bird);lastArrivalPosition=point;arrivalCount+=1
-        _=route(bird,entering:true)
     }
     public func sendAway(_ bird:Bird) {
         guard let point=Migration.outsidePoint(screens:world.displays,right:random.unit()<0.5,fraction:random.value(in:0.2...0.75),margin:80*world.scale*3+20) else {return}

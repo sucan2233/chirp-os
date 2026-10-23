@@ -3,6 +3,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 APP="${CHIRPOS_APP_PATH:-$ROOT/dist/ChirpOS.app}"
+# A local testing environment must never change the published bundle identity.
+export CHIRPOS_DEVELOPMENT_BUILD=0
 source "$ROOT/scripts/lib/macos-release-config.sh"
 MODE=signed
 CHECK=false

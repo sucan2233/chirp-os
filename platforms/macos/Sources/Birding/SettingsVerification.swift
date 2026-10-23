@@ -14,6 +14,11 @@ enum SettingsVerification {
             d.settingsURL=folder.appendingPathComponent("settings.json");d.legacyURL=folder.appendingPathComponent("legacy.json")
             let login = VerificationLoginItem(); d.loginService = login
             d.makeMenu()
+            let status=d.status!
+            checks["statusItemVisibleWithNamedTemplateIcon"] = status.isVisible && status.autosaveName == "ChirpOS.Main" && status.button?.image?.isTemplate == true && status.button?.image?.size == NSSize(width:18,height:18)
+            d.status.isVisible=false;d.restoreStatusItem()
+            checks["reopenRestoresSameStatusItemAndMenu"] = d.status === status && status.isVisible && status.menu?.items.contains{$0.action == #selector(DesktopController.showSpeciesSettings)} == true
+            checks["developmentBuildIdentifiedInMenu"] = !d.isDevelopmentBuild || status.menu?.items.first?.title == "啾啾测试版 · 本地开发"
             checks["loginInitiallyOff"] = d.loginItem?.state == .off && d.loginItem?.title == "随系统启动" && login.registerCalls == 0
             d.toggleLoginItem()
             checks["loginEnable"] = login.registerCalls == 1 && d.loginItem?.state == .on

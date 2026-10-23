@@ -16,7 +16,7 @@ enum UpdateVerification {
             checks["pendingMenuEntry"] = desktop.status.menu?.items.contains(where:{$0.title.contains("1.2.3") && $0.action == #selector(UpdateController.confirmUpdate)}) == true
             checks["manualCheckMenuEntry"] = desktop.status.menu?.items.contains(where:{$0.title == "检查更新…"}) == true
             if let bubble=updater.bubble { try SettingsVerification.snapshot(bubble,to:folder.appendingPathComponent("update-bubble.png")) }
-            let original=NSImage(cgImage:desktop.art.frames["stand"]!,size:NSSize(width:24,height:24))
+            let original=NSImage(cgImage:desktop.art.frames["stand"]!,size:NSSize(width:18,height:18))
             let badge=updater.decorate(original)
             checks["redBadgeChangesIcon"] = badge.tiffRepresentation != original.tiffRepresentation
             if let data=badge.tiffRepresentation,let bitmap=NSBitmapImageRep(data:data) { try bitmap.representation(using:.png,properties:[:])!.write(to:folder.appendingPathComponent("update-badge.png")) }
@@ -44,7 +44,8 @@ enum UpdateVerification {
             let journalBefore=try Data(contentsOf:state)
             let settings=SpeciesSettingsWindow(desktop:desktop)
             let root=settings.window!.contentView!
-            let debugButton=root.subviews.compactMap{$0 as? NSButton}.first{$0.tag == 2}!
+            let debugIndex=settings.tabs.tabViewItems.firstIndex{$0.identifier as? String == "debug"}!
+            let debugButton=root.subviews.compactMap{$0 as? NSButton}.first{$0.tag == debugIndex}!
             checks["debugInitiallyHidden"] = debugButton.isHidden
             let unlock=root.subviews.compactMap{$0 as? DebugUnlockView}.first!
             func click(_ count:Int,_ timestamp:TimeInterval) {
