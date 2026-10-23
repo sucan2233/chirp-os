@@ -26,22 +26,22 @@ final class DesktopView: NSView {
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
     func updateSprites() {
         guard let controller, let root = layer else { return }
+        let snapshot=controller.renderSnapshot()
         CATransaction.begin(); CATransaction.setDisableActions(true)
-        while sprites.count > controller.birds.count { sprites.removeLast().removeFromSuperlayer() }
-        while sprites.count < controller.birds.count {
+        while sprites.count > snapshot.count { sprites.removeLast().removeFromSuperlayer() }
+        while sprites.count < snapshot.count {
             let container = CALayer()
             let texture = CALayer()
             texture.magnificationFilter = .nearest; texture.minificationFilter = .nearest
             container.addSublayer(texture); container.mask = CAShapeLayer()
             root.addSublayer(container); sprites.append(container)
         }
-        for (index,bird) in controller.birds.enumerated() {
+        for (index,bird) in snapshot.enumerated() {
             let container = sprites[index]
-            let scale = controller.spriteScale(for:bird)
+            let scale = bird.scale
             let side = 48*scale
-            let rect = CGRect(x:bird.position.x-(bird.facingRight ? 29 : 19)*scale,
-                              y:bird.position.y+(bird.hopOffset-39)*scale,width:side,height:side)
-            let pieces = Geometry.visiblePieces(rect,blockers:bird.blockers(in:controller.surfaces))
+            let rect = bird.rect
+            let pieces = Geometry.visiblePieces(rect,blockers:bird.blockers)
             container.isHidden = !rect.intersects(desktopRect) || pieces.isEmpty
             guard !container.isHidden else { continue }
             container.frame = rect.offsetBy(dx:-desktopRect.minX,dy:-desktopRect.minY)
@@ -49,7 +49,7 @@ final class DesktopView: NSView {
             texture.bounds = CGRect(x:0,y:0,width:side,height:side)
             texture.position = CGPoint(x:side/2,y:side/2)
             texture.setAffineTransform(CGAffineTransform(scaleX:bird.facingRight ? 1 : -1,y:1))
-            texture.contents = controller.arts[bird.profile.id]!.frames[bird.frameName]
+            texture.contents = controller.arts[bird.species]!.frames[bird.frameName]
             let path = CGMutablePath()
             for piece in pieces { path.addRect(piece.offsetBy(dx:-rect.minX,dy:-rect.minY)) }
             let mask = container.mask as! CAShapeLayer
@@ -65,11 +65,12 @@ final class DesktopView: NSView {
         }
         nameLabel.zPosition=1000
         nameLabel.isHidden=true
-        if let bird=controller.hoveredBird, desktopRect.contains(bird.position) {
-            let text=controller.language.name(bird.profile.id)
+        if let hovered=controller.hoveredBird,let id=controller.engine.id(of:hovered),
+           let bird=snapshot.first(where:{$0.id==id && $0.hoverable}),desktopRect.contains(bird.position) {
+            let text=controller.language.name(bird.species)
             let width=min(desktopRect.width,ceil((text as NSString).size(withAttributes:[.font:NSFont.systemFont(ofSize:13)]).width)+20)
-            let pixel=controller.arts[bird.profile.id]!.topPixel(frame:bird.frameName)
-            let top=bird.position.y+(CGFloat(pixel)+bird.hopOffset-39)*controller.spriteScale(for:bird)
+            let pixel=controller.arts[bird.species]!.topPixel(frame:bird.frameName)
+            let top=bird.position.y+(CGFloat(pixel)+bird.hopOffset-39)*bird.scale
             let x=min(desktopRect.maxX-width,max(desktopRect.minX,bird.position.x-width/2))
             let y=max(desktopRect.minY,top-28)
             nameLabel.frame=CGRect(x:x-desktopRect.minX,y:y-desktopRect.minY,width:width,height:23)
@@ -85,7 +86,11 @@ final class DesktopController: NSObject {
     var loginApprovalItem: NSMenuItem?
     let art = BirdArt()
     let arts = Dictionary(uniqueKeysWithValues: SpeciesID.allCases.map { ($0, BirdArt(species:$0)) })
-    var settings = BirdSettings()
+    let engine=BehaviorEngine()
+    var settings:BirdSettings {
+        get {engine.settings}
+        set {engine.applySettings(newValue)}
+    }
     var catalog: SpeciesCatalog { settings.catalog }
     var preferences = UserDefaults.standard
     var language = AppLanguage.chinese
@@ -96,11 +101,14 @@ final class DesktopController: NSObject {
     var legacyURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Birding/species.json")
     func t(_ zh:String,_ en:String) -> String { language.text(zh,en) }
     func spriteScale(for bird: Bird) -> CGFloat { scale * bird.profile.relativeScale }
-    func loadSpeciesConfig() throws { settings = try BirdSettings.load(from:settingsURL,legacyURL:legacyURL) }
+    func loadSpeciesConfig() throws {
+        settings = try BirdSettings.load(from:settingsURL,legacyURL:legacyURL)
+    }
     func applySettings(_ value:BirdSettings) throws {
         var saved=value;saved.pendingSpecies=[]
         try saved.save(to:settingsURL)
         settings = saved
+        hoverTracker=HoverTracker<BirdID>();hoveredBird=nil
     }
     @objc func showSpeciesGallery() {
         if gallery == nil {gallery=SpeciesGallery(desktop:self)}
@@ -121,24 +129,42 @@ final class DesktopController: NSObject {
         makeMenu(); settingsWindow?.relocalize()
     }
     func updateStatusLine() {
-        statusLine.title = t("桌面鸟群 · \(residentCount) 只 · \(birds.count-residentCount) 只正在离开",
-                             "Birds · \(residentCount) visiting · \(birds.count-residentCount) departing")
+        let passing=engine.passingCount,departing=engine.departingCount
+        statusLine.title = t("桌面鸟群 · \(residentCount) 只 · \(departing) 只正在离开 · \(passing) 只过境",
+                             "Birds · \(residentCount) visiting · \(departing) departing · \(passing) passing")
     }
-    var hoverTracker=HoverTracker<ObjectIdentifier>()
-    weak var hoveredBird:Bird?
-    var birds: [Bird] = []
+    var hoverTracker=HoverTracker<BirdID>()
+    var hoveredID:BirdID?
+    var hoveredBird:Bird? {
+        get {hoveredID.flatMap{engine.bird($0)}}
+        set {hoveredID=newValue.flatMap{engine.id(of:$0)}}
+    }
+    var lastBehaviorEvent:UInt64=0
+    var globalMouseMonitor:Any?
+    var localMouseMonitor:Any?
+    // Mutable Bird access is retained only for the existing desktop fixtures.
+    var birds:[Bird] {
+        get {engine.birds}
+        set {engine.installFixtureBirds(newValue)}
+    }
     var surfaces: [Surface] = [] // Real windows front to back, followed by non-occluding virtual ground.
     var panels: [OverlayPanel] = []
     var views: [DesktopView] = []
-    var population = Population()
+    var population:Population {
+        get {engine.population}
+        set {engine.population=newValue}
+    }
     var populationMenu: NSMenu!
     var populationItem: NSMenuItem!
     var automaticPopulation = true
-    var lastArrivalPosition: CGPoint?
-    var arrivalCount = 0
-    var departureCount = 0
+    var lastArrivalPosition:CGPoint? {engine.lastArrivalPosition}
+    var arrivalCount:Int {engine.arrivalCount}
+    var departureCount:Int {engine.departureCount}
     var scale: CGFloat = 1
-    var paused = false
+    var paused:Bool {
+        get {engine.paused}
+        set {engine.handle(.pause(newValue))}
+    }
     var timer: Timer?
     var lastTick = ProcessInfo.processInfo.systemUptime
     var lastSample: Double = 0
@@ -156,14 +182,14 @@ final class DesktopController: NSObject {
             return Geometry.ground(id:UInt32.max-number.uint32Value,display:Geometry.quartz(screen.frame,primaryHeight:primaryHeight),workArea:Geometry.quartz(screen.visibleFrame,primaryHeight:primaryHeight))
         }
     }
-    var residentCount: Int { birds.filter { !$0.isDeparting }.count }
+    var residentCount:Int {engine.residentCount}
     func start() {
         language = AppLanguage(rawValue:preferences.string(forKey:"appLanguage") ?? "zh") ?? .chinese
         if let saved = PopulationRange(lower: UserDefaults.standard.integer(forKey:"populationLower"), upper: UserDefaults.standard.integer(forKey:"populationUpper")) {
             population = Population(range:saved)
         }
         do { try loadSpeciesConfig() } catch { NSLog("Birding species configuration: %@; using bundled defaults",error.localizedDescription) }
-        makeMenu(); rebuildScreens()
+        makeMenu(); rebuildScreens(); startMouseMonitoring()
         if !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {DispatchQueue.main.async { [weak self] in self?.promptNewSpecies() }}
         sampleWindows(dt: 1.0/30)
         NotificationCenter.default.addObserver(self, selector: #selector(rebuildScreens), name: NSApplication.didChangeScreenParametersNotification, object: nil)
@@ -179,10 +205,11 @@ final class DesktopController: NSObject {
         t.tolerance = 0.003
         RunLoop.main.add(t, forMode: .common); timer = t
     }
-    @objc func sleeping() { timer?.invalidate() }
+    @objc func sleeping() { engine.handle(.cancelAmbient(.sleep));timer?.invalidate() }
     @objc func waking() { lastSample = 0; startTimer() }
-    @objc func spaceChanged() { lastSample = 0; sampleWindows(dt: 1); for v in views { v.needsDisplay = true } }
+    @objc func spaceChanged() { engine.handle(.cancelAmbient(.spaceChanged));lastSample = 0; sampleWindows(dt: 1); for v in views { v.needsDisplay = true } }
     @objc func rebuildScreens() {
+        engine.handle(.cancelAmbient(.screensChanged))
         panels.forEach { $0.orderOut(nil) }; panels.removeAll(); views.removeAll()
         for screen in NSScreen.screens {
             let panel = OverlayPanel(contentRect: screen.frame, styleMask: [.borderless,.nonactivatingPanel], backing: .buffered, defer: false)
@@ -198,12 +225,8 @@ final class DesktopController: NSObject {
         }
         let grounds=groundSurfaces()
         surfaces.removeAll { $0.isGround };surfaces += grounds
-        for bird in birds {
-            if bird.isDeparting { sendAway(bird) }
-            else if bird.state != .flying && grounds.contains(where:{$0.id==bird.hostID}) {
-                bird.updateHost(surfaces:surfaces,sampleDT:1,spriteScale:spriteScale(for:bird))
-            } else { chooseDestination(bird) }
-        }
+        syncWorld()
+        engine.reconcileLayout()
     }
     func sampleWindows(dt: Double) {
         let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly,.excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
@@ -222,105 +245,22 @@ final class DesktopController: NSObject {
             return Surface(id: id, pid: pid, rect: rect, layer: layer)
         }
         surfaces += groundSurfaces()
-        for bird in birds { bird.updateHost(surfaces: surfaces, sampleDT: dt, spriteScale: spriteScale(for:bird)) }
+        syncWorld(sampleDT:dt)
     }
-    func bounds(of bird: Bird) -> CGRect {
-        let scale = spriteScale(for:bird)
-        return CGRect(x: bird.position.x - (bird.facingRight ? 29 : 19)*scale,
-               y: bird.position.y+(bird.hopOffset-39)*scale, width: 48*scale, height: 48*scale).insetBy(dx: -2,dy: -2)
+    func bounds(of bird:Bird) -> CGRect {syncWorld();return engine.bounds(of:bird)}
+    @discardableResult
+    func chooseDestination(_ bird:Bird,entering:Bool=false,avoiding:CGPoint?=nil) -> Bool {
+        syncWorld();return engine.route(bird,entering:entering,avoiding:avoiding)
     }
-    func chooseDestination(_ bird: Bird, entering: Bool = false) {
-        guard !bird.isDeparting else { return }
-        let scale = spriteScale(for:bird)
-        func airspace(_ point: CGPoint) -> CGRect? {
-            guard let index=displayRects.firstIndex(where:{$0.contains(point)}) else { return nil }
-            let screen=screenRects[index],display=displayRects[index]
-            let top=screen.minY+39*scale,bottom=min(screen.maxY,display.maxY-9*scale)
-            return CGRect(x:screen.minX+29*scale,y:top,width:max(0,screen.width-58*scale),height:max(0,bottom-top))
-        }
-        func duration(to point: CGPoint) -> Double {
-            entering ? max(2.8, Double(Geometry.distance(bird.position,point))/400 * Bird.flightSpeedMultiplier) : Double.random(in:2.6...4.8)
-        }
-        let occupied = birds.filter { $0 !== bird && !$0.isDeparting }.compactMap { other -> CGRect? in
-            guard let id = other.hostID, let host = surfaces.first(where: { $0.id == id }) else { return nil }
-            let foot = Geometry.foot(on:host,fraction:other.fraction,edge:other.edge,scale:spriteScale(for:other))
-            return Geometry.landingFootprint(at: foot, scale: spriteScale(for: other)).insetBy(dx: -8, dy: -8)
-        }
-        if bird.profile.id == .greatSpottedWoodpecker {
-            var sides:[(Surface,PerchEdge,ClosedRange<CGFloat>)]=[]
-            for host in surfaces where !host.isGround && host.layer == 0 && host.rect.height >= 180 {
-                for edge in [PerchEdge.left,.right] { for screen in screenRects {
-                    for range in Geometry.sideRanges(on:host,edge:edge,surfaces:surfaces,screen:screen,scale:scale,occupied:occupied) { sides.append((host,edge,range)) }
-                }}
-            }
-            let length=sides.reduce(CGFloat.zero){$0+$1.2.upperBound-$1.2.lowerBound}
-            var ticket=CGFloat.random(in:0...max(0,length))
-            for (host,edge,range) in sides {
-                let n=range.upperBound-range.lowerBound
-                if ticket<n {
-                    bird.edge=edge;bird.fraction=(range.lowerBound+ticket-host.rect.minY-42)/(host.rect.height-84)
-                    let point=Geometry.foot(on:host,fraction:bird.fraction,edge:edge)
-                    bird.fly(to:point,host:host,duration:duration(to:point),airspace:airspace(point));return
-                };ticket-=n
-            }
-        }
-        bird.edge = .top
-        var choices: [(Surface, ClosedRange<CGFloat>)] = []
-        for host in surfaces where !host.isGround && host.layer == 0 && host.rect.width >= 180 && host.rect.height >= 100 {
-            for screen in screenRects {
-                for range in Geometry.landingRanges(on: host, surfaces: surfaces, screen: screen, scale: scale, occupied: occupied) {
-                    choices.append((host, range))
-                }
-            }
-        }
-        if choices.isEmpty {
-            for host in surfaces where host.isGround {
-                for screen in displayRects {
-                    for range in Geometry.landingRanges(on:host,surfaces:surfaces,screen:screen,scale:scale,occupied:occupied) { choices.append((host,range)) }
-                }
-            }
-        }
-        let total = choices.reduce(CGFloat.zero) { $0 + $1.1.upperBound - $1.1.lowerBound }
-        if total > 0 {
-            var ticket = CGFloat.random(in: 0..<total)
-            for (host, range) in choices {
-                let length = range.upperBound - range.lowerBound
-                if ticket < length {
-                    let foot = CGPoint(x: range.lowerBound + ticket, y: Geometry.foot(on:host,fraction:0.5,edge:.top,scale:scale).y)
-                    let start = Geometry.perchX(0, rect: host.rect), end = Geometry.perchX(1, rect: host.rect)
-                    bird.fraction = (foot.x - start) / (end - start)
-                    bird.fly(to: foot, host: host, duration: duration(to: foot), airspace: airspace(foot))
-                    return
-                }
-                ticket -= length
-            }
-        }
-        guard let screen = screenRects.randomElement() else { return }
-        let foot = CGPoint(x: CGFloat.random(in: (screen.minX+70)...max(screen.minX+71,screen.maxX-70)),
-                           y: CGFloat.random(in: (screen.minY+110)...max(screen.minY+111,screen.maxY-80)))
-        bird.fly(to: foot, host: nil, duration: entering ? duration(to:foot) : 4.5, arc: 40, airspace: airspace(foot))
-    }
-    func bringInBird() {
-        guard let point = Migration.outsidePoint(screens:displayRects,right:Bool.random(),fraction:CGFloat.random(in:0.2...0.75),margin:80*scale*3+20) else { return }
-        lastArrivalPosition = point
-        let bird = Bird(position:point,fraction:CGFloat.random(in:0.12...0.88),profile:catalog.profile(settings.probabilities.choose()))
-        birds.append(bird); arrivalCount += 1
-        chooseDestination(bird,entering:true)
-    }
-    func sendAway(_ bird: Bird) {
-        guard let point = Migration.outsidePoint(screens:displayRects,right:Bool.random(),fraction:CGFloat.random(in:0.2...0.75),margin:80*scale*3+20) else { return }
-        let duration = max(2.8,Double(Geometry.distance(bird.position,point))/400 * Bird.flightSpeedMultiplier)
-        bird.depart(to:point,duration:duration)
-    }
-    func updatePopulation(_ dt: Double) {
-        guard automaticPopulation, integration == nil else { return }
-        if let event = population.tick(dt,residents:residentCount,total:birds.count) {
-            switch event {
-            case .arrive: bringInBird()
-            case .depart:
-                if let bird = birds.filter({!$0.isDeparting}).randomElement() { sendAway(bird) }
-            }
-        }
+    func bringInBird() {syncWorld();engine.bringInBird()}
+    func sendAway(_ bird:Bird) {syncWorld();engine.sendAway(bird)}
+    func advanceBirds(_ dt:Double,at point:CGPoint?=nil,buttonsDown:Bool?=nil) {
+        syncWorld(at:point,buttonsDown:buttonsDown)
+        engine.populationEnabled=automaticPopulation && integration == nil
+        engine.ambientEnabled=engine.populationEnabled && !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"})
+        engine.autonomousRouting=integration == nil
+        engine.advance(dt)
+        consumeBehaviorEvents()
     }
     func tick() {
         let now = ProcessInfo.processInfo.systemUptime
@@ -328,15 +268,7 @@ final class DesktopController: NSObject {
         if now-lastSample >= 1.0/30 {
             sampleWindows(dt: now-lastSample); lastSample = now
         }
-        if !paused {
-            updatePopulation(dt)
-            for bird in birds { bird.tick(dt); if bird.needsDestination && integration == nil { chooseDestination(bird) } }
-            birds.removeAll { bird in
-                let gone = bird.departureFinished && !displayRects.contains(where: { $0.intersects(bounds(of:bird)) })
-                if gone { departureCount += 1 }
-                return gone
-            }
-        }
+        advanceBirds(dt)
         updateHover(now:now)
         for view in views { view.updateSprites() }
         if now-lastDiagnostic > 1 {
@@ -350,11 +282,20 @@ final class DesktopController: NSObject {
         let obj: [String:Any] = ["windowCount": surfaces.filter{!$0.isGround}.count, "groundCount":surfaces.filter(\.isGround).count, "overlayCount":panels.count,
             "renderer":"Core Animation sprite layers",
             "populationRange":[population.range.lower,population.range.upper],
-            "residentCount":residentCount,"departingCount":birds.count-residentCount,
+            "residentCount":residentCount,"departingCount":engine.departingCount,
+            "passingCount":engine.passingCount,"pendingCount":engine.pendingCount,
+            "behaviorSeed":String(engine.seed),"behaviorTime":engine.time,
+            "activeBehaviors":engine.activeRunCount,"leasedBirds":engine.leasedBirdCount,
+            "behaviorEvents":engine.events.map {event in
+                ["sequence":event.sequence,"time":event.time,"type":event.type.rawValue,
+                 "run":event.runID?.rawValue ?? 0,"kind":event.kind?.rawValue ?? "",
+                 "source":event.source.rawValue,"reason":event.reason?.rawValue ?? "",
+                 "birds":event.participants.map(\.rawValue)] as [String:Any]
+            },
             "arrivals":arrivalCount,"departures":departureCount,
             "spriteScale":scale, "flightSpeedMultiplier":Bird.flightSpeedMultiplier,
             "nonactivating":panels.allSatisfy{ !$0.canBecomeKey && !$0.canBecomeMain && $0.ignoresMouseEvents },
-            "birds":birds.map{["species":$0.profile.id.rawValue,"name":$0.profile.name,"relativeScale":$0.profile.relativeScale,"state":$0.state.rawValue,"departing":$0.isDeparting,"onGround":$0.hostID.map{grounds.contains($0)} ?? false,"host":$0.hostID ?? 0,"depth":$0.depthID ?? 0,"x":$0.position.x,"y":$0.position.y,"frame":$0.frameName,"followed":$0.followedDistance,"startles":$0.startledCount,"landings":$0.landedCount] as [String:Any]}]
+            "birds":birds.map{["id":engine.id(of:$0)?.rawValue ?? 0,"role":engine.role(of:$0)?.rawValue ?? "","behavior":engine.behavior(of:$0)?.rawValue ?? "","species":$0.profile.id.rawValue,"name":$0.profile.name,"relativeScale":$0.profile.relativeScale,"state":$0.state.rawValue,"departing":$0.isDeparting,"onGround":$0.hostID.map{grounds.contains($0)} ?? false,"host":$0.hostID ?? 0,"depth":$0.depthID ?? 0,"x":$0.position.x,"y":$0.position.y,"frame":$0.frameName,"followed":$0.followedDistance,"startles":$0.startledCount,"landings":$0.landedCount] as [String:Any]}]
         if let data = try? JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted,.sortedKeys]) { try? data.write(to: URL(fileURLWithPath:path), options: .atomic) }
     }
     func makeMenu() {
@@ -401,8 +342,8 @@ final class DesktopController: NSObject {
     func add(_ menu: NSMenu,_ title: String,_ action: Selector,_ key: String) {
         let item = NSMenuItem(title:title,action:action,keyEquivalent:key); item.target = self; menu.addItem(item)
     }
-    @objc func togglePause(_ sender: NSMenuItem) { paused.toggle(); sender.title = paused ? t("继续动画","Resume animation") : t("暂停动画","Pause animation") }
-    @objc func scatter() { for bird in birds where !bird.isDeparting { chooseDestination(bird) } }
+    @objc func togglePause(_ sender: NSMenuItem) { paused.toggle();sender.title = paused ? t("继续动画","Resume animation") : t("暂停动画","Pause animation") }
+    @objc func scatter() { syncWorld();engine.handle(.scatter) }
     @objc func toggleScale() { scale = scale == 1 ? 1.5 : 1; for v in views { v.needsDisplay = true } }
     let populationPresets = [PopulationRange.standard,PopulationRange(lower:8,upper:12)!,PopulationRange(lower:15,upper:20)!]
     func refreshPopulationMenu() {
@@ -447,5 +388,5 @@ final class DesktopController: NSObject {
         let root = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
         NSWorkspace.shared.open(root.appendingPathComponent("README.md"))
     }
-    @objc func quit() { NSApp.terminate(nil) }
+    @objc func quit() { engine.handle(.cancelAmbient(.shutdown));stopMouseMonitoring();NSApp.terminate(nil) }
 }

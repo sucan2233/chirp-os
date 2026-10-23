@@ -27,7 +27,10 @@
 - 没有合适的窗口落点时，小鸟会在 Dock／任务栏上方的屏幕底部歇脚；支持多屏及自动隐藏。
 - 鸟群随机飞入、飞出，可设置数量范围，例如 3–5、8–12 或 15–20 只。
 - 自由调整每种鸟的出现概率并锁定；也可设置体长、振翅频率、飞速和停留时间。
-- 鼠标停在小鸟身上约 1 秒，头顶就会显示名字；点击仍会穿透。
+- 鼠标停在小鸟身上约 1 秒，头顶就会显示名字；macOS 可在“鸟种设置 → 交互”中将等待时间调整为 0–10 秒，设为 0 即时显示；点击仍会穿透。
+- macOS 上点击小鸟可让它飞到其他位置，避开原来的落脚区域；点击仍会穿透到下方窗口，不抢焦点。
+- macOS 新增偶发动作：鼠标静止且周围空间足够时，一只小鸟可能在安全距离外绕一圈；移动或点击即可结束。另有 3–5 只同种鸟错峰掠过屏幕上部，过境鸟不占常驻数量。
+- “鸟种设置 → 交互”可分别开关绕鼠标与鸟群过境，选择低／中／高频率并预览。默认低频，两种动作合计每 3–6 分钟尝试一次，条件不合适时跳过；暂停、睡眠不累积事件。
 - 夜鹭会长时间守望、伸颈、抖毛，偶尔“挤洗手液”；大斑啄木鸟会沿窗口侧边停靠、啄击。
 - 菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
 - 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
@@ -98,7 +101,7 @@ macOS 版本使用 Developer ID 签名并经过 Apple 公证。Windows 版本尚
 
 ### 隐私与反馈
 
-啾啾在本机运行，仅读取窗口位置、前后顺序和用于悬停识别的鼠标位置，不读取窗口标题或内容，也不上传窗口信息或个人设置。自动更新会连接 GitHub 检查版本并下载官方安装包。窗口遮挡按矩形估算，透明窗口、圆角和特殊系统界面的效果可能有所不同。
+啾啾在本机运行，仅读取窗口位置、前后顺序和用于悬停识别和偶发绕飞的鼠标位置；macOS 还监听鼠标左键按下的位置，用于让点击的小鸟换个位置，不记录点击内容。不读取窗口标题或内容，也不上传窗口信息或个人设置。自动更新会连接 GitHub 检查版本并下载官方安装包。窗口遮挡按矩形估算，透明窗口、圆角和特殊系统界面的效果可能有所不同。
 
 遇到问题或有新点子，欢迎提交 [Issue](https://github.com/billtt/chirp-os/issues)。想自己构建或贡献代码，请看[开发指南](docs/DEVELOPMENT.md)。
 
@@ -114,7 +117,10 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - When window perches are unavailable, birds rest along the screen bottom above the Dock or taskbar, including multi-monitor and auto-hide layouts.
 - Birds arrive and leave at random, with configurable population ranges such as 3–5, 8–12, or 15–20.
 - Adjust and lock arrival probabilities, and customize size, wingbeat rate, speed, and perch duration.
-- Hover over a bird for about 1 second to see its name, with clicks still passing through.
+- Hover over a bird for about 1 second to see its name, with clicks still passing through. On macOS, adjust the delay from 0 to 10 seconds in Bird Settings → Interaction; 0 shows names immediately.
+- On macOS, click a bird to move it to another spot away from its previous perch. Clicks still pass through to the window beneath without taking focus.
+- macOS encounters: a small bird may circle a stationary pointer at a safe distance when there is room; moving or clicking ends the visit. Loose flocks of 3–5 birds of one species can also pass across the upper screen without affecting resident counts.
+- Bird Settings → Interaction has separate encounter switches, Low/Medium/High frequency, and previews. Low (default) attempts one of the encounters every 3–6 minutes, skipping unsuitable opportunities. Pause and sleep do not accumulate events.
 - Night herons watch, stretch, shake and occasionally leave a fleeting dropping; woodpeckers cling to and peck window sides.
 - Open “Field guide” for a grid of all species; choose Rest, Flight, Flapping, Gliding, Landing, Preening or Other from the fixed action bar.
 - Hourly update checks download and verify new releases in the background. A notification opens release notes and installation confirmation; a red dot and menu entry remain if you postpone.
@@ -134,7 +140,7 @@ The macOS app is Developer ID-signed and notarized by Apple. Windows builds are 
 
 ### Privacy & feedback
 
-ChirpOS runs locally. It reads window geometry, stacking order and pointer position for hover identification, not window titles or content, and never uploads window information or personal settings. Automatic updates contact GitHub to check releases and download official packages. Occlusion uses rectangular bounds; transparent windows, rounded corners, and special system views may look different.
+ChirpOS runs locally. It reads window geometry, stacking order and pointer position for hover identification and occasional circling. On macOS, it also observes left-click positions to move clicked birds to another spot, without recording click contents. It does not read window titles or content, and never uploads window information or personal settings. Automatic updates contact GitHub to check releases and download official packages. Occlusion uses rectangular bounds; transparent windows, rounded corners, and special system views may look different.
 
 Report a bug or suggest an idea in [Issues](https://github.com/billtt/chirp-os/issues). For building and contributing, see the [development guide](docs/DEVELOPMENT.md).
 

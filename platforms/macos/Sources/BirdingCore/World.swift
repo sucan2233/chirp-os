@@ -120,6 +120,9 @@ public enum BirdState: String { case flying, landing, perched }
 public final class Bird {
     public static let flightSpeedMultiplier: Double = 2
     public private(set) var isDeparting = false
+    /// Changes when a route is replaced, including host-driven startles.
+    public private(set) var motionRevision: UInt64 = 0
+    private var wingPhase = 0.0
     public var edge: PerchEdge = .top
     public let profile: SpeciesProfile
     public var position: CGPoint
@@ -140,9 +143,9 @@ public final class Bird {
     private var arc: CGFloat = 90
     private var flightAge: Double = 0
     private var destinationInvalidated = false
-    public init(position: CGPoint, fraction: CGFloat, profile: SpeciesProfile = SpeciesCatalog.standard.profile(.redWhiskeredBulbul)) {
+    public init(position: CGPoint, fraction: CGFloat, profile: SpeciesProfile = SpeciesCatalog.standard.profile(.redWhiskeredBulbul), random: () -> Double = { Double.random(in:0..<1) }) {
         self.profile = profile
-        self.perchDuration = Double.random(in: profile.perchMin...profile.perchMax)
+        self.perchDuration = profile.perchMin + (profile.perchMax-profile.perchMin)*random()
         self.position = position; self.origin = position; self.target = position; self.plannedTarget = position; self.fraction = fraction
     }
     private var transitDuration: Double = 1
@@ -173,8 +176,9 @@ public final class Bird {
     // Transit speed and time spent airborne are separate: soaring must not be
     // squeezed into the old window-to-window travel duration.
 
-    public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false, random: () -> Double = { Double.random(in:0...1) }) {
+    public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false, pointerOrbit: PointerOrbit? = nil, random: () -> Double = { Double.random(in:0...1) }) {
         isDeparting = false
+        motionRevision &+= 1; wingPhase = 0
         if host?.isGround == true { edge = .top }
         origin = position; target = point; hostID = host?.id; depthID = nil
         previousHost = nil
@@ -184,7 +188,8 @@ public final class Bird {
         orbitDuration = urgent ? 0 : m.orbit
         flightDuration = transitDuration + orbitDuration
         self.arc = arc
-        let cruise=FlightBehavior.cruiseSpeed(profile.id,multiplier:profile.speed)*Self.flightSpeedMultiplier/2
+        let normalCruise=FlightBehavior.cruiseSpeed(profile.id,multiplier:profile.speed)*Self.flightSpeedMultiplier/2
+        let cruise=pointerOrbit == nil ? normalCruise : min(240,max(160,normalCruise*0.7))
         if orbitDuration>0 {
             let radii=FlightBehavior.orbitRadii(width:Double(airspace?.width ?? max(800,Geometry.distance(origin,point)*1.5)),height:Double(airspace?.height ?? 800),widthSample:random(),heightSample:random())
             orbitRadius=radii.width;orbitHeight=radii.height
@@ -200,6 +205,10 @@ public final class Bird {
             // A transit arch must also fit above the destination screen's edge.
             self.arc = min(arc, max(0, min(origin.y, point.y) - area.minY))
         }
+        if let pointerOrbit {
+            orbitCenter=pointerOrbit.center;orbitRadius=pointerOrbit.radius;orbitHeight=pointerOrbit.radius
+            orbitPath=pointerOrbit.path;orbitTurns=1;orbitDuration=pointerOrbit.path.length/cruise
+        }
         if orbitRadius < 24 || orbitHeight < 12 { orbitDuration = 0 }
         plannedTarget=point
         cruiseSpeed=cruise;isGliding=false;flightSpeed=0;transitTiming=nil
@@ -208,7 +217,8 @@ public final class Bird {
             return CGPoint(x:min(area.maxX,max(area.minX,p.x)),y:min(area.maxY,max(area.minY,p.y)))
         }
         if orbitDuration>0 {
-            let entry=CGPoint(x:orbitCenter.x-orbitRadius,y:orbitCenter.y)
+            let first=orbitPath!.point(0),entryTangent=orbitPath!.loopTangent(0)
+            let entry=CGPoint(x:orbitCenter.x+first.x,y:orbitCenter.y+first.y)
             let arriveBend=min(orbitHeight*0.8,Geometry.distance(origin,entry)*0.4)
             let last=orbitPath!.point(orbitTurns.truncatingRemainder(dividingBy:1))
             let exit=CGPoint(x:orbitCenter.x+last.x,y:orbitCenter.y+last.y)
@@ -222,8 +232,9 @@ public final class Bird {
                 if tangent.y>0.000001 { leaveBend=min(leaveBend,(area.maxY-exit.y)/tangent.y) }
                 if tangent.y < -0.000001 { leaveBend=min(leaveBend,(area.minY-exit.y)/tangent.y) }
             }
-            approach=FlightPath(origin,inside(CGPoint(x:origin.x+(entry.x-origin.x)*0.35,y:origin.y+(entry.y-origin.y)*0.35)),inside(CGPoint(x:entry.x,y:entry.y-arriveBend)),entry)
-            exitPath=FlightPath(exit,inside(CGPoint(x:exit.x+tangent.x*leaveBend,y:exit.y+tangent.y*leaveBend)),inside(CGPoint(x:point.x,y:point.y-min(self.arc,leaveBend))),point)
+            approach=FlightPath(origin,inside(CGPoint(x:origin.x+(entry.x-origin.x)*0.35,y:origin.y+(entry.y-origin.y)*0.35)),inside(CGPoint(x:entry.x-entryTangent.x*arriveBend,y:entry.y-entryTangent.y*arriveBend)),entry)
+            let exitControl = pointerOrbit == nil ? CGPoint(x:point.x,y:point.y-min(self.arc,leaveBend)) : CGPoint(x:exit.x+(point.x-exit.x)*0.65,y:exit.y+(point.y-exit.y)*0.65)
+            exitPath=FlightPath(exit,inside(CGPoint(x:exit.x+tangent.x*leaveBend,y:exit.y+tangent.y*leaveBend)),inside(exitControl),point)
             // Match the tangential speed on both sides of the orbit join.
             approachTiming=FlightTiming(distance:approach!.length,speed:cruiseSpeed,acceleration:min(0.65,1.8*approach!.length/cruiseSpeed),deceleration:0)
             exitTiming=FlightTiming(distance:exitPath!.length,speed:cruiseSpeed,acceleration:0,deceleration:min(0.85,1.8*exitPath!.length/cruiseSpeed))
@@ -243,8 +254,18 @@ public final class Bird {
         fly(to: point, host: nil, duration: duration, arc: 30, urgent: true)
         isDeparting = true
     }
+    /// A transient visitor cruises beyond the display edge without braking on
+    /// screen. It never lands or enters the resident population.
+    public func passThrough(_ plan: FlockMemberPlan) {
+        fly(to:plan.path.point(1),host:nil,urgent:true)
+        isDeparting=true;urgentFlight=false;wingPhase=plan.wingPhase
+        transitPath=plan.path
+        transitTiming=FlightTiming(distance:plan.path.length,speed:plan.speed,acceleration:0,deceleration:0)
+        transitDuration=transitTiming!.duration;flightDuration=transitDuration;cruiseSpeed=plan.speed
+    }
     public var departureFinished: Bool { isDeparting && flightAge >= flightDuration }
     public func perch(on host: Surface, spriteScale:CGFloat=1) {
+        motionRevision &+= 1;isDeparting=false
         if host.isGround { edge = .top }
         hostID = host.id; depthID = host.id; previousHost = host.rect
         position = Geometry.foot(on:host,fraction:fraction,edge:edge,scale:spriteScale)
@@ -301,7 +322,7 @@ public final class Bird {
                 }
             } else {
                 let u=transitTiming?.progress(at:flightAge) ?? FlightBehavior.travelProgress(t,duration:transitDuration),p=transitPath?.point(u) ?? origin
-                let wave = urgentFlight ? 0 : m.wave * sin(2 * .pi * flightAge / m.cycle) * pow(sin(t * .pi), 2)
+                let wave = urgentFlight ? 0 : m.wave * sin(2 * .pi * (flightAge+wingPhase) / m.cycle) * pow(sin(t * .pi), 2)
                 next=CGPoint(x:p.x+(target.x-plannedTarget.x)*u,y:p.y+(target.y-plannedTarget.y)*u+wave)
             }
             if abs(next.x-position.x) > 0.05 { facingRight = next.x > position.x }
@@ -337,7 +358,7 @@ public final class Bird {
     public var frameName: String {
         switch state {
         case .flying:
-            return FlightBehavior.frame(profile.id,age:flightAge,fps:profile.flapFPS,gliding:isGliding,banking:isCircling ? -orbitPoint.x/orbitRadius:0)
+            return FlightBehavior.frame(profile.id,age:flightAge+wingPhase,fps:profile.flapFPS,gliding:isGliding,banking:isCircling ? -orbitPoint.x/orbitRadius:0)
         case .landing: if edge != .top { return "cling0" }; return "land\(min(2, Int(stateTime / 0.14)))"
         case .perched:
             return SpeciesBehavior.frame(profile.id, age: stateTime, side: edge != .top) ?? "stand"

@@ -58,6 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender:NSApplication) -> Bool { false }
+    func applicationWillTerminate(_ notification:Notification) {desktop?.engine.handle(.cancelAmbient(.shutdown));desktop?.stopMouseMonitoring()}
 }
 let delegate = AppDelegate()
 app.delegate = delegate

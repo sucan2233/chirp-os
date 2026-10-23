@@ -22,6 +22,11 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var detailFields:[[NSTextField]] = []
     var message: NSTextField!
     var tabs: NSTabView!
+    var hoverDelaySlider:NSSlider!
+    var hoverDelayField:NSTextField!
+    var pointerVisitsButton:NSButton!
+    var flockPassesButton:NSButton!
+    var ambientFrequencyPopup:NSPopUpButton!
     private var debugEnabled=false
     private var debugButton:NSButton!
     var language: AppLanguage { desktop.language }
@@ -51,11 +56,12 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         let root = SettingsContentView(frame:NSRect(x:0,y:0,width:840,height:690)); root.wantsLayer=true; window!.contentView = root
         window!.title = t("鸟种设置","Bird Settings")
         label(t("让哪些鸟来做客？","Which birds should visit?"),NSRect(x:26,y:22,width:760,height:35),in:root,size:25)
-        label(t("调整入场概率；保存后影响新飞入的小鸟，已在屏幕上的鸟保持原样。","Set arrival probabilities. Saved changes affect new arrivals; existing birds keep their profiles."),NSRect(x:26,y:65,width:785,height:40),in:root)
-        let probabilityButton=button(t("出现概率","Arrival probabilities"),#selector(selectPage(_:)),NSRect(x:235,y:112,width:185,height:30),in:root); probabilityButton.tag=0
-        let behaviorButton=button(t("体型与动作","Size & behavior"),#selector(selectPage(_:)),NSRect(x:430,y:112,width:175,height:30),in:root); behaviorButton.tag=1
-        debugButton=button(t("调试","Debug"),#selector(selectPage(_:)),NSRect(x:615,y:112,width:100,height:30),in:root)
-        debugButton.tag=2;debugButton.isHidden = !debugEnabled
+        label(t("鸟种参数影响新飞入的小鸟；交互设置保存后立即生效。","Species settings affect new arrivals; interaction settings apply immediately after saving."),NSRect(x:26,y:65,width:785,height:40),in:root)
+        let probabilityButton=button(t("出现概率","Arrival probabilities"),#selector(selectPage(_:)),NSRect(x:135,y:112,width:175,height:30),in:root); probabilityButton.tag=0
+        let behaviorButton=button(t("体型与动作","Size & behavior"),#selector(selectPage(_:)),NSRect(x:320,y:112,width:150,height:30),in:root); behaviorButton.tag=1
+        let interactionButton=button(t("交互","Interaction"),#selector(selectPage(_:)),NSRect(x:480,y:112,width:140,height:30),in:root); interactionButton.tag=2
+        debugButton=button(t("调试","Debug"),#selector(selectPage(_:)),NSRect(x:630,y:112,width:100,height:30),in:root)
+        debugButton.tag=3;debugButton.isHidden = !debugEnabled
         let unlock=DebugUnlockView(frame:NSRect(x:790,y:10,width:40,height:44))
         unlock.unlock={ [weak self] in self?.debugEnabled=true;self?.debugButton.isHidden=false }
         root.addSubview(unlock)
@@ -95,12 +101,39 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:640))
+        let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
+        label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
+        label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
+        hoverDelaySlider=NSSlider(value:draft.hoverDelay,minValue:0,maxValue:10,target:self,action:#selector(hoverDelayChanged(_:)))
+        hoverDelaySlider.isContinuous=true;hoverDelaySlider.frame=NSRect(x:20,y:122,width:490,height:28)
+        hoverDelaySlider.setAccessibilityLabel(t("悬停显示名字的等待时间","Bird name hover delay"));interactionView.addSubview(hoverDelaySlider)
+        hoverDelayField=NSTextField(frame:NSRect(x:540,y:122,width:80,height:26));hoverDelayField.stringValue=String(format:"%g",draft.hoverDelay)
+        hoverDelayField.alignment = .right;hoverDelayField.delegate=self
+        hoverDelayField.setAccessibilityLabel(t("悬停等待时间（秒）","Hover delay in seconds"));interactionView.addSubview(hoverDelayField)
+        label(t("秒","seconds"),NSRect(x:632,y:125,width:95,height:24),in:interactionView)
+        label(t("0–10 秒，支持小数。默认 1 秒；设为 0 可立即显示。\n保存后立即生效，重启应用后保留。点击小鸟可让它换个位置。","0–10 seconds; decimals allowed. Default: 1 second. Set 0 to show immediately.\nApplies after saving and persists across restarts. Click a bird to move it to another spot."),NSRect(x:20,y:178,width:710,height:75),in:interactionView,size:12)
+        label(t("偶尔来点小惊喜","Occasional encounters"),NSRect(x:20,y:266,width:710,height:30),in:interactionView,size:20)
+        pointerVisitsButton=NSButton(checkboxWithTitle:t("偶尔绕鼠标飞一圈","Occasionally circle the pointer"),target:self,action:#selector(ambientSettingsChanged))
+        pointerVisitsButton.frame=NSRect(x:20,y:310,width:710,height:26);pointerVisitsButton.state=draft.pointerVisits ? .on:.off;interactionView.addSubview(pointerVisitsButton)
+        flockPassesButton=NSButton(checkboxWithTitle:t("偶尔有 3–5 只鸟结伴飞过","Occasionally let 3–5 birds fly past together"),target:self,action:#selector(ambientSettingsChanged))
+        flockPassesButton.frame=NSRect(x:20,y:346,width:710,height:26);flockPassesButton.state=draft.flockPasses ? .on:.off;interactionView.addSubview(flockPassesButton)
+        label(t("发生频率","Frequency"),NSRect(x:20,y:393,width:120,height:26),in:interactionView)
+        ambientFrequencyPopup=NSPopUpButton(frame:NSRect(x:145,y:387,width:420,height:32),pullsDown:false)
+        ambientFrequencyPopup.addItems(withTitles:[t("低 · 每 3–6 分钟尝试一次（默认）","Low · One attempt every 3–6 minutes (default)"),t("中 · 每 1.5–3 分钟尝试一次","Medium · One attempt every 1.5–3 minutes"),t("高 · 每 45–90 秒尝试一次","High · One attempt every 45–90 seconds")])
+        ambientFrequencyPopup.selectItem(at:AmbientFrequency.allCases.firstIndex(of:draft.ambientFrequency)!)
+        ambientFrequencyPopup.target=self;ambientFrequencyPopup.action=#selector(ambientSettingsChanged)
+        ambientFrequencyPopup.setAccessibilityLabel(t("偶发动作频率","Encounter frequency"));interactionView.addSubview(ambientFrequencyPopup)
+        label(t("两种动作共用频率，每次至多发生一种；条件不合适时跳过。鼠标静止 3 秒且周围有空间才会绕飞，移动或点击即可结束。过境鸟不占常驻数量。","Both encounters share this frequency; unsuitable opportunities are skipped. Circling needs 3 seconds of pointer stillness and enough space. Moving or clicking ends it. Passing birds do not count as residents."),NSRect(x:20,y:435,width:710,height:78),in:interactionView,size:12)
+        _=button(t("预览绕鼠标","Preview pointer visit"),#selector(previewPointerVisit),NSRect(x:20,y:528,width:210,height:32),in:interactionView)
+        _=button(t("预览鸟群过境","Preview passing flock"),#selector(previewFlockPass),NSRect(x:250,y:528,width:210,height:32),in:interactionView)
+        label(t("预览使用已保存的设置。绕飞预览将在 3 秒后尝试，请把鼠标移到屏幕中部并停住。","Previews use saved settings. Pointer preview tries after 3 seconds; move the pointer near screen center and hold still."),NSRect(x:20,y:575,width:710,height:52),in:interactionView,size:12)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
         label(t("模拟更新会显示通知和图标红点。点击通知或菜单中的安装更新可查看确认框；选择安装后结束模拟，选择晚点再说则保留提示。不会下载、安装或重启。","Simulate a ready update with a notification and icon badge. Click the notification or install menu item to review it. Confirm to end the simulation, or choose Later to keep the prompt. No download, installation or restart occurs."),NSRect(x:20,y:64,width:710,height:95),in:debugView)
         _=button(t("模拟有更新","Simulate update"),#selector(simulateUpdate),NSRect(x:20,y:172,width:180,height:32),in:debugView)
-        tabs.selectTabViewItem(at:min(selected,debugEnabled ? 2:1))
+        tabs.selectTabViewItem(at:min(selected,debugEnabled ? 3:2))
         message=label("",NSRect(x:26,y:603,width:784,height:28),in:root,size:12)
         _=button(t("恢复默认","Restore Defaults"),#selector(resetDefaults),NSRect(x:22,y:642,width:148,height:30),in:root)
         _=button(t("取消","Cancel"),#selector(cancel),NSRect(x:562,y:642,width:100,height:30),in:root)
@@ -110,6 +143,24 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     @objc func simulateUpdate() {
         let started=desktop.updater?.simulateUpdate() == true
         message.stringValue=started ? t("已显示模拟更新，可点击通知或菜单查看。","Simulated update ready; click the notification or menu to review."):t("更新器正在忙碌，请稍后重试。","The updater is busy; try again shortly.")
+    }
+    @objc func ambientSettingsChanged() {
+        draft.pointerVisits=pointerVisitsButton.state == .on
+        draft.flockPasses=flockPassesButton.state == .on
+        draft.ambientFrequency=AmbientFrequency.allCases[ambientFrequencyPopup.indexOfSelectedItem]
+        message.stringValue=t("尚未保存","Unsaved changes")
+    }
+    @objc func previewPointerVisit() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.previewPointerAfter(3))
+        if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
+        else {message.stringValue=t("3 秒后尝试绕飞：请将鼠标移到屏幕中部并停住。","Trying in 3 seconds: move the pointer near screen center and hold still.")}
+    }
+    @objc func previewFlockPass() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.flockPass(.preview))
+        if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
+        else {message.stringValue=t("鸟群即将飞过。","A flock is about to pass.")}
     }
     @objc func selectPage(_ sender:NSButton) { window?.makeFirstResponder(nil); tabs.selectTabViewItem(at:sender.tag) }
     func scrollToSpecies(_ id:SpeciesID) {
@@ -141,6 +192,13 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         refresh()
     }
     @objc func sliderChanged(_ sender:NSSlider) { let value=sender.doubleValue; window?.makeFirstResponder(nil); change(sender.tag,value) }
+    @objc func hoverDelayChanged(_ sender:NSSlider) {
+        let value=(sender.doubleValue*10).rounded()/10
+        window?.makeFirstResponder(nil)
+        draft.hoverDelay=value;hoverDelaySlider.doubleValue=value
+        hoverDelayField.stringValue=String(format:"%g",value)
+        message.stringValue=t("尚未保存","Unsaved changes")
+    }
     @objc func lockChanged(_ sender:NSButton) {
         let locked=sender.state == .on
         window?.makeFirstResponder(nil)
@@ -149,6 +207,11 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     }
     func controlTextDidEndEditing(_ obj:Notification) {
         guard let f=obj.object as? NSTextField else { return }
+        if f === hoverDelayField {
+            if readInteraction() {message.stringValue=t("尚未保存","Unsaved changes")}
+            else {message.stringValue=t("请输入 0–10 秒之间的有效数值。","Enter a valid delay between 0 and 10 seconds.")}
+            return
+        }
         if f.tag < 100 {
             guard let value=number(f.stringValue),value.isFinite else {
                 message.stringValue=t("请输入有效的百分比数值。","Enter a valid percentage."); refresh(); return
@@ -170,10 +233,20 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.catalog=catalog
         return true
     }
+    func readInteraction() -> Bool {
+        guard let value=number(hoverDelayField.stringValue),value.isFinite,BirdSettings.hoverDelayRange.contains(value) else {return false}
+        draft.hoverDelay=value;hoverDelaySlider.doubleValue=value
+        hoverDelayField.stringValue=String(format:"%g",value)
+        draft.pointerVisits=pointerVisitsButton.state == .on
+        draft.flockPasses=flockPassesButton.state == .on
+        draft.ambientFrequency=AmbientFrequency.allCases[ambientFrequencyPopup.indexOfSelectedItem]
+        return true
+    }
     @objc func save() {
         window?.makeFirstResponder(nil)
+        guard readInteraction() else {tabs.selectTabViewItem(at:2);message.stringValue=t("请输入 0–10 秒之间的有效等待时间。","Enter a valid hover delay between 0 and 10 seconds.");return}
         guard readDetails() else { tabs.selectTabViewItem(at:1); message.stringValue=t("请检查体型与动作数值：最长停留不能小于最短停留。","Check size and behavior ranges; maximum perch time must not be below minimum."); return }
-        do { try desktop.applySettings(draft); message.stringValue=t("已保存 · 新飞入的小鸟将使用这些设置。","Saved · New arrivals will use these settings.") }
+        do { try desktop.applySettings(draft); message.stringValue=t("已保存 · 交互设置立即生效，鸟种参数用于新飞入的小鸟。","Saved · Interaction settings apply now; species settings affect new arrivals.") }
         catch { message.stringValue=t("保存失败，请重试。当前设置未改变。","Could not save. Try again; active settings are unchanged.") }
     }
     @objc func resetDefaults() { window?.makeFirstResponder(nil); draft=BirdSettings(); build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
@@ -181,7 +254,9 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     func relocalize() {
         window?.makeFirstResponder(nil)
         let raw = detailFields.map { $0.map(\.stringValue) }
+        let rawDelay=hoverDelayField.stringValue
         build()
         for i in raw.indices { for j in raw[i].indices { detailFields[i][j].stringValue = raw[i][j] } }
+        hoverDelayField.stringValue=rawDelay
     }
 }

@@ -24,7 +24,7 @@ final class PopulationVerification {
                 bird.tick(bird.flightDuration/2)
                 self.checks["departingBirdRetainedDuringFlight"] = d.birds.contains{$0 === bird} && !bird.departureFinished && !bird.needsDestination
                 bird.tick(bird.flightDuration)
-                d.tick()
+                d.advanceBirds(1.0/60)
                 self.checks["removedOnlyAfterFlyingOffscreen"] = !d.birds.contains{$0 === bird} && !d.displayRects.contains{$0.intersects(d.bounds(of:bird))}
             }
             let previous = d.birds.count

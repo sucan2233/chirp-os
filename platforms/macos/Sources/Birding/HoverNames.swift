@@ -14,18 +14,51 @@ extension BirdArt {
     }
 }
 extension DesktopController {
-    func updateHover(now:Double, at suppliedPoint:CGPoint? = nil) {
-        let mouse=NSEvent.mouseLocation
-        let point=suppliedPoint ?? CGPoint(x:mouse.x,y:primaryHeight-mouse.y)
-        let hit=birds.reversed().first { bird in
-            let s=spriteScale(for:bird)
-            let x=(point.x-bird.position.x)/s+(bird.facingRight ? 29:19)
-            let y=(point.y-bird.position.y)/s-bird.hopOffset+39
+    // Use the same visible sprite pixels for hovering and clicking, including
+    // mirroring, species size, hops, and foreground-window occlusion.
+    func birdSnapshot(at point:CGPoint) -> BirdRenderState? {
+        renderSnapshot().reversed().first { bird in
+            let x=(point.x-bird.position.x)/bird.scale+(bird.facingRight ? 29:19)
+            let y=(point.y-bird.position.y)/bird.scale-bird.hopOffset+39
             guard x>=0,x<48,y>=0,y<48,
-                  !bird.blockers(in:surfaces).contains(where:{$0.contains(point)}) else {return false}
-            return arts[bird.profile.id]!.contains(frame:bird.frameName,x:bird.facingRight ? Int(x):47-Int(x),y:Int(y))
+                  !bird.blockers.contains(where:{$0.contains(point)}) else {return false}
+            return arts[bird.species]!.contains(frame:bird.frameName,x:bird.facingRight ? Int(x):47-Int(x),y:Int(y))
         }
-        let ready=hoverTracker.update(hit.map(ObjectIdentifier.init),now:now)
-        hoveredBird=birds.first{ObjectIdentifier($0)==ready}
+    }
+    func bird(at point:CGPoint) -> Bird? {birdSnapshot(at:point).flatMap{engine.bird($0.id)}}
+    func updateHover(now:Double, at suppliedPoint:CGPoint? = nil) {
+        let hit=birdSnapshot(at:suppliedPoint ?? pointerPosition)
+        hoveredID=hoverTracker.update(hit.flatMap{$0.hoverable ? $0.id:nil},now:now,delay:settings.hoverDelay)
+    }
+    @discardableResult
+    func relocateBird(at point:CGPoint) -> Bool {
+        guard let hit=birdSnapshot(at:point),engine.handle(.relocate(hit.id)).accepted else {return false}
+        hoverTracker=HoverTracker<BirdID>();hoveredID=nil
+        for view in views {view.updateSprites()}
+        return true
+    }
+    func handleMouseDown(_ event:NSEvent) {
+        // CGEvent locations already use the desktop's top-left coordinates.
+        // Relocate before cancelling pointer visits so the clicked bird keeps priority.
+        guard let point=event.cgEvent?.location else {return}
+        relocateBird(at:point)
+        engine.handle(.pointerClick)
+    }
+    func startMouseMonitoring() {
+        stopMouseMonitoring()
+        // Observe clicks without consuming them or activating the overlay.
+        globalMouseMonitor=NSEvent.addGlobalMonitorForEvents(matching:.leftMouseDown) { [weak self] event in
+            self?.handleMouseDown(event)
+        }
+        // Global monitors exclude events sent to this application.
+        localMouseMonitor=NSEvent.addLocalMonitorForEvents(matching:.leftMouseDown) { [weak self] event in
+            self?.handleMouseDown(event)
+            return event
+        }
+    }
+    func stopMouseMonitoring() {
+        if let globalMouseMonitor {NSEvent.removeMonitor(globalMouseMonitor)}
+        if let localMouseMonitor {NSEvent.removeMonitor(localMouseMonitor)}
+        globalMouseMonitor=nil;localMouseMonitor=nil
     }
 }

@@ -1,5 +1,7 @@
 # 开发指南 / Development
 
+行为扩展与架构规划见 [行为与互动引擎设计](BEHAVIOR-ENGINE-DESIGN.md)：包含动作储备、现有架构评估、运行时边界、迁移路线与验收标准。M0–M2 已实现，实际范围、迁移桥和验收状态见文档第 16 节；其余为后续设计。
+
 ## 项目结构 / Layout
 
 | 目录 / Directory | 内容 / Contents |
@@ -15,6 +17,13 @@
 
 需要 macOS 13+ 和 Swift Command Line Tools。构建使用本机架构。
 Requires macOS 13+ and Swift Command Line Tools. Builds target the host architecture.
+
+运行 XCTest 单元测试还需要安装完整 Xcode。可通过环境变量指定测试工具链，无需修改系统的默认开发工具路径：
+XCTest unit tests also require a full Xcode installation. Select its toolchain for a test run without changing the system-wide developer directory:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./scripts/test.sh
+```
 
 ```bash
 ./scripts/build.sh
@@ -32,6 +41,30 @@ Requires macOS 13+ and Swift Command Line Tools. Builds target the host architec
 ./scripts/verify-settings.sh
 .build/release/Birding --verify-birds .build/bird-check
 ```
+
+macOS 行为统一从 `BirdingCore/Behavior/BehaviorEngine` 进入：平台先提交 `BehaviorWorld`，
+再串行调用 `handle(EngineCommand)` 与 `advance(elapsed)`；固定时间步为 1/60 秒。
+渲染与像素命中读取 `BirdRenderState` 值快照，控制器不保存行为专用计时器或参与者队列。
+
+`BehaviorRuntime` 统一负责运动占用、显著事件互斥、超时和结束清理；
+`InteractionExecutions` 包含换位、绕鼠标、鸟群过境三个实现；`DestinationPlanner` 选择落点。
+新增动作先在核心实现 `BehaviorExecution`，声明参与者、暂停策略、超时与清理，再接入命令/选择规则及测试。
+现有 `Bird` 暂时作为运动与姿态实现，已有路径和素材仍复用。
+
+过境鸟使用引擎 `transient` 角色，独立于常驻，最多 5 只。
+`AmbientBehavior.swift` 保留机会调度与路径规划辅助函数；
+`Birding/AmbientAnimations.swift` 只适配平台输入和预览结果。
+默认两类事件合计每 180–360 秒尝试一次；中频 90–180 秒、高频 45–90 秒。
+设置页预览与自动事件共享校验和清理规则。
+
+`BehaviorEngine(seed:)` 支持核心场景重放，需同时给定相同配置、初始鸟、世界输入和命令时间线。
+目前单一随机流，不保证跨版本或 Swift/C# 两端轨迹一致；诊断里的 seed 不能单独重放真实桌面。
+`--diagnostics <path>` 输出鸟 ID、角色、行为计数和最多 256 条生命周期事件。
+
+`BehaviorEngineTests` 覆盖 30/60/120 Hz 重放、抢占、暂停、宿主失效、移除、预览、超时和资源释放；
+`AmbientTests` 保留配置兼容、路径连续性与鼠标安全距离；
+`--verify-birds` 验证真实绘制/命中与互动；`--verify-settings` 输出中英文界面截图。
+完整桌面集成中的 `playsLandingState` 存在迁移前已知时序不稳定，需单独记录当次结果。
 
 ## Windows
 

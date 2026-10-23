@@ -27,6 +27,17 @@ enum SettingsVerification {
             checks["loginExternalChangeRefreshes"] = d.loginItem?.state == .on
             d.showSpeciesSettings()
             let w=d.settingsWindow!
+            checks["hoverDelayDefaultsToOneSecond"] = w.hoverDelayField.doubleValue == 1 && w.hoverDelaySlider.doubleValue == 1
+            w.hoverDelaySlider.doubleValue=0.5;w.hoverDelayChanged(w.hoverDelaySlider)
+            checks["hoverDelaySliderUpdatesDraft"] = w.draft.hoverDelay == 0.5 && w.hoverDelayField.doubleValue == 0.5 && d.settings.hoverDelay == 1
+            w.hoverDelayField.stringValue="0.25"
+            w.controlTextDidEndEditing(Notification(name:NSControl.textDidEndEditingNotification,object:w.hoverDelayField))
+            checks["hoverDelayAcceptsTypedDecimals"] = w.draft.hoverDelay == 0.25 && w.hoverDelaySlider.doubleValue == 0.25
+            for invalid in ["-1","10.1","NaN","abc"] {
+                w.hoverDelayField.stringValue=invalid;w.save()
+                checks["invalidHoverDelayRejected-\(invalid)"] = d.settings.hoverDelay == 1 && !FileManager.default.fileExists(atPath:d.settingsURL.path) && (w.tabs.selectedTabViewItem?.identifier as? String) == "interaction"
+            }
+            w.hoverDelayField.stringValue="0.25"
             checks["allSpeciesEditable"] = w.sliders.count == SpeciesID.allCases.count && w.fields.count == SpeciesID.allCases.count && w.locks.count == SpeciesID.allCases.count
             let last=w.sliders.count-1
             w.sliders[last].doubleValue=3;w.sliderChanged(w.sliders[last])
@@ -53,10 +64,20 @@ enum SettingsVerification {
             d.paused=true;d.makeMenu();d.toggleLanguage()
             checks["loginEnglishLabel"] = d.loginItem?.title == "Launch at Login" && d.loginItem?.state == .on
             checks["englishMenuAndWindow"] = d.status.menu!.items.contains{$0.title == "中文"} && d.status.menu!.items.contains{$0.title=="Resume animation"} && w.window!.title == "Bird Settings"
-            checks["languageKeepsUnsavedEdits"] = w.draft.probabilities == before && w.detailFields[0][2].stringValue == "1.25"
+            checks["languageKeepsUnsavedEdits"] = w.draft.probabilities == before && w.detailFields[0][2].stringValue == "1.25" && w.hoverDelayField.stringValue == "0.25"
             w.save()
             let saved=try BirdSettings.decode(Data(contentsOf:d.settingsURL))
             checks["saveAndReloadPreserveProbabilitiesLocksAndBehavior"] = saved.probabilities == w.draft.probabilities && saved.catalog.profile(.redWhiskeredBulbul).speed == 1.25
+            checks["hoverDelaySavedAndAppliedImmediately"] = saved.hoverDelay == 0.25 && d.settings.hoverDelay == 0.25
+            let reloaded=DesktopController();reloaded.settingsURL=d.settingsURL;reloaded.legacyURL=d.legacyURL
+            try reloaded.loadSpeciesConfig()
+            checks["hoverDelaySurvivesRestart"] = reloaded.settings.hoverDelay == 0.25
+            w.tabs.selectTabViewItem(at:2)
+            try snapshot(w.window!,to:folder.appendingPathComponent("interaction-en.png"))
+            if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView {
+                scroll.contentView.scroll(to:CGPoint(x:0,y:230));scroll.reflectScrolledClipView(scroll.contentView)
+                try snapshot(w.window!,to:folder.appendingPathComponent("encounters-en.png"))
+            }
             checks["languagePreferenceSaved"] = prefs.string(forKey:"appLanguage") == "en"
             w.tabs.selectTabViewItem(at:0)
             try snapshot(w.window!,to:folder.appendingPathComponent("settings-en.png"))
@@ -64,6 +85,20 @@ enum SettingsVerification {
             try snapshot(w.window!,to:folder.appendingPathComponent("behavior-en.png"))
             d.toggleLanguage();w.tabs.selectTabViewItem(at:0)
             checks["chineseToggleRestored"] = d.status.menu!.items.contains{$0.title == "English"} && w.window!.title == "鸟种设置"
+            w.tabs.selectTabViewItem(at:2)
+            try snapshot(w.window!,to:folder.appendingPathComponent("interaction-zh.png"))
+            if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView {
+                scroll.contentView.scroll(to:CGPoint(x:0,y:230));scroll.reflectScrolledClipView(scroll.contentView)
+                try snapshot(w.window!,to:folder.appendingPathComponent("encounters-zh.png"))
+            }
+            w.pointerVisitsButton.performClick(nil);w.flockPassesButton.performClick(nil)
+            w.ambientFrequencyPopup.selectItem(at:2);w.ambientSettingsChanged()
+            w.relocalize()
+            checks["ambientDraftSurvivesRebuild"] = !w.draft.pointerVisits && !w.draft.flockPasses && w.ambientFrequencyPopup.indexOfSelectedItem == 2
+            w.save()
+            let ambientSaved=try BirdSettings.decode(Data(contentsOf:d.settingsURL))
+            checks["ambientSettingsPersistAndApply"] = !ambientSaved.pointerVisits && !d.settings.pointerVisits && !ambientSaved.flockPasses && ambientSaved.ambientFrequency == .high
+            w.tabs.selectTabViewItem(at:0)
             try snapshot(w.window!,to:folder.appendingPathComponent("settings-zh.png"))
             for i in w.locks.indices where w.locks[i].state == .off { w.locks[i].performClick(nil) }
             checks["allLockedDisablesAllEditors"] = w.sliders.allSatisfy{!$0.isEnabled} && w.fields.allSatisfy{!$0.isEnabled}
@@ -74,8 +109,14 @@ enum SettingsVerification {
                 w.tabs.selectTabViewItem(at:0)
                 try snapshot(w.window!,to:folder.appendingPathComponent("settings-last.png"))
             }
+            for delay in [0.0,10.0] {
+                w.hoverDelayField.stringValue=String(delay);w.save()
+                let boundary=try BirdSettings.decode(Data(contentsOf:d.settingsURL))
+                checks["hoverDelayBoundarySaved-\(delay)"] = boundary.hoverDelay == delay && d.settings.hoverDelay == delay
+            }
             w.resetDefaults()
-            checks["resetRestoresDefaultsAndUnlocks"] = w.draft.probabilities == BirdSettings().probabilities
+            checks["ambientDefaultsRestored"] = w.draft.pointerVisits && w.draft.flockPasses && w.draft.ambientFrequency == .low
+            checks["resetRestoresDefaultsAndUnlocks"] = w.draft.probabilities == BirdSettings().probabilities && w.draft.hoverDelay == 1 && w.hoverDelayField.doubleValue == 1
             w.scrollToSpecies(.nightHeron)
             if let scroll=w.tabs.tabViewItems[0].view as? NSScrollView {
                 checks["manualMigrationScrollsToFirstNewBird"] = scroll.documentView!.visibleRect.intersects(w.fields[7].frame)

@@ -79,12 +79,35 @@ public struct ProbabilityDistribution: Codable, Equatable {
     }
 }
 public struct BirdSettings: Codable {
+    public static let hoverDelayRange:ClosedRange<Double> = 0...10
     public var catalog: SpeciesCatalog
     public var probabilities: ProbabilityDistribution
+    public var hoverDelay:Double = 1
+    public var pointerVisits = true
+    public var flockPasses = true
+    public var ambientFrequency: AmbientFrequency = .low
     public var perchDefaultsVersion: Int? = nil
     public var pendingSpecies: [SpeciesID]? = nil
     public init(catalog:SpeciesCatalog = .standard) {
         self.catalog = catalog; probabilities = ProbabilityDistribution(catalog:catalog); perchDefaultsVersion=1
+    }
+    private enum CodingKeys:String,CodingKey {
+        case catalog,probabilities,hoverDelay,perchDefaultsVersion,pendingSpecies
+        case pointerVisits,flockPasses,ambientFrequency
+    }
+    public init(from decoder:Decoder) throws {
+        let values=try decoder.container(keyedBy:CodingKeys.self)
+        catalog=try values.decode(SpeciesCatalog.self,forKey:.catalog)
+        probabilities=try values.decode(ProbabilityDistribution.self,forKey:.probabilities)
+        hoverDelay=try values.decodeIfPresent(Double.self,forKey:.hoverDelay) ?? 1
+        pointerVisits=try values.decodeIfPresent(Bool.self,forKey:.pointerVisits) ?? true
+        flockPasses=try values.decodeIfPresent(Bool.self,forKey:.flockPasses) ?? true
+        ambientFrequency=try values.decodeIfPresent(AmbientFrequency.self,forKey:.ambientFrequency) ?? .low
+        perchDefaultsVersion=try values.decodeIfPresent(Int.self,forKey:.perchDefaultsVersion)
+        pendingSpecies=try values.decodeIfPresent([SpeciesID].self,forKey:.pendingSpecies)
+        guard hoverDelay.isFinite,Self.hoverDelayRange.contains(hoverDelay) else {
+            throw DecodingError.dataCorruptedError(forKey:.hoverDelay,in:values,debugDescription:"Hover delay must be between 0 and 10 seconds.")
+        }
     }
     public static func decode(_ data:Data) throws -> BirdSettings {
         var value = try JSONDecoder().decode(Self.self,from:data)

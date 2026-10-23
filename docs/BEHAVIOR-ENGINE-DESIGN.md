@@ -1,0 +1,500 @@
+# ChirpOS 行为与互动引擎设计
+
+日期：2026-10-23  
+状态：M0–M2 基础迁移已实现并完成本轮验收；完整桌面集成保留 1 项已知时序失败。M3–M5 仍为后续设计。  
+分析基线：`fix/click-to-relocate-birds`，HEAD `2b3c05c` 加当前工作区未提交修改，包含点击换位、悬停延迟、绕鼠标和鸟群过境。  
+范围：以 macOS 为实现落点，检查 Windows 对应结构并保留跨平台演进路径。
+
+## 1. 结论与决策
+
+ChirpOS 正在形成一套面向桌面鸟类的**行为与互动引擎**。它需要决定鸟想做什么、什么时候允许做、如何执行、遇到打断如何退出，最后才是选取动画帧。
+
+建议：**保留现有桌面集成、几何计算、路径与渲染，渐进重构行为调度和动作生命周期；在继续大量增加互动前，先完成一个可验收的引擎基础版本。**
+
+现有实现适合作为迁移基础，继续直接叠加特殊标记和控制器分支则会增加维护成本。整项目重写的收益不足以抵消重新验证多屏坐标、落脚、遮挡、点击穿透、物种动画和设置兼容的成本。
+
+| 决策 | 选择 | 原因与边界 |
+| --- | --- | --- |
+| 是否重写整个应用 | 否 | 有价值的几何、路径、平台适配和回归测试可以直接保留 |
+| 是否重构行为系统 | 是，分阶段替换 | 生命周期、抢占和群体协调需要统一入口 |
+| 是否更换 AppKit / Core Animation | 当前不需要 | 本次痛点来自调度与状态归属，尚无证据证明渲染框架构成瓶颈 |
+| 是否自建通用游戏引擎 | 当前不需要 | 先覆盖鸟类、桌面表面、互动道具这几个明确领域 |
+| 是否立即引入大型行为树 / GOAP / ECS | 当前不采用 | 先用显式状态、带类型的动作序列和小型条件选择器，保留替换选择策略的边界 |
+| 是否共享 Swift/C# 执行二进制 | 当前不采用 | 先共享行为语义、参数、素材约定和测试场景，避免先引入跨语言接口工程 |
+| 下一步开发内容 | 引擎基础 + 现有行为迁移 + 一个新行为样例 | 用真实功能检验架构，而非只建空接口 |
+
+这里的“优雅好用”落实为：新增普通行为时，不再要求同时修改桌面控制器、鸟状态、事件清理、计数和渲染；涉及新运动能力或新素材时，修改相应扩展点即可。
+
+## 2. 产品目标和行为储备
+
+目标是安静、可发现、有回应的桌面陪伴。以下频率、持续时间和优先级属于产品设计建议，不是野外行为测量结果。
+
+### 2.1 已有能力
+
+- 飞入、飞出、寻找窗口或地面落点；窗口移动跟随、遮挡与失效处理。
+- 物种化振翅、滑翔、盘旋、起伏飞行；弧长路径与平滑速度包络。
+- 眨眼、呼吸、理羽及物种专属小动作，部分鸟有原地跳动。
+- macOS 点击同一只鸟换位置、悬停名字与可配置等待时间。
+- macOS 偶发绕鼠标、3–5 只同种鸟过境，频率开关与预览。
+
+这些项目在当前工作区已有实现，不应在后续需求表中重复标记为全新功能。Windows 尚未同步本轮 macOS 交互扩展。
+
+### 2.2 行为清单
+
+优先级定义：P1 为引擎迁移后的第一批，P2 为社交与场景能力，P3 为长期内容。成本是相对判断，包含动作素材与验证；不是工期承诺。
+
+| 编号 | 行为 | 可见片段与触发条件 | 引擎依赖 / 素材 | 优先级 / 成本 |
+| --- | --- | --- | --- | --- |
+| B01 | 观察鼠标 | 鼠标进入附近，先转头再决定是否转身；离开后恢复 | 注意目标、方向切换滞回；真正转头需要新增帧 | P1 / 中 |
+| B02 | 侧跳让路 | 鼠标靠近时沿同一落脚边跳开一段；边缘不够宽就放弃 | 落脚区间、占位、短跳运动；不能只移动画面不改落脚坐标 | P1 / 中 |
+| B03 | 着陆后整理 | 站稳、收翅、抖动或理羽，再休息 | 着陆完成事件、短动作序列，可先复用素材 | P1 / 低—中 |
+| B04 | 短暂打盹 | 安静停留后闭眼、缩身；靠近、点击或落脚失效时醒来 | 休息行为、中断、姿态帧；参考 S1 | P1 / 中 |
+| B05 | 起飞前准备 | 看目标、下蹲、展翅、起飞 | 起飞准备序列；点击换位可跳过等待 | P1 / 中 |
+| B06 | 探头观察 | 走到窗口边缘低头，再退回来 | 短距离移动、边缘约束、探头帧 | P2 / 中 |
+| B07 | 警觉后放松 | 鼠标快速掠过附近时短暂警觉，随后恢复 | 鼠标速度摘要、冷却、警觉帧；与已有窗口惊飞区分 | P2 / 中 |
+| B08 | 并排停靠、让座 | 第二只鸟飞来，第一只侧移，随后各自休息 | 双鸟会话、落点预约、参与者退出策略 | P2 / 中—高 |
+| B09 | 相互招呼 | 一只朝同伴做出鸣叫姿势，另一只延迟回应 | 双鸟会话与分角色时间线；声音默认关闭 | P2 / 中 |
+| B10 | 结伴起飞 | 一只起飞，同伴稍后跟上，随后各自落下 | 同伴角色、错峰启动、独立安全降落 | P2 / 中 |
+| B11 | 短暂追逐 | 两只鸟追赶几秒，避开鼠标保护区，再分开 | 有界追逐运动、间距限制、超时和取消 | P2 / 高 |
+| B12 | 同伴理羽 | 两只靠近，一只整理另一只头颈羽毛 | 稳定双鸟站位、物种能力、成对素材；家燕配偶行为参考 S2 | P3 / 高 |
+| B13 | 临时结队、散开 | 独立飞行的鸟短暂同行，随后各自继续 | 运动目标协调、间距和转向限制 | P3 / 高 |
+| B14 | 临时食盘 | 用户放置道具，鸟观察、靠近、啄食、离开 | 道具实体、可用槽位、食性配置；不设必须喂养的惩罚 | P2 / 高 |
+| B15 | 小鸟浴盆 | 观察、试水、洗澡、甩水、理羽 | 场景序列、道具失效处理、水花和洗澡素材；参考 S8 的维护行为概述 | P3 / 高 |
+| B16 | 追逐落叶 | 用户放出虚拟叶片，鸟观察、扑向或叼起 | 道具生命周期、追逐、携带关系；物体游戏灵感参考 S3 | P2 / 中—高 |
+| B17 | 空中捕虫 | 家燕沿弧线追赶小飞虫，捕获后恢复飞行 | 移动目标、捕获判定、结束后路线恢复；参考 S4 | P2 / 中—高 |
+| B18 | 固定小栖木 | 用户指定低干扰位置，鸟偶尔前往 | 虚拟表面、位置持久化、屏幕布局变化后的重新定位 | P2 / 中 |
+| B19 | 叼来小礼物 | 熟客带来虚拟叶片或羽毛，短暂停留后离开 | 长期身份、携带物、低频奖励；明确为拟人化设计 | P3 / 高 |
+| B20 | 观察手册 | 首次看见某种行为后，在图鉴留下记录 | 行为完成事件、去重记录；用户主动查看 | P3 / 中 |
+| B21 | 个体性格 | 同种鸟在胆量、好奇心、社交和活跃度上有稳定差异 | 生成时采样的特征、行为权重；不能逐帧重抽 | P1 / 中 |
+| B22 | 昼夜与安静节奏 | 根据用户选定模式和本地时段改变活动倾向 | 用户策略和行为权重；按鸟种配置，不统一让夜行鸟夜间睡觉 | P3 / 中 |
+
+食盘、浴盆、落叶仅操作应用自己的虚拟对象。主动放置通过菜单或明确的放置模式进入，保留普通桌面点击穿透语义。单击鸟继续代表换位置，不同时承担喂食或抚摸。
+
+### 2.3 内容组合原则
+
+- 用“观察 → 接近 → 互动 → 恢复”表达一个片段，避免所有动作随机无缝拼接。
+- 小幅观察、休息动作可常见；横穿屏幕、追逐、道具场景共用显著事件预算。
+- 保留鸟种差异。家燕捕虫、合适鸟种的同伴理羽、不同体型的起落节奏分别配置。
+- 先以麻雀、家燕和一种大型鸟做代表样例；基础交互与安全规则仍覆盖全部鸟种。
+- 先保存短期偏好与冷却；长期熟客、礼物、关系成长后置。
+- 外部资料提供行为灵感，不证明某个桌面动作会让用户更喜欢；最终观感仍需预览与人工体验。
+
+## 3. 现有架构：主链与状态归属
+
+### 3.1 当前执行链
+
+```mermaid
+flowchart TD
+    OS[鼠标事件、窗口、屏幕和睡眠通知] --> D[DesktopController]
+    Timer[主运行循环 Timer] --> D
+    D --> W[sampleWindows / Bird.updateHost]
+    W --> P[updatePopulation]
+    P --> A[updateAmbient]
+    A --> B[advanceBirds / Bird.tick]
+    B --> H[updateHover]
+    H --> V[DesktopView.updateSprites]
+    V --> L[Core Animation 图层]
+```
+
+`DesktopController.tick` 用系统运行时钟计算帧间隔，上限 0.05 秒；窗口采样目标约 30 Hz，动画 timer 目标约 60 Hz。暂停时跳过数量与偶发动作推进，手动换位仍可完成；窗口采样仍执行。因此当前暂停不能概括为“冻结所有世界状态”。见 E1、E2。
+
+### 3.2 关键对象
+
+| 当前对象 | 当前职责 | 扩展价值与限制 |
+| --- | --- | --- |
+| `DesktopController` | 系统输入、鸟集合、数量、选落点、互动状态、设置、菜单、诊断 | 平台入口可保留，行为编排需要迁出 |
+| `Bird` | 姿态状态、坐标、宿主、路线、速度、盘旋、动画帧、失效与离场标记 | 运动资产有价值；状态、动作和渲染选择职责应逐步拆开 |
+| `SpeciesBehavior` | 按物种和时间取模选择栖息帧、原地跳动 | 适合保留为基础动作库，不宜承担情境决策和社交会话 |
+| `FlightPath` / `FlightTiming` | 弧长采样与速度包络 | 可复用的运动底层，已具备针对连续性和速度的测试 |
+| `Geometry` / `Surface` | 桌面坐标、遮挡、可用落点、窗口/地面关系 | 可保留并逐步提取为只读世界查询 |
+| `Population` | 常驻数量范围与迁入迁出节奏 | 保留独立策略，由引擎统一管理生命周期和计数口径 |
+| `AmbientScheduler` | 两类偶发事件的时间、条件与选择 | 已有仿真时间思路，可迁为显著事件预算和候选机会来源 |
+| `DesktopView` / `BirdArt` | 屏幕图层、裁剪、像素帧、悬停名字 | 保留绘制方式；后续改读渲染快照 |
+| `BirdSettings` | 鸟种、概率、互动参数、持久化及旧配置补齐 | 保留迁移经验，新增配置需要明确版本与能力校验 |
+
+### 3.3 具体扩展压力
+
+1. **一次行为分散在两层。** 绕鼠标同时依赖 `Bird.isVisitingPointer`、控制器的 `pointerVisitor` / `pointerVisitCenter` 和 scheduler；过境还有 `pendingFlock`、离场标记和计数过滤。增加动作时容易遗漏其中一条收尾路径。见 E2、E3、E4。
+2. **状态维度混合。** `flying / landing / perched` 是运动状态，`isVisitingPointer` 是行为意图，`isPassingThrough` 是访问角色，`isDeparting` 又参与生命周期和常驻计数。当前组合可工作，但不应把每个新行为都继续添加成布尔字段。见 E3。
+3. **运行与决策耦合。** `Bird.tick` 推进路线并判断着陆；`needsDestination` 让控制器在下一层选择新行为；`updateHost` 还可能直接惊飞或标记路线失效。规则尚未统一收敛。见 E1、E3。
+4. **动作选择缺少情境。** `SpeciesBehavior.frame` 主要由 `age % cycle` 驱动，无法自然表达刚睡醒、刚互动、暂时避开鼠标等短期记忆。见 E5。
+5. **随机源只局部可注入。** 路径与 scheduler 可传随机闭包，但控制器仍直接调用随机选择，鸟初始化也随机采样。当前能测局部规则，尚不能用一个 seed 重放整个互动过程。见 E2、E3、E4。
+6. **预览与运行入口不完全一致。** 预览直接请求开始动作，正常触发先经过 scheduler。未来应共用校验与执行，只明确允许预览绕过概率等待。见 E2、E8。
+7. **模型和帧名耦合。** `Bird.frameName` 直接产出 `String`，渲染按名字找素材。增加侧头、睡觉或道具接触动作时，需要有能力声明和缺帧退化，不能依赖所有鸟都有相同素材。见 E3、E7。
+8. **诊断口径已经出现分歧。** 菜单单独展示过境数量，但 `writeDiagnostics` 的 `departingCount` 仍用 `birds.count-residentCount`，包含过境鸟。应作为迁移时的明确修正项，不能将当前测试通过理解为所有语义均已统一。见 E1。
+9. **双平台已有复制成本。** Swift 与 C# 分别实现状态和动作参数。现有 parity 脚本校验物种时间表、飞行参数和素材契约，不证明两端运行时行为完全一致。见 E9。
+
+这些是从源码得出的结构判断；没有据此声称当前存在并发崩溃、性能瓶颈或已通过完整用户体验验收。
+
+## 4. 建议架构与依赖方向
+
+```mermaid
+flowchart TD
+    Adapter[平台适配：窗口、屏幕、输入、设置 UI] --> Input[WorldSnapshot 与 EngineCommand]
+    Input --> Engine[BehaviorEngine：唯一世界状态写入口]
+    Engine --> Policy[候选选择与优先级]
+    Policy --> Runs[BehaviorRun：动作序列与生命周期]
+    Runs --> Motion[MotionSystem：飞行、短跳、宿主跟随]
+    Runs --> Pose[PosePlayer：姿态与动画帧]
+    Engine --> Sessions[SessionCoordinator：多鸟与道具占位]
+    Engine --> Output[RenderSnapshot 与 DomainEvent]
+    Output --> Renderer[平台渲染与像素命中]
+    Renderer --> Adapter
+```
+
+这是职责划分，不要求第一版就拆成独立包、线程或大量 manager 类。先放在现有 `BirdingCore` 中，以少量类型形成明确边界。
+
+| 层 | 应当负责 | 不应负责 |
+| --- | --- | --- |
+| 平台适配 | 采集窗口几何和鼠标摘要；坐标转换；菜单、保存和屏幕生命周期 | 决定哪只鸟睡觉、直接改飞行路径 |
+| `BehaviorEngine` | 状态所有权、命令排序、更新阶段、生命周期与统一输出 | 读取 `NSEvent`、调用设置窗口、依赖真实系统 timer |
+| 候选选择 | 条件、能力、冷却、个体权重、注意力预算、候选排序 | 直接移动鸟、创建图层、临时修改随机全局状态 |
+| `BehaviorRun` | 一个行为实例的开始、步骤推进、中断、完成和清理 | 查询 OS、拥有自己的 `Timer`、把恢复任务藏在延时闭包里 |
+| `MotionSystem` | 执行路径、速度与转向约束、落脚跟随、短跳；发出运动结果 | 决定今天想社交还是睡觉 |
+| `PosePlayer` | 根据动作阶段、运动状态和物种能力生成姿态 | 决定行为意图、修改世界位置 |
+| `SessionCoordinator` | 多参与者角色、资源预约、同步点与退出 | 再实现另一套独立鸟计时与运动系统 |
+| 平台渲染 | 消费最终快照、裁剪、缩放、像素命中数据 | 在绘制过程中推动行为或修改鸟状态 |
+
+借鉴 S5 的显式状态转换思想，以及 S6 对动作选择、转向与运动的职责区分；具体类型与边界是本项目的设计提案，并非外部资料对该实现的保证。
+
+## 5. 状态模型：分清“是什么、在哪里、想做什么”
+
+建议分别表达以下维度，避免把所有组合塞进一个巨型枚举或一组互相依赖的布尔值：
+
+| 维度 | 示例 | 约束 |
+| --- | --- | --- |
+| 稳定身份 | `BirdID`、`BehaviorRunID`、`SessionID` | 单次运行 ID 不复用；长期熟客身份后置；不持久化 `ObjectIdentifier` |
+| 访问角色 | resident / transient | 过境属于 transient，与是否正在离开分开 |
+| 生命周期 | entering / active / departing / removed | 只有生命周期管理能完成移除和统计 |
+| 运动状态 | flying / landing / perched / hopping | 由运动系统拥有；宿主引用含表面标识和落脚比例 |
+| 行为意图 | rest / relocate / pointerVisit / passThrough / nap | 通过运行实例表达，包含进度、原因和所属资源 |
+| 性格与短期记忆 | curiosity、sociability、lastInteraction、cooldowns | 生成时确定性采样；随仿真时间推进 |
+| 可见姿态 | stand、blink、sleep、lookLeft 等 | 有类型的语义 ID，最后映射到实际帧名与素材 |
+
+维度分开仍需合法组合检查，例如 transient 过境结束直接离场；正在手动换位的鸟不能同时被招募为追逐同伴。规则由引擎与资源仲裁集中维护。
+
+首版可以保留现有 `Bird` 作为运动执行对象，由 runtime 包装；在迁移阶段明确每个字段的唯一拥有者，禁止旧控制器和新 runtime 同时推进同一只鸟。
+
+运行期 ID 可由世界代次加递增序号生成，方便稳定排序与重放。需要跨启动保留的“熟客身份”使用另一套持久化身份，不混用运行实例 ID。
+
+## 6. 行为定义、动作序列与扩展契约
+
+每个行为定义至少包含：稳定 ID、支持能力、触发条件、优先级、所需资源、冷却、最长时间、中断与恢复策略。规则读取快照，只返回候选；接受候选后才创建有状态的执行实例。
+
+建议的接口语义如下；这是接口草图，不是已存在或已编译的 API：
+
+```text
+BehaviorRule.evaluate(context, bird) -> Candidate | RejectionReason
+Candidate = behaviorID + participants + priority + score + claims + plan
+
+BehaviorRuntime.tryStart(candidate) -> Started(runID) | Rejected(reason)
+BehaviorRun.advance(dt, events) -> Effects + Running | Succeeded | Failed(reason)
+BehaviorRun.cancel(reason) -> CleanupEffects + RecoveryRequest?
+
+Effects = StartMotion | PlayPose | ReserveTarget | ReleaseTarget | EmitDomainEvent
+RecoveryRequest = FindSafePerch | ContinueDeparture | ReturnToIdle
+```
+
+- `evaluate` 不消耗随机数、不修改鸟。先按稳定 ID 排序候选，再由决策器使用注入的随机源选择，避免遍历顺序影响可重放性。
+- `tryStart` 对参与者、表面版本、能力和资源做最后校验；候选评估之后世界可能已经改变。
+- 运行实例只能产生有类型的效果，由引擎验证并执行；不能绕过运动系统直接写 `position`。
+- 引擎只提交一次终态：Succeeded、Failed 或 Cancelled。完成与取消各有终态事件；取消清理不会再触发成功奖励。
+- 第一版只需顺序步骤、等待条件和有上限的重复。并行动作必须经过通道资源检查；不要立刻设计通用脚本语言。
+- 每个等待条件有超时，每次更新的即时步骤转换有数量上限，避免无条件循环阻塞动画主线程。
+
+例如“洗澡”以后可表达成：观察水盆 → 占用槽位 → 接近并落脚 → 播放洗澡 → 甩水 → 理羽 → 释放槽位。水盆被撤走、鸟被点击、宿主失效都走相同取消接口。
+
+新增同伴理羽时，需要新增行为与双鸟素材，但不应再往 `DesktopController.tick` 添加理羽专用分支。新增短跳这种真正的新运动方式，则合理地扩展 `MotionSystem`，不能承诺所有新功能只增加一条配置。
+
+## 7. 优先级、资源竞争与取消
+
+### 7.1 先处理有效性，再处理优先级
+
+建议顺序：世界与目标有效性检查 → 明确用户命令 → 正在运行的动作与恢复 → 自发行为候选。屏幕消失、鸟被移除等属于有效性约束，不能被高权重的“想玩”覆盖。
+
+在通过有效性检查的候选中：手动换位高于主动玩具互动，主动互动高于随机显著事件，显著事件高于普通休息变化。全局暂停是执行策略，不靠一个更高的数字优先级模拟。
+
+### 7.2 用资源声明避免动作打架
+
+- 每只鸟的 `locomotion` 同时只有一个拥有者。
+- 当前素材是一张完整鸟的像素帧，`fullBodyPose` 首版也应互斥。不能假设头、翅膀和身体已经可以独立混合。
+- 可兼容的基础呼吸、眨眼由 pose 策略决定是否叠加或替换，不让每个业务行为自行争抢。
+- 落脚区间、道具槽位、多鸟角色均有带拥有者的预约。
+- 横穿、追逐等共用 `foregroundEncounter` 预算，初始全局最多一个显著事件；局部轻动作单独限流。
+- 多鸟资源要么一次获得全部，要么全部不获得；在单线程引擎中实现原子预约，不引入线程锁或无限等待。
+
+### 7.3 中断规则必须与行为同时定义
+
+| 事件 | 建议语义 |
+| --- | --- |
+| 用户点击鸟 | 取消可打断互动，释放关系与道具预约，从当前位置开始换位；连续点击不反复重置同一换位 |
+| 鼠标离开绕飞范围 | 结束互动意图，进入安全返回运动，不瞬移、不消失、不继续追踪 |
+| 关闭某个行为开关 | 停止创建；活跃实例执行该行为声明的软退出；当前过境可自然飞完 |
+| 暂停 | 保留现有“手动换位可以完成”的语义；冻结自主计时和等待队列，取消鼠标绑定互动；窗口必要跟随与有效性检查仍可执行 |
+| 睡眠 / 屏幕重建 / Space 切换 | 清理临时会话与待入场对象，重新验证落点；恢复后无积攒爆发 |
+| 同伴或道具消失 | 结束或降级会话；存活参与者独立寻找落点，不能永久等待 |
+| 应用退出 | 停止输入、取消运行实例、清理临时资源；不强行播放退出动画 |
+
+释放逻辑资源与终止运动要分开：取消追逐不意味着立即把正在空中的鸟切成站立。恢复过程仍由统一执行器拥有运动资源，完成交接后旧实例才完全退出。
+
+## 8. 时间、事件回调与逐帧数据流
+
+### 8.1 当前异步机制
+
+平台 Timer、鼠标全局/本地监听、屏幕与睡眠通知都能进入控制器；设置 UI 直接调用保存和预览入口。鼠标点击目前直接选择新落点并改状态，下一帧继续推进。`pendingFlock` 暂存鸟与延迟，`updateAmbient` 到时加入鸟集合；飞出所有显示范围后由 `advanceBirds` 清理。退出时移除鼠标监听。见 E1、E2、E6、E10。
+
+这是事件回调与逐帧模拟，不是网络流式任务。现有延迟队列不会向下游发送文字 chunk；下游消费的是当前鸟状态与每帧渲染结果。
+
+### 8.2 建议的输入与更新顺序
+
+所有平台回调统一切入一个串行拥有者。macOS 第一版可由主线程适配器调用纯核心引擎，不给每只鸟分配线程、actor 或 timer。
+
+```text
+平台输入 -> 归一化坐标、命中 BirdID、序号/世界版本 -> 命令队列
+窗口采样 -> 最新 WorldSnapshot（屏幕、表面、遮挡、鼠标摘要）
+
+一次模拟步：
+  1. 安装世界快照，处理屏幕/宿主/目标失效。
+  2. 消费有序命令，处理取消、显式换位和配置变更。
+  3. 推进现有动作，执行运动/姿态，收集完成和失败事件。
+  4. 完成资源释放、离场清理、会话收尾和数量统计。
+  5. 在决策时间点评估新候选；校验并启动允许的行为。
+  6. 输出只读 RenderSnapshot 和有序 DomainEvent。
+```
+
+新动作从下一模拟步推进，规则固定，防止同一帧内递归启动无限事件。命中来自最近一次渲染快照，提交时再次确认目标仍存在；失效目标返回忽略原因。
+
+输入处理需要有界：鼠标移动采用最新摘要，并保留速度/最大位移信息供“快速掠过”使用；点击和生命周期事件保序。队列满时丢弃过期预览、合并重复移动，并记录原因，不能悄悄丢失清理通知。
+
+### 8.3 时钟与重放
+
+- `dt` 与随机源从入口注入，行为内部不读墙上时间、不自行 sleep。
+- 建议引入固定模拟步及有界 accumulator；初始可用 1/60 秒、每次回调最多 3 步作为待性能验证参数。暂停/睡眠清空积压，不长时间补帧。
+- 运动逐步更新；自发行为选择可以低频执行，例如 5 Hz，点击和失效命令在下一个模拟步优先处理。频率是建议值，需实测调整。
+- 使用明确算法与版本的 seeded RNG；各鸟和场景使用稳定子流。相同 seed、配置版本、输入事件与模拟步序列，应重现相同决策。
+- 迁移要覆盖初始化停留时长、物种选择、落点采样和群体成员抽样等所有随机入口，不能只给最外层 scheduler 加一个 seed。
+- 跨 Swift/C# 不承诺浮点逐位相同；比较事件语义、状态、位置容差与时间容差。仅记录 seed 不能重放外部窗口变化，需要同时记录归一化输入。
+
+### 8.4 完成、失败与输出
+
+`DomainEvent` 至少区分 `BehaviorStarted`、`BehaviorCompleted`、`BehaviorCancelled`、`BehaviorFailed`、`BirdRemoved`。含 bird/run/session ID、原因、模拟时间和配置版本。
+
+拒绝候选不等于运行失败：`noSpace`、`cooldown`、`capabilityMissing`、`resourceBusy` 是可诊断的拒绝结果。运行中的宿主消失则产生失败或取消，并请求恢复行为。
+
+观察手册只消费去重后的成功完成事件；UI 显示预览被拒绝的具体原因；渲染只消费最终快照。一次运行最多一次终态，清理可重复调用且无副作用。
+
+## 9. 多鸟、道具和动画资源
+
+多鸟互动使用 `InteractionSession`：记录参与者和角色、资源预约、开始条件、最长等待、当前阶段和退出策略。候选鸟不应靠每帧“再找一下另一只”来维持关系。
+
+“并排停靠”的完整流程：选择两只可用鸟 → 验证可用边缘长度 → 预约两处落点 → 同时接受邀请 → 分别到达 → 同步进入招呼 → 释放会话。任一方被点击或落点失效，另一方立即获知并独立恢复。
+
+道具后续作为带稳定 ID、版本和可用槽位的世界实体加入，复用同一套会话与资源机制。点击穿透的桌面层不直接变成捕获全部鼠标的游戏窗口；放置、拖动道具使用用户明确进入的交互模式。
+
+素材能力通过 `SpeciesCapabilities` 和 `ClipCatalog` 声明。只有可解析的帧、锚点、持续时间和方向变体才能启用相关行为；缺少真正睡眠帧时，禁用该行为或标注为“闭眼休息”退化，不能宣称已经实现完整睡姿。
+
+原有脚部锚点、翻转、缩放和像素命中保持同一契约。新姿态必须同时检查头顶名字位置、遮挡裁剪和点击命中，不能只验动画图片。
+
+## 10. 配置与双平台策略
+
+第一版继续采用 Swift 定义行为和类型化参数，先把接口运行起来。验证过若干行为后，再把合适的数值与能力表提取到版本化共享 JSON；复杂逻辑不塞进字符串表达式。
+
+- 用户设置与物种默认值分开：用户控制开关、频率和体验预设，物种数据控制能力和行为偏好。
+- 引入 `schemaVersion`，继续兼容旧 `hoverDelay`、`pointerVisits`、`flockPasses`、`ambientFrequency`。未知可选内容可禁用并报告；未知必需版本不覆盖原文件。
+- 保存成功后一次性应用配置；候选用新版本，活跃动作明确选择保留已采样参数或软退出，不能中途重抽路径。
+- 预览走正常的校验、资源、运行和取消入口，仅允许绕过随机等待，并在诊断中标记 preview。
+- Windows 保留现有实现，待 macOS 基础契约稳定后按相同语义迁移；新功能在产品说明中继续明确平台差异。
+- 增加共享场景夹具：输入事件、seed、时间步、期望语义事件和位置容差。现有正则参数 parity 继续保留，但不能替代行为一致性测试。
+
+是否最终需要共享 C++/Rust 等核心，应由双端持续演进成本、性能测量和团队维护能力决定，当前资料不足以支持提前切换技术栈。
+
+## 11. 迁移路线与每步验收
+
+每个阶段先完成实现，再统一编译、验证和验收。阶段以可回归的行为边界划分，不边改几个函数边反复全量编译。
+
+| 阶段 | 范围 | 完成标准 |
+| --- | --- | --- |
+| M0：锁定语义 | 固化点击、暂停、失效、离场、数量、设置迁移场景；记录已有失败 | 有明确输入/输出夹具；既有 flaky 检查单独标注 |
+| M1：运行时骨架 | BirdID、输入命令、世界快照、时钟/RNG 注入、运行实例与取消；包装现有运动 | 单鸟只被一处推进；基础飞行、落脚、暂停和点击规则保持 |
+| M2：迁移已有互动 | 依次迁移点击换位、绕鼠标、过境；统一资源、预览、计数和诊断 | 删除对应旧控制器调度分支与状态源；不能留下新旧双运行时 |
+| M3：验证扩展性 | 实现打盹或观察鼠标一个完整样例，再加入着陆整理与个体差异 | 普通行为无需修改 DesktopController 的调度或渲染分支；素材缺失可解释 |
+| M4：多鸟会话 | 并排停靠、招呼、结伴起飞；验证同伴中断 | 参与者被点击/离场/失去落点后，剩余鸟和预约均可收尾 |
+| M5：道具场景与跨平台 | 食盘或落叶一个代表场景；共享夹具、Windows 对齐 | 道具删除、设置切换、屏幕变动无悬挂实例；双端按语义验收 |
+
+首个重构里程碑建议止于 M2，并以 M3 的一个行为证明接口可扩展。不一次性实现全部行为库，也不先造完整行为编辑器。
+
+迁移以行为为单位替换，临时适配器把新请求转换为现有 `Bird.fly` / `FlightPath` 调用。同一行为只能选一个实现路径。保留行为级回退开关或独立提交边界，验证后删除旧分支，不长期维护两套互相修改状态的实现。
+
+## 12. 验证、可观测性与架构验收
+
+### 12.1 已有证据
+
+下列为迁移前读取的上一轮留存日志。迁移后的验收记录见第 16 节，不将旧结果当作本次通过证据。
+
+| 证据 | 已有结果 | 能证明什么 |
+| --- | --- | --- |
+| `.build/ambient-tests.log` | 98 项单元测试通过 | 当前已覆盖的路径、几何、配置和行为规则 |
+| `.build/ambient-birds.log` / `ambient-bird-check/report.json` | 40 项鸟行为检查通过 | 当前点击优先、鼠标退出、互斥、过境清理等 |
+| `.build/ambient-settings.log` | 51 项设置检查通过 | 当前设置保存、默认值、语言切换等 |
+| `.build/ambient-population.log` | 7 项数量检查通过 | 当前迁入迁出和数量行为 |
+
+这些是旧实现的回归基线，不是未来引擎的测试结果。临时日志位于 ignored `.build/`，不作为仓库长期证据；可提交的依据是测试源码与可复现命令。
+
+此前桌面集成检查有 `playsLandingState` 着陆时序不稳定记录，并曾在未修改基线复现；迁移验收需单独记录该项结果，不能仅凭核心用例写成“全部集成测试通过”。迁移应优先把依赖真实时钟的核心判定改成可控时间场景，并保留少量真实桌面烟雾检查。
+
+### 12.2 引擎需要新增的验收场景
+
+1. 同一输入与 seed 可重放；30/60/120 Hz 外层回调产生约定容差内的结果。
+2. 单鸟运动资源不被两个动作同时拥有；同一 run 只产生一次终态。
+3. 在动作每个阶段插入点击、关闭开关、暂停、睡眠、同伴移除、道具移除与屏幕变化，最终没有泄漏预约或永远等待。
+4. 暂停期间只有明确允许的手动换位推进；自主概率、延迟入场、等待超时不积攒爆发。
+5. 负坐标、多屏断开、宿主移动与遮挡变化不产生瞬移、悬空站立和幽灵命中。
+6. 过境与常驻数量分开，菜单、诊断和测试使用相同口径。
+7. 有能力但缺素材、无合适落点、道具已过期时有确定拒绝原因和安全退化。
+8. 预览与正常动作共享中断、清理和安全约束。
+9. 以 50 常驻 + 最多 5 过境为现有规模基线，测量引擎耗时、窗口采样耗时、帧间隔、素材内存和待处理队列；报告硬件和 p95/p99，不凭架构图宣称性能改善。
+10. 动画观感单独人工验收：转向是否抖动、动作是否过密、姿态是否滑脚、名字/点击是否对齐、是否挡工作区域。
+
+建议提供可关闭的本地诊断面板：当前行为与阶段、参与者、资源拥有者、冷却、候选被拒绝原因、最近中断原因。使用有上限的环形事件记录，默认不长期保存桌面轨迹。
+
+### 12.3 判断架构是否完成的标准
+
+- 新增打盹等普通行为，只改行为定义、必要素材/能力和测试；不增加控制器专用计时字段。
+- 删除一个行为后，不留下悬空 scheduler、监听器、参与者引用和计数分支。
+- 所有点击、预览和自主触发汇入一个运行入口；所有结束路径汇入统一清理。
+- 决策层不依赖 AppKit；核心测试不需要真正显示桌面窗口。
+- 群体动作能解释“为什么没发生、为什么被取消”，无需靠随机等待猜原因。
+- 物种差异、用户偏好和技术执行分开，参数可调整且可验证。
+
+## 13. 源码阅读与证据索引
+
+下列 E1–E12 是迁移前架构评估的证据索引，行号和部分已删除符号保留为历史记录。迁移后的入口见第 16 节，以符号名定位。
+
+| 编号 | 文件与定位 | 证据用途 |
+| --- | --- | --- |
+| E1 | [Desktop.swift](../platforms/macos/Sources/Birding/Desktop.swift)，`tick` 372、`advanceBirds` 359、`updateStatusLine` 130、`writeDiagnostics` 388 | 主循环、暂停例外、清理与计数 |
+| E2 | [AmbientAnimations.swift](../platforms/macos/Sources/Birding/AmbientAnimations.swift)，`updateAmbient` 24、`startPointerVisit` 59、`startFlockPass` 75 | 互动生命周期、延迟队列、随机源与预览执行 |
+| E3 | [World.swift](../platforms/macos/Sources/BirdingCore/World.swift)，`Bird` 120、`fly` 179、`updateHost` 280、`tick` 304、`frameName` 359 | 状态归属、路径执行和动作帧耦合 |
+| E4 | [AmbientBehavior.swift](../platforms/macos/Sources/BirdingCore/AmbientBehavior.swift)，`AmbientScheduler` 19 | 仿真时间、条件选择与随机注入 |
+| E5 | [SpeciesBehavior.swift](../platforms/macos/Sources/BirdingCore/SpeciesBehavior.swift)，`hop` 61、`frame` 67 | 固定周期与现有物种动作 |
+| E6 | [HoverNames.swift](../platforms/macos/Sources/Birding/HoverNames.swift)，`bird(at:)` 19、`relocateBird` 37、`handleMouseDown` 49 | 像素命中、点击穿透、回调与清理 |
+| E7 | [PixelArt.swift](../platforms/macos/Sources/Birding/PixelArt.swift)，像素与锚点约定 5；[Desktop.swift](../platforms/macos/Sources/Birding/Desktop.swift)，`updateSprites` 27 | 素材、裁剪、名字和坐标契约 |
+| E8 | [SpeciesSettingsWindow.swift](../platforms/macos/Sources/Birding/SpeciesSettingsWindow.swift)，`previewPointerVisit`、`previewFlockPass`；[Probability.swift](../platforms/macos/Sources/BirdingCore/Probability.swift)，`BirdSettings` 81 | 设置、预览与配置兼容 |
+| E9 | [Windows World.cs](../platforms/windows/ChirpOS.Core/World.cs)，`Bird` 66；[parity 脚本](../scripts/test-species-parity.py) | 双平台重复实现和检查边界 |
+| E10 | [main.swift](../platforms/macos/Sources/Birding/main.swift)，`applicationDidFinishLaunching` 37、退出清理 61 | 生命周期入口与测试入口 |
+| E11 | [FlightBehavior.swift](../platforms/macos/Sources/BirdingCore/FlightBehavior.swift)，`FlightPath`、`FlightTiming`；[Population.swift](../platforms/macos/Sources/BirdingCore/Population.swift)，`tick` 25 | 可保留的运动与数量基础 |
+| E12 | [AmbientTests.swift](../platforms/macos/Tests/BirdingCoreTests/AmbientTests.swift)、[FlightBehaviorTests.swift](../platforms/macos/Tests/BirdingCoreTests/FlightBehaviorTests.swift)、[WorldTests.swift](../platforms/macos/Tests/BirdingCoreTests/WorldTests.swift)、[ExpandedVerification.swift](../platforms/macos/Sources/Birding/ExpandedVerification.swift) | 可复用的测试与迁移回归基线 |
+
+建议阅读顺序：E1 → E2 → E3 → E4/E5 → E11 → E6/E7 → E12 → E9。
+
+## 14. 外部资料与使用边界
+
+资料核对日期：2026-10-23。以下为行为灵感和架构思想来源，采用概述，不复制原文；优先级、类型设计、参数与迁移路线均为本项目建议。
+
+| 编号 | 来源 | 在本文中的用途 |
+| --- | --- | --- |
+| S1 | Cornell Lab，Do Birds Sleep?：`https://www.birds.cornell.edu/k12/do-birds-sleep/` | 闭眼、蓬羽、藏喙等休息姿态灵感 |
+| S2 | Audubon，Barn Swallow：`https://www.audubon.org/field-guide/bird/barn-swallow` | 家燕配偶靠坐、接触鸟喙和相互理羽的物种限定参考 |
+| S3 | Cornell Lab，Do birds play?：`https://www.allaboutbirds.org/news/do-birds-play/` | 幼鸟扑叶、摆弄和抛接物体的游戏灵感，不泛化到所有鸟种 |
+| S4 | Cornell Lab，Barn Swallow Overview：`https://www.allaboutbirds.org/guide/Barn_Swallow/overview` | 家燕追逐飞虫的飞行行为参考 |
+| S5 | Apple，GameplayKit Programming Guide / State Machines：`https://developer.apple.com/library/archive/documentation/General/Conceptual/GameplayKit_Guide/StateMachine.html` | 显式状态、合法转换和分离状态相关更新；是归档概念资料，不是依赖升级建议 |
+| S6 | Craig Reynolds，Steering Behaviors For Autonomous Characters：`https://www.red3d.com/cwr/steer/gdc99/` | 动作选择、转向、运动分层，以及后续追逐/避让的参考 |
+| S7 | VS Code Pets 官方文档：`https://tonybaloney.github.io/vscode-pets/pets/` | 鼠标互动、交朋友、追逐和抛球的产品参考；未审计其源码，也不据此判断适合直接引入 |
+| S8 | BTO，Preening, sunbathing, dustbathing and waterbathing：`https://www.bto.org/learn/about-birds/behaviour/preening-bathing` | 理羽、洗澡和部分鸟种相互理羽的概述；本次读取到搜索索引正文摘录，原页直接打开超时 |
+
+浴盆的具体动作序列、适用鸟种和持续时间仍属于待验证设计，不能由通用洗澡资料直接推导。
+
+## 15. 后续决策记录
+
+后续每轮修改在这里补充：日期、已接受的决策、替代方案、验证结果和改变原因。
+
+| 日期 | 记录 |
+| --- | --- |
+| 2026-10-23 | 记录动作储备与架构评估；建议渐进重构。目标架构与 M0–M5 均为提案，本轮未迁移运行代码。 |
+
+
+## 16. M0–M2 实施记录（2026-10-23）
+
+### 16.1 实际边界
+
+本轮在 macOS 落地统一行为运行时，迁移点击换位、绕鼠标、鸟群过境。Windows、M3 新行为样例、M4 社交会话和 M5 道具能力尚未实现。第 3–10 节中更完整的感知、动作姿态、能力库、个体状态和共享配置设计仍是后续目标。
+
+```mermaid
+flowchart LR
+    I[AppKit 鼠标／窗口／屏幕／设置] --> W[BehaviorWorld / EngineCommand]
+    W --> E[BehaviorEngine 单一推进入口]
+    E --> R[BehaviorRuntime 生命周期与资源占用]
+    R --> X[换位／绕鼠标／过境执行实例]
+    X --> P[DestinationPlanner / 现有 Bird 运动]
+    P --> S[BirdRenderState 值快照]
+    S --> V[Core Animation 绘制／像素命中]
+    R --> D[有界事件记录与诊断]
+```
+
+| 入口 | 本轮职责 |
+| --- | --- |
+| `BirdingCore/Behavior/BehaviorTypes.swift` | BirdID、BehaviorRunID、角色、命令、输入与渲染快照、拒绝原因、固定算法随机源 |
+| `BehaviorEngine.swift` | 鸟注册与移除、输入校验、设置、数量推进、固定时间步、候选选择、事件日志 |
+| `BehaviorRuntime.swift` | 单鸟运动占用、显著事件互斥、实例推进、超时与唯一终态、统一释放 |
+| `InteractionExecutions.swift` | 三个行为实例自己的参与者、阶段/等待、完成条件和恢复逻辑 |
+| `DestinationPlanner.swift` | 将原控制器的落点选择提取为先规划后应用；换位持续避开原位置 |
+| `Birding/AmbientAnimations.swift` | 平台输入快照、预览入口和结果文案；不再保存运行队列 |
+| `Birding/Desktop.swift` / `HoverNames.swift` | AppKit 生命周期与命令适配；绘制、名字与命中读取值快照和稳定 ID |
+| `BehaviorEngineTests.swift` | 不依赖 AppKit 窗口的可控场景与资源生命周期回归 |
+
+原控制器中的 `relocatingBirds`、`pointerVisitor`、`pendingFlock`、`pendingPointerPreview` 和 `updateAmbient` 已删除；`Bird.isPassingThrough/isVisitingPointer` 已删除。访问角色由引擎记录，行为归属由运行时记录，不能用飞行动画状态推断角色。
+
+### 16.2 运行契约
+
+- 调用方在主线程串行调用 `updateWorld`、`handle`、`advance`。核心同步执行，没有行为自建的 Timer、异步回调或第二个运动循环。
+- 每个可见鸟每个仿真步只调用一次 `Bird.tick`。固定步为 1/60 秒，单次外层更新最多接收 0.05 秒、推进 3 步；睡眠和负载造成的长间隔不会集中补发动作。
+- 引擎 `time` 记录所有固定步，包含暂停期间手动换位的时间。自主调度、人口、过境等待与非手动实例的 age 在暂停时冻结；已有窗口跟随仍由平台采样更新。
+- 点击换位先得到可用计划，再抢占原行为。重复点击不重新开始；暂停允许手动换位完成。宿主失效通过 `motionRevision/needsDestination` 触发重新规划，持续避开原点。
+- 绕鼠标、过境共享显著事件占用；每只参与鸟的运动只能属于一个行为。延迟预览也阻止新的显著事件。预览仅绕过自动等待，复用同一校验和执行。
+- 鼠标移动/点击、暂停、关闭开关记录为取消；宿主失效或超时记录为失败。每个 run 恰好一次终态，先释放占用再执行清理回调。
+- 关闭过境开关时撤销尚未出现的成员，已出现成员自然离开；睡眠、屏幕变化、Space 切换、退出会取消全部相关运行实例并清空过境成员。主动移除任一过境参与者按整组取消处理。
+- 菜单和诊断同读 `residentCount/departingCount/passingCount/pendingCount`。过境不增加常驻迁出统计，数量调度不以过境充当常驻。
+- 事件环最多保留 256 条，序号单调增加。`--diagnostics` 包含 seed、行为 run、参与者 ID、来源和结束原因；默认没有长期桌面输入录像。
+
+### 16.3 明确保留的迁移桥与限制
+
+- `Bird` 仍承载运动和素材帧选择。`installFixtureBirds` 与可读 Bird 引用服务既有桌面验证器；生产事件从命令入口进入。完全封闭 Bird 可变状态、拆出 MotionController/PosePlayer 留待下一阶段。
+- RNG 使用固定版本 SplitMix64 单一 seed 流，主要决策、初始停留时间和路径采样由引擎注入。同一代码版本、配置、初始状态、世界快照和命令时间线可在核心测试中复现；只有 seed 不能复现真实桌面。
+- 尚未实现每鸟/每行为独立随机子流、输入记录文件、跨平台逐位重放。新增随机采样会改变后续序列，跨版本不保证相同轨迹。
+- 暂未加入通用优先级评分器、外部行为注册插件、通用落脚区间预约、道具资源和能力表。当前接口允许在核心内新增执行类型；新种类的命令/选择器仍需显式接入，不增加桌面专用定时字段。
+- 不在此次迁移更改用户配置 schema，不需要迁移或重写已有设置文件。
+- 未测量 p95/p99 或整机能耗，不宣称此次重构提高性能；动画观感仍需真实桌面人工体验。
+
+### 16.4 本轮验收
+
+全部实现完成后集中执行，结果如下。没有提交或推送 Git，也没有修改 Windows 实现。
+
+| 验收 | 本轮结果 | 本地证据（ignored，不随仓库提交） |
+| --- | --- | --- |
+| Release 开发包构建 | 通过 | `.build/engine-build.log` |
+| XCTest | 114/114，通过；新增 16 个引擎用例 | `.build/engine-tests.log` |
+| 物种/飞行参数 parity | 46 鸟种、34 帧名、46 飞行参数匹配 | 同上，test.sh 前置检查 |
+| 鸟行为与像素命中 | 40/40 | `.build/engine-bird-check/report.json` |
+| 设置与持久化 | 51/51 | `.build/settings-check.3ppdYz/report.json` |
+| 常驻数量与离场 | 7/7 | `.build/population-check.bfJ4oV/report.json` |
+| 地面/落点/渲染 | 24/24 | `.build/engine-ground-check/report.json` |
+| 完整桌面集成 | 12/13；`playsLandingState` 未通过 | `.build/desktop-check.8Hup30/report.json` |
+| `git diff --check`、开发包 codesign 校验 | 通过 | 执行命令返回 0 |
+| 本地开发版重启与启动检查 | 通过；新进程已运行，常驻鸟正常进入，overlay 不抢焦点 | `.build/engine-live.json` |
+
+完整集成未通过项与迁移前在未修改基线复现的着陆采样时序问题一致。此次保留失败报告，未更改其断言、重复运行取通过结果或将其隐藏为成功。核心固定步场景已验证换位实际着陆及完成事件；这不能代替对原桌面时序用例的后续修正。
+
+可复现命令：
+
+```bash
+./scripts/build.sh
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./scripts/test.sh
+dist/ChirpOS.app/Contents/MacOS/Birding --verify-birds .build/engine-bird-check
+./scripts/verify-settings.sh
+./scripts/verify-population.sh
+dist/ChirpOS.app/Contents/MacOS/Birding --verify-ground .build/engine-ground-check
+./scripts/verify-desktop.sh
+git diff --check
+codesign --verify --deep --strict dist/ChirpOS.app
+```
+
