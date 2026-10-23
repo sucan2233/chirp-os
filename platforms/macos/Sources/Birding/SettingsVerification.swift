@@ -261,6 +261,8 @@ enum SettingsVerification {
             w.cancel()
             try checkPassiveSettings(folder:folder,checks:&checks)
             try PassiveMotionSettingsVerification.run(into:&checks,folder:folder)
+            try VisitorMemorySettingsVerification.run(into:&checks,folder:folder)
+            try VisitorMemoryPersistenceVerification.run(into:&checks,folder:folder)
             try checkLeafSettings(folder:folder,checks:&checks)
             d.showSpeciesGallery()
             checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.title=="图鉴…"} && d.gallery?.window?.isVisible == true
@@ -468,7 +470,11 @@ enum SettingsVerification {
             checks["leafPreviewUsesSavedDisabledSwitch-\(suffix)"] = event?.sequence != sequence && event?.kind == .leafPlay && event?.source == .preview && event?.type == .rejected && event?.reason == .disabled && !d.engine.hasLeafPreview && w.message.stringValue == d.behaviorMessage(.disabled)
             checks["leafRejectedPreviewPreservesPopulation-\(suffix)"] = d.engine.birds.count == before && d.engine.scenePropCount == 0 && d.engine.leasedBirdCount == 0
             if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView,let document=scroll.documentView {
-                scroll.contentView.scroll(to:CGPoint(x:0,y:document.bounds.height-scroll.contentView.bounds.height))
+                // Leaf play is no longer the last section. Navigate to its own
+                // heading and retain the full controls/help visibility checks.
+                let heading=document.subviews.first{$0.identifier?.rawValue=="leafSectionTitle"}
+                let top=max(0,(heading?.frame.minY ?? w.leafPlayButton.frame.minY)-12)
+                scroll.contentView.scroll(to:CGPoint(x:0,y:min(top,document.bounds.height-scroll.contentView.bounds.height)))
                 scroll.reflectScrolledClipView(scroll.contentView)
                 let controls=[w.leafPlayButton!,w.ambientLeafPlayButton!,w.releaseLeafButton!,w.clearLeafButton!]
                 checks["leafControlsReachable-\(suffix)"] = controls.allSatisfy{document.visibleRect.contains($0.frame)}

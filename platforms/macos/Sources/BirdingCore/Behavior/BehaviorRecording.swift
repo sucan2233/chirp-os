@@ -121,6 +121,7 @@ public struct RecordedCommand:Codable {
 public struct RecordedInput:Codable {
     public var kind:String
     public var world:RecordedWorld?,settings:BirdSettings?,command:RecordedCommand?,options:RecordedSimulationOptions?
+    public var visitorMemory:VisitorMemoryArchive?
     public var elapsed:Double?,sampleDT:Double?,remaining:Double?
     public var lower:Int?,upper:Int?,repeatCount:Int?
     public var bird:String?,entering:Bool?,avoiding:RecordedPoint?
@@ -159,12 +160,14 @@ public struct RecordedEvent:Codable,Equatable {
 public struct RecordedBirdState:Codable,Equatable {
     public var id:String,species:String,position:RecordedPoint,facingRight:Bool,frame:String,hop:Double,scale:Double
     public var state:String,behavior:String?,disturbance:Double?,cooldowns:[String:Double]?
+    public var visitorID:String?,familiarity:Double?
     init(_ value:BirdRenderState,engine:BehaviorEngine) {
         id=String(value.id.rawValue);species=value.species.rawValue;position=RecordedPoint(value.position)
         facingRight=value.facingRight;frame=value.frameName;hop=Double(value.hopOffset);scale=Double(value.scale)
         let bird=engine.bird(value.id)!
         state=bird.state.rawValue;behavior=engine.behavior(of:bird)?.rawValue
         let ecology=engine.ecology(of:bird);disturbance=ecology?.disturbance
+        visitorID=engine.visitor(of:bird)?.id;familiarity=ecology?.familiarity
         cooldowns=ecology.map{Dictionary(uniqueKeysWithValues:$0.cooldowns.map{($0.key.rawValue,$0.value)})}
     }
 }
@@ -178,11 +181,13 @@ public struct RecordedPropState:Codable,Equatable {
 public struct BehaviorReplayReport:Codable,Equatable {
     public var time:Double,paused:Bool,residents:Int,transients:Int,pending:Int,runs:Int,leases:Int,reservations:Int
     public var events:[RecordedEvent],birds:[RecordedBirdState],props:[RecordedPropState]
+    public var visitorMemory:VisitorMemoryArchive
     init(engine:BehaviorEngine,events:[RecordedEvent]) {
         time=engine.time;paused=engine.paused;residents=engine.residentCount;transients=engine.passingCount;pending=engine.pendingCount
         runs=engine.activeRunCount;leases=engine.leasedBirdCount;reservations=engine.reservedLandingCount
         self.events=events;birds=engine.renderSnapshot().map{RecordedBirdState($0,engine:engine)}
         props=engine.propSnapshot().map(RecordedPropState.init)
+        visitorMemory=engine.visitorMemoryArchive
     }
     public func save(to url:URL) throws {try BehaviorInputLog.encoder().encode(self).write(to:url,options:.atomic)}
 }
@@ -190,7 +195,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=2,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=3,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String
@@ -243,6 +248,9 @@ public struct BehaviorInputLog:Codable {
         for (index,input) in inputs.enumerated() {
             func bad() -> BehaviorRecordingError {.invalid("invalid input \(index): \(input.kind)")}
             switch input.kind {
+            case "visitorMemory":
+                guard let memory=input.visitorMemory else {throw bad()}
+                try engine.restoreVisitorMemory(memory)
             case "world":
                 guard let world=input.world,input.sampleDT.map({$0.isFinite && $0>0}) ?? true else {throw bad()}
                 engine.updateWorld(try world.validated(inheriting:engine.world),sampleDT:input.sampleDT)

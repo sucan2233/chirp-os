@@ -43,6 +43,7 @@ final class PerchActivityPlanner {
         var revision:UInt64
         var landings:Int
         var disturbance=0.0,quietTime=0.0
+        var familiarity=0.0
         var cooldowns:[BehaviorKind:Double]=[:]
         var active:Set<BehaviorKind>=[]
         var previousNear=false,previousRange=false,previousFast=false,previousClick=false
@@ -70,9 +71,13 @@ final class PerchActivityPlanner {
     private let selection:EngineRandom
     private(set) var rhythms:[BirdID:Rhythm]=[:]
     init(seed:UInt64) {self.seed=seed;selection=EngineRandom(seed:seed ^ 0x504552434853454C)}
-    func register(_ id:BirdID,bird:Bird) {
+    func register(_ id:BirdID,bird:Bird,temperament:BirdTemperament?=nil,familiarity:Double=0) {
         rhythms[id]=Rhythm(seed:seed ^ 0x5045524348524E47 ^ (id.rawValue &* 0x9E3779B97F4A7C15),bird:bird,
-            temperament:BirdTemperament(seed:seed,birdID:id))
+            temperament:temperament ?? BirdTemperament(seed:seed,birdID:id))
+        setFamiliarity(familiarity,for:id)
+    }
+    func setFamiliarity(_ value:Double,for id:BirdID) {
+        rhythms[id]?.familiarity=value.isFinite ? min(1,max(0,value)):0
     }
     func remove(_ id:BirdID) {rhythms.removeValue(forKey:id)}
     func suppress(_ id:BirdID) {rhythms[id]?.suppress()}
@@ -81,7 +86,7 @@ final class PerchActivityPlanner {
     func ecology(_ id:BirdID) -> BirdEcologySnapshot? {
         guard let rhythm=rhythms[id] else {return nil}
         return BirdEcologySnapshot(temperament:rhythm.temperament,disturbance:rhythm.disturbance,
-            quietTime:rhythm.quietTime,cooldowns:rhythm.cooldowns)
+            quietTime:rhythm.quietTime,familiarity:rhythm.familiarity,cooldowns:rhythm.cooldowns)
     }
     func observe(_ id:BirdID,stimulus:BirdStimulus,dt:Double) {
         guard let rhythm=rhythms[id],dt.isFinite,dt>=0 else {return}
@@ -103,13 +108,13 @@ final class PerchActivityPlanner {
         rhythm.previousFast=stimulus.fastPass;rhythm.previousClick=stimulus.click
         if approached,!stimulus.click,!stimulus.fastPass,rhythm.disturbance<0.6,
            automaticWeight(id,kind:.sideHop)>0,
-           rhythm.ecologyRandom.unit()<0.3+0.5*rhythm.temperament.boldness {
+           rhythm.ecologyRandom.unit()<(0.3+0.5*rhythm.temperament.boldness)*(1-0.35*rhythm.familiarity) {
             rhythm.hopOpportunityRemaining=0.5
         }
         if !stimulus.near || stimulus.click || stimulus.fastPass {rhythm.hopOpportunityRemaining=0}
         if clicked {noteClick(id)}
         else if fast && !stimulus.click {
-            rhythm.disturbance=min(1,rhythm.disturbance+0.65*(1-rhythm.temperament.boldness))
+            rhythm.disturbance=min(1,rhythm.disturbance+0.65*(1-rhythm.temperament.boldness)*(1-0.15*rhythm.familiarity))
             // A fast pass can replace a pending watch, but never retries while held.
             rhythm.pendingAttention=nil;rhythm.attentionRemaining=0
             if automaticWeight(id,kind:.alert)>0 {
@@ -117,7 +122,7 @@ final class PerchActivityPlanner {
             }
         } else if entered && !stimulus.click && !stimulus.fastPass && !stimulus.near,
                   automaticWeight(id,kind:.watch)>0,
-                  rhythm.ecologyRandom.unit()<rhythm.temperament.curiosity {
+                  rhythm.ecologyRandom.unit()<min(0.9,rhythm.temperament.curiosity+0.1*rhythm.familiarity) {
             rhythm.pendingAttention = .watch;rhythm.attentionRemaining=0.5
         }
         if !stimulus.inAttentionRange && rhythm.pendingAttention == .watch {
@@ -160,7 +165,7 @@ final class PerchActivityPlanner {
     func automaticWeight(_ id:BirdID,kind:BehaviorKind) -> Double {
         guard let rhythm=rhythms[id],!rhythm.active.contains(kind),(rhythm.cooldowns[kind] ?? 0)<=0 else {return 0}
         let traits=rhythm.temperament
-        if kind == .sideHop {return rhythm.disturbance<0.6 ? 0.5+traits.activity:0}
+        if kind == .sideHop {return rhythm.disturbance<0.6 ? (0.5+traits.activity)*(1-0.2*rhythm.familiarity):0}
         if kind == .alert {
             return rhythm.disturbance>=0.2 ? (1.2-traits.boldness)*(0.8+0.4*traits.activity):0
         }
@@ -170,7 +175,7 @@ final class PerchActivityPlanner {
         case .rest:return 1.2-0.4*traits.activity
         case .preen:return (0.6+0.8*traits.boldness)*(0.9+0.2*traits.curiosity)
         case .leafPlay:return (0.3+1.4*traits.curiosity)*(0.6+0.8*traits.activity)*(0.7+0.6*traits.boldness)
-        case .watch:return 0.4+1.2*traits.curiosity
+        case .watch:return (0.4+1.2*traits.curiosity)*(1+0.2*rhythm.familiarity)
         default:return 1
         }
     }

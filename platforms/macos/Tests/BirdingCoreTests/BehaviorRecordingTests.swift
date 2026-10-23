@@ -81,7 +81,7 @@ final class BehaviorRecordingTests:XCTestCase {
     }
     func testUnknownOrInvalidInputsAreRejectedWithoutSilentSkipping() throws {
         let e=fixture();var log=try e.recordedInputs()
-        for kind in ["unknown","world","settings","command","advance","population","route","depart"] {
+        for kind in ["unknown","world","settings","visitorMemory","command","advance","population","route","depart"] {
             log.inputs=[RecordedInput(kind:kind)]
             XCTAssertThrowsError(try log.replay(),kind)
         }
@@ -91,6 +91,25 @@ final class BehaviorRecordingTests:XCTestCase {
         input.elapsed=Double.greatestFiniteMagnitude;log.inputs=[input];XCTAssertNoThrow(try log.replay())
         log.inputs=[];XCTAssertThrowsError(try log.replay(callbackHz:0))
         log.failure="incomplete";XCTAssertThrowsError(try log.replay())
+    }
+    func testRestoredVisitorsAndLearningReplayWithoutReadingLocalMemory() throws {
+        let memory=VisitorMemory(seed:9999)
+        var identities:[SpeciesID:String]=[:]
+        for species in SpeciesID.allCases {
+            let profile=try XCTUnwrap(memory.acquire(species:species));identities[species]=profile.id
+            for _ in 0..<20 {memory.learn(profile.id,elapsed:0.05)}
+            memory.release(profile.id)
+        }
+        let e=fixture();try e.restoreVisitorMemory(memory.archive);e.bringInBird();advance(e,20)
+        let bird=try XCTUnwrap(e.birds.first),visitor=try XCTUnwrap(e.visitor(of:bird))
+        XCTAssertEqual(visitor.id,identities[bird.profile.id]);XCTAssertGreaterThan(visitor.familiarity,0)
+        var world=e.world;world.pointer=CGPoint(x:bird.position.x+180,y:bird.position.y);e.updateWorld(world)
+        advance(e,5)
+        let inputCount=try e.recordedInputs().inputs.count
+        XCTAssertThrowsError(try e.restoreVisitorMemory(memory.archive))
+        XCTAssertEqual(try e.recordedInputs().inputs.count,inputCount)
+        XCTAssertEqual(try e.recordedInputs().inputs.filter{$0.kind == "visitorMemory"}.count,1)
+        try assertReplay(e)
     }
     func testWorldManifestDeltaPreservesChangesAndClearsAndLongHostSamples() throws {
         let e=fixture();e.bringInBird();advance(e,3)
@@ -166,7 +185,7 @@ final class BehaviorRecordingTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let folder=root.appendingPathComponent("shared/behavior-fixtures/v1")
         let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="json"}.sorted{$0.path<$1.path}
-        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json"])
+        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
@@ -181,6 +200,16 @@ final class BehaviorRecordingTests:XCTestCase {
                 XCTAssertNotEqual(bird.position.x,800,"hop must change the actual foot position")
             }
             if file.lastPathComponent=="takeoff-preparation.json" {XCTAssertTrue(finished.contains("takeoffPreparation"))}
+            if file.lastPathComponent=="returning-visitor.json" {
+                let bird=try XCTUnwrap(reference.birds.first)
+                XCTAssertEqual(reference.birds.count,1);XCTAssertEqual(bird.id,"2")
+                XCTAssertEqual(bird.visitorID,"99");XCTAssertEqual(bird.familiarity,0.5)
+                let memory=VisitorMemory(seed:0);try memory.restore(reference.visitorMemory)
+                let profile=try XCTUnwrap(memory.profile("99"))
+                XCTAssertEqual(profile.visits,4);XCTAssertEqual(profile.familiarity,0.5)
+                XCTAssertEqual(profile.temperament,BirdTemperament(seed:9001,birdID:BirdID(99)))
+                XCTAssertTrue(reference.events.contains{$0.type=="birdRemoved" && $0.participants==["1"]})
+            }
             if file.lastPathComponent=="leaf.json" {XCTAssertTrue(finished.contains("leafPlay"))}
             if file.lastPathComponent=="social.json" {XCTAssertTrue(finished.contains("socialGreeting"))}
             if file.lastPathComponent=="interruptions.json" {

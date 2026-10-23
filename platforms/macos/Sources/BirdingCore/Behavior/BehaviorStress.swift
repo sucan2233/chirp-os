@@ -61,6 +61,7 @@ public enum BehaviorStress {
     public struct Peaks: Codable, Equatable {
         public internal(set) var activeRuns=0, birds=0, leases=0, reservations=0, props=0, events=0
         public internal(set) var ecologyMemories=0, pendingBirds=0
+        public internal(set) var visitorProfiles=0, visitorLeases=0
     }
     public struct Integrity: Codable, Equatable {
         public let samples: Int
@@ -83,9 +84,11 @@ public enum BehaviorStress {
         public let reservations: Int
         public let props: Int
         public let ecologyMemories: Int
+        public let visitorLeases:Int
+        public let retainedVisitorProfiles:Int
         public let pendingPreviews: Int
         public var passed: Bool {
-            [activeRuns,birds,pendingBirds,leases,reservations,props,ecologyMemories,pendingPreviews].allSatisfy{$0==0}
+            [activeRuns,birds,pendingBirds,leases,reservations,props,ecologyMemories,pendingPreviews,visitorLeases].allSatisfy{$0==0} && retainedVisitorProfiles<=VisitorMemoryArchive.maximumProfiles
         }
     }
     public struct Timing: Codable, Equatable {
@@ -159,7 +162,7 @@ public enum BehaviorStress {
         private var samples=0
         private var violations:[String:Int]=[:]
         private static let names=["eventSequence","runLifecycle","leaseOwnership","reservations","propOwnership",
-                                  "finitePresentation","uniqueBirds","ecologyMemory","boundedResources","finalRunBalance","successfulWork","noTimeouts","actionCoverage","autonomousCoverage"]
+                                  "finitePresentation","uniqueBirds","ecologyMemory","boundedResources","finalRunBalance","successfulWork","noTimeouts","actionCoverage","autonomousCoverage","visitorMemory"]
         func check(_ name:String,_ condition:Bool) {if !condition {violations[name,default:0]+=1}}
         private func hash(_ value:UInt64,into digest:inout UInt64) {digest=(digest ^ value) &* 1099511628211}
         private func hash(_ value:String,into digest:inout UInt64) {for byte in value.utf8 {hash(UInt64(byte),into:&digest)}; hash(255,into:&digest)}
@@ -220,6 +223,10 @@ public enum BehaviorStress {
                 p.position.x.isFinite && p.position.y.isFinite && p.rotation.isFinite && p.size.isFinite && p.size>0 && p.opacity.isFinite && (0...1).contains(p.opacity)
             })
             let residents=Set(models.filter{engine.role(of:$0) == .resident}.compactMap{engine.id(of:$0)})
+            let visitors=models.compactMap{engine.visitor(of:$0)}
+            check("visitorMemory",Set(visitors.map(\.id)).count==visitors.count && engine.activeVisitorCount==visitors.count &&
+                  engine.rememberedVisitorCount<=VisitorMemoryArchive.maximumProfiles &&
+                  visitors.allSatisfy{$0.familiarity.isFinite && (0...1).contains($0.familiarity)})
             check("ecologyMemory",Set(engine.perchPlanner.rhythms.keys)==residents && models.allSatisfy {bird in
                 guard engine.role(of:bird) == .resident else {return true}
                 guard let state=engine.ecology(of:bird) else {return false}
@@ -232,6 +239,8 @@ public enum BehaviorStress {
             peaks.leases=max(peaks.leases,owners.count); peaks.reservations=max(peaks.reservations,slots.count)
             peaks.props=max(peaks.props,propIDs.count); peaks.events=max(peaks.events,engine.events.count)
             peaks.ecologyMemories=max(peaks.ecologyMemories,engine.perchPlanner.rhythms.count); peaks.pendingBirds=max(peaks.pendingBirds,engine.pendingCount)
+            peaks.visitorProfiles=max(peaks.visitorProfiles,engine.rememberedVisitorCount)
+            peaks.visitorLeases=max(peaks.visitorLeases,engine.activeVisitorCount)
             hash(UInt64(runs.count),into:&stateHash); hash(UInt64(slots.count),into:&stateHash)
             for b in birds {
                 hash(b.id.rawValue,into:&stateHash); hash(b.species.rawValue,into:&stateHash)
@@ -482,7 +491,8 @@ public enum BehaviorStress {
                 naturallyCompletedDuringDrain:auditor.metrics.drainCompletions,explicitlyCancelledRuns:auditor.metrics.explicitCleanupCancellations,
                 residentsBeforeRemoval:retained,explicitlyRemovedBirds:removedBirds,activeRuns:engine.activeRunCount,birds:engine.birds.count,
                 pendingBirds:engine.pendingCount,leases:engine.leasedBirdCount,reservations:engine.reservedLandingCount,props:engine.scenePropCount,
-                ecologyMemories:engine.perchPlanner.rhythms.count,pendingPreviews:(engine.hasLeafPreview ? 1:0)+(engine.hasPointerPreview ? 1:0))
+                ecologyMemories:engine.perchPlanner.rhythms.count,visitorLeases:engine.activeVisitorCount,
+                retainedVisitorProfiles:engine.rememberedVisitorCount,pendingPreviews:(engine.hasLeafPreview ? 1:0)+(engine.hasPointerPreview ? 1:0))
             return Report(configuration:config,workload:Workload(version:1,fixedStepSeconds:BehaviorEngine.step,activeSteps:activeSteps,
                 warmupSteps:warmupSteps,drainSteps:drainSteps,drainLimitSteps:drainLimit,worldSampleEverySteps:6,timingSampleLimit:WallSamples.limit,
                 frameManifest:"Existing BirdArt atlas vocabulary, keyed by SpeciesCatalog.standard entries; no renderer assets loaded",

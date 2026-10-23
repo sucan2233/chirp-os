@@ -22,6 +22,7 @@ public struct BirdEcologySnapshot:Equatable {
     public let temperament:BirdTemperament
     public let disturbance:Double
     public let quietTime:Double
+    public let familiarity:Double
     public let cooldowns:[BehaviorKind:Double]
 }
 

@@ -64,6 +64,7 @@ extension BehaviorEngine {
             if inRange {attentionRanges.insert(id)} else {attentionRanges.remove(id)}
             perchPlanner.observe(id,stimulus:BirdStimulus(near:onDisplay && distance<near,
                 inAttentionRange:inRange,fastPass:!world.buttonsDown && onDisplay && perception.passesNear(bird.position,radius:near),click:false),dt:dt)
+            observeVisitor(id,bird:bird,inAttentionRange:inRange,distance:distance,dt:dt)
         }
     }
     /// Stable traversal and a separate stream keep optional ecology out of the

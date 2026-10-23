@@ -15,6 +15,8 @@ public final class BehaviorEngine {
     let poseMixer=PoseMixer()
     let random:EngineRandom
     let perchPlanner:PerchActivityPlanner
+    let visitorMemory:VisitorMemory
+    var visitorIDs:[BirdID:String]=[:]
     private let socialRandom:EngineRandom
     let ecologyRandom:EngineRandom
     var perception=PointerPerception()
@@ -48,6 +50,7 @@ public final class BehaviorEngine {
         self.seed=seed;self.random=EngineRandom(seed:seed);self.settings=settings
         self.inputRecorder=recordInputs ? BehaviorInputRecorder(seed:seed,settings:settings):nil
         self.perchPlanner=PerchActivityPlanner(seed:seed)
+        self.visitorMemory=VisitorMemory(seed:seed)
         self.socialRandom=EngineRandom(seed:seed ^ 0x534F4349414C524E)
         self.ecologyRandom=EngineRandom(seed:seed ^ 0x45434F5343484544)
         scheduler.reset(settings.ambientFrequency);observePopulation()
@@ -86,6 +89,20 @@ public final class BehaviorEngine {
     public func propSnapshot() -> [ScenePropRenderState] {runtime.propSnapshots(in:self)}
     public func id(of bird:Bird) -> BirdID? {identities[ObjectIdentifier(bird)]}
     public func ecology(of bird:Bird) -> BirdEcologySnapshot? {id(of:bird).flatMap{perchPlanner.ecology($0)}}
+    public var visitorMemoryArchive:VisitorMemoryArchive {visitorMemory.archive}
+    public var activeVisitorCount:Int {visitorMemory.activeCount}
+    public var rememberedVisitorCount:Int {visitorMemory.profileCount}
+    public func visitor(of bird:Bird) -> VisitorProfile? {
+        id(of:bird).flatMap{visitorIDs[$0]}.flatMap{visitorMemory.profile($0)}
+    }
+    /// Bootstrap input, before any live identity is registered. Both persistence
+    /// and replay use this boundary; an import never rewrites active birds.
+    public func restoreVisitorMemory(_ archive:VisitorMemoryArchive) throws {
+        guard order.isEmpty else {throw VisitorMemoryError.invalid("cannot restore visitor memory while birds are registered")}
+        try visitorMemory.restore(archive)
+        var input=RecordedInput(kind:"visitorMemory");input.visitorMemory=archive
+        beginRecordingInput(input);endRecordingInput()
+    }
     public func bird(_ id:BirdID) -> Bird? {records[id]?.bird}
     public func role(of bird:Bird) -> BirdRole? {id(of:bird).flatMap{records[$0]?.role}}
     public func behavior(of bird:Bird) -> BehaviorKind? {id(of:bird).flatMap{runtime.kind(for:$0)}}
@@ -97,7 +114,11 @@ public final class BehaviorEngine {
         let id=BirdID(nextBirdID);nextBirdID+=1
         records[id]=Record(bird:bird,role:role,visible:visible)
         identities[ObjectIdentifier(bird)]=id;order.append(id)
-        if role == .resident {perchPlanner.register(id,bird:bird)}
+        if role == .resident {
+            let profile=settings.visitorMemoryEnabled ? visitorMemory.acquire(species:bird.profile.id):nil
+            if let profile {visitorIDs[id]=profile.id}
+            perchPlanner.register(id,bird:bird,temperament:profile?.temperament,familiarity:profile?.familiarity ?? 0)
+        }
         return id
     }
     // Fixture bridge for the existing desktop verifiers. Production spawning
@@ -116,6 +137,7 @@ public final class BehaviorEngine {
     func removeRecord(_ id:BirdID) {
         guard let record=records.removeValue(forKey:id) else {return}
         identities.removeValue(forKey:ObjectIdentifier(record.bird));order.removeAll{$0==id}
+        if let visitorID=visitorIDs.removeValue(forKey:id) {visitorMemory.release(visitorID)}
         perchPlanner.remove(id);poseMixer.remove(id);attentionRanges.remove(id)
         emit(.birdRemoved,participants:[id],reason:.removed)
     }
@@ -140,6 +162,10 @@ public final class BehaviorEngine {
             runtime.cancel(where:{$0.kind == .pointerVisit},reason:.settingsChanged,in:self)
         }
         settings=value;scheduler.reset(value.ambientFrequency)
+        for id in visitorIDs.keys {
+            let familiarity=value.visitorMemoryEnabled ? visitorIDs[id].flatMap{visitorMemory.profile($0)?.familiarity} ?? 0:0
+            perchPlanner.setFamiliarity(familiarity,for:id)
+        }
         if !value.leafPlayEnabled {
             if hasLeafPreview {cancelPreview(.settingsChanged)}
             runtime.cancel(where:{$0.kind == .leafPlay},reason:.settingsChanged,in:self)

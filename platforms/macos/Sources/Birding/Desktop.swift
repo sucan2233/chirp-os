@@ -105,6 +105,9 @@ final class DesktopController: NSObject {
     var settingsWindow: SpeciesSettingsWindow?
     var settingsURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Birding/settings.json")
     var legacyURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Birding/species.json")
+    var visitorMemoryPersistenceEnabled=VisitorMemoryPersistence.automaticEnabled(arguments:CommandLine.arguments)
+    var visitorMemoryURL=VisitorMemoryPersistence.defaultURL
+    var visitorMemoryPersistence:VisitorMemoryPersistence?
     func t(_ zh:String,_ en:String) -> String { language.text(zh,en) }
     func spriteScale(for bird: Bird) -> CGFloat { scale * bird.profile.relativeScale }
     func loadSpeciesConfig() throws {
@@ -203,6 +206,7 @@ final class DesktopController: NSObject {
             population = Population(range:saved)
         }
         do { try loadSpeciesConfig() } catch { NSLog("Birding species configuration: %@; using bundled defaults",error.localizedDescription) }
+        loadVisitorMemory()
         makeMenu(); rebuildScreens(); startMouseMonitoring()
         if !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {DispatchQueue.main.async { [weak self] in self?.promptNewSpecies() }}
         sampleWindows(dt: 1.0/30)
@@ -283,6 +287,7 @@ final class DesktopController: NSObject {
             sampleWindows(dt: lastSample>0 ? now-lastSample:1); lastSample = now
         }
         advanceBirds(dt)
+        persistVisitorMemoryIfNeeded(now:now)
         updateHover(now:now)
         for view in views { view.updateSprites() }
         if now-lastDiagnostic > 1 {
@@ -315,7 +320,10 @@ final class DesktopController: NSObject {
             },
             "ecology":birds.compactMap { bird -> [String:Any]? in
                 guard let id=engine.id(of:bird),let state=engine.ecology(of:bird) else {return nil}
+                let visitor=engine.visitor(of:bird)
                 return ["bird":id.rawValue,"disturbance":state.disturbance,"quietTime":state.quietTime,
+                    "visitorID":visitor?.id ?? "","familiarity":state.familiarity,
+                    "storedFamiliarity":visitor?.familiarity ?? 0,"visits":visitor?.visits ?? 0,
                     "temperament":["boldness":state.temperament.boldness,"curiosity":state.temperament.curiosity,
                         "sociability":state.temperament.sociability,"activity":state.temperament.activity],
                     "cooldowns":Dictionary(uniqueKeysWithValues:state.cooldowns.map{($0.key.rawValue,$0.value)})]
@@ -323,7 +331,18 @@ final class DesktopController: NSObject {
             "arrivals":arrivalCount,"departures":departureCount,
             "spriteScale":scale, "flightSpeedMultiplier":Bird.flightSpeedMultiplier,
             "nonactivating":panels.allSatisfy{ !$0.canBecomeKey && !$0.canBecomeMain && $0.ignoresMouseEvents },
-            "birds":birds.map{["id":engine.id(of:$0)?.rawValue ?? 0,"role":engine.role(of:$0)?.rawValue ?? "","behavior":engine.behavior(of:$0)?.rawValue ?? "","species":$0.profile.id.rawValue,"name":$0.profile.name,"relativeScale":$0.profile.relativeScale,"state":$0.state.rawValue,"departing":$0.isDeparting,"onGround":$0.hostID.map{grounds.contains($0)} ?? false,"host":$0.hostID ?? 0,"depth":$0.depthID ?? 0,"x":$0.position.x,"y":$0.position.y,"frame":engine.id(of:$0).flatMap{rendered[$0]?.frameName} ?? $0.frameName,"followed":$0.followedDistance,"startles":$0.startledCount,"landings":$0.landedCount] as [String:Any]}]
+            "birds":birds.map { bird -> [String:Any] in
+                let visitor=engine.visitor(of:bird)
+                return ["id":engine.id(of:bird)?.rawValue ?? 0,"role":engine.role(of:bird)?.rawValue ?? "",
+                    "behavior":engine.behavior(of:bird)?.rawValue ?? "","species":bird.profile.id.rawValue,
+                    "name":bird.profile.name,"relativeScale":bird.profile.relativeScale,"state":bird.state.rawValue,
+                    "departing":bird.isDeparting,"onGround":bird.hostID.map{grounds.contains($0)} ?? false,
+                    "host":bird.hostID ?? 0,"depth":bird.depthID ?? 0,"x":bird.position.x,"y":bird.position.y,
+                    "frame":engine.id(of:bird).flatMap{rendered[$0]?.frameName} ?? bird.frameName,
+                    "followed":bird.followedDistance,"startles":bird.startledCount,"landings":bird.landedCount,
+                    "visitorID":visitor?.id ?? "","familiarity":engine.ecology(of:bird)?.familiarity ?? 0,
+                    "storedFamiliarity":visitor?.familiarity ?? 0,"visits":visitor?.visits ?? 0]
+            }]
         if let data = try? JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted,.sortedKeys]) { try? data.write(to: URL(fileURLWithPath:path), options: .atomic) }
     }
     func makeMenu() {
