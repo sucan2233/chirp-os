@@ -39,11 +39,12 @@ extension DesktopController {
         case .missingFrames:return t("当前鸟种暂不支持这个动作。","This activity is not yet available for this bird.")
         case .pointerNearby:return t("请先把鼠标移离小鸟，让它安静停留。","Move the pointer away from the bird so it can settle.")
         case .noSpecies:return t("请启用至少一种群飞鸟种。","Enable at least one flock species.")
+        case .noCompanion:return t("请等待两只小鸟在同一条可见边缘附近停稳，再预览招呼。","Wait for two nearby birds to settle on the same visible edge, then try the greeting.")
         case .unavailableBird,.missingBird:
             return t("暂时没有合适的小鸟，请等它在可见位置停稳后再试。","No bird is ready yet. Wait for one to settle in a visible spot and try again.")
         case .userInput:return t("请先松开鼠标，再试一次。","Release the mouse button and try again.")
         case .noSpace:
-            return t("暂时无法开始：请将鼠标放在屏幕中部，并等待同屏的小鸟停稳。","Not available yet. Place the pointer near screen center and wait for a bird to perch on that screen.")
+            return t("可见空间不足。请等待小鸟在更开阔、未被遮挡的位置停稳。","Not enough visible space. Wait for birds to settle in a clear, unobstructed area.")
         default:return t("预览已取消，可以稍后重试。","Preview cancelled. You can try again later.")
         }
     }

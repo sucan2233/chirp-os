@@ -14,6 +14,7 @@ public enum PerchActionKind:String,CaseIterable {
 struct BirdPose {
     let frameName:String
     let hopOffset:CGFloat
+    var facingRight:Bool? = nil
 }
 
 struct PerchActionPlan {

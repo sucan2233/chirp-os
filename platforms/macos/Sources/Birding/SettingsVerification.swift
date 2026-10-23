@@ -11,6 +11,10 @@ enum SettingsVerification {
             let prefs=UserDefaults(suiteName:suite)!
             defer { prefs.removePersistentDomain(forName:suite) }
             let d=DesktopController();d.preferences=prefs
+            func birdCounts() -> [Int] {
+                [d.engine.birds.count,d.engine.residentCount,d.engine.passingCount,d.engine.departingCount,
+                 d.engine.pendingCount,d.engine.arrivalCount,d.engine.departureCount]
+            }
             d.settingsURL=folder.appendingPathComponent("settings.json");d.legacyURL=folder.appendingPathComponent("legacy.json")
             let login = VerificationLoginItem(); d.loginService = login
             d.makeMenu()
@@ -31,7 +35,23 @@ enum SettingsVerification {
             login.status = .enabled; d.menuWillOpen(d.status.menu!)
             checks["loginExternalChangeRefreshes"] = d.loginItem?.state == .on
             d.showSpeciesSettings()
+            let cancelledWindow=d.settingsWindow!
+            cancelledWindow.socialInteractionsButton.performClick(nil)
+            checks["socialCancelledDraftWasEdited"] = !cancelledWindow.draft.socialInteractions && d.settings.socialInteractions
+            cancelledWindow.cancel()
+            checks["socialCancelDoesNotApplyOrSave"] = cancelledWindow.window?.isVisible == false && d.settings.socialInteractions && !FileManager.default.fileExists(atPath:d.settingsURL.path)
+            d.showSpeciesSettings()
             let w=d.settingsWindow!
+            checks["socialReopeningDiscardsCancelledDraft"] = w !== cancelledWindow && w.draft.socialInteractions && w.socialInteractionsButton.state == .on
+            checks["socialInteractionsDefaultOn"] = w.draft.socialInteractions && d.settings.socialInteractions && w.socialInteractionsButton.state == .on
+            checks["socialInteractionsChineseLabels"] = w.socialInteractionsButton.title == "双鸟招呼" && w.previewSocialGreetingButton.title == "预览双鸟招呼"
+            w.socialInteractionsButton.performClick(nil)
+            checks["socialToggleOnlyChangesDraft"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off && d.settings.socialInteractions
+            let beforeMissingCompanion=birdCounts(),beforeMissingCompanionSequence=d.engine.events.last?.sequence
+            w.previewSocialGreetingButton.performClick(nil)
+            checks["socialPreviewUsesSavedEnabledSwitch"] = !w.draft.socialInteractions && d.settings.socialInteractions && d.engine.events.last?.sequence != beforeMissingCompanionSequence && d.engine.events.last?.kind == .socialGreeting && d.engine.events.last?.source == .preview && d.engine.events.last?.type == .rejected && d.engine.events.last?.reason == .noCompanion
+            checks["socialMissingCompanionExplainedChinese"] = w.message.stringValue == d.behaviorMessage(.noCompanion) && w.message.stringValue.contains("两只")
+            checks["socialMissingCompanionDoesNotCreateBirds"] = birdCounts() == beforeMissingCompanion && d.engine.activeRunCount == 0 && d.engine.leasedBirdCount == 0
             checks["hoverDelayDefaultsToOneSecond"] = w.hoverDelayField.doubleValue == 1 && w.hoverDelaySlider.doubleValue == 1
             checks["perchActivitiesDefaultOn"] = w.draft.perchActions && d.settings.perchActions && w.perchActionsButton.state == .on
             checks["perchActivitiesChineseLabels"] = w.perchActionsButton.title == "停栖小动作" && w.previewRestButton.title == "预览闭眼休息" && w.previewPreenButton.title == "预览整理羽毛"
@@ -76,6 +96,11 @@ enum SettingsVerification {
             checks["languageKeepsUnsavedEdits"] = w.draft.probabilities == before && w.detailFields[0][2].stringValue == "1.25" && w.hoverDelayField.stringValue == "0.25"
             checks["perchDraftSurvivesLanguageChange"] = !w.draft.perchActions && w.perchActionsButton.state == .off && d.settings.perchActions
             checks["perchActivitiesEnglishLabels"] = w.perchActionsButton.title == "Perch activities" && w.previewRestButton.title == "Preview eyes-closed rest" && w.previewPreenButton.title == "Preview preening"
+            checks["socialDraftSurvivesLanguageChange"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off && d.settings.socialInteractions
+            checks["socialInteractionsEnglishLabels"] = w.socialInteractionsButton.title == "Two-bird greetings" && w.previewSocialGreetingButton.title == "Preview two-bird greeting"
+            let beforePausedGreeting=birdCounts(),beforePausedGreetingSequence=d.engine.events.last?.sequence
+            w.previewSocialGreetingButton.performClick(nil)
+            checks["socialPreviewPaused"] = d.engine.events.last?.sequence != beforePausedGreetingSequence && d.engine.events.last?.kind == .socialGreeting && d.engine.events.last?.source == .preview && d.engine.events.last?.reason == .paused && w.message.stringValue == d.behaviorMessage(.paused) && birdCounts() == beforePausedGreeting
             for (name,button) in [("rest",w.previewRestButton!),("preen",w.previewPreenButton!)] {
                 let sequence=d.engine.events.last?.sequence
                 button.performClick(nil)
@@ -86,13 +111,20 @@ enum SettingsVerification {
             checks["saveAndReloadPreserveProbabilitiesLocksAndBehavior"] = saved.probabilities == w.draft.probabilities && saved.catalog.profile(.redWhiskeredBulbul).speed == 1.25
             checks["hoverDelaySavedAndAppliedImmediately"] = saved.hoverDelay == 0.25 && d.settings.hoverDelay == 0.25
             checks["perchSettingSavedAndAppliedImmediately"] = !saved.perchActions && !d.settings.perchActions
+            checks["socialSettingSavedAndAppliedImmediately"] = !saved.socialInteractions && !d.settings.socialInteractions
             let reloaded=DesktopController();reloaded.settingsURL=d.settingsURL;reloaded.legacyURL=d.legacyURL
             try reloaded.loadSpeciesConfig()
             checks["hoverDelaySurvivesRestart"] = reloaded.settings.hoverDelay == 0.25
             checks["perchSettingSurvivesRestart"] = !reloaded.settings.perchActions
+            checks["socialSettingSurvivesRestart"] = !reloaded.settings.socialInteractions
             // The UI may contain an enabled draft while the saved switch is off.
             // Both buttons must still go through the engine's saved-settings gate.
             d.paused=false;w.perchActionsButton.performClick(nil)
+            w.socialInteractionsButton.performClick(nil)
+            let beforeDisabledGreeting=birdCounts(),beforeDisabledGreetingSequence=d.engine.events.last?.sequence
+            w.previewSocialGreetingButton.performClick(nil)
+            checks["socialPreviewUsesSavedDisabledSwitch"] = w.draft.socialInteractions && !d.settings.socialInteractions && d.engine.events.last?.sequence != beforeDisabledGreetingSequence && d.engine.events.last?.kind == .socialGreeting && d.engine.events.last?.source == .preview && d.engine.events.last?.type == .rejected && d.engine.events.last?.reason == .disabled && w.message.stringValue == d.behaviorMessage(.disabled)
+            checks["socialDisabledPreviewPreservesPopulation"] = birdCounts() == beforeDisabledGreeting && d.engine.activeRunCount == 0 && d.engine.leasedBirdCount == 0
             for (name,button) in [("rest",w.previewRestButton!),("preen",w.previewPreenButton!)] {
                 let sequence=d.engine.events.last?.sequence
                 button.performClick(nil)
@@ -103,12 +135,16 @@ enum SettingsVerification {
             w.save();d.settingsURL=settingsURL
             let afterFailedSave=try BirdSettings.decode(Data(contentsOf:settingsURL))
             checks["failedPerchSavePreservesActiveAndStoredSettings"] = w.draft.perchActions && !d.settings.perchActions && !afterFailedSave.perchActions && w.message.stringValue == "Could not save. Try again; active settings are unchanged."
+            checks["failedSocialSavePreservesActiveAndStoredSettings"] = w.draft.socialInteractions && !d.settings.socialInteractions && !afterFailedSave.socialInteractions && w.message.stringValue == "Could not save. Try again; active settings are unchanged."
+            w.socialInteractionsButton.performClick(nil)
             w.perchActionsButton.performClick(nil);d.paused=true
             w.tabs.selectTabViewItem(at:2)
             try snapshot(w.window!,to:folder.appendingPathComponent("interaction-en.png"))
             if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView {
                 scroll.contentView.scroll(to:CGPoint(x:0,y:200));scroll.reflectScrolledClipView(scroll.contentView)
                 try snapshot(w.window!,to:folder.appendingPathComponent("encounters-en.png"))
+                checkSocialLayout(w,language:"English",checks:&checks)
+                try snapshot(w.window!,to:folder.appendingPathComponent("social-greetings-en.png"))
                 scroll.contentView.scroll(to:CGPoint(x:0,y:scroll.documentView!.bounds.height-scroll.contentView.bounds.height));scroll.reflectScrolledClipView(scroll.contentView)
                 checks["perchPreviewsReachableEnglish"] = scroll.documentView!.visibleRect.contains(w.perchActionsButton.frame) && scroll.documentView!.visibleRect.contains(w.previewRestButton.frame) && scroll.documentView!.visibleRect.contains(w.previewPreenButton.frame)
                 try snapshot(w.window!,to:folder.appendingPathComponent("perch-activities-en.png"))
@@ -121,11 +157,14 @@ enum SettingsVerification {
             d.toggleLanguage();w.tabs.selectTabViewItem(at:0)
             checks["chineseToggleRestored"] = d.status.menu!.items.contains{$0.title == "English"} && w.window!.title == "鸟种设置"
             checks["perchChineseToggleRestored"] = !w.draft.perchActions && w.perchActionsButton.state == .off && w.perchActionsButton.title == "停栖小动作" && w.previewRestButton.title == "预览闭眼休息" && w.previewPreenButton.title == "预览整理羽毛"
+            checks["socialChineseToggleRestored"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off && w.socialInteractionsButton.title == "双鸟招呼" && w.previewSocialGreetingButton.title == "预览双鸟招呼"
             w.tabs.selectTabViewItem(at:2)
             try snapshot(w.window!,to:folder.appendingPathComponent("interaction-zh.png"))
             if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView {
                 scroll.contentView.scroll(to:CGPoint(x:0,y:200));scroll.reflectScrolledClipView(scroll.contentView)
                 try snapshot(w.window!,to:folder.appendingPathComponent("encounters-zh.png"))
+                checkSocialLayout(w,language:"Chinese",checks:&checks)
+                try snapshot(w.window!,to:folder.appendingPathComponent("social-greetings-zh.png"))
                 scroll.contentView.scroll(to:CGPoint(x:0,y:scroll.documentView!.bounds.height-scroll.contentView.bounds.height));scroll.reflectScrolledClipView(scroll.contentView)
                 checks["perchPreviewsReachableChinese"] = scroll.documentView!.visibleRect.contains(w.perchActionsButton.frame) && scroll.documentView!.visibleRect.contains(w.previewRestButton.frame) && scroll.documentView!.visibleRect.contains(w.previewPreenButton.frame)
                 try snapshot(w.window!,to:folder.appendingPathComponent("perch-activities-zh.png"))
@@ -134,10 +173,16 @@ enum SettingsVerification {
             w.ambientFrequencyPopup.selectItem(at:2);w.ambientSettingsChanged()
             w.relocalize()
             checks["ambientDraftSurvivesRebuild"] = !w.draft.pointerVisits && !w.draft.flockPasses && w.ambientFrequencyPopup.indexOfSelectedItem == 2
+            checks["socialDraftSurvivesAmbientRebuild"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off
             w.save()
             let ambientSaved=try BirdSettings.decode(Data(contentsOf:d.settingsURL))
             checks["ambientSettingsPersistAndApply"] = !ambientSaved.pointerVisits && !d.settings.pointerVisits && !ambientSaved.flockPasses && ambientSaved.ambientFrequency == .high
             checks["ambientEditsPreservePerchAndHoverSettings"] = !ambientSaved.perchActions && !d.settings.perchActions && ambientSaved.hoverDelay == 0.25 && d.settings.hoverDelay == 0.25
+            checks["ambientEditsPreserveSocialSetting"] = !ambientSaved.socialInteractions && !d.settings.socialInteractions
+            var oldSocialObject=try JSONSerialization.jsonObject(with:Data(contentsOf:d.settingsURL)) as! [String:Any]
+            oldSocialObject.removeValue(forKey:"socialInteractions")
+            let socialMigrated=try BirdSettings.decode(JSONSerialization.data(withJSONObject:oldSocialObject))
+            checks["oldSettingsEnableSocialWithoutLosingOtherEdits"] = socialMigrated.socialInteractions && socialMigrated.perchActions == ambientSaved.perchActions && socialMigrated.hoverDelay == ambientSaved.hoverDelay && socialMigrated.pointerVisits == ambientSaved.pointerVisits && socialMigrated.flockPasses == ambientSaved.flockPasses && socialMigrated.ambientFrequency == ambientSaved.ambientFrequency && socialMigrated.probabilities == ambientSaved.probabilities && socialMigrated.catalog.species == ambientSaved.catalog.species
             var oldObject=try JSONSerialization.jsonObject(with:Data(contentsOf:d.settingsURL)) as! [String:Any]
             oldObject.removeValue(forKey:"perchActions")
             let migrated=try BirdSettings.decode(JSONSerialization.data(withJSONObject:oldObject))
@@ -162,9 +207,11 @@ enum SettingsVerification {
             checks["ambientDefaultsRestored"] = w.draft.pointerVisits && w.draft.flockPasses && w.draft.ambientFrequency == .low
             checks["resetRestoresDefaultsAndUnlocks"] = w.draft.probabilities == BirdSettings().probabilities && w.draft.hoverDelay == 1 && w.hoverDelayField.doubleValue == 1
             checks["perchDefaultsRestoredWithoutApplying"] = w.draft.perchActions && w.perchActionsButton.state == .on && !d.settings.perchActions
+            checks["socialDefaultsRestoredWithoutApplying"] = w.draft.socialInteractions && w.socialInteractionsButton.state == .on && !d.settings.socialInteractions
             w.save()
             let defaultsSaved=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
             checks["perchDefaultsSaveAndReload"] = defaultsSaved.perchActions && d.settings.perchActions && defaultsSaved.hoverDelay == 1 && defaultsSaved.pointerVisits && defaultsSaved.flockPasses && defaultsSaved.ambientFrequency == .low
+            checks["socialDefaultsSaveAndReload"] = defaultsSaved.socialInteractions && d.settings.socialInteractions
             w.scrollToSpecies(.nightHeron)
             if let scroll=w.tabs.tabViewItems[0].view as? NSScrollView {
                 checks["manualMigrationScrollsToFirstNewBird"] = scroll.documentView!.visibleRect.intersects(w.fields[7].frame)
@@ -201,6 +248,18 @@ enum SettingsVerification {
             exit(passed ? 0:1)
         } catch {
             saveJSON(["passed":false,"error":error.localizedDescription,"checks":checks],to:folder.appendingPathComponent("report.json"));exit(1)
+        }
+    }
+    private static func checkSocialLayout(_ window:SpeciesSettingsWindow,language:String,checks:inout [String:Bool]) {
+        guard let scroll=window.tabs.tabViewItems[2].view as? NSScrollView,let document=scroll.documentView else {
+            checks["socialControlsReachable\(language)"]=false
+            return
+        }
+        scroll.contentView.scroll(to:CGPoint(x:0,y:max(0,window.socialInteractionsButton.frame.minY-20)))
+        scroll.reflectScrolledClipView(scroll.contentView)
+        checks["socialControlsReachable\(language)"] = document.visibleRect.contains(window.socialInteractionsButton.frame) && document.visibleRect.contains(window.previewSocialGreetingButton.frame) && document.visibleRect.contains(window.ambientFrequencyPopup.frame)
+        checks["interactionControlsDoNotOverlap\(language)"] = document.subviews.enumerated().allSatisfy { index,view in
+            document.bounds.contains(view.frame) && document.subviews.dropFirst(index+1).allSatisfy{!view.frame.intersects($0.frame)}
         }
     }
     static func snapshot(_ window:NSWindow,to url:URL) throws {

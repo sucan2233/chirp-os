@@ -12,9 +12,9 @@ public enum AmbientFrequency: String, Codable, CaseIterable {
     }
 }
 
-public enum AmbientEvent: Equatable { case pointerVisit, flockPass }
+public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting }
 
-/// One simulation clock for both events. Missed opportunities are discarded,
+/// One simulation clock for encounters. Missed opportunities are discarded,
 /// so busy periods, sleep and pause never build up a queue of animations.
 public struct AmbientScheduler {
     public private(set) var remaining: Double = 180
@@ -30,7 +30,7 @@ public struct AmbientScheduler {
         stationaryTime = 0; pointerAnchor = nil
     }
     public mutating func tick(_ dt: Double, pointer: CGPoint, buttonsDown: Bool,
-                              pointerEnabled: Bool, flockEnabled: Bool,
+                              pointerEnabled: Bool, flockEnabled: Bool, socialEnabled: Bool = false,
                               frequency: AmbientFrequency, busy: Bool,
                               random: () -> Double = { Double.random(in: 0..<1) }) -> AmbientEvent? {
         let step = min(0.1, max(0, dt))
@@ -45,6 +45,7 @@ public struct AmbientScheduler {
         var choices: [AmbientEvent] = []
         if pointerEnabled && stationaryTime >= 3 { choices.append(.pointerVisit) }
         if flockEnabled { choices.append(.flockPass) }
+        if socialEnabled { choices.append(.socialGreeting) }
         guard !choices.isEmpty else { return nil }
         return choices[min(choices.count - 1, Int(random() * Double(choices.count)))]
     }

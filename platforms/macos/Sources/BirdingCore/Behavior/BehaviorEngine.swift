@@ -13,6 +13,7 @@ public final class BehaviorEngine {
     let poseMixer=PoseMixer()
     let random:EngineRandom
     let perchPlanner:PerchActivityPlanner
+    private let socialRandom:EngineRandom
     var scheduler=AmbientScheduler()
     private var previewDelay:Double?
     private var accumulator=0.0
@@ -36,6 +37,7 @@ public final class BehaviorEngine {
     public init(seed:UInt64=UInt64.random(in:0...UInt64.max),settings:BirdSettings=BirdSettings()) {
         self.seed=seed;self.random=EngineRandom(seed:seed);self.settings=settings
         self.perchPlanner=PerchActivityPlanner(seed:seed)
+        self.socialRandom=EngineRandom(seed:seed ^ 0x534F4349414C524E)
         scheduler.reset(settings.ambientFrequency)
     }
     public var birds:[Bird] {order.compactMap{records[$0].flatMap{$0.visible ? $0.bird:nil}}}
@@ -93,6 +95,9 @@ public final class BehaviorEngine {
     }
     public func applySettings(_ value:BirdSettings) {
         settings=value;scheduler.reset(value.ambientFrequency)
+        if !value.socialInteractions {
+            runtime.cancel(where:{$0.kind == .socialGreeting},reason:.settingsChanged,in:self)
+        }
         if !value.perchActions {
             runtime.cancel(where:{$0.kind == .rest || $0.kind == .preen},reason:.settingsChanged,in:self)
             perchPlanner.suppressAll()
@@ -112,6 +117,7 @@ public final class BehaviorEngine {
         case .relocate(let id): return relocate(id)
         case .pointerVisit(let source): return requestPointer(source)
         case .flockPass(let source): return requestFlock(source)
+        case .socialGreeting(let source): return requestSocialGreeting(source)
         case .perchAction(let kind,let source):return requestPerchAction(kind,source:source)
         case .previewPointerAfter(let delay):
             guard !paused else {return reject(.pointerVisit,.preview,.paused)}
@@ -120,7 +126,7 @@ public final class BehaviorEngine {
             previewDelay=max(0,min(10,delay.isFinite ? delay:3));return .scheduled
         case .pointerClick:
             scheduler.suppress()
-            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind == .rest || $0.kind == .preen},reason:.userInput,in:self)
+            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind == .rest || $0.kind == .preen || $0.kind == .socialGreeting},reason:.userInput,in:self)
             perchPlanner.suppressAll()
         case .pause(let value):
             guard paused != value else {return .accepted}
@@ -135,7 +141,7 @@ public final class BehaviorEngine {
             runtime.cancel(where:{all.contains(reason) || $0.occupiesEncounter},reason:reason,in:self)
         case .scatter:
             cancelPreview(.userInput);perchPlanner.suppressAll()
-            runtime.cancel(where:{!$0.occupiesEncounter || $0.kind == .pointerVisit},reason:.replaced,in:self)
+            runtime.cancel(where:{!$0.occupiesEncounter || $0.kind == .pointerVisit || $0.kind == .socialGreeting},reason:.replaced,in:self)
             scheduler.suppress()
             for bird in birds where !bird.isDeparting {_=route(bird)}
         case .remove(let id):
@@ -206,6 +212,47 @@ public final class BehaviorEngine {
         scheduler.suppress()
         let result=runtime.start(FlockPassExecution(members:members),source:source,in:self)
         if !result.accepted {for (id,_) in members {removeRecord(id)}}
+        return result
+    }
+    private func requestSocialGreeting(_ source:BehaviorSource) -> BehaviorResult {
+        guard !paused else {return reject(.socialGreeting,source,.paused)}
+        guard settings.socialInteractions else {return reject(.socialGreeting,source,.disabled)}
+        guard !ambientBusy,previewDelay == nil else {return reject(.socialGreeting,source,.busy)}
+        guard !world.buttonsDown else {return reject(.socialGreeting,source,.userInput)}
+        var reasons:[BehaviorReason]=[]
+        let candidates=order.filter {id in
+            guard let record=records[id],record.visible,record.role == .resident else {return false}
+            let bird=record.bird
+            guard bird.state == .perched,bird.edge == .top,!bird.isDeparting,
+                  !bird.needsDestination,bird.perchDuration-bird.stateTime>6 else {return false}
+            if runtime.owners[id] != nil {reasons.append(.busy);return false}
+            if !SocialGreetingPlan.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? []) {
+                reasons.append(.missingFrames);return false
+            }
+            if !hasUsablePerch(bird) {reasons.append(.noSpace);return false}
+            if pointerNear(bird) {reasons.append(.pointerNearby);return false}
+            return true
+        }
+        var pairs:[(BirdID,BirdID)]=[]
+        for (index,first) in candidates.enumerated() {
+            for second in candidates.dropFirst(index+1) {
+                if let a=bird(first),let b=bird(second),SocialGreetingPlan.eligiblePair(a,b,in:self,
+                    hopA:baseHop(for:first,bird:a),hopB:baseHop(for:second,bird:b)) {
+                    pairs.append((first,second))
+                }
+            }
+        }
+        guard let pair=socialRandom.element(pairs) else {
+            let reason=([BehaviorReason.pointerNearby,.missingFrames,.busy,.noSpace].first{reasons.contains($0)}) ?? .noCompanion
+            return reject(.socialGreeting,source,reason)
+        }
+        let reverse=socialRandom.unit()<0.5
+        let plan=SocialGreetingPlan(initiator:reverse ? pair.1:pair.0,responder:reverse ? pair.0:pair.1)
+        let result=runtime.start(SocialGreetingExecution(plan:plan),source:source,in:self)
+        if result.accepted {
+            scheduler.suppress()
+            perchPlanner.suppress(pair.0);perchPlanner.suppress(pair.1)
+        }
         return result
     }
     func supports(_ action:PerchActionKind,bird:Bird) -> Bool {
@@ -334,11 +381,12 @@ public final class BehaviorEngine {
         }
         if !paused {updatePerchActivities(dt)}
         if !paused && ambientEnabled,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
-            pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,frequency:settings.ambientFrequency,
+            pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,socialEnabled:settings.socialInteractions,frequency:settings.ambientFrequency,
             busy:ambientBusy || previewDelay != nil,random:random.unit) {
             switch event {
             case .pointerVisit:_=requestPointer(.automatic)
             case .flockPass:_=requestFlock(.automatic)
+            case .socialGreeting:_=requestSocialGreeting(.automatic)
             }
         }
     }
@@ -352,14 +400,16 @@ public final class BehaviorEngine {
     }
     public func bounds(of bird:Bird) -> CGRect {
         let scale=spriteScale(for:bird)
-        let hop=id(of:bird).map{runtime.presentation(for:$0,in:self)?.hopOffset ?? baseHop(for:$0,bird:bird)} ?? bird.hopOffset
-        return CGRect(x:bird.position.x-(bird.facingRight ? 29:19)*scale,y:bird.position.y+(hop-39)*scale,width:48*scale,height:48*scale).insetBy(dx:-2,dy:-2)
+        let pose=id(of:bird).flatMap{runtime.presentation(for:$0,in:self)}
+        let hop=pose?.hopOffset ?? id(of:bird).map{baseHop(for:$0,bird:bird)} ?? bird.hopOffset
+        let facing=pose?.facingRight ?? bird.facingRight
+        return CGRect(x:bird.position.x-(facing ? 29:19)*scale,y:bird.position.y+(hop-39)*scale,width:48*scale,height:48*scale).insetBy(dx:-2,dy:-2)
     }
     public func renderSnapshot() -> [BirdRenderState] {
         birds.compactMap {bird in
             guard let id=id(of:bird) else {return nil}
             let pose=runtime.presentation(for:id,in:self)
-            return BirdRenderState(id:id,species:bird.profile.id,position:bird.position,facingRight:bird.facingRight,
+            return BirdRenderState(id:id,species:bird.profile.id,position:bird.position,facingRight:pose?.facingRight ?? bird.facingRight,
                 scale:spriteScale(for:bird),hopOffset:pose?.hopOffset ?? baseHop(for:id,bird:bird),frameName:drawableFrame(pose?.frameName ?? bird.frameName,for:bird),
                 blockers:bird.blockers(in:world.surfaces),hoverable:isHoverable(bird))
         }

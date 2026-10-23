@@ -1,6 +1,6 @@
 # 开发指南 / Development
 
-行为扩展与架构规划见 [行为与互动引擎设计](BEHAVIOR-ENGINE-DESIGN.md)：包含动作储备、现有架构评估、运行时边界、迁移路线与验收标准。M0–M3 实际范围、迁移桥和验收状态见文档第 16–17 节；社交与道具仍为后续设计。
+行为扩展与架构规划见 [行为与互动引擎设计](BEHAVIOR-ENGINE-DESIGN.md)：包含动作储备、现有架构评估、运行时边界、迁移路线与验收标准。M0–M3 与 M4a 实际范围、迁移桥和验收状态见文档第 16–18 节；M4a 已增加双鸟招呼，并排停靠、结伴起飞及道具仍为后续设计。
 
 ## 项目结构 / Layout
 
@@ -54,7 +54,8 @@ macOS 行为统一从 `BirdingCore/Behavior/BehaviorEngine` 进入：平台先�
 过境鸟使用引擎 `transient` 角色，独立于常驻，最多 5 只。
 `AmbientBehavior.swift` 保留机会调度与路径规划辅助函数；
 `Birding/AmbientAnimations.swift` 只适配平台输入和预览结果。
-默认两类事件合计每 180–360 秒尝试一次；中频 90–180 秒、高频 45–90 秒。
+双鸟招呼使用 `SocialGreetingExecution`，复用多参与者占用和统一终态；配对只选择同一可见边缘的两个常驻鸟，不生成额外鸟。`BirdPose.facingRight` 同时进入绘制、命中和边界快照。设置 `socialInteractions` 默认开启，旧配置自动补齐。
+默认三类事件（绕鼠标、过境、招呼）合计每 180–360 秒尝试一次；中频 90–180 秒、高频 45–90 秒。
 设置页预览与自动事件共享校验和清理规则。
 
 `BehaviorEngine(seed:)` 支持核心场景重放，需同时给定相同配置、初始鸟、世界输入和命令时间线。
