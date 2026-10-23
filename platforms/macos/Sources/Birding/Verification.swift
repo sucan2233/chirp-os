@@ -20,7 +20,7 @@ final class FixtureController {
         host = window(frame:CGRect(x:visible.midX-w/2,y:visible.midY-h/2,width:w,height:h),title:"ChirpOS · Window habitat",color:NSColor(calibratedRed:0.13,green:0.22,blue:0.24,alpha:1))
         host.orderFrontRegardless()
         cover = window(frame:CGRect(x:host.frame.midX+14,y:host.frame.maxY-110,width:280,height:210),title:"ChirpOS · Foreground",color:NSColor(calibratedRed:0.31,green:0.24,blue:0.22,alpha:1))
-        saveJSON(["host":host.windowNumber,"cover":cover.windowNumber,"pid":ProcessInfo.processInfo.processIdentifier], to:folder.appendingPathComponent("fixture.json"))
+        saveJSON(["host":host.windowNumber,"cover":cover.windowNumber,"pid":ProcessInfo.processInfo.processIdentifier,"hostFrame":NSStringFromRect(host.frame)], to:folder.appendingPathComponent("fixture.json"))
         timer = Timer.scheduledTimer(withTimeInterval:1.0/30,repeats:true) { [weak self] _ in self?.tick() }
     }
     func window(frame: CGRect,title:String,color:NSColor) -> NSWindow {
@@ -89,6 +89,8 @@ final class IntegrationCheck {
     private var landingFrames: [String] = []
     var hostID: UInt32 = 0
     var fixturePID: Int32 = 0
+    private var fixtureInitialFrame=CGRect.zero
+    private var observedWindowScale:CGFloat=1
     var initial = CGPoint.zero
     var initialFrontPID: Int32 = 0
     var bird: Bird { desktop.birds[0] }
@@ -100,6 +102,9 @@ final class IntegrationCheck {
         guard let data = try? Data(contentsOf:folder.appendingPathComponent("fixture.json")),
               let json = try? JSONSerialization.jsonObject(with:data) as? [String:Any],
               let id = json["host"] as? UInt32, let pid = json["pid"] as? Int32 else { finish(error:"fixture metadata missing"); return }
+        guard let rawFrame=json["hostFrame"] as? String else {finish(error:"fixture initial geometry missing");return}
+        fixtureInitialFrame=NSRectFromString(rawFrame)
+        guard fixtureInitialFrame.width>0 else {finish(error:"fixture initial geometry invalid");return}
         hostID = id; fixturePID = pid
         initialFrontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0
         // The normal app starts empty; the fixture owns its single deterministic bird.
@@ -110,25 +115,68 @@ final class IntegrationCheck {
             guard let host = self.host() else { self.finish(error:"WindowServer did not expose fixture"); return }
             self.bird.fraction = 0.5; self.bird.perch(on:host); self.bird.perchDuration = 999
             self.initial = self.bird.position
+            self.observedWindowScale=host.rect.width/self.fixtureInitialFrame.width
             self.results["overlayNonactivatingAndClickThrough"] = self.desktop.panels.allSatisfy{$0.ignoresMouseEvents && !$0.canBecomeKey && !$0.canBecomeMain}
             self.results["keepsOtherAppFocused"] = self.initialFrontPID == (NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0)
-            self.command("slow")
+            self.observeSlowMovement()
         }
-        after(2.3) {
-            self.results["slowMoveFollows"] = self.bird.state == .perched && abs(self.bird.position.x-self.initial.x-90)<2 && self.bird.followedDistance>85
-            self.results["feetStayOnWindowEdge"] = abs(self.bird.position.y-(self.host()?.rect.minY ?? -100))<0.1
-            self.command("cover")
+    }
+    private func observeSlowMovement() {
+        command("slow")
+        wallDeadline=ProcessInfo.processInfo.systemUptime+8
+        let timer=Timer(timeInterval:1.0/60,repeats:true) { [weak self] _ in
+            guard let self else {return}
+            let applied=try? String(contentsOf:self.folder.appendingPathComponent("applied-command"),encoding:.utf8)
+            let state=(try? Data(contentsOf:self.folder.appendingPathComponent("fixture-state.json")))
+                .flatMap{try? JSONSerialization.jsonObject(with:$0) as? [String:Any]}
+            let finished=applied=="slow" && state?["command"] as? String == "slow" && state?["slowRemaining"] as? Int == 0
+            let fixtureFrame=(state?["host"] as? String).map{NSRectFromString($0)}
+            let fixtureTravel=fixtureFrame.map{$0.minX-self.fixtureInitialFrame.minX} ?? 0
+            let completedTravel=abs(fixtureTravel-90)<0.1
+            // WindowServer may transform an inactive window (for example to
+            // 90% of its AppKit frame). Compare travel in the same coordinates
+            // consumed by production, while independently checking all 90
+            // commanded AppKit points and a stable observed transform.
+            let expectedTravel=90*self.observedWindowScale
+            let stableScale=self.host().map{abs($0.rect.width/self.fixtureInitialFrame.width-self.observedWindowScale)<0.001} ?? false
+            let follows=self.bird.state == .perched && expectedTravel>45 && stableScale &&
+                abs(self.bird.position.x-self.initial.x-expectedTravel)<2 && self.bird.followedDistance>expectedTravel-2
+            let anchored=abs(self.bird.position.y-(self.host()?.rect.minY ?? -100))<0.1
+            let timedOut=ProcessInfo.processInfo.systemUptime>=self.wallDeadline
+            guard finished && completedTravel && follows && anchored || timedOut else {return}
+            saveJSON(["fixtureFinished":finished,"fixtureTravel":fixtureTravel,"windowScale":self.observedWindowScale,
+                "expectedDesktopTravel":expectedTravel,"fixture":state ?? [:],"initial":NSStringFromPoint(self.initial),
+                "bird":NSStringFromPoint(self.bird.position),"state":self.bird.state.rawValue,
+                "followed":self.bird.followedDistance,"host":self.host().map{NSStringFromRect($0.rect)} ?? "missing",
+                "simulationTime":self.desktop.engine.time,"timedOut":timedOut],
+                to:self.folder.appendingPathComponent("slow-movement-evidence.json"))
+            self.results["slowMoveFollows"]=finished && completedTravel && follows
+            self.results["feetStayOnWindowEdge"]=anchored
+            self.observationTimer?.invalidate();self.observationTimer=nil
+            if timedOut {self.finish(error:"fixture slow movement did not complete with an attached bird");return}
+            self.observeCover()
         }
-        after(3.0) {
-            let blockers = self.bird.blockers(in:self.desktop.surfaces)
-            let bbox = self.desktop.bounds(of:self.bird)
-            let pieces = Geometry.visiblePieces(bbox,blockers:blockers)
-            let visibleArea = pieces.reduce(CGFloat(0)){$0+$1.width*$1.height}
-            self.results["frontWindowMasksPartOfBird"] = visibleArea>0 && visibleArea<bbox.width*bbox.height && blockers.contains{$0.intersects(bbox)}
-            self.saveMaskedBird()
-            self.saveLayerSnapshot()
-            self.observeUncoverAndStartle()
+        RunLoop.main.add(timer,forMode:.common);observationTimer=timer
+    }
+    private func observeCover() {
+        command("cover")
+        wallDeadline=ProcessInfo.processInfo.systemUptime+6
+        let timer=Timer(timeInterval:1.0/60,repeats:true) { [weak self] _ in
+            guard let self else {return}
+            guard ProcessInfo.processInfo.systemUptime<self.wallDeadline else {
+                self.finish(error:"fixture cover did not partially mask the perched bird");return
+            }
+            let applied=try? String(contentsOf:self.folder.appendingPathComponent("applied-command"),encoding:.utf8)
+            guard applied=="cover" else {return}
+            let blockers=self.bird.blockers(in:self.desktop.surfaces),bbox=self.desktop.bounds(of:self.bird)
+            let pieces=Geometry.visiblePieces(bbox,blockers:blockers)
+            let visibleArea=pieces.reduce(CGFloat(0)){$0+$1.width*$1.height}
+            guard visibleArea>0,visibleArea<bbox.width*bbox.height,blockers.contains(where:{$0.intersects(bbox)}) else {return}
+            self.results["frontWindowMasksPartOfBird"]=true
+            self.observationTimer?.invalidate();self.observationTimer=nil
+            self.saveMaskedBird();self.saveLayerSnapshot();self.observeUncoverAndStartle()
         }
+        RunLoop.main.add(timer,forMode:.common);observationTimer=timer
     }
     private func observeUncoverAndStartle() {
         // Pixel inspection may take longer than a wall-clock callback interval.
