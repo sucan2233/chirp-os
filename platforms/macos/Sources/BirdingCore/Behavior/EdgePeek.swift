@@ -23,7 +23,7 @@ struct EdgePeekPlan {
     }
     static func make(id:BirdID,in engine:BehaviorEngine) -> EdgePeekPlan? {
         guard let bird=engine.bird(id),
-              let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isGround else {return nil}
+              let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isGround,!host.isFixedPerch else {return nil}
         let scale=engine.spriteScale(for:bird)
         guard scale.isFinite,scale>0,bird.fraction.isFinite,(0...1).contains(bird.fraction),
               let display=engine.world.displays.first(where:{$0.contains(Geometry.landingFootprint(at:bird.position,scale:scale))}),
@@ -76,7 +76,7 @@ public final class EdgePeekExecution:LedgeTraversalExecution {
         guard let revision,bird.motionRevision==revision,!bird.isDeparting,bird.edge == .top,
               bird.hostID==plan.approach.host.id,!bird.needsDestination,bird.isSideHopping,
               phase != .observe || bird.state == .perched,
-              let host=plan.origin.host(in:engine),!host.isGround,plan.isSafe(in:engine) else {return .failed(.targetInvalid)}
+              let host=plan.origin.host(in:engine),!host.isGround,!host.isFixedPerch,plan.isSafe(in:engine) else {return .failed(.targetInvalid)}
         guard plan.pointerIsClear(in:engine) else {return .cancelled(.pointerMoved)}
         // Keep the hop's metadata queue during observation too. Bird.updateHost
         // retains the actual sampling interval and detects fast host movement;

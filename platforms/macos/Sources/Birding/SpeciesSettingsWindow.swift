@@ -57,6 +57,15 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var previewTravelTogetherButton:NSButton!
     var allopreeningButton:NSButton!
     var previewAllopreeningButton:NSButton!
+    var fixedPerchesButton:NSButton!
+    var fixedPerchSlotPopup:NSPopUpButton!
+    var fixedPerchStatus:NSTextField!
+    var placeFixedPerchButton:NSButton!
+    var removeFixedPerchButton:NSButton!
+    var previewFixedPerchButton:NSButton!
+    private(set) var selectedFixedPerchSlot=1
+    private(set) var fixedPerchCaptureTimer:Timer?
+    private(set) var fixedPerchCaptureRequest:UUID?
     private var debugEnabled=false
     private var debugButton:NSButton!
     var language: AppLanguage { desktop.language }
@@ -66,9 +75,15 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         let window = NSWindow(contentRect:NSRect(x:0,y:0,width:840,height:690),styleMask:[.titled,.closable,.miniaturizable],backing:.buffered,defer:false)
         window.isReleasedWhenClosed = false
         super.init(window:window)
+        NotificationCenter.default.addObserver(self,selector:#selector(fixedPerchWindowWillClose(_:)),
+                                               name:NSWindow.willCloseNotification,object:window)
         build(); window.center()
     }
     required init?(coder:NSCoder) { fatalError() }
+    deinit {
+        fixedPerchCaptureTimer?.invalidate()
+        NotificationCenter.default.removeObserver(self)
+    }
     @discardableResult func label(_ text:String,_ rect:NSRect,in view:NSView,size:CGFloat = 13) -> NSTextField {
         let l = NSTextField(wrappingLabelWithString:text); l.font = .systemFont(ofSize:size); l.frame = rect; view.addSubview(l); return l
     }
@@ -81,6 +96,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         return view
     }
     func build() {
+        cancelFixedPerchCapture()
         let selected = tabs?.indexOfTabViewItem(tabs!.selectedTabViewItem!) ?? 0
         sliders=[]; fields=[]; locks=[]; detailFields=[]
         let root = SettingsContentView(frame:NSRect(x:0,y:0,width:840,height:690)); root.wantsLayer=true; window!.contentView = root
@@ -131,7 +147,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:4180))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:4656))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -260,6 +276,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         previewAllopreeningButton=button(t("预览同伴理羽","Preview companion preening"),#selector(previewAllopreening),NSRect(x:20,y:4016,width:290,height:32),in:interactionView)
         previewAllopreeningButton.identifier=NSUserInterfaceItemIdentifier("previewAllopreening")
         label(t("预览使用已保存的设置和现有小鸟，不会增加小鸟。请让两只上述同种鸟在同一窗口边缘相邻停稳，并把鼠标移远。\n暂停、尚未保存开启、没有合适同伴或空间不足时，下方会提示原因。安静陪伴仍可手动预览。","Previews use saved settings and existing birds, without adding birds. Let two supported birds of the same species settle beside each other on one window and move the pointer away.\nPausing, saved switches being off, no suitable companion or insufficient space are explained below. Manual preview works in Quiet companionship."),NSRect(x:20,y:4062,width:710,height:88),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("allopreeningPreviewHelp")
+        buildFixedPerches(in:interactionView)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -271,6 +288,147 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         _=button(t("取消","Cancel"),#selector(cancel),NSRect(x:562,y:642,width:100,height:30),in:root)
         let save=button(t("保存并应用","Save & Apply"),#selector(save),NSRect(x:672,y:642,width:144,height:30),in:root); save.keyEquivalent="\r"
         refresh()
+    }
+    private func buildFixedPerches(in view:NSView) {
+        label(t("固定小栖木","Fixed perches"),NSRect(x:20,y:4200,width:710,height:30),in:view,size:20).identifier=NSUserInterfaceItemIdentifier("fixedPerchSectionTitle")
+        fixedPerchesButton=NSButton(checkboxWithTitle:t("启用固定小栖木","Enable fixed perches"),target:self,action:#selector(fixedPerchesChanged))
+        fixedPerchesButton.frame=NSRect(x:20,y:4242,width:710,height:26)
+        fixedPerchesButton.identifier=NSUserInterfaceItemIdentifier("fixedPerchesEnabled")
+        fixedPerchesButton.setAccessibilityLabel(fixedPerchesButton.title);view.addSubview(fixedPerchesButton)
+        label(t("栖木槽位","Perch slot"),NSRect(x:20,y:4288,width:120,height:26),in:view).identifier=NSUserInterfaceItemIdentifier("fixedPerchSlotLabel")
+        fixedPerchSlotPopup=NSPopUpButton(frame:NSRect(x:145,y:4282,width:540,height:32),pullsDown:false)
+        fixedPerchSlotPopup.target=self;fixedPerchSlotPopup.action=#selector(fixedPerchSlotChanged)
+        fixedPerchSlotPopup.identifier=NSUserInterfaceItemIdentifier("fixedPerchSlot")
+        fixedPerchSlotPopup.setAccessibilityLabel(t("栖木槽位","Perch slot"));view.addSubview(fixedPerchSlotPopup)
+        fixedPerchStatus=label("",NSRect(x:20,y:4324,width:710,height:48),in:view,size:12)
+        fixedPerchStatus.identifier=NSUserInterfaceItemIdentifier("fixedPerchStatus")
+        placeFixedPerchButton=button("",#selector(placeFixedPerch),NSRect(x:20,y:4386,width:390,height:32),in:view)
+        placeFixedPerchButton.identifier=NSUserInterfaceItemIdentifier("placeFixedPerch")
+        removeFixedPerchButton=button(t("移除该栖木","Remove this perch"),#selector(removeFixedPerch),NSRect(x:430,y:4386,width:300,height:32),in:view)
+        removeFixedPerchButton.identifier=NSUserInterfaceItemIdentifier("removeFixedPerch")
+        removeFixedPerchButton.setAccessibilityLabel(removeFixedPerchButton.title)
+        previewFixedPerchButton=button(t("预览访问","Preview visit"),#selector(previewFixedPerch),NSRect(x:20,y:4430,width:240,height:32),in:view)
+        previewFixedPerchButton.identifier=NSUserInterfaceItemIdentifier("previewFixedPerch")
+        previewFixedPerchButton.setAccessibilityLabel(previewFixedPerchButton.title)
+        let names=SpeciesID.allCases.filter{FixedPerchVisitBehavior.supportedSpecies.contains($0)}
+            .map{language.name($0)}.joined(separator:t("、",", "))
+        label(t("最多 3 个栖木。点击放置后移动鼠标，3 秒后记录所在屏幕与相对坐标；放置、移动和移除仅改草稿，保存并应用后生效。关闭开关保留位置。\n支持鸟种：",
+                "Up to 3 perches. Click Place, then move the pointer; after 3 seconds capture its display and relative coordinates. Place, move and remove edit the draft. Save & Apply to activate; turning off keeps positions.\nSupported species: ")+names+t("。\n安静陪伴停止新自动访问；屏幕断开时暂映射到可用屏幕，重连后恢复原位置。\n预览只使用已保存栖木和现有小鸟，不增加小鸟；缺少已保存栖木、合适小鸟或空间时，下方说明原因。",
+                ".\nQuiet companionship stops new automatic visits. Disconnected displays map temporarily to an available display; reconnect to restore.\nPreview uses saved perches and existing birds, without adding birds. Missing perches, suitable birds or space are explained below."),NSRect(x:20,y:4476,width:710,height:150),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("fixedPerchHelp")
+        refreshFixedPerchControls()
+    }
+    private func refreshFixedPerchControls() {
+        guard fixedPerchesButton != nil else {return}
+        fixedPerchesButton.state=draft.fixedPerchesEnabled ? .on:.off
+        fixedPerchSlotPopup.removeAllItems()
+        for slot in 1...3 {
+            let placed=draft.fixedPerches.contains{$0.slot==slot}
+            fixedPerchSlotPopup.addItem(withTitle:t("栖木 \(slot) · ","Perch \(slot) · ")+(placed ? t("已放置","Placed"):t("未放置","Not placed")))
+        }
+        fixedPerchSlotPopup.selectItem(at:selectedFixedPerchSlot-1)
+        let anchor=draft.fixedPerches.first{$0.slot==selectedFixedPerchSlot}
+        if let anchor {
+            let displayIndex=anchor.displayID.isEmpty ? desktop.displayRects.firstIndex(of:anchor.displayFrame):
+                desktop.fixedPerchDisplayIDs.firstIndex(of:anchor.displayID)
+            let display=displayIndex.map{t("屏幕 \($0+1)","Display \($0+1)")} ?? t("原屏幕暂未连接","Original display disconnected")
+            fixedPerchStatus.stringValue=t("已放置 · ","Placed · ")+display+"\n" +
+                t("相对坐标：","Relative coordinates: ")+String(format:"X %.1f%% · Y %.1f%%",anchor.x*100,anchor.y*100)
+        } else {fixedPerchStatus.stringValue=t("此槽位尚未放置栖木。","No perch has been placed in this slot.")}
+        refreshFixedPerchPlacementButton()
+        removeFixedPerchButton.isEnabled=draft.fixedPerchesEnabled && anchor != nil
+        // Preview intentionally remains available while the draft is off: it reads saved settings.
+        previewFixedPerchButton.isEnabled=true
+    }
+    private func refreshFixedPerchPlacementButton() {
+        guard let placeFixedPerchButton else {return}
+        let placed=draft.fixedPerches.contains{$0.slot==selectedFixedPerchSlot}
+        let pending=fixedPerchCaptureRequest != nil
+        placeFixedPerchButton.title=pending ? t("等待采样 · 请移动鼠标…","Waiting for capture · Move the pointer…"):
+            (placed ? t("3 秒后在鼠标处移动","Move to pointer in 3 seconds"):t("3 秒后在鼠标处放置","Place at pointer in 3 seconds"))
+        placeFixedPerchButton.setAccessibilityLabel(placeFixedPerchButton.title)
+        placeFixedPerchButton.isEnabled=draft.fixedPerchesEnabled && !pending
+    }
+    @objc func fixedPerchesChanged() {
+        let enabled=fixedPerchesButton.state == .on
+        cancelFixedPerchCapture()
+        draft.fixedPerchesEnabled=enabled
+        refreshFixedPerchControls();message.stringValue=t("尚未保存","Unsaved changes")
+    }
+    @objc func fixedPerchSlotChanged() {
+        let slot=max(1,min(3,fixedPerchSlotPopup.indexOfSelectedItem+1))
+        cancelFixedPerchCapture()
+        selectedFixedPerchSlot=slot
+        refreshFixedPerchControls()
+        message.stringValue=t("已切换槽位；等待中的放置已取消。","Slot selected; any pending placement was cancelled.")
+    }
+    @objc func placeFixedPerch() {
+        guard draft.fixedPerchesEnabled,window?.isVisible == true else {return}
+        cancelFixedPerchCapture()
+        let request=UUID();fixedPerchCaptureRequest=request
+        // One-shot UI input sampling only. Bird motion remains on the engine clock.
+        let timer=Timer(timeInterval:3,repeats:false) { [weak self] _ in
+            guard let self,self.fixedPerchCaptureRequest==request else {return}
+            self.captureFixedPerch(request:request,point:self.desktop.pointerPosition,
+                                   displayIDs:self.desktop.fixedPerchDisplayIDs,displays:self.desktop.displayRects)
+        }
+        fixedPerchCaptureTimer=timer;RunLoop.main.add(timer,forMode:.common)
+        refreshFixedPerchControls()
+        message.stringValue=t("3 秒后记录鼠标位置；仅修改草稿，请移动到目标屏幕。","Capturing in 3 seconds; draft only. Move the pointer to your target display.")
+    }
+    /// Deterministic sampling boundary also used by the isolated settings verifier.
+    func captureFixedPerch(request:UUID,point:CGPoint,displayIDs:[String],displays:[CGRect]) {
+        guard fixedPerchCaptureRequest==request,window?.isVisible == true,draft.fixedPerchesEnabled else {return}
+        let slot=selectedFixedPerchSlot
+        cancelFixedPerchCapture()
+        guard let anchor=FixedPerchAnchor.capture(slot:slot,point:point,displayIDs:displayIDs,displays:displays) else {
+            refreshFixedPerchControls()
+            message.stringValue=t("鼠标不在可用屏幕内，草稿未改变，请重试。","Pointer is outside available displays. Draft unchanged; try again.")
+            return
+        }
+        draft.fixedPerches.removeAll{$0.slot==slot};draft.fixedPerches.append(anchor)
+        draft.fixedPerches.sort{$0.slot<$1.slot}
+        refreshFixedPerchControls()
+        message.stringValue=t("已记录栖木位置（尚未保存）；保存并应用后生效。","Perch position captured in draft; Save & Apply to activate.")
+    }
+    @objc func removeFixedPerch() {
+        guard draft.fixedPerchesEnabled else {return}
+        cancelFixedPerchCapture()
+        draft.fixedPerches.removeAll{$0.slot==selectedFixedPerchSlot}
+        refreshFixedPerchControls();message.stringValue=t("已移除该栖木（尚未保存）。","Perch removed from draft (not saved).")
+    }
+    func cancelFixedPerchCapture() {
+        fixedPerchCaptureTimer?.invalidate();fixedPerchCaptureTimer=nil;fixedPerchCaptureRequest=nil
+        // Do not overwrite native checkbox/input values before Save reads them.
+        refreshFixedPerchPlacementButton()
+    }
+    @objc private func fixedPerchWindowWillClose(_ notification:Notification) {cancelFixedPerchCapture()}
+    @objc func previewFixedPerch() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.fixedPerchVisit(.preview))
+        if case .rejected(let reason)=result {message.stringValue=fixedPerchPreviewMessage(reason)}
+        else {message.stringValue=t("正在预览访问已保存的固定栖木。","Previewing a visit to a saved fixed perch.")}
+    }
+    func fixedPerchPreviewMessage(_ reason:BehaviorReason) -> String {
+        if FixedPerchArt.shared == nil {
+            return t("栖木图像未能载入，请重新安装完整测试版。","Perch artwork could not load. Reinstall the complete test app.")
+        }
+        if reason == .disabled || reason == .settingsChanged {
+            return t("请先保存并启用固定小栖木。","Save and enable fixed perches first.")
+        }
+        if reason == .paused {return desktop.behaviorMessage(reason)}
+        if desktop.settings.fixedPerches.isEmpty {
+            return t("请先放置栖木并保存，预览只使用已保存的位置。","Place a perch and save first. Preview uses saved positions only.")
+        }
+        switch reason {
+        case .noSpecies,.noCompanion,.missingBird,.unavailableBird:
+            return t("没有适合访问栖木的现有小鸟，请等待支持鸟种空闲。","No suitable existing bird. Wait for a supported species to become available.")
+        case .noSpace,.targetInvalid:
+            if desktop.engine.fixedPerchSnapshot().isEmpty {
+                return t("已保存栖木暂无可用屏幕空间，请调整位置并保存。","Saved perches have no usable display space. Adjust their positions and save.")
+            }
+            return t("栖木或飞行空间不足，请调整位置并保存。","Not enough perch or flight space. Adjust the position and save.")
+        default:return desktop.behaviorMessage(reason)
+        }
     }
     @objc func simulateUpdate() {
         let started=desktop.updater?.simulateUpdate() == true
@@ -568,18 +726,22 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         ambientLeafPlayButton.isEnabled=draft.leafPlayEnabled
         draft.visitorMemoryEnabled=visitorMemoryButton.state == .on
         draft.activityRhythm=ActivityRhythmMode.allCases[activityRhythmPopup.indexOfSelectedItem]
+        draft.fixedPerchesEnabled=fixedPerchesButton.state == .on
+        refreshFixedPerchControls()
         return true
     }
     @objc func save() {
+        cancelFixedPerchCapture()
         window?.makeFirstResponder(nil)
         guard readInteraction() else {tabs.selectTabViewItem(at:2);message.stringValue=t("请输入 0–10 秒之间的有效等待时间。","Enter a valid hover delay between 0 and 10 seconds.");return}
         guard readDetails() else { tabs.selectTabViewItem(at:1); message.stringValue=t("请检查体型与动作数值：最长停留不能小于最短停留。","Check size and behavior ranges; maximum perch time must not be below minimum."); return }
         do { try desktop.applySettings(draft); message.stringValue=t("已保存 · 交互设置立即生效，鸟种参数用于新飞入的小鸟。","Saved · Interaction settings apply now; species settings affect new arrivals.") }
         catch { message.stringValue=t("保存失败，请重试。当前设置未改变。","Could not save. Try again; active settings are unchanged.") }
     }
-    @objc func resetDefaults() { window?.makeFirstResponder(nil); draft=BirdSettings(); build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
-    @objc func cancel() { window?.close() }
+    @objc func resetDefaults() { cancelFixedPerchCapture();window?.makeFirstResponder(nil); draft=BirdSettings();selectedFixedPerchSlot=1; build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
+    @objc func cancel() { cancelFixedPerchCapture();window?.close() }
     func relocalize() {
+        cancelFixedPerchCapture()
         window?.makeFirstResponder(nil)
         let raw = detailFields.map { $0.map(\.stringValue) }
         let rawDelay=hoverDelayField.stringValue

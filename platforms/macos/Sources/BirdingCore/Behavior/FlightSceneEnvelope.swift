@@ -11,7 +11,7 @@ struct FlightSceneEnvelope {
     private let pointerRadius:CGFloat
 
     init?(routes:[CoordinatedFlightRoute],offsets:[Double],scales:[CGFloat],maximumDuration:Double=20) {
-        guard routes.count==2,offsets.count==2,scales.count==2,
+        guard (1...2).contains(routes.count),offsets.count==routes.count,scales.count==routes.count,
               offsets.allSatisfy({$0.isFinite && $0>=0}),scales.allSatisfy({$0.isFinite && $0>0}),
               maximumDuration.isFinite,maximumDuration>0,maximumDuration<=30 else {return nil}
         let duration=zip(offsets,routes).map{$0.0+$0.1.duration}.max() ?? 0
@@ -26,7 +26,7 @@ struct FlightSceneEnvelope {
                 let margin=CGFloat(speeds[actor]*dt/2)+4
                 return Geometry.landingFootprint(at:foot,scale:scales[actor]).insetBy(dx:-margin,dy:-margin)
             }
-            guard !Self.intersects(areas[0],areas[1]) else {return nil}
+            if areas.count==2,Self.intersects(areas[0],areas[1]) {return nil}
             result.append(Sweep(end:Double(index+1)*dt,areas:areas))
         }
         self.sweeps=result;self.duration=duration;pointerRadius=max(100,72*(scales.max() ?? 1))
@@ -40,7 +40,9 @@ struct FlightSceneEnvelope {
         let protected=CGRect(x:pointer.x-pointerRadius,y:pointer.y-pointerRadius,width:2*pointerRadius,height:2*pointerRadius)
         return !sweeps.contains{$0.end+1e-9>=min(age,duration) && $0.areas.contains{Self.intersects($0,protected)}}
     }
-    func isClear(in engine:BehaviorEngine,excluding participants:[BirdID],display:CGRect,after age:Double=0) -> Bool {
+    /// A nil display requires the caller to have bounded the complete route
+    /// footprint independently; obstacle padding is always retained.
+    func isClear(in engine:BehaviorEngine,excluding participants:[BirdID],display:CGRect?,after age:Double=0) -> Bool {
         let ids=Set(participants)
         // Ordinary windows allow flight overhead. Utility/system panels block it.
         var obstacles=engine.world.surfaces.filter{!$0.isGround && $0.layer>0}.map(\.rect)
@@ -65,7 +67,7 @@ struct FlightSceneEnvelope {
         }
         for sweep in sweeps where sweep.end+1e-9>=min(age,duration) {
             for area in sweep.areas {
-                guard display.contains(area),!obstacles.contains(where:{Self.intersects(area,$0)}) else {return false}
+                guard display.map({$0.contains(area)}) ?? true,!obstacles.contains(where:{Self.intersects(area,$0)}) else {return false}
             }
         }
         return true

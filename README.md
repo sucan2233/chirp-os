@@ -32,6 +32,7 @@
 - macOS 新增偶发动作：鼠标静止且周围空间足够时，一只小鸟可能在安全距离外绕一圈；移动或点击即可结束。另有 3–5 只同种鸟错峰掠过屏幕上部，过境鸟不占常驻数量。
 - “鸟种设置 → 交互”可分别开关绕鼠标与鸟群过境，选择低／中／高频率并预览。默认低频，两种动作合计每 3–6 分钟尝试一次，条件不合适时跳过；暂停、睡眠不累积事件。
 - macOS 小鸟停稳后会偶尔闭眼休息，着陆后可能整理羽毛，每只鸟的节奏有所不同；鼠标靠近或点击即可打断。在“鸟种设置 → 交互 → 停栖小动作”中开关和预览。
+- macOS 开发版可在“鸟种设置 → 交互 → 固定小栖木”中放置最多 3 根栖木：点击放置后把鼠标移到目标位置，3 秒后记录，再保存并应用。支持的现有小鸟会偶尔飞来停留，也可手动预览；关闭开关保留位置。
 - 夜鹭会长时间守望、伸颈、抖毛，偶尔“挤洗手液”；大斑啄木鸟会沿窗口侧边停靠、啄击。
 - 菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
 - 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
@@ -120,6 +121,7 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - Adjust and lock arrival probabilities, and customize size, wingbeat rate, speed, and perch duration.
 - Hover over a bird for about 1 second to see its name, with clicks still passing through. On macOS, adjust the delay from 0 to 10 seconds in Bird Settings → Interaction; 0 shows names immediately.
 - On macOS, click a bird to move it to another spot away from its previous perch. Clicks still pass through to the window beneath without taking focus.
+- macOS development builds support up to three fixed perches in Bird settings → Interaction → Fixed perches. Click Place, move the pointer to the desired position, then Save & Apply after the three-second capture. Existing supported birds occasionally visit; manual preview is also available. Turning the feature off keeps saved positions.
 - macOS encounters: a small bird may circle a stationary pointer at a safe distance when there is room; moving or clicking ends the visit. Loose flocks of 3–5 birds of one species can also pass across the upper screen without affecting resident counts.
 - Bird Settings → Interaction has separate encounter switches, Low/Medium/High frequency, and previews. Low (default) attempts one of the encounters every 3–6 minutes, skipping unsuitable opportunities. Pause and sleep do not accumulate events.
 - Night herons watch, stretch, shake and occasionally leave a fleeting dropping; woodpeckers cling to and peck window sides.

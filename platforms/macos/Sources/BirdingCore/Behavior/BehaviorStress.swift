@@ -297,7 +297,7 @@ public enum BehaviorStress {
         let species:[SpeciesID]
         var phase="warmup"
         var timings:[String:[String:WallSamples]]=[:]
-        let warmupSteps=96*60, drainLimit=120*60
+        let warmupSteps=128*60, drainLimit=120*60
         var moving=false, removed=false, sweep=false
         var sampleTick=0
 
@@ -420,6 +420,19 @@ public enum BehaviorStress {
                     host:host,arc:0,allowsOrbit:false,random:{0.5})
             }
         }
+        func prepareFixedPerchResident() {
+            guard let bird=engine.birds.first,engine.behavior(of:bird)==nil,
+                  let host=baseHosts.first(where:{$0.id==9001}) else {return}
+            bird.fraction=0.5
+            bird.fly(to:Geometry.foot(on:host,fraction:0.5,edge:.top,scale:engine.spriteScale(for:bird)),
+                host:host,arc:0,allowsOrbit:false,random:{0.5})
+        }
+        func installFixedPerch() {
+            var value=engine.settings
+            value.fixedPerches=[FixedPerchAnchor(slot:1,displayID:"",displayFrame:screens[0],x:0.6,y:0.86)]
+            measured("settings"){engine.applySettings(value)};auditor.metrics.settingsChanges+=1
+            command(.fixedPerchVisit(.preview))
+        }
         func tick(_ index:Int) {
             sampleTick=index
             if index%6==0 {sampleWorld()}
@@ -431,7 +444,7 @@ public enum BehaviorStress {
             value.pointerVisits=enabled; value.flockPasses=enabled; value.socialInteractions=enabled
             value.perchActions=enabled; value.leafPlayEnabled=enabled; value.ambientLeafPlayEnabled=enabled
             value.sideHopEnabled=enabled; value.takeoffPreparationEnabled=enabled; value.passiveAttentionEnabled=enabled
-            value.pointerFollowEnabled=enabled;value.edgePeekEnabled=enabled;value.chaseEnabled=enabled;value.travelTogetherEnabled=enabled;value.allopreeningEnabled=enabled
+            value.pointerFollowEnabled=enabled;value.edgePeekEnabled=enabled;value.chaseEnabled=enabled;value.travelTogetherEnabled=enabled;value.allopreeningEnabled=enabled;value.fixedPerchesEnabled=enabled
             measured("settings"){engine.applySettings(value)}; auditor.metrics.settingsChanges+=1; inspect()
         }
         func pause(_ value:Bool) {
@@ -507,6 +520,8 @@ public enum BehaviorStress {
                 if tickIndex==41*60,config.birds>=2 {command(.travelTogether(.preview))}
                 if tickIndex==60*60 {preparePreeningPair()}
                 if tickIndex==86*60,config.birds>=5 {command(.allopreening(.preview))}
+                if tickIndex==96*60 {prepareFixedPerchResident()}
+                if tickIndex==108*60 {installFixedPerch()}
                 tick(tickIndex)
             }
             phase="active"
@@ -544,14 +559,14 @@ public enum BehaviorStress {
                 auditor.metrics.repeatedRemovalChecks+=1
             }
             command(.clearProps); lifecycle(.shutdown); inspect()
-            auditor.finish(requiredCompletedKinds:["preen","leafPlay"]+(config.birds>=3 ? ["edgePeek"]:[])+(config.birds>=2 ? ["chase","travelTogether"]:[])+(config.birds>=5 ? ["allopreening"]:[]),requireAutonomy:config.autonomous && config.seconds>=120)
+            auditor.finish(requiredCompletedKinds:["preen","leafPlay","fixedPerchVisit"]+(config.birds>=3 ? ["edgePeek"]:[])+(config.birds>=2 ? ["chase","travelTogether"]:[])+(config.birds>=5 ? ["allopreening"]:[]),requireAutonomy:config.autonomous && config.seconds>=120)
             let cleanup=Cleanup(activeRunsBeforeDrain:beforeDrain,activeRunsAfterDrain:afterDrain,drainReachedIdle:idle,
                 naturallyCompletedDuringDrain:auditor.metrics.drainCompletions,explicitlyCancelledRuns:auditor.metrics.explicitCleanupCancellations,
                 residentsBeforeRemoval:retained,explicitlyRemovedBirds:removedBirds,activeRuns:engine.activeRunCount,birds:engine.birds.count,
                 pendingBirds:engine.pendingCount,leases:engine.leasedBirdCount,reservations:engine.reservedLandingCount,props:engine.scenePropCount,
                 ecologyMemories:engine.perchPlanner.rhythms.count,visitorLeases:engine.activeVisitorCount,
                 retainedVisitorProfiles:engine.rememberedVisitorCount,pendingPreviews:(engine.hasLeafPreview ? 1:0)+(engine.hasPointerPreview ? 1:0))
-            return Report(configuration:config,workload:Workload(version:5,fixedStepSeconds:BehaviorEngine.step,activeSteps:activeSteps,
+            return Report(configuration:config,workload:Workload(version:6,fixedStepSeconds:BehaviorEngine.step,activeSteps:activeSteps,
                 warmupSteps:warmupSteps,drainSteps:drainSteps,drainLimitSteps:drainLimit,worldSampleEverySteps:6,timingSampleLimit:WallSamples.limit,
                 frameManifest:"Existing BirdArt atlas vocabulary, keyed by SpeciesCatalog.standard entries; no renderer assets loaded",
                 species:Array(Set((0..<config.birds).map{fixtureSpecies($0).rawValue})).sorted()),auditor:auditor,cleanup:cleanup,

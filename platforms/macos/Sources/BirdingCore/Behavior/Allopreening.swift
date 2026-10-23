@@ -113,7 +113,7 @@ struct AllopreeningPlan {
                   !bird.isDeparting,!bird.needsDestination,!bird.isSideHopping,!bird.isCoordinatedFlying,
                   bird.perchDuration-bird.stateTime>duration+1,abs(bird.hopOffset)<0.001,
                   requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
-                  let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isGround,host.layer==0,
+                  let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isGround,!host.isFixedPerch,host.layer==0,
                   engine.hasUsablePerch(bird),bird.fraction.isFinite,(0...1).contains(bird.fraction),
                   Geometry.distance(bird.position,Geometry.foot(on:host,fraction:bird.fraction,edge:.top,
                       scale:engine.spriteScale(for:bird)))<0.001 else {return nil}

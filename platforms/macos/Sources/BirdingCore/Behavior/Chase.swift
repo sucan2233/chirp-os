@@ -61,7 +61,7 @@ struct ChasePlan {
                   requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
                   engine.hasUsablePerch(bird),!engine.pointerNear(bird),
                   let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),
-                  host.isGround || host.layer==0,
+                  !host.isFixedPerch,host.isGround || host.layer==0,
                   Geometry.distance(bird.position,Geometry.foot(on:host,fraction:bird.fraction,edge:.top,
                       scale:engine.spriteScale(for:bird)))<0.001 else {return nil}
             if source == .automatic {

@@ -7,8 +7,9 @@ public struct Surface: Equatable {
     public var rect: CGRect // Quartz desktop coordinates: y grows downward.
     public let layer: Int
     public let isGround: Bool
-    public init(id: UInt32, pid: Int32 = 0, rect: CGRect, layer: Int = 0, isGround: Bool = false) {
-        self.id = id; self.pid = pid; self.rect = rect; self.layer = layer; self.isGround = isGround
+    public let isFixedPerch: Bool
+    public init(id: UInt32, pid: Int32 = 0, rect: CGRect, layer: Int = 0, isGround: Bool = false, isFixedPerch:Bool = false) {
+        self.id = id; self.pid = pid; self.rect = rect; self.layer = layer; self.isGround = isGround; self.isFixedPerch=isFixedPerch
     }
 }
 
@@ -23,9 +24,9 @@ public enum Geometry {
     public static func blockers(on host:Surface,surfaces:[Surface]) -> [Surface] {
         // Ground birds share the floating overlay with birds in flight. Normal
         // windows cannot invalidate this last-resort ledge, but utility panels can.
-        if host.isGround { return surfaces.filter { !$0.isGround && $0.layer>0 } }
+        if host.isGround || host.isFixedPerch { return surfaces.filter { !$0.isGround && !$0.isFixedPerch && $0.layer>0 } }
         guard let depth=surfaces.firstIndex(where:{$0.id==host.id}) else { return [] }
-        return surfaces.prefix(depth).filter { !$0.isGround }
+        return surfaces.prefix(depth).filter { !$0.isGround && !$0.isFixedPerch }
     }
     // Sequential subtraction, not even-odd clipping: overlapping occluders stay opaque.
     public static func subtract(_ rect: CGRect, _ blocker: CGRect) -> [CGRect] {
@@ -132,7 +133,7 @@ public final class Bird {
     public var position: CGPoint
     public var state: BirdState = .flying
     public var hostID: UInt32?
-    private var hostPID: Int32?
+    private(set) var hostPID: Int32?
     public var depthID: UInt32?
     public var fraction: CGFloat
     public var facingRight = true
@@ -485,10 +486,10 @@ public final class Bird {
     }
     /// Reserve/plan first, then install without changing the current feet. Host
     /// geometry remains fixed for this route; changes request safe recovery.
-    func canBeginCoordinatedFlight(_ route:CoordinatedFlightRoute,on host:Surface,fraction:CGFloat,spriteScale:CGFloat,delay:Double=0,airborne:Bool=false) -> Bool {
+    func canBeginCoordinatedFlight(_ route:CoordinatedFlightRoute,on host:Surface,fraction:CGFloat,spriteScale:CGFloat,delay:Double=0,airborne:Bool=false,allowExpiredPerch:Bool=false) -> Bool {
         let snapshot=airborneFlight
         guard coordinatedMotion==nil,sideHopMotion==nil,(airborne ? snapshot != nil:state == .perched),edge == .top,
-              !isDeparting,!needsDestination,spriteScale.isFinite,spriteScale>0,
+              !isDeparting,(!needsDestination || (allowExpiredPerch && !airborne && state == .perched && !destinationInvalidated)),spriteScale.isFinite,spriteScale>0,
               fraction.isFinite,(0...1).contains(fraction),delay.isFinite,(0...5).contains(delay),
               delay==0 || (hostID==host.id && hostPID==host.pid),
               Geometry.distance(position,route.position(at:0))<0.001,
@@ -509,8 +510,8 @@ public final class Bird {
         return true
     }
     @discardableResult
-    func beginCoordinatedFlight(_ route:CoordinatedFlightRoute,on host:Surface,fraction:CGFloat,spriteScale:CGFloat,delay:Double=0,airborne:Bool=false) -> Bool {
-        guard canBeginCoordinatedFlight(route,on:host,fraction:fraction,spriteScale:spriteScale,delay:delay,airborne:airborne) else {return false}
+    func beginCoordinatedFlight(_ route:CoordinatedFlightRoute,on host:Surface,fraction:CGFloat,spriteScale:CGFloat,delay:Double=0,airborne:Bool=false,allowExpiredPerch:Bool=false) -> Bool {
+        guard canBeginCoordinatedFlight(route,on:host,fraction:fraction,spriteScale:spriteScale,delay:delay,airborne:airborne,allowExpiredPerch:allowExpiredPerch) else {return false}
         let snapshot=airborneFlight
         let phase=flightAge+wingPhase
         fly(to:route.position(at:route.duration),host:host,arc:0,urgent:true,allowsOrbit:false,random:{0.5})

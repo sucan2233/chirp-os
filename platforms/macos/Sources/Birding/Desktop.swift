@@ -13,6 +13,7 @@ final class DesktopView: NSView {
     var desktopRect: CGRect = .zero
     private var sprites: [CALayer] = []
     private let propRenderer=ScenePropRenderer()
+    private let fixedPerchRenderer=FixedPerchRenderer()
     private let nameLabel=CATextLayer()
     override var isFlipped: Bool { true }
     override var isOpaque: Bool { false }
@@ -31,6 +32,7 @@ final class DesktopView: NSView {
         let propSnapshot=controller.engine.propSnapshot()
         CATransaction.begin(); CATransaction.setDisableActions(true)
         propRenderer.update(propSnapshot,on:root,desktopRect:desktopRect)
+        fixedPerchRenderer.update(controller.engine.fixedPerchSnapshot(),world:controller.engine.world,on:root,desktopRect:desktopRect)
         while sprites.count > snapshot.count { sprites.removeLast().removeFromSuperlayer() }
         while sprites.count < snapshot.count {
             let container = CALayer()

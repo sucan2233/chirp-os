@@ -24,18 +24,21 @@ public struct RecordedSurface:Codable,Equatable {
     public var id:UInt32,pid:Int32,layer:Int
     public var rect:RecordedRect
     public var isGround:Bool
-    init(_ surface:Surface) {id=surface.id;pid=surface.pid;layer=surface.layer;rect=RecordedRect(surface.rect);isGround=surface.isGround}
-    var value:Surface {Surface(id:id,pid:pid,rect:rect.value,layer:layer,isGround:isGround)}
+    public var isFixedPerch:Bool?
+    init(_ surface:Surface) {id=surface.id;pid=surface.pid;layer=surface.layer;rect=RecordedRect(surface.rect);isGround=surface.isGround;isFixedPerch=surface.isFixedPerch}
+    var value:Surface {Surface(id:id,pid:pid,rect:rect.value,layer:layer,isGround:isGround,isFixedPerch:isFixedPerch ?? false)}
 }
 public struct RecordedWorld:Codable,Equatable {
     public var screens,displays:[RecordedRect]
+    public var displayIDs:[String]?
+    public var fixedPerchArtAvailable:Bool?
     public var surfaces:[RecordedSurface]
     public var scale:Double,pointer:RecordedPoint
     public var buttonsDown:Bool
     public var localMinuteOfDay:Int?
     public var availableFrames:[String:[String]]?
     public init(_ world:BehaviorWorld) {
-        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init)
+        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable
         surfaces=world.surfaces.map(RecordedSurface.init);scale=Double(world.scale);pointer=RecordedPoint(world.pointer)
         buttonsDown=world.buttonsDown;localMinuteOfDay=world.localMinuteOfDay
         availableFrames=Dictionary(uniqueKeysWithValues:world.availableFrames.map{($0.key.rawValue,$0.value.sorted())})
@@ -44,6 +47,8 @@ public struct RecordedWorld:Codable,Equatable {
         let frames=availableFrames ?? previous.map{Dictionary(uniqueKeysWithValues:$0.availableFrames.map{($0.key.rawValue,$0.value.sorted())})} ?? [:]
         guard localMinuteOfDay.map({(0..<1440).contains($0)}) ?? true,
               screens.count<=16,displays.count<=16,surfaces.count<=256,
+              (displayIDs ?? []).isEmpty || displayIDs?.count==displays.count,
+              (displayIDs ?? []).allSatisfy({$0.count<=128}),
               screens.allSatisfy({$0.valid && $0.height>0}),displays.allSatisfy({$0.valid && $0.height>0}),
               surfaces.allSatisfy({$0.rect.valid && ($0.isGround || $0.rect.height>0)}),
               Set(surfaces.map(\.id)).count==surfaces.count,
@@ -55,7 +60,7 @@ public struct RecordedWorld:Codable,Equatable {
         return BehaviorWorld(screens:screens.map(\.value),displays:displays.map(\.value),surfaces:surfaces.map(\.value),
             scale:scale,pointer:pointer.value,buttonsDown:buttonsDown,
             availableFrames:Dictionary(uniqueKeysWithValues:frames.map{(SpeciesID(rawValue:$0.key)!,Set($0.value))}),
-            localMinuteOfDay:localMinuteOfDay)
+            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true)
     }
 }
 public struct RecordedSimulationOptions:Codable,Equatable {
@@ -77,6 +82,7 @@ public struct RecordedCommand:Codable {
         case .socialGreeting(let value):name="socialGreeting";source=value.rawValue
         case .socialMotion(let kind,let value):name="socialMotion";action=kind.rawValue;source=value.rawValue
         case .perchAction(let kind,let value):name="perchAction";action=kind.rawValue;source=value.rawValue
+        case .fixedPerchVisit(let value):name="fixedPerchVisit";source=value.rawValue
         case .allopreening(let value):name="allopreening";source=value.rawValue
         case .travelTogether(let value):name="travelTogether";source=value.rawValue
         case .chase(let value):name="chase";source=value.rawValue
@@ -108,6 +114,7 @@ public struct RecordedCommand:Codable {
         case "socialGreeting":return .socialGreeting(try origin())
         case "socialMotion":guard let action,let kind=SocialMotionKind(rawValue:action) else {throw bad()};return .socialMotion(kind,try origin())
         case "perchAction":guard let action,let kind=PerchActionKind(rawValue:action) else {throw bad()};return .perchAction(kind,try origin())
+        case "fixedPerchVisit":return .fixedPerchVisit(try origin())
         case "allopreening":return .allopreening(try origin())
         case "travelTogether":return .travelTogether(try origin())
         case "chase":return .chase(try origin())
@@ -199,15 +206,21 @@ public struct RecordedPropState:Codable,Equatable {
         rotation=Double(prop.rotation);opacity=prop.opacity
     }
 }
+public struct RecordedFixedPerchState:Codable,Equatable {
+    public var slot:Int,surface:RecordedSurface,foot:RecordedPoint,rect:RecordedRect
+    init(_ perch:ResolvedFixedPerch) {slot=perch.slot;surface=RecordedSurface(perch.surface);foot=RecordedPoint(perch.foot);rect=RecordedRect(perch.rect)}
+}
 public struct BehaviorReplayReport:Codable,Equatable {
     public var time:Double,paused:Bool,residents:Int,transients:Int,pending:Int,runs:Int,leases:Int,reservations:Int
     public var events:[RecordedEvent],birds:[RecordedBirdState],props:[RecordedPropState]
     public var visitorMemory:VisitorMemoryArchive
+    public var fixedPerches:[RecordedFixedPerchState]
     init(engine:BehaviorEngine,events:[RecordedEvent]) {
         time=engine.time;paused=engine.paused;residents=engine.residentCount;transients=engine.passingCount;pending=engine.pendingCount
         runs=engine.activeRunCount;leases=engine.leasedBirdCount;reservations=engine.reservedLandingCount
         self.events=events;birds=engine.renderSnapshot().map{RecordedBirdState($0,engine:engine)}
         props=engine.propSnapshot().map(RecordedPropState.init)
+        fixedPerches=engine.fixedPerchSnapshot().map(RecordedFixedPerchState.init)
         visitorMemory=engine.visitorMemoryArchive
     }
     public func save(to url:URL) throws {try BehaviorInputLog.encoder().encode(self).write(to:url,options:.atomic)}
@@ -216,7 +229,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=8,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=9,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

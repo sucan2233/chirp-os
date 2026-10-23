@@ -17,6 +17,9 @@ public final class BehaviorEngine {
     let perchPlanner:PerchActivityPlanner
     let visitorMemory:VisitorMemory
     var visitorIDs:[BirdID:String]=[:]
+    private let habitatRandom:EngineRandom
+    private var fixedPerches:[ResolvedFixedPerch]=[]
+    private var fixedPerchDepartureAttempts:[BirdID:UInt64]=[:]
     private let socialRandom:EngineRandom
     let ecologyRandom:EngineRandom
     var perception=PointerPerception()
@@ -51,6 +54,7 @@ public final class BehaviorEngine {
         self.inputRecorder=recordInputs ? BehaviorInputRecorder(seed:seed,settings:settings):nil
         self.perchPlanner=PerchActivityPlanner(seed:seed)
         self.visitorMemory=VisitorMemory(seed:seed)
+        self.habitatRandom=EngineRandom(seed:seed ^ 0x5045524348524E47)
         self.socialRandom=EngineRandom(seed:seed ^ 0x534F4349414C524E)
         self.ecologyRandom=EngineRandom(seed:seed ^ 0x45434F5343484544)
         scheduler.reset(settings.ambientFrequency);observePopulation()
@@ -87,6 +91,7 @@ public final class BehaviorEngine {
     public var hasLeafPreview:Bool {scheduledEncounter?.kind == .leafPlay}
     public var scenePropCount:Int {runtime.propIDs.count}
     public func propSnapshot() -> [ScenePropRenderState] {runtime.propSnapshots(in:self)}
+    public func fixedPerchSnapshot() -> [ResolvedFixedPerch] {fixedPerches}
     public func id(of bird:Bird) -> BirdID? {identities[ObjectIdentifier(bird)]}
     public func ecology(of bird:Bird) -> BirdEcologySnapshot? {id(of:bird).flatMap{perchPlanner.ecology($0)}}
     public var visitorMemoryArchive:VisitorMemoryArchive {visitorMemory.archive}
@@ -138,6 +143,7 @@ public final class BehaviorEngine {
         guard let record=records.removeValue(forKey:id) else {return}
         identities.removeValue(forKey:ObjectIdentifier(record.bird));order.removeAll{$0==id}
         if let visitorID=visitorIDs.removeValue(forKey:id) {visitorMemory.release(visitorID)}
+        fixedPerchDepartureAttempts.removeValue(forKey:id)
         perchPlanner.remove(id);poseMixer.remove(id);attentionRanges.remove(id)
         emit(.birdRemoved,participants:[id],reason:.removed)
     }
@@ -151,7 +157,9 @@ public final class BehaviorEngine {
     public func updateWorld(_ value:BehaviorWorld,sampleDT:Double?=nil) {
         beginRecordingInput(.world(value,sampleDT:sampleDT));defer {endRecordingInput()}
         if world.screens != value.screens || world.displays != value.displays {resetPerception()}
+        let previousPerches=world.surfaces.filter(\.isFixedPerch)
         world=value
+        refreshFixedPerches(previous:previousPerches)
         if !value.buttonsDown {clickHandled=false}
         // Contact scenes use fixed anchors. Release them against the new world
         // before host tracking can translate a perched partner or an active hop.
@@ -165,6 +173,8 @@ public final class BehaviorEngine {
             runtime.cancel(where:{$0.kind == .pointerVisit},reason:.settingsChanged,in:self)
         }
         settings=value;scheduler.reset(value.ambientFrequency)
+        if !value.fixedPerchesEnabled {runtime.cancel(where:{$0.kind == .fixedPerchVisit},reason:.settingsChanged,in:self)}
+        refreshFixedPerches(previous:world.surfaces.filter(\.isFixedPerch))
         for id in visitorIDs.keys {
             let familiarity=value.visitorMemoryEnabled ? visitorIDs[id].flatMap{visitorMemory.profile($0)?.familiarity} ?? 0:0
             perchPlanner.setFamiliarity(familiarity,for:id)
@@ -212,6 +222,7 @@ public final class BehaviorEngine {
         beginRecordingInput(.command(command));defer {endRecordingInput()}
         switch command {
         case .relocate(let id): return relocate(id)
+        case .fixedPerchVisit(let source):return requestFixedPerchVisit(source:source)
         case .allopreening(let source):return requestAllopreening(source:source)
         case .travelTogether(let source):return requestTravelTogether(source:source)
         case .chase(let source):return requestChase(source:source)
@@ -246,7 +257,7 @@ public final class BehaviorEngine {
         case .pointerClick:
             recordPointerClick(explicit:true)
             scheduler.suppress()
-            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind.isPerchActivity || $0.kind.isSocial || $0.kind == .leafPlay},reason:.userInput,in:self)
+            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind.isPerchActivity || $0.kind.isSocial || $0.kind == .leafPlay || $0.kind == .fixedPerchVisit},reason:.userInput,in:self)
             perchPlanner.suppressAll()
         case .pause(let value):
             guard paused != value else {return .accepted}
@@ -520,6 +531,48 @@ public final class BehaviorEngine {
         } else if case .rejected(let reason)=result {return reject(.travelTogether,source,reason)}
         return result
     }
+    /// Persistent habitat surfaces are derived from saved anchors, never from
+    /// a behavior run. Re-layout releases birds before any host tracking occurs.
+    private func refreshFixedPerches(previous:[Surface]) {
+        world.surfaces.removeAll(where: \.isFixedPerch)
+        fixedPerches=settings.fixedPerchesEnabled && world.fixedPerchArtAvailable ? FixedPerchLayout.resolve(anchors:settings.fixedPerches,world:world):[]
+        world.surfaces.append(contentsOf:fixedPerches.map(\.surface))
+        runtime.validate(in:self,where:{$0.kind == .fixedPerchVisit})
+        for bird in birds {
+            guard let old=previous.first(where:{$0.id==bird.hostID && $0.pid==bird.hostPID}),
+                  !world.surfaces.contains(old) else {continue}
+            if let id=id(of:bird) {runtime.cancel(bird:id,reason:.targetInvalid,in:self)}
+            if bird.hostID==old.id,bird.hostPID==old.pid,!bird.isDeparting {bird.requestFlightRecovery()}
+        }
+    }
+    private func requestFixedPerchVisit(source:BehaviorSource,target:BirdID?=nil) -> BehaviorResult {
+        guard !paused else {return reject(.fixedPerchVisit,source,.paused)}
+        guard BehaviorDefinitions.definition(for:.fixedPerchVisit).isEnabled(settings:settings,source:source)
+        else {return reject(.fixedPerchVisit,source,.disabled)}
+        guard !ambientBusy,scheduledEncounter==nil else {return reject(.fixedPerchVisit,source,.busy)}
+        guard !world.buttonsDown else {return reject(.fixedPerchVisit,source,.userInput)}
+        guard !fixedPerches.isEmpty else {return reject(.fixedPerchVisit,source,.noSpace)}
+        var candidates=FixedPerchVisitPlan.candidates(in:self,source:source,target:target)
+        if source == .preview {
+            let arriving=candidates.filter{!$0.originHost.isFixedPerch}
+            if !arriving.isEmpty {candidates=arriving}
+        }
+        guard let plan=(source == .automatic ? ecologicalChoice(candidates,weight:{self.perchPlanner.automaticWeight($0.id,kind:.fixedPerchVisit)}):habitatRandom.element(candidates)) else {
+            let supported=birds.filter{role(of:$0) == .resident && FixedPerchVisitBehavior.supportedSpecies.contains($0.profile.id)}
+            let settled=supported.filter{$0.state == .perched}
+            let reason:BehaviorReason
+            if supported.isEmpty {reason = .noSpecies}
+            else if settled.isEmpty {reason = .unavailableBird}
+            else if settled.allSatisfy({!FixedPerchVisitPlan.requiredFrames.isSubset(of:world.availableFrames[$0.profile.id] ?? [])}) {reason = .missingFrames}
+            else if settled.contains(where:{pointerNear($0)}) {reason = .pointerNearby}
+            else {reason = .noSpace}
+            return reject(.fixedPerchVisit,source,reason)
+        }
+        let result=runtime.start(FixedPerchVisitExecution(plan:plan,source:source),source:source,in:self)
+        if result.accepted {perchPlanner.suppress(plan.id)}
+        else if case .rejected(let reason)=result {return reject(.fixedPerchVisit,source,reason)}
+        return result
+    }
     private func requestAllopreening(source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.allopreening,source,.paused)}
         guard BehaviorDefinitions.definition(for:.allopreening).isEnabled(settings:settings,source:source) else {return reject(.allopreening,source,.disabled)}
@@ -636,6 +689,14 @@ public final class BehaviorEngine {
         plan.apply(to:bird,random:random);return true
     }
     private func routeAutonomously(_ bird:Bird,id:BirdID) {
+        // One optional choice at the existing departure opportunity. No new
+        // timer, resident, or forced takeoff is created by placing a perch.
+        if ambientEnabled,!fixedPerches.isEmpty,bird.state == .perched,
+           fixedPerchDepartureAttempts[id] != bird.motionRevision,
+           BehaviorDefinitions.definition(for:.fixedPerchVisit).isEnabled(settings:settings,source:.automatic) {
+            fixedPerchDepartureAttempts[id]=bird.motionRevision
+            if habitatRandom.unit()<0.15,requestFixedPerchVisit(source:.automatic,target:id).accepted {return}
+        }
         guard let destination=plan(for:bird) else {return}
         if settings.perchActions,settings.takeoffPreparationEnabled,
            bird.state == .perched,bird.stateTime>=bird.perchDuration,hasUsablePerch(bird),

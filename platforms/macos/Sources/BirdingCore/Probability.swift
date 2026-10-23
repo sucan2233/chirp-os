@@ -114,6 +114,8 @@ public struct BirdSettings: Codable {
     public var leafPlayEnabled = true
     public var ambientLeafPlayEnabled = true
     public var visitorMemoryEnabled = true
+    public var fixedPerchesEnabled = true
+    public var fixedPerches: [FixedPerchAnchor] = []
     public var ambientFrequency: AmbientFrequency = .low
     public var activityRhythm: ActivityRhythmMode = .steady
     public var perchDefaultsVersion: Int? = nil
@@ -128,6 +130,7 @@ public struct BirdSettings: Codable {
         case pointerVisits,pointerFollowEnabled,flockPasses,ambientFrequency,perchActions,socialInteractions,leafPlayEnabled
         case passiveAttentionEnabled,ambientLeafPlayEnabled,sideHopEnabled,takeoffPreparationEnabled
         case visitorMemoryEnabled,activityRhythm,edgePeekEnabled,chaseEnabled,travelTogetherEnabled,allopreeningEnabled
+        case fixedPerchesEnabled,fixedPerches
     }
     private static func validateSchemaVersion(in values:KeyedDecodingContainer<CodingKeys>) throws {
         // Absence alone denotes version 0; null and malformed values are not legacy versions.
@@ -167,6 +170,17 @@ public struct BirdSettings: Codable {
         leafPlayEnabled=try values.decodeIfPresent(Bool.self,forKey:.leafPlayEnabled) ?? true
         ambientLeafPlayEnabled=try values.decodeIfPresent(Bool.self,forKey:.ambientLeafPlayEnabled) ?? true
         visitorMemoryEnabled=try values.decodeIfPresent(Bool.self,forKey:.visitorMemoryEnabled) ?? true
+        fixedPerchesEnabled=try values.decodeIfPresent(Bool.self,forKey:.fixedPerchesEnabled) ?? true
+        // Missing keys are legacy defaults; explicit null is malformed anchor data.
+        if values.contains(.fixedPerches) {
+            fixedPerches=try values.decode([FixedPerchAnchor].self,forKey:.fixedPerches)
+        } else {fixedPerches=[]}
+        guard fixedPerches.count<=FixedPerchLayout.maximumCount,
+              Set(fixedPerches.map(\.slot)).count==fixedPerches.count,
+              fixedPerches.allSatisfy(\.isValid) else {
+            throw DecodingError.dataCorruptedError(forKey:.fixedPerches,in:values,
+                debugDescription:"Fixed perches must contain at most three valid anchors with unique slots.")
+        }
         ambientFrequency=try values.decodeIfPresent(AmbientFrequency.self,forKey:.ambientFrequency) ?? .low
         activityRhythm=try values.decodeIfPresent(ActivityRhythmMode.self,forKey:.activityRhythm) ?? .steady
         perchDefaultsVersion=try values.decodeIfPresent(Int.self,forKey:.perchDefaultsVersion)

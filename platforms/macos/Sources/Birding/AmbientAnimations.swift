@@ -10,7 +10,7 @@ extension DesktopController {
     var ambientBusy:Bool {engine.ambientBusy}
     func syncWorld(sampleDT:Double?=nil,at point:CGPoint?=nil,buttonsDown:Bool?=nil) {
         engine.updateWorld(BehaviorWorld(screens:screenRects,displays:displayRects,surfaces:surfaces,
-            scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? (NSEvent.pressedMouseButtons != 0),availableFrames:frameCapabilities,localMinuteOfDay:activityMinuteOfDay()),sampleDT:sampleDT)
+            scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? (NSEvent.pressedMouseButtons != 0),availableFrames:frameCapabilities,localMinuteOfDay:activityMinuteOfDay(),displayIDs:fixedPerchDisplayIDs,fixedPerchArtAvailable:FixedPerchArt.shared != nil),sampleDT:sampleDT)
     }
     func renderSnapshot() -> [BirdRenderState] {syncWorld();return engine.renderSnapshot()}
     @discardableResult func startPointerVisit(at point:CGPoint) -> Bool {

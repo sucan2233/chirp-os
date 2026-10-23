@@ -12,7 +12,7 @@ public struct BehaviorRunID: Hashable, Codable, Comparable {
 }
 public enum BirdRole: String {case resident, transient}
 public enum BehaviorKind: String {
-    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase, travelTogether, allopreening
+    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase, travelTogether, allopreening, fixedPerchVisit
     var isPerchActivity:Bool {[Self.rest,.preen,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek].contains(self)}
     var isSocial:Bool {[Self.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase,.travelTogether,.allopreening].contains(self)}
 }
@@ -45,6 +45,7 @@ public enum EngineCommand {
     case socialMotion(SocialMotionKind,BehaviorSource)
     case perchAction(PerchActionKind,BehaviorSource)
     case attention(AttentionKind,BehaviorSource)
+    case fixedPerchVisit(BehaviorSource)
     case allopreening(BehaviorSource)
     case travelTogether(BehaviorSource)
     case chase(BehaviorSource)
@@ -67,6 +68,10 @@ public enum EngineCommand {
 public struct BehaviorWorld {
     public var screens: [CGRect]
     public var displays: [CGRect]
+    /// Stable display identifiers, in the same order as displays; empty for legacy fixtures.
+    public var displayIDs:[String]
+    /// Platforms opt out when the real perch sprite cannot be loaded.
+    public var fixedPerchArtAvailable:Bool
     public var surfaces: [Surface]
     public var scale: CGFloat
     public var pointer: CGPoint
@@ -76,8 +81,8 @@ public struct BehaviorWorld {
     /// Optional poses require real renderer frames; an empty manifest opts out.
     public var availableFrames: [SpeciesID:Set<String>]
     public init(screens:[CGRect]=[],displays:[CGRect]=[],surfaces:[Surface]=[],scale:CGFloat=1,
-                pointer:CGPoint = .zero,buttonsDown:Bool=false,availableFrames:[SpeciesID:Set<String>]=[:],localMinuteOfDay:Int?=nil) {
-        self.screens=screens;self.displays=displays;self.surfaces=surfaces
+                pointer:CGPoint = .zero,buttonsDown:Bool=false,availableFrames:[SpeciesID:Set<String>]=[:],localMinuteOfDay:Int?=nil,displayIDs:[String]=[],fixedPerchArtAvailable:Bool=true) {
+        self.screens=screens;self.displays=displays;self.surfaces=surfaces;self.displayIDs=displayIDs;self.fixedPerchArtAvailable=fixedPerchArtAvailable
         self.scale=scale;self.pointer=pointer;self.buttonsDown=buttonsDown;self.availableFrames=availableFrames
         self.localMinuteOfDay=localMinuteOfDay.flatMap{(0..<1440).contains($0) ? $0:nil}
     }
