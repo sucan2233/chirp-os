@@ -5,6 +5,7 @@ func argument(_ flag:String) -> String? {
     guard let i = CommandLine.arguments.firstIndex(of:flag),i+1<CommandLine.arguments.count else { return nil }
     return CommandLine.arguments[i+1]
 }
+BehaviorStressCLI.runIfRequested()
 if let token=argument("--apply-update") { exit(UpdateInstaller.runHelper(token:token)) }
 if let path=argument("--verify-update-archive") {
     do { let expanded=try UpdateArchive.validate(Data(contentsOf:URL(fileURLWithPath:path),options:.mappedIfSafe));print("Update archive structure: PASS (\(expanded) expanded bytes)");exit(0) }
