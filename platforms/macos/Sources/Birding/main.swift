@@ -83,6 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification:Notification) {
         desktop?.engine.handle(.cancelAmbient(.shutdown));desktop?.stopMouseMonitoring()
         desktop?.flushVisitorMemory()
+        desktop?.flushObservationJournal()
         if let desktop,let path=desktop.recordingPath {
             do {try desktop.engine.saveRecording(to:URL(fileURLWithPath:path));print("Behavior recording saved: \(path)")}
             catch {fputs("Behavior recording failed: \(error)\n",stderr)}

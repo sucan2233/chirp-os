@@ -38,6 +38,9 @@ final class BehaviorRuntime {
         let id: BehaviorRunID
         let source: BehaviorSource
         let execution: BehaviorExecution
+        // Retain only species that were renderable on a display during this run;
+        // transient participants may already be gone when completion is emitted.
+        var observationSpecies=Set<SpeciesID>()
         var age: Double = 0
     }
     private(set) var runs: [BehaviorRunID:Run] = [:]
@@ -59,6 +62,18 @@ final class BehaviorRuntime {
     func presentation(for bird:BirdID,in engine:BehaviorEngine) -> BirdPose? {
         owners[bird].flatMap{runs[$0]?.execution.presentation(for:bird,in:engine)}
     }
+    private func captureObservationSpecies(_ id:BehaviorRunID,in engine:BehaviorEngine) {
+        guard var run=runs[id],run.execution.kind != .relocate else {return}
+        let participants=Set(run.execution.participants)
+        // engine.birds excludes hidden records. A shown offscreen arrival still
+        // needs to enter a display before its species qualifies as a discovery.
+        for bird in engine.birds where !run.observationSpecies.contains(bird.profile.id) {
+            guard let birdID=engine.id(of:bird),participants.contains(birdID),
+                  engine.world.displays.contains(where:{$0.intersects(engine.bounds(of:bird))}) else {continue}
+            run.observationSpecies.insert(bird.profile.id)
+        }
+        runs[id]=run
+    }
     func start(_ execution:BehaviorExecution,source:BehaviorSource,in engine:BehaviorEngine) -> BehaviorResult {
         guard !execution.participants.contains(where:{owners[$0] != nil}),
               Set(execution.habitatReservations).count==execution.habitatReservations.count,
@@ -79,12 +94,14 @@ final class BehaviorRuntime {
             owners[bird]=id;engine.perchPlanner.didStart(bird,kind:execution.kind)
         }
         execution.start(in:engine)
+        captureObservationSpecies(id,in:engine)
         engine.emit(.started,run:id,kind:execution.kind,source:source,participants:execution.participants)
         return .started(id)
     }
     func validate(in engine:BehaviorEngine,where matches:(BehaviorExecution)->Bool = {_ in true}) {
         for id in runs.keys.sorted() {
             guard let run=runs[id],matches(run.execution) else {continue}
+            captureObservationSpecies(id,in:engine)
             guard run.execution.habitatReservations.allSatisfy({engine.habitatObjects.objects[$0] != nil}) else {
                 finish(id,result:.failed(.targetInvalid),in:engine);continue
             }
@@ -107,7 +124,10 @@ final class BehaviorRuntime {
             if run.age>run.execution.timeout {
                 finish(id,result:.failed(.timedOut),in:engine);continue
             }
-            if let result=run.execution.advance(dt,in:engine) {finish(id,result:result,in:engine)}
+            captureObservationSpecies(id,in:engine)
+            let result=run.execution.advance(dt,in:engine)
+            captureObservationSpecies(id,in:engine)
+            if let result {finish(id,result:result,in:engine)}
         }
     }
     // Remove ownership before callbacks so cleanup/recovery cannot double-end a run.
@@ -127,7 +147,12 @@ final class BehaviorRuntime {
         guard let run=detach(id,in:engine) else {return}
         switch result {
         case .completed:
-            engine.emit(.completed,run:id,kind:run.execution.kind,source:run.source,participants:run.execution.participants)
+            let event=engine.emit(.completed,run:id,kind:run.execution.kind,source:run.source,participants:run.execution.participants)
+            if run.execution.kind != .relocate,!run.observationSpecies.isEmpty {
+                engine.observationObserver?(BehaviorObservation(sequence:event.sequence,simulationTime:event.time,
+                    kind:run.execution.kind,source:run.source,
+                    species:run.observationSpecies.sorted{$0.rawValue<$1.rawValue},runID:id.rawValue))
+            }
         case .cancelled(let reason):
             run.execution.cancel(reason,in:engine)
             engine.emit(.cancelled,run:id,kind:run.execution.kind,source:run.source,participants:run.execution.participants,reason:reason)

@@ -271,6 +271,9 @@ enum SettingsVerification {
             try FoodTraySettingsVerification.run(into:&checks,folder:folder)
             ActivityRhythmClockVerification.run(into:&checks)
             try VisitorMemoryPersistenceVerification.run(into:&checks,folder:folder)
+            try ObservationJournalPersistenceVerification.run(into:&checks,folder:folder)
+            try ObservationJournalConcurrencyVerification.run(into:&checks,folder:folder)
+            try ObservationJournalUIVerification.run(into:&checks,folder:folder)
             try checkLeafSettings(folder:folder,checks:&checks)
             d.showSpeciesGallery()
             checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.title=="图鉴…"} && d.gallery?.window?.isVisible == true

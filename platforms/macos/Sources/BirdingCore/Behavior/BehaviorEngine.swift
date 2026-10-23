@@ -16,6 +16,9 @@ public final class BehaviorEngine {
     private let foodRandom:EngineRandom
     private let inputRecorder:BehaviorInputRecorder?
     var eventObserver:((BehaviorEvent)->Void)?
+    /// Outbound discovery values. Hosts serialize delivery with engine commands;
+    /// observers must not issue simulation commands from inside this callback.
+    public var observationObserver:((BehaviorObservation)->Void)?
     let poseMixer=PoseMixer()
     let random:EngineRandom
     let perchPlanner:PerchActivityPlanner
@@ -156,12 +159,14 @@ public final class BehaviorEngine {
         perchPlanner.remove(id);poseMixer.remove(id);attentionRanges.remove(id)
         emit(.birdRemoved,participants:[id],reason:.removed)
     }
-    func emit(_ type:BehaviorEventType,run:BehaviorRunID?=nil,kind:BehaviorKind?=nil,
-              source:BehaviorSource = .automatic,participants:[BirdID]=[],reason:BehaviorReason?=nil) {
-        events.append(BehaviorEvent(sequence:nextEvent,time:time,runID:run,kind:kind,source:source,type:type,participants:participants,reason:reason))
-        if let event=events.last {inputRecorder?.event(event);eventObserver?(event)}
+    @discardableResult func emit(_ type:BehaviorEventType,run:BehaviorRunID?=nil,kind:BehaviorKind?=nil,
+              source:BehaviorSource = .automatic,participants:[BirdID]=[],reason:BehaviorReason?=nil) -> BehaviorEvent {
+        let event=BehaviorEvent(sequence:nextEvent,time:time,runID:run,kind:kind,source:source,type:type,participants:participants,reason:reason)
+        events.append(event)
+        inputRecorder?.event(event);eventObserver?(event)
         nextEvent+=1
         if events.count>256 {events.removeFirst(events.count-256)}
+        return event
     }
     public func updateWorld(_ value:BehaviorWorld,sampleDT:Double?=nil) {
         beginRecordingInput(.world(value,sampleDT:sampleDT));defer {endRecordingInput()}

@@ -49,6 +49,7 @@ final class BehaviorStressTests: XCTestCase {
         XCTAssertEqual(a.configuration,b.configuration)
         XCTAssertEqual(a.workload,b.workload)
         XCTAssertEqual(a.metrics,b.metrics)
+        XCTAssertEqual(a.failures,b.failures)
         XCTAssertEqual(a.peaks,b.peaks)
         XCTAssertEqual(a.integrity,b.integrity)
         XCTAssertEqual(a.cleanup,b.cleanup)
@@ -87,7 +88,12 @@ final class BehaviorStressTests: XCTestCase {
         let decoded=try JSONDecoder().decode(BehaviorStress.Report.self,from:data)
         XCTAssertTrue(decoded.passed)
         XCTAssertEqual(decoded.metrics,report.metrics)
+        XCTAssertEqual(decoded.failures,report.failures)
         XCTAssertEqual(decoded.cleanup,report.cleanup)
+        var legacy=object;legacy.removeValue(forKey:"failures")
+        let legacyReport=try JSONDecoder().decode(BehaviorStress.Report.self,from:JSONSerialization.data(withJSONObject:legacy))
+        XCTAssertTrue(legacyReport.failures.samples.isEmpty)
+        XCTAssertEqual(legacyReport.metrics,report.metrics)
         assertTimings(report)
     }
 
@@ -103,6 +109,26 @@ final class BehaviorStressTests: XCTestCase {
         let empty=BehaviorStress.Auditor()
         empty.finish(requireAutonomy:true)
         XCTAssertEqual(empty.report.checks["autonomousCoverage"],false)
+    }
+
+    func testFailureAttributionSurvivesRingEvictionWithBoundedSamples() throws {
+        let auditor=BehaviorStress.Auditor()
+        for index in 1...300 {
+            let id=BehaviorRunID(rawValue:UInt64(index)),kind:BehaviorKind=index%2==0 ? .edgePeek:.foodTrayVisit
+            auditor.observe(BehaviorEvent(sequence:UInt64(index*2-1),time:Double(index),runID:id,
+                kind:kind,source:.automatic,type:.started,participants:[BirdID(7)],reason:nil))
+            auditor.observe(BehaviorEvent(sequence:UInt64(index*2),time:Double(index)+0.5,runID:id,
+                kind:kind,source:.automatic,type:.failed,participants:[BirdID(7)],reason:.targetInvalid))
+        }
+        XCTAssertEqual(auditor.failures.byBehavior,["edgePeek":150,"foodTrayVisit":150])
+        XCTAssertEqual(auditor.failures.samples.count,32)
+        XCTAssertEqual(auditor.failures.omittedSamples,268)
+        let first=try XCTUnwrap(auditor.failures.samples.first)
+        XCTAssertEqual(first.runID,1);XCTAssertEqual(first.simulationTime,1.5)
+        XCTAssertEqual(first.behavior,"foodTrayVisit");XCTAssertEqual(first.participants,[7])
+        XCTAssertEqual(first.reason,"targetInvalid");XCTAssertEqual(first.source,"automatic")
+        let data=try JSONEncoder().encode(auditor.failures)
+        XCTAssertEqual(try JSONDecoder().decode(BehaviorStress.FailureDiagnostics.self,from:data),auditor.failures)
     }
 
     func testDifferentSeedsChangeDeterministicTrace() throws {

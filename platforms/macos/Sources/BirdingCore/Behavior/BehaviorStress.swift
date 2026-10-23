@@ -115,6 +115,22 @@ public enum BehaviorStress {
         public let drain: [String:Timing]
         public let cleanup: [String:Timing]
     }
+    /// Small causal samples survive eviction from the engine's event ring.
+    /// Aggregate counts remain complete when the sample budget is exhausted.
+    public struct FailureDiagnostics:Codable,Equatable {
+        public struct Sample:Codable,Equatable {
+            public let sequence:UInt64
+            public let simulationTime:Double
+            public let runID:UInt64?
+            public let behavior:String
+            public let source:String
+            public let reason:String
+            public let participants:[UInt64]
+        }
+        public internal(set) var byBehavior:[String:Int]=[:]
+        public internal(set) var samples:[Sample]=[]
+        public internal(set) var omittedSamples=0
+    }
     public struct Report: Codable {
         public let configuration: Configuration
         public let workload: Workload
@@ -123,11 +139,12 @@ public enum BehaviorStress {
         public let peaks: Peaks
         public let cleanup: Cleanup
         public let timings: Timings
+        public let failures:FailureDiagnostics
         public var passed: Bool {integrity.passed && cleanup.passed && cleanup.drainReachedIdle && metrics.startedRuns>0 && metrics.completedRuns>0}
 
         // Encode passed as a field as well as exposing the Swift computed value.
         private enum CodingKeys: String, CodingKey {
-            case configuration, workload, metrics, integrity, peaks, cleanup, timings, passed
+            case configuration, workload, metrics, integrity, peaks, cleanup, timings, failures, passed
         }
         public func encode(to encoder: Encoder) throws {
             var c=encoder.container(keyedBy:CodingKeys.self)
@@ -135,6 +152,7 @@ public enum BehaviorStress {
             try c.encode(metrics,forKey:.metrics); try c.encode(integrity,forKey:.integrity)
             try c.encode(peaks,forKey:.peaks); try c.encode(cleanup,forKey:.cleanup)
             try c.encode(timings,forKey:.timings); try c.encode(passed,forKey:.passed)
+            try c.encode(failures,forKey:.failures)
         }
         public init(from decoder: Decoder) throws {
             let c=try decoder.container(keyedBy:CodingKeys.self)
@@ -144,10 +162,12 @@ public enum BehaviorStress {
             integrity=try c.decode(Integrity.self,forKey:.integrity)
             peaks=try c.decode(Peaks.self,forKey:.peaks); cleanup=try c.decode(Cleanup.self,forKey:.cleanup)
             timings=try c.decode(Timings.self,forKey:.timings)
+            failures=try c.decodeIfPresent(FailureDiagnostics.self,forKey:.failures) ?? FailureDiagnostics()
         }
         init(configuration: Configuration, workload: Workload, auditor: Auditor, cleanup: Cleanup, timings: Timings) {
             self.configuration=configuration; self.workload=workload; metrics=auditor.metrics
             integrity=auditor.report; peaks=auditor.peaks; self.cleanup=cleanup; self.timings=timings
+            failures=auditor.failures
         }
     }
 
@@ -160,6 +180,7 @@ public enum BehaviorStress {
     /// Run IDs increase strictly, so a terminal absent from open is invalid
     /// without retaining the entire terminal history.
     final class Auditor {
+        private(set) var failures=FailureDiagnostics()
         struct Open {let participants:[BirdID]; let kind:BehaviorKind?; let source:BehaviorSource}
         var metrics=Metrics(), peaks=Peaks()
         private var open:[BehaviorRunID:Open]=[:]
@@ -200,6 +221,12 @@ public enum BehaviorStress {
                 }
                 if event.type == .failed {
                     metrics.failedRuns+=1; metrics.failureReasons[event.reason?.rawValue ?? "unspecified",default:0]+=1
+                    failures.byBehavior[event.kind?.rawValue ?? "unknown",default:0]+=1
+                    if failures.samples.count<32 {
+                        failures.samples.append(FailureDiagnostics.Sample(sequence:event.sequence,simulationTime:event.time,
+                            runID:event.runID?.rawValue,behavior:event.kind?.rawValue ?? "unknown",source:event.source.rawValue,
+                            reason:event.reason?.rawValue ?? "unspecified",participants:event.participants.map(\.rawValue)))
+                    } else {failures.omittedSamples+=1}
                 }
                 check("noTimeouts",event.reason != .timedOut)
                 guard let id=event.runID,let started=open.removeValue(forKey:id) else {check("runLifecycle",false); return}

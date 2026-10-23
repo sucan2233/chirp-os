@@ -10,7 +10,7 @@ extension DesktopController {
     var ambientBusy:Bool {engine.ambientBusy}
     func syncWorld(sampleDT:Double?=nil,at point:CGPoint?=nil,buttonsDown:Bool?=nil) {
         var world=BehaviorWorld(screens:screenRects,displays:displayRects,surfaces:surfaces,
-            scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? (NSEvent.pressedMouseButtons != 0),availableFrames:frameCapabilities,localMinuteOfDay:activityMinuteOfDay(),displayIDs:fixedPerchDisplayIDs,fixedPerchArtAvailable:FixedPerchArt.shared != nil)
+            scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? pointerButtonsDown(),availableFrames:frameCapabilities,localMinuteOfDay:activityMinuteOfDay(),displayIDs:fixedPerchDisplayIDs,fixedPerchArtAvailable:FixedPerchArt.shared != nil)
         world.foodTrayArtAvailable=HabitatObjectRenderer.foodTrayArtAvailable
         engine.updateWorld(world,sampleDT:sampleDT)
     }

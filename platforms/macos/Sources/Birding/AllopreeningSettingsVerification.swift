@@ -141,6 +141,7 @@ enum AllopreeningSettingsVerification {
 
     private static func isolatedDesktop(preferences:UserDefaults,folder:URL) -> DesktopController {
         let d=DesktopController();d.preferences=preferences;d.automaticPopulation=false
+        d.pointerButtonsDown={false}
         d.engine.populationEnabled=false;d.engine.ambientEnabled=false;d.engine.autonomousRouting=false
         d.settingsURL=folder.appendingPathComponent("settings.json");d.legacyURL=folder.appendingPathComponent("legacy.json")
         d.visitorMemoryPersistenceEnabled=false;d.visitorMemoryURL=folder.appendingPathComponent("visitors.json")
@@ -169,6 +170,9 @@ enum AllopreeningSettingsVerification {
             event?.source == .preview && event?.type == .rejected && event?.reason.map {reason in
                 reasons.contains(reason) && w.message.stringValue==w.allopreeningPreviewMessage(reason)
             } == true
+        if checks["allopreeningPreviewRejection-"+suffix] != true {
+            NSLog("Allopreening rejection fixture %@: event=%@, message=%@",suffix,String(describing:event),w.message.stringValue)
+        }
         checks["allopreeningRejectedPreviewPreservesBirdsAndMotion-"+suffix] =
             counts==[e.birds.count,e.residentCount,e.passingCount,e.departingCount,e.pendingCount,e.arrivalCount,e.departureCount] &&
             zip(birds,e.birds).allSatisfy{$0.0 === $0.1} && e.birds.map(\.position)==positions &&

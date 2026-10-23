@@ -112,6 +112,14 @@ final class DesktopController: NSObject {
     var visitorMemoryPersistenceEnabled=VisitorMemoryPersistence.automaticEnabled(arguments:CommandLine.arguments)
     var visitorMemoryURL=VisitorMemoryPersistence.defaultURL
     var visitorMemoryPersistence:VisitorMemoryPersistence?
+    let observationJournal=ObservationJournal()
+    var observationWindow:ObservationJournalWindow?
+    var observationJournalURL=ObservationJournalPersistence.defaultURL
+    var observationJournalPersistenceEnabled=ObservationJournalPersistence.automaticEnabled(arguments:CommandLine.arguments)
+    var observationPersistence:ObservationJournalPersistence?
+    var observationDate:()->Date={Date()}
+    // Isolated native fixtures supply deterministic input; production samples AppKit.
+    var pointerButtonsDown:()->Bool={NSEvent.pressedMouseButtons != 0}
     func t(_ zh:String,_ en:String) -> String { language.text(zh,en) }
     func spriteScale(for bird: Bird) -> CGFloat { scale * bird.profile.relativeScale }
     func loadSpeciesConfig() throws {
@@ -139,7 +147,7 @@ final class DesktopController: NSObject {
     @objc func toggleLanguage() {
         language = language == .chinese ? .english : .chinese
         preferences.set(language.rawValue,forKey:"appLanguage")
-        makeMenu(); settingsWindow?.relocalize()
+        makeMenu(); settingsWindow?.relocalize(); observationWindow?.relocalize()
     }
     func updateStatusLine() {
         let passing=engine.passingCount,departing=engine.departingCount
@@ -212,6 +220,7 @@ final class DesktopController: NSObject {
         }
         do { try loadSpeciesConfig() } catch { NSLog("Birding species configuration: %@; using bundled defaults",error.localizedDescription) }
         loadVisitorMemory()
+        loadObservationJournal()
         makeMenu(); rebuildScreens(); startMouseMonitoring()
         if !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {DispatchQueue.main.async { [weak self] in self?.promptNewSpecies() }}
         sampleWindows(dt: 1.0/30)
@@ -295,6 +304,7 @@ final class DesktopController: NSObject {
         }
         advanceBirds(dt)
         persistVisitorMemoryIfNeeded(now:now)
+        persistObservationJournalIfNeeded(now:now)
         updateHover(now:now)
         for view in views { view.updateSprites() }
         if now-lastDiagnostic > 1 {
@@ -387,6 +397,7 @@ final class DesktopController: NSObject {
         refreshPopulationMenu()
         menu.addItem(.separator())
         add(menu,t("图鉴…","Field guide…"),#selector(showSpeciesGallery),"")
+        add(menu,t("观察手册…","Observation journal…"),#selector(showObservationJournal),"")
         add(menu,t("鸟种设置…","Bird settings…"),#selector(showSpeciesSettings),"")
         addLoginItem(to:menu)
         add(menu,language.switchTitle,#selector(toggleLanguage),"")
@@ -398,6 +409,8 @@ final class DesktopController: NSObject {
         if isDevelopmentBuild {menu.insertItem(NSMenuItem(title:t("啾啾测试版 · 本地开发","ChirpOS Dev · Local build"),action:nil,keyEquivalent:""),at:0)}
         let main=NSMenu()
         let application=NSMenuItem();main.addItem(application);application.submenu=NSMenu()
+        add(application.submenu!,t("观察手册…","Observation journal…"),#selector(showObservationJournal),"j")
+        application.submenu!.addItem(.separator())
         add(application.submenu!,t("退出啾啾","Quit ChirpOS"),#selector(quit),"q")
         let editItem=NSMenuItem(title:t("编辑","Edit"),action:nil,keyEquivalent:"")
         let edit=NSMenu(title:editItem.title);editItem.submenu=edit;main.addItem(editItem)
