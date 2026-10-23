@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "simulationVersion": 2,
+  "seed": "81",
+  "settings": {
+    "schemaVersion": 1,
+    "catalog": {
+      "species": [
+        {
+          "weightBasis": "上海2017–2023观鸟研究表2：18647只次",
+          "flapFPS": 48.0,
+          "speed": 1.12,
+          "name": "麻雀",
+          "id": "treeSparrow",
+          "adultLengthCM": 14.5,
+          "weight": 18647,
+          "perchMin": 16,
+          "perchMax": 36,
+          "englishName": "Eurasian Tree Sparrow"
+        }
+      ]
+    },
+    "probabilities": {
+      "entries": [
+        {
+          "id": "treeSparrow",
+          "points": 10000,
+          "locked": false
+        }
+      ]
+    },
+    "perchDefaultsVersion": 1,
+    "pointerVisits": true,
+    "pointerFollowEnabled": true,
+    "flockPasses": true,
+    "socialInteractions": true,
+    "perchActions": true,
+    "passiveAttentionEnabled": true,
+    "leafPlayEnabled": true,
+    "ambientLeafPlayEnabled": false,
+    "ambientFrequency": "low",
+    "hoverDelay": 1
+  },
+  "initialWorld": {
+    "screens": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1200
+      }
+    ],
+    "displays": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1200
+      }
+    ],
+    "surfaces": [
+      {
+        "id": 61,
+        "pid": 42,
+        "layer": 0,
+        "rect": {
+          "x": 100,
+          "y": 900,
+          "width": 1400,
+          "height": 250
+        },
+        "isGround": false
+      }
+    ],
+    "scale": 1,
+    "pointer": {
+      "x": 30,
+      "y": 30
+    },
+    "buttonsDown": false,
+    "availableFrames": {
+      "treeSparrow": [
+        "stand",
+        "blink",
+        "preen0",
+        "preen1",
+        "idle0",
+        "idle1",
+        "idle2",
+        "fly0",
+        "fly1",
+        "fly2",
+        "fly3",
+        "fly4",
+        "fly5",
+        "fly6",
+        "fly7",
+        "land0",
+        "land1",
+        "land2"
+      ]
+    }
+  },
+  "fixtureBirds": [
+    {
+      "species": "treeSparrow",
+      "host": 61,
+      "fraction": 0.5,
+      "perchDuration": 600,
+      "facingRight": true
+    }
+  ],
+  "inputs": [
+    {
+      "kind": "command",
+      "command": {
+        "name": "prepareTakeoff",
+        "source": "preview"
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 600,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    }
+  ]
+}

@@ -144,6 +144,18 @@ public final class Bird {
     private var arc: CGFloat = 90
     private var flightAge: Double = 0
     private var destinationInvalidated = false
+    /// A hop has its own short ballistic clock, never a flight acceleration path.
+    private struct SideHopMotion {
+        let startFraction:CGFloat, endFraction:CGFloat, scale:CGFloat
+        let duration:Double
+        var host:Surface
+        var followedHost:Surface
+        var age=0.0
+    }
+    private var sideHopMotion:SideHopMotion?
+    var isSideHopping:Bool {sideHopMotion != nil}
+    static let sideHopDuration=0.36
+    static func sideHopRise(scale:CGFloat) -> CGFloat {12*scale}
     public init(position: CGPoint, fraction: CGFloat, profile: SpeciesProfile = SpeciesCatalog.standard.profile(.redWhiskeredBulbul), random: () -> Double = { Double.random(in:0..<1) }) {
         self.profile = profile
         self.perchDuration = profile.perchMin + (profile.perchMax-profile.perchMin)*random()
@@ -195,6 +207,7 @@ public final class Bird {
     // squeezed into the old window-to-window travel duration.
 
     public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false, allowsOrbit:Bool = true, pointerOrbit: PointerOrbit? = nil, random: () -> Double = { Double.random(in:0...1) }) {
+        sideHopMotion=nil
         pointerFollow=nil
         isDeparting = false
         motionRevision &+= 1; wingPhase = 0
@@ -360,6 +373,7 @@ public final class Bird {
     }
     public var departureFinished: Bool { isDeparting && flightAge >= flightDuration }
     public func perch(on host: Surface, spriteScale:CGFloat=1) {
+        sideHopMotion=nil
         pointerFollow=nil
         motionRevision &+= 1;isDeparting=false
         if host.isGround { edge = .top }
@@ -368,6 +382,77 @@ public final class Bird {
         state = .perched; stateTime = 0; destinationInvalidated = false;isGliding=false;flightSpeed=0
         if edge != .top { facingRight = edge == .left }
     }
+    /// Installs motion without changing position. Only tick advances feet or age.
+    @discardableResult
+    func beginSideHop(on host:Surface,to endFraction:CGFloat,spriteScale:CGFloat) -> Bool {
+        guard sideHopMotion == nil,state == .perched,edge == .top,!isDeparting,!needsDestination,
+              host.id==hostID,host.pid==hostPID,spriteScale.isFinite,spriteScale>0,
+              endFraction.isFinite,(0...1).contains(endFraction),fraction.isFinite,
+              Geometry.distance(position,Geometry.foot(on:host,fraction:fraction,edge:.top,scale:spriteScale))<0.001 else {return false}
+        let distance=abs(Geometry.perchX(endFraction,rect:host.rect)-position.x)/spriteScale
+        guard distance>=60-0.001,distance<=110+0.001 else {return false}
+        sideHopMotion=SideHopMotion(startFraction:fraction,endFraction:endFraction,scale:spriteScale,
+            duration:Self.sideHopDuration,host:host,followedHost:host)
+        pointerFollow=nil;orbitDuration=0;orbitPath=nil;transitPath=nil;transitTiming=nil
+        approach=nil;exitPath=nil;approachTiming=nil;exitTiming=nil
+        motionRevision &+= 1;flightAge=0;flightDuration=Self.sideHopDuration
+        state = .flying;stateTime=0;destinationInvalidated=false;isGliding=false;flightSpeed=0
+        depthID=host.id;previousHost=host.rect
+        return true
+    }
+    /// Metadata changes only the pending host. Pause therefore freezes even a
+    /// gently moving window until the next allowed simulation step.
+    @discardableResult
+    func updateSideHopHost(_ host:Surface,spriteScale:CGFloat) -> Bool {
+        guard var hop=sideHopMotion,host.id==hostID,host.pid==hostPID,
+              hop.host.isGround==host.isGround,host.rect.size==hop.host.rect.size,
+              spriteScale==hop.scale else {return false}
+        hop.host=host;sideHopMotion=hop
+        return true
+    }
+    /// Preserve the actual airborne anchor. A future route starts here, and an
+    /// absent route leaves a destination request rather than resuming stale flight.
+    func cancelSideHop() {
+        guard sideHopMotion != nil else {return}
+        sideHopMotion=nil;motionRevision &+= 1
+        hostID=nil;hostPID=nil;depthID=nil;previousHost=nil
+        state = .flying;stateTime=0;destinationInvalidated=true;flightSpeed=0;isGliding=false
+    }
+    func finishSideHop() {
+        guard state == .perched else {return}
+        sideHopMotion=nil
+    }
+    private func advanceSideHop(_ dt:Double) {
+        guard var hop=sideHopMotion else {return}
+        let old=position
+        let delta=CGPoint(x:hop.host.rect.minX-hop.followedHost.rect.minX,
+                          y:hop.host.rect.minY-hop.followedHost.rect.minY)
+        let distance=Geometry.distance(.zero,delta),limit=360*dt
+        let amount=distance>0 ? min(1,limit/distance):1
+        hop.followedHost.rect.origin.x+=delta.x*amount
+        hop.followedHost.rect.origin.y+=delta.y*amount
+        hop.age+=dt
+        let t=min(1,hop.age/hop.duration),u=CGFloat(t*t*(3-2*t))
+        fraction=hop.startFraction+(hop.endFraction-hop.startFraction)*u
+        let foot=Geometry.foot(on:hop.followedHost,fraction:fraction,edge:.top,scale:hop.scale)
+        position=CGPoint(x:foot.x,y:foot.y-Self.sideHopRise(scale:hop.scale)*CGFloat(sin(.pi*t)))
+        facingRight=hop.endFraction>hop.startFraction
+        flightSpeed=Double(Geometry.distance(old,position))/max(0.000001,dt)
+        if t>=1,distance<=limit+0.000001 {
+            position=foot
+            if state == .flying {
+                state = .landing;stateTime=0;landedCount+=1;flightSpeed=0
+            } else if state == .landing,stateTime>0.42 {
+                // Keep metadata queued until the execution observes completion.
+                // A pause between this tick and runtime detachment must still
+                // freeze the anchor, including on window metadata updates.
+                state = .perched;stateTime=0;sideHopMotion=hop
+                previousHost=hop.host.rect
+                return
+            }
+        }
+        sideHopMotion=hop
+    }
     public func flee() {
         startledCount += 1
         fly(to: CGPoint(x: position.x + (facingRight ? 210 : -210), y: position.y - 100), host: nil, duration: 1.25, arc: 45, urgent: true)
@@ -375,6 +460,13 @@ public final class Bird {
     // Called at the actual metadata sampling interval, independent of animation frames.
     public func updateHost(surfaces: [Surface], sampleDT: Double, spriteScale: CGFloat = 1) {
         guard let id = hostID else { return }
+        if let hop=sideHopMotion {
+            guard let host=surfaces.first(where:{$0.id==id && $0.pid==hostPID}),
+                  updateSideHopHost(host,spriteScale:spriteScale) else {cancelSideHop();return}
+            let delta=Geometry.distance(host.rect.origin,hop.host.rect.origin)
+            if !host.isGround,sampleDT<0.20,delta>8,delta/max(0.016,sampleDT)>950 {cancelSideHop()}
+            return
+        }
         // Window IDs can be reused between samples, including the first landing
         // frame. Reject a different owner before calculating or adopting its feet.
         guard let host = surfaces.first(where: { $0.id == id && $0.pid == hostPID }) else { flee(); return }
@@ -402,6 +494,7 @@ public final class Bird {
     public func tick(_ dt: Double) {
         guard !destinationInvalidated else { return }
         stateTime += dt
+        if sideHopMotion != nil {advanceSideHop(dt);return}
         if state == .flying {
             let oldAge=flightAge
             flightAge += dt
@@ -456,6 +549,12 @@ public final class Bird {
         return CGFloat(SpeciesBehavior.hop(profile.id, age: stateTime))
     }
     public var frameName: String {
+        if sideHopMotion != nil,state == .perched {return "stand"}
+        if let hop=sideHopMotion,state == .flying {
+            // Use existing landing/standing artwork without assigning unverified
+            // takeoff semantics to a frame or introducing a flap sequence.
+            return hop.age<0.05 ? "land0":"stand"
+        }
         switch state {
         case .flying:
             return FlightBehavior.frame(profile.id,age:flightAge+wingPhase,fps:profile.flapFPS,gliding:isGliding,banking:isCircling ? -orbitPoint.x/orbitRadius:0)

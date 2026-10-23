@@ -112,7 +112,7 @@ final class BehaviorRecordingTests:XCTestCase {
         try assertReplay(e)
     }
     func testEveryCommandHasAStableRoundTrip() throws {
-        let commands:[EngineCommand]=[.relocate(BirdID(1)),.pointerVisit(.automatic),.flockPass(.preview),.socialGreeting(.user),
+        let commands:[EngineCommand]=[.sideHop(.preview),.prepareTakeoff(.automatic),.relocate(BirdID(1)),.pointerVisit(.automatic),.flockPass(.preview),.socialGreeting(.user),
             .socialMotion(.giveWay,.automatic),.perchAction(.preen,.preview),.attention(.alert,.preview),.previewPointerAfter(3),
             .leafPlay(at:CGPoint(x:400,y:400),source:.preview),.releaseLeafAfter(2),.clearProps,.removeProp(ScenePropID(9)),
             .pointerClick,.pause(true),.cancelAmbient(.sleep),.scatter,.remove(BirdID(3))]
@@ -166,7 +166,7 @@ final class BehaviorRecordingTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let folder=root.appendingPathComponent("shared/behavior-fixtures/v1")
         let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="json"}.sorted{$0.path<$1.path}
-        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json"])
+        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
@@ -175,6 +175,12 @@ final class BehaviorRecordingTests:XCTestCase {
             XCTAssertEqual(reference.reservations,0,file.lastPathComponent);XCTAssertTrue(reference.props.isEmpty,file.lastPathComponent)
             let finished=reference.events.filter{$0.type=="completed"}.compactMap(\.kind)
             if file.lastPathComponent=="attention.json" {XCTAssertTrue(finished.contains("watch"));XCTAssertTrue(finished.contains("alert"))}
+            if file.lastPathComponent=="side-hop.json" {
+                XCTAssertTrue(finished.contains("sideHop"))
+                let bird=try XCTUnwrap(reference.birds.first)
+                XCTAssertNotEqual(bird.position.x,800,"hop must change the actual foot position")
+            }
+            if file.lastPathComponent=="takeoff-preparation.json" {XCTAssertTrue(finished.contains("takeoffPreparation"))}
             if file.lastPathComponent=="leaf.json" {XCTAssertTrue(finished.contains("leafPlay"))}
             if file.lastPathComponent=="social.json" {XCTAssertTrue(finished.contains("socialGreeting"))}
             if file.lastPathComponent=="interruptions.json" {

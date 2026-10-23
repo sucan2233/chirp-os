@@ -149,6 +149,8 @@ public final class BehaviorEngine {
                 runtime.cancel(run.id,reason:.settingsChanged,in:self)
             }
         }
+        if !value.sideHopEnabled {runtime.cancel(where:{$0.kind == .sideHop},reason:.settingsChanged,in:self)}
+        if !value.takeoffPreparationEnabled {runtime.cancel(where:{$0.kind == .takeoffPreparation},reason:.settingsChanged,in:self)}
         if !value.passiveAttentionEnabled {
             runtime.cancel(where:{$0.kind == .watch || $0.kind == .alert},reason:.settingsChanged,in:self)
             resetPerception()
@@ -174,6 +176,8 @@ public final class BehaviorEngine {
         beginRecordingInput(.command(command));defer {endRecordingInput()}
         switch command {
         case .relocate(let id): return relocate(id)
+        case .sideHop(let source):return requestSideHop(source:source)
+        case .prepareTakeoff(let source):return requestTakeoffPreparation(source:source)
         case .pointerVisit(let source): return requestPointer(source)
         case .flockPass(let source): return requestFlock(source)
         case .socialGreeting(let source): return requestSocialGreeting(source)
@@ -492,6 +496,14 @@ public final class BehaviorEngine {
         if let id=id(of:bird) {runtime.cancel(bird:id,reason:.replaced,in:self)}
         plan.apply(to:bird,random:random);return true
     }
+    private func routeAutonomously(_ bird:Bird,id:BirdID) {
+        guard let destination=plan(for:bird) else {return}
+        if settings.perchActions,settings.takeoffPreparationEnabled,
+           bird.state == .perched,bird.stateTime>=bird.perchDuration,hasUsablePerch(bird),
+           perchPlanner.automaticWeight(id,kind:.takeoffPreparation)>0,
+           prepareTakeoff(id:id,plan:destination,source:.automatic).accepted {return}
+        destination.apply(to:bird,random:random)
+    }
     public func bringInBird() {
         beginRecordingInput(RecordedInput(kind:"arrive"));defer {endRecordingInput()}
         guard let point=Migration.outsidePoint(screens:world.displays,right:random.unit()<0.5,fraction:random.value(in:0.2...0.75),margin:80*world.scale*3+20) else {return}
@@ -561,10 +573,10 @@ public final class BehaviorEngine {
             if bird.departureFinished && !world.displays.contains(where:{$0.intersects(bounds(of:bird))}) {
                 if record.role == .resident {departureCount+=1}
                 removeRecord(id)
-            } else if runtime.owners[id]==nil && !paused && autonomousRouting && bird.needsDestination {_=route(bird)}
+            } else if runtime.owners[id]==nil && !paused && autonomousRouting && bird.needsDestination {routeAutonomously(bird,id:id)}
         }
         if !paused {
-            if !updateAttention() {updatePerchActivities(dt)}
+            if !updateAttention(),!updateSideHops() {updatePerchActivities(dt)}
         }
         if !paused && ambientEnabled,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
             pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,socialEnabled:settings.socialInteractions,leafEnabled:settings.leafPlayEnabled && settings.ambientLeafPlayEnabled,frequency:settings.ambientFrequency,

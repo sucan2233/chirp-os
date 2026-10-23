@@ -74,6 +74,8 @@ public struct RecordedCommand:Codable {
         case .socialGreeting(let value):name="socialGreeting";source=value.rawValue
         case .socialMotion(let kind,let value):name="socialMotion";action=kind.rawValue;source=value.rawValue
         case .perchAction(let kind,let value):name="perchAction";action=kind.rawValue;source=value.rawValue
+        case .sideHop(let value):name="sideHop";source=value.rawValue
+        case .prepareTakeoff(let value):name="prepareTakeoff";source=value.rawValue
         case .attention(let kind,let value):name="attention";action=kind.rawValue;source=value.rawValue
         case .previewPointerAfter(let value):name="previewPointerAfter";delay=max(0,min(10,value.isFinite ? value:3))
         case .leafPlay(let value,let origin):name="leafPlay";point=RecordedPoint(value);source=origin.rawValue
@@ -99,6 +101,8 @@ public struct RecordedCommand:Codable {
         case "socialGreeting":return .socialGreeting(try origin())
         case "socialMotion":guard let action,let kind=SocialMotionKind(rawValue:action) else {throw bad()};return .socialMotion(kind,try origin())
         case "perchAction":guard let action,let kind=PerchActionKind(rawValue:action) else {throw bad()};return .perchAction(kind,try origin())
+        case "sideHop":return .sideHop(try origin())
+        case "prepareTakeoff":return .prepareTakeoff(try origin())
         case "attention":guard let action,let kind=AttentionKind(rawValue:action) else {throw bad()};return .attention(kind,try origin())
         case "previewPointerAfter":return .previewPointerAfter(try wait())
         case "leafPlay":guard let point,point.valid else {throw bad()};return .leafPlay(at:point.value,source:try origin())
@@ -186,7 +190,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=1,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=2,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

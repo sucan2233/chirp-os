@@ -138,6 +138,16 @@ extension BehaviorEngine {
         guard let selected=ecologicalChoice(alerts.isEmpty ? candidates:alerts,weight:{self.perchPlanner.automaticWeight($0.0,kind:$0.1.behavior)}) else {return false}
         return requestAttention(selected.1,source:.automatic,target:selected.0).accepted
     }
+    @discardableResult func updateSideHops() -> Bool {
+        // One chance per approach. No new ambient timer and no retry queue.
+        let candidates=birds.compactMap {bird -> BirdID? in
+            guard let id=id(of:bird),perchPlanner.consumeHopOpportunity(id) else {return nil}
+            return id
+        }
+        guard ambientEnabled,settings.perchActions,settings.sideHopEnabled,!world.buttonsDown,
+              let id=ecologicalChoice(candidates,weight:{self.perchPlanner.automaticWeight($0,kind:.sideHop)}) else {return false}
+        return requestSideHop(source:.automatic,target:id).accepted
+    }
     func requestAutomaticLeaf() {
         guard !paused,ambientEnabled,settings.leafPlayEnabled,settings.ambientLeafPlayEnabled,
               !ambientBusy,!hasPointerPreview,!hasLeafPreview,!world.buttonsDown else {return}

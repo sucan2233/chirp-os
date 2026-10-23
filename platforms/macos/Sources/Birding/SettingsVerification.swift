@@ -260,6 +260,7 @@ enum SettingsVerification {
             }
             w.cancel()
             try checkPassiveSettings(folder:folder,checks:&checks)
+            try PassiveMotionSettingsVerification.run(into:&checks,folder:folder)
             try checkLeafSettings(folder:folder,checks:&checks)
             d.showSpeciesGallery()
             checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.title=="图鉴…"} && d.gallery?.window?.isVisible == true

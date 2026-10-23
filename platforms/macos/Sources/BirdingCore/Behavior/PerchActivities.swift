@@ -48,6 +48,8 @@ final class PerchActivityPlanner {
         var previousNear=false,previousRange=false,previousFast=false,previousClick=false
         var pendingAttention:AttentionKind?
         var attentionRemaining=0.0
+        var hopOpportunityRemaining=0.0
+        var hasPerceptionBaseline=false
         init(seed:UInt64,bird:Bird,temperament:BirdTemperament?=nil) {
             random=EngineRandom(seed:seed)
             ecologyRandom=EngineRandom(seed:seed ^ 0x45434F4C4F475952)
@@ -90,12 +92,21 @@ final class PerchActivityPlanner {
             else {rhythm.cooldowns.removeValue(forKey:kind)}
         }
         rhythm.attentionRemaining=max(0,rhythm.attentionRemaining-dt)
+        rhythm.hopOpportunityRemaining=max(0,rhythm.hopOpportunityRemaining-dt)
+        let approached=rhythm.hasPerceptionBaseline && stimulus.near && !rhythm.previousNear
+        rhythm.hasPerceptionBaseline=true
         if rhythm.attentionRemaining==0 {rhythm.pendingAttention=nil}
         let entered=stimulus.inAttentionRange && !rhythm.previousRange
         let fast=stimulus.fastPass && !rhythm.previousFast
         let clicked=stimulus.click && !rhythm.previousClick
         rhythm.previousNear=stimulus.near;rhythm.previousRange=stimulus.inAttentionRange
         rhythm.previousFast=stimulus.fastPass;rhythm.previousClick=stimulus.click
+        if approached,!stimulus.click,!stimulus.fastPass,rhythm.disturbance<0.6,
+           automaticWeight(id,kind:.sideHop)>0,
+           rhythm.ecologyRandom.unit()<0.3+0.5*rhythm.temperament.boldness {
+            rhythm.hopOpportunityRemaining=0.5
+        }
+        if !stimulus.near || stimulus.click || stimulus.fastPass {rhythm.hopOpportunityRemaining=0}
         if clicked {noteClick(id)}
         else if fast && !stimulus.click {
             rhythm.disturbance=min(1,rhythm.disturbance+0.65*(1-rhythm.temperament.boldness))
@@ -119,7 +130,7 @@ final class PerchActivityPlanner {
     func noteClick(_ id:BirdID) {
         guard let rhythm=rhythms[id] else {return}
         // An explicit click command and the next held-button sample are one input.
-        rhythm.previousClick=true
+        rhythm.previousClick=true;rhythm.hopOpportunityRemaining=0
         rhythm.disturbance=min(1,rhythm.disturbance+0.8*(1-rhythm.temperament.boldness))
         rhythm.quietTime=0;rhythm.quiet=0;rhythm.pendingPreen=false
         rhythm.pendingAttention=nil;rhythm.attentionRemaining=0
@@ -128,6 +139,7 @@ final class PerchActivityPlanner {
     func resetPerception() {
         for rhythm in rhythms.values {
             rhythm.pendingAttention=nil;rhythm.attentionRemaining=0
+            rhythm.hopOpportunityRemaining=0;rhythm.hasPerceptionBaseline=false
             rhythm.previousNear=false;rhythm.previousRange=false
             rhythm.previousFast=false;rhythm.previousClick=false
         }
@@ -139,9 +151,16 @@ final class PerchActivityPlanner {
         let kind:BehaviorKind=pending == .watch ? .watch:.alert
         return automaticWeight(id,kind:kind)>0 ? pending:nil
     }
+    /// Consume the approach once, including when no safe hop can be planned.
+    func consumeHopOpportunity(_ id:BirdID) -> Bool {
+        guard let rhythm=rhythms[id],rhythm.hopOpportunityRemaining>0 else {return false}
+        rhythm.hopOpportunityRemaining=0
+        return automaticWeight(id,kind:.sideHop)>0
+    }
     func automaticWeight(_ id:BirdID,kind:BehaviorKind) -> Double {
         guard let rhythm=rhythms[id],!rhythm.active.contains(kind),(rhythm.cooldowns[kind] ?? 0)<=0 else {return 0}
         let traits=rhythm.temperament
+        if kind == .sideHop {return rhythm.disturbance<0.6 ? 0.5+traits.activity:0}
         if kind == .alert {
             return rhythm.disturbance>=0.2 ? (1.2-traits.boldness)*(0.8+0.4*traits.activity):0
         }
@@ -157,7 +176,7 @@ final class PerchActivityPlanner {
     }
     func didStart(_ id:BirdID,kind:BehaviorKind) {
         guard let rhythm=rhythms[id] else {return}
-        rhythm.active.insert(kind)
+        rhythm.active.insert(kind);rhythm.hopOpportunityRemaining=0
         rhythm.pendingAttention=nil;rhythm.attentionRemaining=0
         rhythm.quietTime=0;rhythm.quiet=0;rhythm.pendingPreen=false
     }
