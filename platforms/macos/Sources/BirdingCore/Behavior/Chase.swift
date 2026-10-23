@@ -25,12 +25,7 @@ struct ChasePlan {
     let screens:[CGRect]
     let displays:[CGRect]
     let worldScale:CGFloat
-    private let sweeps:[Sweep]
-
-    private struct Sweep {
-        let end:Double
-        let areas:[CGRect]
-    }
+    private let envelope:FlightSceneEnvelope
     var duration:Double {zip(launchOffsets,routes).map{$0.0+$0.1.duration}.max() ?? 0}
     var loopEntries:[Double] {
         routes.indices.map{launchOffsets[$0]+routes[$0].legs[0].timing.duration}
@@ -38,41 +33,9 @@ struct ChasePlan {
     func position(of index:Int,at age:Double) -> CGPoint {
         routes[index].position(at:max(0,age-launchOffsets[index]))
     }
-    private static func intersects(_ a:CGRect,_ b:CGRect) -> Bool {
-        let cut=a.intersection(b);return !cut.isNull && !cut.isEmpty
-    }
-
-    /// Every midpoint envelope contains ALL positions in its time interval:
-    /// arc-length speed is bounded by peakSpeed, so speed * halfInterval is a
-    /// conservative displacement bound even across a curve/leg/launch boundary.
-    private static func makeSweeps(routes:[CoordinatedFlightRoute],offsets:[Double],scales:[CGFloat]) -> [Sweep]? {
-        let duration=zip(offsets,routes).map{$0.0+$0.1.duration}.max() ?? 0
-        guard duration.isFinite,duration>0,duration<=20 else {return nil}
-        let count=Int(ceil(duration*30)),dt=duration/Double(count)
-        let speeds=routes.map{$0.legs.map{$0.timing.peakSpeed}.max() ?? 0}
-        var result:[Sweep]=[]
-        for index in 0..<count {
-            let mid=(Double(index)+0.5)*dt
-            let areas=routes.indices.map {actor -> CGRect in
-                let foot=routes[actor].position(at:max(0,mid-offsets[actor]))
-                let margin=CGFloat(speeds[actor]*dt/2)+4
-                return Geometry.landingFootprint(at:foot,scale:scales[actor]).insetBy(dx:-margin,dy:-margin)
-            }
-            guard !intersects(areas[0],areas[1]) else {return nil}
-            result.append(Sweep(end:Double(index+1)*dt,areas:areas))
-        }
-        return result
-    }
-
     func pointerIsClear(in engine:BehaviorEngine,after age:Double=0) -> Bool {
-        let pointer=engine.world.pointer
-        guard pointer.x.isFinite,pointer.y.isFinite else {return false}
-        let radius=max(100,72*(scales.max() ?? 1))
-        let protected=CGRect(x:pointer.x-radius,y:pointer.y-radius,width:2*radius,height:2*radius)
-        let from=min(age,duration)
-        return !sweeps.contains{$0.end+1e-9>=from && $0.areas.contains{Self.intersects($0,protected)}}
+        envelope.pointerIsClear(in:engine,after:age)
     }
-
     func isSafe(in engine:BehaviorEngine,after age:Double=0) -> Bool {
         guard engine.world.screens==screens,engine.world.displays==displays,
               engine.world.scale==worldScale,engine.world.displays.contains(display) else {return false}
@@ -81,34 +44,7 @@ struct ChasePlan {
                   destinations[index].host(in:engine)==hosts[index],destinations[index].isValid(in:engine) else {return false}
         }
         guard !destinations[0].conflicts(with:destinations[1],in:engine) else {return false}
-        let ids=Set(participants)
-        // Flying overlays pass over ordinary windows; utility panels still block.
-        var obstacles=engine.world.surfaces.filter{!$0.isGround && $0.layer>0}.map(\.rect)
-        for other in engine.birds where engine.id(of:other).map({!ids.contains($0)}) == true {
-            let scale=engine.spriteScale(for:other)
-            let speed=max(other.flightSpeed,FlightBehavior.cruiseSpeed(other.profile.id,multiplier:other.profile.speed))
-            let margin:CGFloat=8+(other.state == .flying ? CGFloat(speed*BehaviorEngine.step):0)
-            obstacles.append(Geometry.landingFootprint(at:other.position,scale:scale)
-                .union(engine.bounds(of:other)).insetBy(dx:-margin,dy:-margin))
-            if other.state == .flying {
-                guard let planned=other.plannedFlightFootprint(scale:scale) else {return false}
-                obstacles.append(planned.insetBy(dx:-8,dy:-8))
-            }
-            if let host=engine.world.surfaces.first(where:{$0.id==other.hostID}) {
-                let foot=Geometry.foot(on:host,fraction:other.fraction,edge:other.edge,scale:scale)
-                obstacles.append(Geometry.landingFootprint(at:foot,scale:scale).insetBy(dx:-8,dy:-8))
-            }
-        }
-        for slot in engine.runtime.landingReservations where !ids.contains(slot.bird) {
-            guard let area=slot.footprint(in:engine) else {return false}
-            obstacles.append(area)
-        }
-        for sweep in sweeps where sweep.end+1e-9>=min(age,duration) {
-            for area in sweep.areas {
-                guard display.contains(area),!obstacles.contains(where:{Self.intersects(area,$0)}) else {return false}
-            }
-        }
-        return true
+        return envelope.isClear(in:engine,excluding:participants,display:display,after:age)
     }
 
     static func candidates(in engine:BehaviorEngine,source:BehaviorSource = .automatic) -> [ChasePlan] {
@@ -204,13 +140,13 @@ struct ChasePlan {
         let offsets=[0.3,0.3+stagger]
         let actualLag=offsets[1]+routes[1].legs[0].timing.duration-offsets[0]-routes[0].legs[0].timing.duration
         guard actualLag>0,loopDuration-actualLag>=3,
-              let sweeps=makeSweeps(routes:routes,offsets:offsets,scales:scales) else {return nil}
+              let envelope=FlightSceneEnvelope(routes:routes,offsets:offsets,scales:scales) else {return nil}
         let slots=zip(participants,zip(hosts,birds)).map {
             LandingReservation(bird:$0.0,host:$0.1.0,fraction:$0.1.1.fraction)
         }
         let plan=ChasePlan(participants:participants,destinations:slots,hosts:hosts,scales:scales,
             routes:routes,launchOffsets:offsets,loop:loop,loopDuration:loopDuration,display:display,
-            screens:engine.world.screens,displays:engine.world.displays,worldScale:engine.world.scale,sweeps:sweeps)
+            screens:engine.world.screens,displays:engine.world.displays,worldScale:engine.world.scale,envelope:envelope)
         return plan.isSafe(in:engine) && plan.pointerIsClear(in:engine) ? plan:nil
     }
 }

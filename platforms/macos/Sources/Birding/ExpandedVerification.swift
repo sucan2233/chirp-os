@@ -51,6 +51,7 @@ enum ExpandedVerification {
             try PassiveMotionVerification.run(into:&checks,folder:folder)
             try EdgePeekVerification.run(into:&checks,folder:folder)
             try ChaseVerification.run(into:&checks,folder:folder)
+            try TravelTogetherVerification.run(into:&checks,folder:folder)
             try ArrivalRenderingVerification.run(into:&checks,folder:folder)
             window.orderOut(nil)
             saveJSON(["passed":checks.values.allSatisfy{$0},"checks":checks],to:folder.appendingPathComponent("report.json"))

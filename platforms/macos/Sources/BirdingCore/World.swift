@@ -117,6 +117,10 @@ public enum Geometry {
 public enum PerchEdge { case top, left, right }
 
 public enum BirdState: String { case flying, landing, perched }
+struct AirborneFlightSnapshot {
+    let position,velocity,destination:CGPoint
+    let revision:UInt64
+}
 public final class Bird {
     public static let flightSpeedMultiplier: Double = 2
     public private(set) var isDeparting = false
@@ -194,6 +198,17 @@ public final class Bird {
     private var approachTiming:FlightTiming?, exitTiming:FlightTiming?, transitTiming:FlightTiming?
     private var cruiseSpeed=0.0
     public private(set) var flightSpeed=0.0
+    private var flightVelocity:CGPoint = .zero
+    /// Actual last-step velocity, never a guessed vector toward the destination.
+    /// The snapshot does not advance simulation or consume randomness.
+    var airborneFlight:AirborneFlightSnapshot? {
+        guard state == .flying,stateTime>=0.3,!isDeparting,!needsDestination,!urgentFlight,
+              coordinatedMotion==nil,sideHopMotion==nil,pointerFollow==nil,hostID != nil,
+              flightDuration-flightAge>0.8,
+              flightVelocity.x.isFinite,flightVelocity.y.isFinite,
+              Geometry.distance(.zero,flightVelocity)>=60 else {return nil}
+        return AirborneFlightSnapshot(position:position,velocity:flightVelocity,destination:target,revision:motionRevision)
+    }
     public private(set) var isGliding=false
     public var isBraking:Bool {
         if let motion=coordinatedMotion {return motion.route.isBraking(at:max(0,motion.age-motion.delay))}
@@ -218,6 +233,7 @@ public final class Bird {
     // squeezed into the old window-to-window travel duration.
 
     public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false, allowsOrbit:Bool = true, pointerOrbit: PointerOrbit? = nil, random: () -> Double = { Double.random(in:0...1) }) {
+        flightVelocity = .zero
         coordinatedMotion=nil
         sideHopMotion=nil
         pointerFollow=nil
@@ -385,6 +401,7 @@ public final class Bird {
     }
     public var departureFinished: Bool { isDeparting && flightAge >= flightDuration }
     public func perch(on host: Surface, spriteScale:CGFloat=1) {
+        flightVelocity = .zero
         coordinatedMotion=nil
         sideHopMotion=nil
         pointerFollow=nil
@@ -468,16 +485,36 @@ public final class Bird {
     }
     /// Reserve/plan first, then install without changing the current feet. Host
     /// geometry remains fixed for this route; changes request safe recovery.
-    @discardableResult
-    func beginCoordinatedFlight(_ route:CoordinatedFlightRoute,on host:Surface,fraction:CGFloat,spriteScale:CGFloat,delay:Double=0) -> Bool {
-        guard coordinatedMotion==nil,sideHopMotion==nil,state == .perched,edge == .top,
+    func canBeginCoordinatedFlight(_ route:CoordinatedFlightRoute,on host:Surface,fraction:CGFloat,spriteScale:CGFloat,delay:Double=0,airborne:Bool=false) -> Bool {
+        let snapshot=airborneFlight
+        guard coordinatedMotion==nil,sideHopMotion==nil,(airborne ? snapshot != nil:state == .perched),edge == .top,
               !isDeparting,!needsDestination,spriteScale.isFinite,spriteScale>0,
               fraction.isFinite,(0...1).contains(fraction),delay.isFinite,(0...5).contains(delay),
               delay==0 || (hostID==host.id && hostPID==host.pid),
               Geometry.distance(position,route.position(at:0))<0.001,
               Geometry.distance(Geometry.foot(on:host,fraction:fraction,edge:.top,scale:spriteScale),
                                 route.position(at:route.duration))<0.001 else {return false}
+        if airborne {
+            guard let snapshot,delay==0,hostID==host.id,hostPID==host.pid,self.fraction==fraction,
+                  Geometry.distance(snapshot.destination,route.position(at:route.duration))<0.001,
+                  abs(route.speed(at:0)-Double(Geometry.distance(.zero,snapshot.velocity)))<0.1 else {return false}
+            let step=route.position(at:0.001),dx=step.x-position.x,dy=step.y-position.y
+            let length=hypot(dx,dy),speed=route.speed(at:0)
+            guard length>0 else {return false}
+            let incoming=CGPoint(x:dx/length*speed,y:dy/length*speed)
+            // Permit only the small error introduced by polyline arc-length
+            // lookup, never an otherwise visible turn at the handoff boundary.
+            guard Geometry.distance(incoming,snapshot.velocity)<=max(2,speed*0.01) else {return false}
+        }
+        return true
+    }
+    @discardableResult
+    func beginCoordinatedFlight(_ route:CoordinatedFlightRoute,on host:Surface,fraction:CGFloat,spriteScale:CGFloat,delay:Double=0,airborne:Bool=false) -> Bool {
+        guard canBeginCoordinatedFlight(route,on:host,fraction:fraction,spriteScale:spriteScale,delay:delay,airborne:airborne) else {return false}
+        let snapshot=airborneFlight
+        let phase=flightAge+wingPhase
         fly(to:route.position(at:route.duration),host:host,arc:0,urgent:true,allowsOrbit:false,random:{0.5})
+        if airborne,let snapshot {flightVelocity=snapshot.velocity;flightSpeed=Double(Geometry.distance(.zero,snapshot.velocity));wingPhase=phase}
         self.fraction=fraction
         coordinatedMotion=CoordinatedMotion(route:route,host:host,scale:spriteScale,delay:delay)
         if delay>0 {state = .perched;depthID=host.id;previousHost=host.rect}
@@ -491,6 +528,7 @@ public final class Bird {
     /// Release an interrupted scene at its actual feet. Ordinary routing can
     /// choose a fresh destination once simulation resumes.
     func requestFlightRecovery() {
+        flightVelocity = .zero
         coordinatedMotion=nil;sideHopMotion=nil;pointerFollow=nil;motionRevision &+= 1
         hostID=nil;hostPID=nil;depthID=nil;previousHost=nil
         state = .flying;stateTime=0;destinationInvalidated=true;flightSpeed=0;isGliding=false
@@ -567,6 +605,12 @@ public final class Bird {
     }
     public func tick(_ dt: Double) {
         guard !destinationInvalidated else { return }
+        let previousPosition=position
+        defer {
+            if state == .flying,dt>0 {
+                flightVelocity=CGPoint(x:(position.x-previousPosition.x)/dt,y:(position.y-previousPosition.y)/dt)
+            } else {flightVelocity = .zero}
+        }
         stateTime += dt
         if coordinatedMotion != nil {advanceCoordinatedFlight(dt);return}
         if sideHopMotion != nil {advanceSideHop(dt);return}

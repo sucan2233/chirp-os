@@ -3,10 +3,10 @@
 这些 JSON 是引擎输入，采用 Quartz 桌面坐标（向右为 x 正方向，向下为 y 正方向）。它们不依赖 AppKit、窗口标题、桌面截图或用户配置，供 macOS 与后续 Windows 核心运行同一场景。
 
 - `version`：文件格式版本；未知版本拒绝，不能忽略无法理解的事件。
-- `simulationVersion`：当前为 6，加入双鸟追逐与共享社交机会调度后更新。版本 1–5 的录制明确拒绝；需要在对应旧提交重放或重新录制，不能直接修改版本标签假装迁移。模拟语义版本。改变随机算法、调度或固定步契约时需明确迁移，不能让旧期望静默漂移。
+- `simulationVersion`：当前为 7，加入独立飞行中的临时结队及移动端点速度接续后更新。版本 1–6 的录制明确拒绝；需要在对应旧提交重放或重新录制，不能直接修改版本标签假装迁移。模拟语义版本。改变随机算法、调度或固定步契约时需明确迁移，不能让旧期望静默漂移。
 - `seed`、鸟/运行/道具 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
 - `settings`：完整配置或合法的旧格式配置；按 BirdSettings schema 迁移。
-- `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。
+- `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟；可选 `flightOrigin` 让鸟从该坐标开始普通直达飞行，仍需 `advance` 输入才能移动和产生速度。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。
 - `inputs`：严格按数组顺序处理。支持 world、settings、visitorMemory、command、advance、population、reconcileLayout、arrive、depart、route。visitorMemory 仅允许在尚无鸟注册时恢复档案，随输入一起记录，不读取重放机器上的用户档案。
 - `advance.elapsed`：一次原始回调时长，保持引擎 0.05 秒截断；`repeatCount` 仅压缩相同连续回调，默认 1。不可把长暂停变成补播。
 - `advance.options`：此时实际启用的数量调度、环境调度和自主选路开关。
@@ -32,3 +32,5 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 ```
 
 当前 macOS 测试把同一输入序列分别拆成至多 1/30、1/60、1/120 秒的回调，比较完整报告；保留输入发生边界，不跨 world/command 合并时间。这验证回调分段稳定性，不宣称恢复录制时没有采到的鼠标轨迹。不同采样率的真实移动轨迹另由 PassiveEcologyTests 验证。Windows 解析器与原生验收尚待迁移，当前文件通过不代表跨端已经对齐。
+
+`travel-together.json` 从两只普通飞行鸟开始，经过非零速度接续、同行与暂停后分别落到原目标；再次请求应拒绝停栖候选。独立断言检查原落点、参与者、完整完成及拒绝原因。

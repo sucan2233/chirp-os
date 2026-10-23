@@ -158,8 +158,13 @@ public struct FlightPath {
 /// a lower peak instead of accelerating just to qualify for a gliding pose.
 public struct FlightTiming {
     public let distance,peakSpeed,acceleration,deceleration,duration:Double
+    private struct MovingEndpoints {
+        let initial,cruise,final:Double
+    }
+    private let movingEndpoints:MovingEndpoints?
     public var brakeStart:Double { duration-deceleration }
     public init(distance:Double,speed:Double,acceleration:Double=0.65,deceleration:Double=0.85) {
+        movingEndpoints=nil
         self.distance=max(0,distance)
         let speed=max(1,speed),rampDistance=speed*(acceleration+deceleration)/2
         let factor=rampDistance>0 ? min(1,sqrt(self.distance/rampDistance)):1
@@ -167,8 +172,31 @@ public struct FlightTiming {
         let ramps=self.acceleration+self.deceleration
         self.duration=max(0.001,ramps+max(0,self.distance-self.peakSpeed*ramps/2)/max(0.001,self.peakSpeed))
     }
+    /// Join an already moving bird without resetting its speed to zero. Unlike
+    /// a takeoff, short paths cannot silently scale down the requested endpoints.
+    init?(distance:Double,cruiseSpeed:Double,initialSpeed:Double,finalSpeed:Double,rampIn:Double,rampOut:Double) {
+        guard [distance,cruiseSpeed,initialSpeed,finalSpeed,rampIn,rampOut].allSatisfy({$0.isFinite}),
+              distance>0,cruiseSpeed>0,initialSpeed>=0,finalSpeed>=0,rampIn>=0,rampOut>=0,
+              rampIn>0 || initialSpeed==cruiseSpeed,rampOut>0 || finalSpeed==cruiseSpeed else {return nil}
+        let rampDistance=(initialSpeed+cruiseSpeed)*rampIn/2+(cruiseSpeed+finalSpeed)*rampOut/2
+        guard distance+1e-9>=rampDistance else {return nil}
+        self.distance=distance;self.peakSpeed=max(initialSpeed,max(cruiseSpeed,finalSpeed))
+        self.acceleration=rampIn;self.deceleration=rampOut
+        self.duration=rampIn+rampOut+max(0,distance-rampDistance)/cruiseSpeed
+        guard duration.isFinite,duration>0 else {return nil}
+        movingEndpoints=MovingEndpoints(initial:initialSpeed,cruise:cruiseSpeed,final:finalSpeed)
+    }
     public func speed(at time:Double) -> Double {
         let t=min(duration,max(0,time))
+        if let endpoints=movingEndpoints {
+            if acceleration>0,t<acceleration {
+                return endpoints.initial+(endpoints.cruise-endpoints.initial)*0.5*(1-cos(.pi*(t/acceleration)))
+            }
+            if deceleration>0,t>brakeStart {
+                return endpoints.cruise+(endpoints.final-endpoints.cruise)*0.5*(1-cos(.pi*((t-brakeStart)/deceleration)))
+            }
+            return endpoints.cruise
+        }
         if acceleration>0 && t<acceleration { return peakSpeed*0.5*(1-cos(.pi*t/acceleration)) }
         if deceleration>0 && t>brakeStart { return peakSpeed*0.5*(1+cos(.pi*(t-brakeStart)/deceleration)) }
         return peakSpeed
@@ -176,6 +204,17 @@ public struct FlightTiming {
     public func progress(at time:Double) -> Double {
         let t=min(duration,max(0,time))
         if t>=duration || distance<=0 { return 1 }
+        if let endpoints=movingEndpoints {
+            func ramp(_ time:Double,_ duration:Double,_ start:Double,_ end:Double) -> Double {
+                start*time+(end-start)*0.5*(time-duration / .pi*sin(.pi*(time/duration)))
+            }
+            if acceleration>0,t<acceleration {return ramp(t,acceleration,endpoints.initial,endpoints.cruise)/distance}
+            let first=(endpoints.initial+endpoints.cruise)*acceleration/2
+            if deceleration>0,t>brakeStart {
+                return (first+endpoints.cruise*(brakeStart-acceleration)+ramp(t-brakeStart,deceleration,endpoints.cruise,endpoints.final))/distance
+            }
+            return (first+endpoints.cruise*(t-acceleration))/distance
+        }
         if acceleration>0 && t<acceleration { return peakSpeed*0.5*(t-acceleration / .pi*sin(.pi*t/acceleration))/distance }
         if deceleration>0 && t>brakeStart {
             let remaining=duration-t

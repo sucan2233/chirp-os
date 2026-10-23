@@ -89,21 +89,32 @@ final class FlightBehaviorTests: XCTestCase {
         XCTAssertEqual(again.catalog.species,restored.catalog.species)
     }
     func testCirclingMaintainsCruiseSpeedIncludingNarrowTurns() {
+        // A frame measures the chord, which is shorter than arc length in a
+        // tight turn. Test both real callback spacing and finer speed sampling,
+        // with deterministic widest/narrowest ellipse boundaries instead of RNG.
         for id:SpeciesID in [.blackKite,.commonBuzzard,.commonKestrel,.peregrineFalcon,.blackHeadedGull] {
-            let b=bird(id);b.fly(to:CGPoint(x:700,y:500),host:host,airspace:airspace)
-            var speeds=[Double](),previous=b.position,wasCircling=false
-            for _ in 0..<Int(b.flightDuration*120) {
-                b.tick(1/120)
-                if wasCircling && b.isCircling { speeds.append(Double(Geometry.distance(previous,b.position))*120) }
-                previous=b.position;wasCircling=b.isCircling
+            for samples in [[0.0,0.0],[0,1],[1,0],[1,1]] {
+                for hz in [120,600] {
+                    var cursor=0
+                    let b=bird(id)
+                    b.fly(to:CGPoint(x:700,y:500),host:host,airspace:airspace,random:{
+                        defer {cursor+=1};return samples[cursor%2]
+                    })
+                    var speeds=[Double](),previous=b.position,wasCircling=false
+                    for _ in 0..<Int(b.flightDuration*Double(hz)) {
+                        b.tick(1/Double(hz))
+                        if wasCircling && b.isCircling {speeds.append(Double(Geometry.distance(previous,b.position))*Double(hz))}
+                        previous=b.position;wasCircling=b.isCircling
+                    }
+                    let cruise=FlightBehavior.cruiseSpeed(id,multiplier:SpeciesCatalog.standard.profile(id).speed)
+                    let label="\(id) / \(samples) / \(hz)Hz"
+                    XCTAssertGreaterThan(speeds.min()!,100,label)
+                    XCTAssertGreaterThanOrEqual(speeds.min()!,cruise-(hz==600 ? 1:cruise*0.01),label)
+                    XCTAssertLessThanOrEqual(speeds.max()!,cruise+0.05,label)
+                    XCTAssertLessThan(speeds.max()!/speeds.min()!,1.01,label)
+                    XCTAssertEqual(Double(speeds.count)/Double(hz),FlightBehavior.motion(id).orbit,accuracy:0.03,label)
+                }
             }
-            XCTAssertGreaterThan(speeds.min()!,100,id.rawValue)
-            let cruise=FlightBehavior.cruiseSpeed(id,multiplier:SpeciesCatalog.standard.profile(id).speed)
-            XCTAssertEqual(speeds.min()!,cruise,accuracy:1,id.rawValue)
-            XCTAssertEqual(speeds.max()!,cruise,accuracy:1,id.rawValue)
-            XCTAssertLessThan(speeds.max()!/speeds.min()!,1.05,id.rawValue)
-            XCTAssertEqual(Double(speeds.count)/120,FlightBehavior.motion(id).orbit,accuracy:0.03)
-            print("Cruise \(id.rawValue): \(Int(speeds.min()!))–\(Int(speeds.max()!)) pt/s")
         }
     }
     func testShortFlightsDoNotDriftForTheLongRouteDuration() {

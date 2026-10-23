@@ -53,6 +53,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var previewEdgePeekButton:NSButton!
     var chaseButton:NSButton!
     var previewChaseButton:NSButton!
+    var travelTogetherButton:NSButton!
+    var previewTravelTogetherButton:NSButton!
     private var debugEnabled=false
     private var debugButton:NSButton!
     var language: AppLanguage { desktop.language }
@@ -127,7 +129,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:3360))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:3790))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -156,7 +158,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         ambientFrequencyPopup.target=self;ambientFrequencyPopup.action=#selector(ambientSettingsChanged)
         ambientFrequencyPopup.setAccessibilityLabel(t("偶发动作频率","Encounter frequency"));interactionView.addSubview(ambientFrequencyPopup)
         label(t("绕飞、过境、双鸟互动和少见的自动落叶共享出现频率，每次至多一种，条件不合适时跳过。绕飞需鼠标静止 3 秒且有空间；默认移动或点击结束，开启跟随后移动继续、点击结束。过境鸟不占常驻数量。","Pointer visits, passing flocks, two-bird interactions and rare automatic leaves share the encounter frequency: at most one per attempt; unsuitable conditions are skipped. Circling needs 3 seconds of stillness and space. Moving or clicking ends it; following allows movement until a click. Passing birds do not count as residents."),NSRect(x:20,y:507,width:710,height:70),in:interactionView,size:12)
-        label(t("双鸟互动需要两只距离合适、在可见边缘停稳的小鸟及足够空间。招呼、并排停靠、让座和结伴起飞共用此开关；短暂追逐另有子开关，见下方。默认开启，保存后生效。","Two-bird interactions need two suitably spaced birds settled on visible edges, with room to move. This switch controls greetings, side-by-side perching, giving way and paired takeoff. Brief chases have a separate preference below. On by default; save to apply."),NSRect(x:20,y:584,width:710,height:76),in:interactionView,size:12)
+        label(t("招呼、并排停靠、让座和结伴起飞需要两只距离合适、在可见边缘停稳的小鸟及足够空间，共用此开关。短暂追逐和飞行中临时结队另有子开关，见下方；结队只选择正在飞行的鸟。默认开启，保存后生效。","Greetings, side-by-side perching, giving way and paired takeoff need two suitably spaced birds settled on visible edges, with room to move. This master also controls Brief chases and Travel together in flight, with separate preferences below. Travel together uses birds already in flight. On by default; save to apply."),NSRect(x:20,y:584,width:710,height:76),in:interactionView,size:12)
         _=button(t("预览绕鼠标","Preview pointer visit"),#selector(previewPointerVisit),NSRect(x:20,y:674,width:210,height:32),in:interactionView)
         _=button(t("预览鸟群过境","Preview passing flock"),#selector(previewFlockPass),NSRect(x:250,y:674,width:210,height:32),in:interactionView)
         previewSocialGreetingButton=button(t("预览双鸟招呼","Preview two-bird greeting"),#selector(previewSocialGreeting),NSRect(x:480,y:674,width:250,height:32),in:interactionView)
@@ -234,6 +236,17 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         previewChaseButton=button(t("预览短暂追逐","Preview brief chase"),#selector(previewChase),NSRect(x:20,y:3180,width:260,height:32),in:interactionView)
         previewChaseButton.identifier=NSUserInterfaceItemIdentifier("previewChase")
         label(t("预览使用已保存的设置和现有小鸟，不会生成或传送鸟。请让两只支持追逐的同种鸟在附近停稳，并留出飞行和落回的空间。\n暂停、未保存开启、没有合适同伴或空间不足时，下方会提示原因。安静陪伴仍可手动预览。","Previews use saved settings and existing birds, without spawning or teleporting any. Let two supported birds of the same species settle nearby, with room to fly and return.\nPausing, saved switches being off, no suitable companion or insufficient space are explained below. Manual previews remain available in Quiet companionship."),NSRect(x:20,y:3226,width:710,height:104),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("chasePreviewHelp")
+        label(t("飞行中临时结队","Travel together in flight"),NSRect(x:20,y:3380,width:710,height:30),in:interactionView,size:20).identifier=NSUserInterfaceItemIdentifier("travelTogetherSectionTitle")
+        travelTogetherButton=NSButton(checkboxWithTitle:t("飞行中临时结队","Travel together in flight"),target:self,action:#selector(ambientSettingsChanged))
+        travelTogetherButton.frame=NSRect(x:20,y:3422,width:710,height:26);travelTogetherButton.state=draft.travelTogetherEnabled ? .on:.off
+        travelTogetherButton.isEnabled=draft.socialInteractions;travelTogetherButton.identifier=NSUserInterfaceItemIdentifier("travelTogetherEnabled")
+        travelTogetherButton.setAccessibilityLabel(travelTogetherButton.title);interactionView.addSubview(travelTogetherButton)
+        let travelSpecies=SpeciesID.allCases.filter { TravelTogetherBehavior.supportedSpecies.contains($0) }
+        let travelNames=travelSpecies.map { language.name($0) }.joined(separator:t("、",", "))
+        label(t("两只原本独立飞行的同种居民鸟逐渐靠拢，同行约 2 秒，再分开飞向各自原目标。不会让停栖的小鸟起飞。\n支持鸟种：","Two resident birds of the same species, already flying independently, gradually draw closer, travel together for about 2 seconds, then separate toward their original destinations. Perched birds stay perched.\nSupported species: ")+travelNames+t("。\n默认开启，受双鸟互动总开关控制；关闭总开关保留此项偏好，保存后生效。安静陪伴不触发新的自动结队，当前结队可自然完成。",".\nOn by default, controlled by Two-bird interactions; turning off the master preserves this preference. Save to apply. Quiet companionship prevents new automatic pairs; current pairs finish naturally."),NSRect(x:20,y:3460,width:710,height:136),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("travelTogetherHelp")
+        previewTravelTogetherButton=button(t("预览飞行中结队","Preview travel together"),#selector(previewTravelTogether),NSRect(x:20,y:3610,width:280,height:32),in:interactionView)
+        previewTravelTogetherButton.identifier=NSUserInterfaceItemIdentifier("previewTravelTogether")
+        label(t("预览使用已保存的设置，只选择现有、正在独立飞行的同种居民鸟，不会让停栖鸟起飞、生成或传送鸟。没有合适候选时，请等待上述鸟种的两只同种鸟自然飞行，并留出同行与分开的空间。\n暂停、未保存开启、缺少同伴或空间不足时，下方会提示原因。安静陪伴仍可手动预览。","Previews use saved settings and existing same-species residents already flying independently. No takeoff, spawning or teleporting. If no pair is available, wait for two supported birds of the same species to fly naturally, with room to travel together and separate.\nPausing, saved switches being off, missing companions or insufficient space are explained below. Manual previews remain available in Quiet companionship."),NSRect(x:20,y:3656,width:710,height:104),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("travelTogetherPreviewHelp")
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -258,6 +271,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.socialInteractions=socialInteractionsButton.state == .on
         draft.chaseEnabled=chaseButton.state == .on
         chaseButton.isEnabled=draft.socialInteractions
+        draft.travelTogetherEnabled=travelTogetherButton.state == .on
+        travelTogetherButton.isEnabled=draft.socialInteractions
         draft.ambientFrequency=AmbientFrequency.allCases[ambientFrequencyPopup.indexOfSelectedItem]
         message.stringValue=t("尚未保存","Unsaved changes")
     }
@@ -372,6 +387,25 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             return t("追逐和落回的空间不足，请等待更开阔的位置。","Not enough room to chase and return. Wait for a clearer area.")
         case .disabled,.settingsChanged:
             return t("请先保存并开启双鸟互动和短暂追逐。","Save and enable Two-bird interactions and Brief chases first.")
+        default:return desktop.behaviorMessage(reason)
+        }
+    }
+    @objc func previewTravelTogether() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.travelTogether(.preview))
+        if case .rejected(let reason)=result {message.stringValue=travelTogetherPreviewMessage(reason)}
+        else {message.stringValue=t("正在预览飞行中结队：两鸟靠拢同行约 2 秒，再分开飞向各自原目标。","Previewing travel together: birds draw closer for about 2 seconds, then resume their original routes.")}
+    }
+    func travelTogetherPreviewMessage(_ reason:BehaviorReason) -> String {
+        switch reason {
+        case .noSpecies:
+            return t("没有支持结队的飞行鸟种，请参考上方鸟种说明；不会让停栖鸟起飞。","No supported species in flight. See the list above; perched birds will stay perched.")
+        case .noCompanion,.missingBird,.unavailableBird:
+            return t("请等待两只支持结队的同种居民鸟正在独立飞行；不会让停栖鸟起飞。","Wait for two supported same-species residents flying independently; perched birds stay perched.")
+        case .noSpace:
+            return t("飞行中靠拢、同行与分开的空间不足，请等待更开阔的飞行路线。","Not enough room to draw closer, fly together and separate. Wait for clearer flight routes.")
+        case .disabled,.settingsChanged:
+            return t("请先保存并开启双鸟互动和飞行中临时结队。","Save and enable Two-bird interactions and Travel together in flight first.")
         default:return desktop.behaviorMessage(reason)
         }
     }
@@ -491,6 +525,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.socialInteractions=socialInteractionsButton.state == .on
         draft.chaseEnabled=chaseButton.state == .on
         chaseButton.isEnabled=draft.socialInteractions
+        draft.travelTogetherEnabled=travelTogetherButton.state == .on
+        travelTogetherButton.isEnabled=draft.socialInteractions
         draft.leafPlayEnabled=leafPlayButton.state == .on
         draft.ambientLeafPlayEnabled=ambientLeafPlayButton.state == .on
         ambientLeafPlayButton.isEnabled=draft.leafPlayEnabled

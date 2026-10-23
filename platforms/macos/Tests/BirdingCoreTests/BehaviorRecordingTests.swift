@@ -138,7 +138,7 @@ final class BehaviorRecordingTests:XCTestCase {
         try assertReplay(e)
     }
     func testEveryCommandHasAStableRoundTrip() throws {
-        let commands:[EngineCommand]=[.chase(.preview),.edgePeek(.preview),.sideHop(.preview),.prepareTakeoff(.automatic),.relocate(BirdID(1)),.pointerVisit(.automatic),.flockPass(.preview),.socialGreeting(.user),
+        let commands:[EngineCommand]=[.travelTogether(.preview),.chase(.preview),.edgePeek(.preview),.sideHop(.preview),.prepareTakeoff(.automatic),.relocate(BirdID(1)),.pointerVisit(.automatic),.flockPass(.preview),.socialGreeting(.user),
             .socialMotion(.giveWay,.automatic),.perchAction(.preen,.preview),.attention(.alert,.preview),.previewPointerAfter(3),
             .leafPlay(at:CGPoint(x:400,y:400),source:.preview),.releaseLeafAfter(2),.clearProps,.removeProp(ScenePropID(9)),
             .pointerClick,.pause(true),.cancelAmbient(.sleep),.scatter,.remove(BirdID(3))]
@@ -181,6 +181,20 @@ final class BehaviorRecordingTests:XCTestCase {
         XCTAssertThrowsError(try e.recordedInputs())
         XCTAssertThrowsError(try fixture(record:false).recordedInputs())
     }
+    func testAirborneFixtureStartsAtItsOriginAndRejectsInvalidCoordinates() throws {
+        let e=fixture(record:false)
+        var value=RecordedFixtureBird(species:.spottedDove,host:61,fraction:0.5,perchDuration:600,facingRight:true)
+        value.flightOrigin=RecordedPoint(CGPoint(x:100,y:900))
+        let bird=try value.make(in:e)
+        XCTAssertEqual(bird.position,CGPoint(x:100,y:900));XCTAssertEqual(bird.state,.flying)
+        XCTAssertNil(bird.airborneFlight,"Setup cannot invent measured velocity")
+        for _ in 0..<45 {bird.tick(1.0/60)}
+        XCTAssertNotNil(bird.airborneFlight)
+        for coordinate in [Double.nan,Double.infinity,1_000_001] {
+            value.flightOrigin=RecordedPoint(CGPoint(x:coordinate,y:900))
+            XCTAssertThrowsError(try value.make(in:e))
+        }
+    }
     func testOversizedRecordingCannotBeReplayedOrSavedAsComplete() throws {
         let e=fixture()
         for _ in 0...BehaviorInputLog.maximumInputs {e.handle(.clearProps)}
@@ -192,7 +206,7 @@ final class BehaviorRecordingTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let folder=root.appendingPathComponent("shared/behavior-fixtures/v1")
         let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="json"}.sorted{$0.path<$1.path}
-        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json"])
+        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
@@ -200,6 +214,15 @@ final class BehaviorRecordingTests:XCTestCase {
             XCTAssertEqual(reference.runs,0,file.lastPathComponent);XCTAssertEqual(reference.leases,0,file.lastPathComponent)
             XCTAssertEqual(reference.reservations,0,file.lastPathComponent);XCTAssertTrue(reference.props.isEmpty,file.lastPathComponent)
             let finished=reference.events.filter{$0.type=="completed"}.compactMap(\.kind)
+            if file.lastPathComponent=="travel-together.json" {
+                XCTAssertEqual(finished.filter{$0=="travelTogether"}.count,1)
+                XCTAssertEqual(reference.birds.map(\.id),["1","2"])
+                XCTAssertEqual(reference.birds.map(\.position.x),[1760,1760])
+                XCTAssertEqual(reference.birds.map(\.position.y),[400,640])
+                XCTAssertEqual(reference.birds.map(\.state),["perched","perched"])
+                XCTAssertTrue(reference.events.contains{$0.kind=="travelTogether" && $0.type=="rejected" && $0.reason=="unavailableBird"})
+                XCTAssertFalse(reference.events.contains{$0.type=="failed" || $0.type=="cancelled"})
+            }
             if file.lastPathComponent=="chase.json" {
                 XCTAssertEqual(finished.filter{$0=="chase"}.count,2)
                 XCTAssertEqual(reference.birds.map(\.id),["1","2"])

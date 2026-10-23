@@ -77,6 +77,7 @@ public struct RecordedCommand:Codable {
         case .socialGreeting(let value):name="socialGreeting";source=value.rawValue
         case .socialMotion(let kind,let value):name="socialMotion";action=kind.rawValue;source=value.rawValue
         case .perchAction(let kind,let value):name="perchAction";action=kind.rawValue;source=value.rawValue
+        case .travelTogether(let value):name="travelTogether";source=value.rawValue
         case .chase(let value):name="chase";source=value.rawValue
         case .edgePeek(let value):name="edgePeek";source=value.rawValue
         case .sideHop(let value):name="sideHop";source=value.rawValue
@@ -106,6 +107,7 @@ public struct RecordedCommand:Codable {
         case "socialGreeting":return .socialGreeting(try origin())
         case "socialMotion":guard let action,let kind=SocialMotionKind(rawValue:action) else {throw bad()};return .socialMotion(kind,try origin())
         case "perchAction":guard let action,let kind=PerchActionKind(rawValue:action) else {throw bad()};return .perchAction(kind,try origin())
+        case "travelTogether":return .travelTogether(try origin())
         case "chase":return .chase(try origin())
         case "edgePeek":return .edgePeek(try origin())
         case "sideHop":return .sideHop(try origin())
@@ -149,11 +151,21 @@ public struct RecordedInput:Codable {
 public struct RecordedFixtureBird:Codable {
     public var species:SpeciesID,host:UInt32,fraction:Double,perchDuration:Double
     public var facingRight:Bool
+    /// Optional origin for a normal, initially accelerating flight to this slot.
+    /// Fixture setup only; subsequent movement still uses recorded fixed steps.
+    public var flightOrigin:RecordedPoint? = nil
     func make(in engine:BehaviorEngine) throws -> Bird {
         guard let surface=engine.world.surfaces.first(where:{$0.id==host}),fraction.isFinite,(0...1).contains(fraction),
               perchDuration.isFinite,(0.1...3600).contains(perchDuration) else {throw BehaviorRecordingError.invalid("invalid fixture bird")}
         let bird=Bird(position:.zero,fraction:fraction,profile:engine.settings.catalog.profile(species),random:{0.5})
         bird.perch(on:surface,spriteScale:engine.spriteScale(for:bird));bird.perchDuration=perchDuration;bird.facingRight=facingRight
+        if let flightOrigin {
+            guard flightOrigin.valid else {throw BehaviorRecordingError.invalid("invalid fixture flight origin")}
+            let origin=flightOrigin.value
+            let destination=bird.position
+            bird.position=origin
+            bird.fly(to:destination,host:surface,arc:0,allowsOrbit:false,random:{0.5})
+        }
         return bird
     }
 }
@@ -202,7 +214,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=6,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=7,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String
