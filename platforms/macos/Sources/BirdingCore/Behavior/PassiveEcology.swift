@@ -149,6 +149,18 @@ extension BehaviorEngine {
               let id=ecologicalChoice(candidates,weight:{self.perchPlanner.automaticWeight($0,kind:.sideHop)}) else {return false}
         return requestSideHop(source:.automatic,target:id).accepted
     }
+    @discardableResult func updateEdgePeeks(_ dt:Double) -> Bool {
+        let enabled=ambientEnabled && settings.perchActions && settings.edgePeekEnabled
+        let ids=birds.compactMap {bird -> BirdID? in
+            guard role(of:bird) == .resident,let id=id(of:bird) else {return nil}
+            let supported=EdgePeekExecution.supportedSpecies.contains(bird.profile.id)
+            guard perchPlanner.edgePeekOpportunity(id,bird:bird,dt:dt,enabled:enabled && supported,
+                occupied:runtime.owners[id] != nil,quiet:!world.buttonsDown && !pointerNear(bird)) else {return nil}
+            return edgePeekCandidate(id,source:.automatic) ? id:nil
+        }
+        guard let id=ecologicalChoice(ids,weight:{self.perchPlanner.automaticWeight($0,kind:.edgePeek)}) else {return false}
+        return requestEdgePeek(source:.automatic,target:id).accepted
+    }
     func requestAutomaticLeaf() {
         guard !paused,ambientEnabled,settings.leafPlayEnabled,settings.ambientLeafPlayEnabled,
               !ambientBusy,!hasPointerPreview,!hasLeafPreview,!world.buttonsDown else {return}

@@ -234,7 +234,13 @@ public enum BehaviorStress {
                     state.cooldowns.values.allSatisfy{$0.isFinite && $0>0}
             })
             let total=models.count+engine.pendingCount
-            check("boundedResources",total<=birdLimit+5 && runs.count<=birdLimit+1 && owners.count<=birdLimit+5 && slots.count<=birdLimit+5 && propIDs.count<=1 && engine.events.count<=256)
+            let reservationCounts=Dictionary(grouping:slots,by: \.bird).mapValues(\.count)
+            let perBirdSlotsBounded=reservationCounts.allSatisfy {bird,count in
+                guard let owner=owners[bird],let run=runs[owner] else {return false}
+                return count <= (run.execution.kind == .edgePeek ? 2:1)
+            }
+            check("boundedResources",total<=birdLimit+5 && runs.count<=birdLimit+1 && owners.count<=birdLimit+5 &&
+                slots.count<=2*birdLimit+5 && perBirdSlotsBounded && propIDs.count<=1 && engine.events.count<=256)
             peaks.activeRuns=max(peaks.activeRuns,runs.count); peaks.birds=max(peaks.birds,total)
             peaks.leases=max(peaks.leases,owners.count); peaks.reservations=max(peaks.reservations,slots.count)
             peaks.props=max(peaks.props,propIDs.count); peaks.events=max(peaks.events,engine.events.count)
@@ -367,9 +373,12 @@ public enum BehaviorStress {
             let ordinal=index<2 ? index:(index-2)/config.displays
             let row=index<2 ? 7:min(6,ordinal/8)
             let host=baseHosts[display*8+row]
-            let x=index<2 ? host.rect.minX+700+CGFloat(index)*280:host.rect.minX+180+CGFloat(ordinal%8)*250
+            let profile=engine.settings.catalog.profile(index==2 ? .treeSparrow:species[index%species.count])
+            // One endpoint resident exercises the complete two-slot excursion.
+            let x=index==2 ? Geometry.perchX(0,rect:host.rect)+90*profile.relativeScale:
+                (index<2 ? host.rect.minX+700+CGFloat(index)*280:host.rect.minX+180+CGFloat(ordinal%8)*250)
             let fraction=(x-Geometry.perchX(0,rect:host.rect))/(Geometry.perchX(1,rect:host.rect)-Geometry.perchX(0,rect:host.rect))
-            let bird=Bird(position:.zero,fraction:fraction,profile:engine.settings.catalog.profile(species[index%species.count]),random:{0.5})
+            let bird=Bird(position:.zero,fraction:fraction,profile:profile,random:{0.5})
             bird.perch(on:host,spriteScale:engine.spriteScale(for:bird)); bird.perchDuration=600
             return bird
         }
@@ -384,7 +393,7 @@ public enum BehaviorStress {
             value.pointerVisits=enabled; value.flockPasses=enabled; value.socialInteractions=enabled
             value.perchActions=enabled; value.leafPlayEnabled=enabled; value.ambientLeafPlayEnabled=enabled
             value.sideHopEnabled=enabled; value.takeoffPreparationEnabled=enabled; value.passiveAttentionEnabled=enabled
-            value.pointerFollowEnabled=enabled
+            value.pointerFollowEnabled=enabled;value.edgePeekEnabled=enabled
             measured("settings"){engine.applySettings(value)}; auditor.metrics.settingsChanges+=1; inspect()
         }
         func pause(_ value:Bool) {
@@ -411,6 +420,7 @@ public enum BehaviorStress {
             case 46:command(.socialMotion(.pairedTakeoff,.preview))
             case 58:command(.previewPointerAfter(0.1))
             case 72:command(.flockPass(.preview))
+            case 80:command(.edgePeek(.preview))
             case 84:
                 if let id=engine.birds.first(where:{engine.role(of:$0) == .resident}).flatMap({engine.id(of:$0)}) {command(.relocate(id))}
             case 86:pause(true); if !config.autonomous {command(.pointerVisit(.preview))}
@@ -448,7 +458,10 @@ public enum BehaviorStress {
             for i in 0..<config.birds {engine.register(makeBird(i))}
             inspect(); command(.perchAction(.preen,.preview))
             for tickIndex in 0..<warmupSteps {
-                if tickIndex==4*60 {command(.sideHop(.preview))}
+                if tickIndex==4*60 {
+                    if config.birds>=3 {command(.edgePeek(.preview))}
+                    command(.sideHop(.preview))
+                }
                 tick(tickIndex)
             }
             phase="active"
@@ -486,17 +499,17 @@ public enum BehaviorStress {
                 auditor.metrics.repeatedRemovalChecks+=1
             }
             command(.clearProps); lifecycle(.shutdown); inspect()
-            auditor.finish(requiredCompletedKinds:["preen","leafPlay"],requireAutonomy:config.autonomous && config.seconds>=120)
+            auditor.finish(requiredCompletedKinds:["preen","leafPlay"]+(config.birds>=3 ? ["edgePeek"]:[]),requireAutonomy:config.autonomous && config.seconds>=120)
             let cleanup=Cleanup(activeRunsBeforeDrain:beforeDrain,activeRunsAfterDrain:afterDrain,drainReachedIdle:idle,
                 naturallyCompletedDuringDrain:auditor.metrics.drainCompletions,explicitlyCancelledRuns:auditor.metrics.explicitCleanupCancellations,
                 residentsBeforeRemoval:retained,explicitlyRemovedBirds:removedBirds,activeRuns:engine.activeRunCount,birds:engine.birds.count,
                 pendingBirds:engine.pendingCount,leases:engine.leasedBirdCount,reservations:engine.reservedLandingCount,props:engine.scenePropCount,
                 ecologyMemories:engine.perchPlanner.rhythms.count,visitorLeases:engine.activeVisitorCount,
                 retainedVisitorProfiles:engine.rememberedVisitorCount,pendingPreviews:(engine.hasLeafPreview ? 1:0)+(engine.hasPointerPreview ? 1:0))
-            return Report(configuration:config,workload:Workload(version:1,fixedStepSeconds:BehaviorEngine.step,activeSteps:activeSteps,
+            return Report(configuration:config,workload:Workload(version:2,fixedStepSeconds:BehaviorEngine.step,activeSteps:activeSteps,
                 warmupSteps:warmupSteps,drainSteps:drainSteps,drainLimitSteps:drainLimit,worldSampleEverySteps:6,timingSampleLimit:WallSamples.limit,
                 frameManifest:"Existing BirdArt atlas vocabulary, keyed by SpeciesCatalog.standard entries; no renderer assets loaded",
-                species:Array(Set((0..<config.birds).map{species[$0%species.count].rawValue})).sorted()),auditor:auditor,cleanup:cleanup,
+                species:Array(Set((0..<config.birds).map{($0==2 ? SpeciesID.treeSparrow:species[$0%species.count]).rawValue})).sorted()),auditor:auditor,cleanup:cleanup,
                 timings:Timings(method:"Monotonic wall milliseconds; deterministic reservoir (4096/category/phase), nearest-rank percentiles; max over every call. No machine-independent performance threshold.",
                     warmup:timingReport("warmup"),active:timingReport("active"),drain:timingReport("drain"),cleanup:timingReport("cleanup")))
         }

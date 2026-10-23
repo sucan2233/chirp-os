@@ -1,6 +1,11 @@
 import Foundation
 import CoreGraphics
 
+/// Same-ledge executions protect their continuous path as well as their slots.
+protocol LedgeTraversalExecution:BehaviorExecution {
+    func sweptFootprint(in engine:BehaviorEngine) -> CGRect?
+}
+
 /// A single, finite same-ledge move. Pointer position chooses the direction once;
 /// neither motion nor validation follows the pointer after acceptance.
 struct SideHopPlan {
@@ -55,8 +60,8 @@ struct SideHopPlan {
         }
         // Destination slots alone do not protect two crossing hop trajectories.
         for run in engine.runtime.runs.values {
-            guard let other=run.execution as? SideHopExecution,other.plan.id != id else {continue}
-            guard let footprint=other.plan.sweptFootprint(in:engine),
+            guard let other=run.execution as? LedgeTraversalExecution,!other.participants.contains(id) else {continue}
+            guard let footprint=other.sweptFootprint(in:engine),
                   !intersects(footprint.insetBy(dx:-8,dy:-8)) else {return false}
         }
         return true
@@ -88,7 +93,7 @@ struct SideHopPlan {
     }
 }
 
-final class SideHopExecution:BehaviorExecution {
+final class SideHopExecution:LedgeTraversalExecution {
     let plan:SideHopPlan
     let source:BehaviorSource
     let kind:BehaviorKind = .sideHop
@@ -100,6 +105,7 @@ final class SideHopExecution:BehaviorExecution {
     init(plan:SideHopPlan,source:BehaviorSource) {
         self.plan=plan;self.source=source
     }
+    func sweptFootprint(in engine:BehaviorEngine) -> CGRect? {plan.sweptFootprint(in:engine)}
     func start(in engine:BehaviorEngine) {
         guard let bird=engine.bird(plan.id),bird.beginSideHop(on:plan.host,to:plan.destination.fraction,spriteScale:plan.scale) else {return}
         revision=bird.motionRevision

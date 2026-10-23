@@ -263,6 +263,7 @@ enum SettingsVerification {
             try PassiveMotionSettingsVerification.run(into:&checks,folder:folder)
             try VisitorMemorySettingsVerification.run(into:&checks,folder:folder)
             try ActivityRhythmSettingsVerification.run(into:&checks,folder:folder)
+            try EdgePeekSettingsVerification.run(into:&checks,folder:folder)
             ActivityRhythmClockVerification.run(into:&checks)
             try VisitorMemoryPersistenceVerification.run(into:&checks,folder:folder)
             try checkLeafSettings(folder:folder,checks:&checks)

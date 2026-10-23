@@ -49,6 +49,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var clearLeafButton:NSButton!
     var visitorMemoryButton:NSButton!
     var activityRhythmPopup:NSPopUpButton!
+    var edgePeekButton:NSButton!
+    var previewEdgePeekButton:NSButton!
     private var debugEnabled=false
     private var debugButton:NSButton!
     var language: AppLanguage { desktop.language }
@@ -123,7 +125,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:2580))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:2950))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -210,6 +212,15 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         activityRhythmPopup.identifier=NSUserInterfaceItemIdentifier("activityRhythmPopup")
         activityRhythmPopup.setAccessibilityLabel(t("活动节奏","Activity rhythm"));interactionView.addSubview(activityRhythmPopup)
         label(t("跟随本地昼夜：按本机时段减少夜间显著互动，并按鸟种调整打盹节奏。\n\n安静陪伴：停止新触发的自动绕飞、鸟群过境、社交场景和落叶；正在进行的互动自然结束，手动预览不会取消。保留自然飞行、被动观察、警觉和侧跳；已有开关仍然适用。\n\n所有模式点击换位都立即响应。默认保持日常；保存后生效。不会强制入睡、改变鸟的数量或离线累计。","Local day/night uses this Mac’s local time to reduce noticeable interactions at night and adjusts dozing rhythms by species.\n\nQuiet companionship stops new automatic pointer visits, passing flocks, social scenes and leaves. Interactions already in progress finish naturally; manual previews are not cancelled. Natural flight, passive observation, alertness and side hops remain available, subject to their existing switches.\n\nClicks move birds immediately in every mode. Default: keep everyday rhythm. Save to apply. No forced sleep, bird count changes or offline accumulation."),NSRect(x:20,y:2270,width:710,height:234),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("activityRhythmHelp")
+        label(t("探头观察","Edge peeking"),NSRect(x:20,y:2540,width:710,height:30),in:interactionView,size:20).identifier=NSUserInterfaceItemIdentifier("edgePeekSectionTitle")
+        edgePeekButton=NSButton(checkboxWithTitle:t("窗口边缘探头观察","Peek over window edges"),target:self,action:#selector(perchSettingsChanged))
+        edgePeekButton.frame=NSRect(x:20,y:2582,width:710,height:26);edgePeekButton.state=draft.edgePeekEnabled ? .on:.off
+        edgePeekButton.isEnabled=draft.perchActions;edgePeekButton.identifier=NSUserInterfaceItemIdentifier("edgePeekEnabled")
+        edgePeekButton.setAccessibilityLabel(t("窗口边缘探头观察","Peek over window edges"));interactionView.addSubview(edgePeekButton)
+        label(t("仅麻雀、乌鸫、戴胜和中杓鹬参加。\n小鸟在窗口上沿端点附近的安全空间内靠近边缘、低头观察，再退回原位。地面或远离端点的窗口中央不会被强制拉来参加；空间不足时跳过。\n默认开启，受停栖小动作总开关控制。关闭总开关会保留此项偏好；保存后生效。","Only Tree Sparrows, Chinese Blackbirds, Hoopoes and Whimbrels participate.\nNear a window’s top-edge endpoint, a bird approaches within safe space, looks down, then retreats to its starting spot. Ground birds and birds far from endpoints stay where they are. Insufficient space skips the activity.\nOn by default, controlled by Perch activities. Turning off the master preserves this preference. Save to apply."),NSRect(x:20,y:2620,width:710,height:116),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("edgePeekHelp")
+        previewEdgePeekButton=button(t("预览探头观察","Preview edge peeking"),#selector(previewEdgePeek),NSRect(x:20,y:2750,width:260,height:32),in:interactionView)
+        previewEdgePeekButton.identifier=NSUserInterfaceItemIdentifier("previewEdgePeek")
+        label(t("预览读取已保存的设置，使用现有小鸟，不改变鸟的数量。请让上述鸟种在窗口上沿端点附近停稳，并留出安全的靠近和退回空间。\n暂停、没有合适小鸟、空间不足、缺少对应帧或尚未保存开启时，会在下方提示原因。","Previews use saved settings and existing birds; the bird count stays unchanged. Let a supported bird settle near a window’s top-edge endpoint with safe room to approach and retreat.\nPausing, no suitable bird, insufficient space, missing frames or a saved switch being off are explained below."),NSRect(x:20,y:2796,width:710,height:116),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("edgePeekPreviewHelp")
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -254,6 +265,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.sideHopEnabled=sideHopButton.state == .on
         draft.takeoffPreparationEnabled=takeoffPreparationButton.state == .on
         sideHopButton.isEnabled=draft.perchActions;takeoffPreparationButton.isEnabled=draft.perchActions
+        draft.edgePeekEnabled=edgePeekButton.state == .on
+        edgePeekButton.isEnabled=draft.perchActions
         message.stringValue=t("尚未保存","Unsaved changes")
     }
     @objc func leafSettingsChanged() {
@@ -317,6 +330,16 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         let result=desktop.engine.handle(.prepareTakeoff(.preview))
         if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
         else {message.stringValue=t("正在预览起飞准备，小鸟会朝向目标、展翅后出发。","Previewing takeoff preparation: face the target, open wings, then depart.")}
+    }
+    @objc func previewEdgePeek() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.edgePeek(.preview))
+        if case .rejected(let reason)=result {
+            message.stringValue=reason == .noSpecies
+                ? t("请等待麻雀、乌鸫、戴胜或中杓鹬在窗口上沿端点附近停稳。","Wait for a Tree Sparrow, Chinese Blackbird, Hoopoe or Whimbrel to settle near a window’s top-edge endpoint.")
+                : desktop.behaviorMessage(reason)
+        }
+        else {message.stringValue=t("正在预览探头观察：小鸟会安全靠近边缘、低头，再退回原位。","Previewing edge peeking: the bird approaches safely, looks down, then retreats.")}
     }
     @objc func previewWatch() {
         desktop.syncWorld()
@@ -429,6 +452,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.sideHopEnabled=sideHopButton.state == .on
         draft.takeoffPreparationEnabled=takeoffPreparationButton.state == .on
         sideHopButton.isEnabled=draft.perchActions;takeoffPreparationButton.isEnabled=draft.perchActions
+        draft.edgePeekEnabled=edgePeekButton.state == .on
+        edgePeekButton.isEnabled=draft.perchActions
         draft.socialInteractions=socialInteractionsButton.state == .on
         draft.leafPlayEnabled=leafPlayButton.state == .on
         draft.ambientLeafPlayEnabled=ambientLeafPlayButton.state == .on

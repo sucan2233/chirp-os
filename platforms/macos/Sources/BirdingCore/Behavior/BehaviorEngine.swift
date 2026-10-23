@@ -175,6 +175,10 @@ public final class BehaviorEngine {
                 runtime.cancel(run.id,reason:.settingsChanged,in:self)
             }
         }
+        if !value.edgePeekEnabled {
+            runtime.cancel(where:{$0.kind == .edgePeek},reason:.settingsChanged,in:self)
+            perchPlanner.resetEdgePeekOpportunities()
+        }
         if !value.sideHopEnabled {runtime.cancel(where:{$0.kind == .sideHop},reason:.settingsChanged,in:self)}
         if !value.takeoffPreparationEnabled {runtime.cancel(where:{$0.kind == .takeoffPreparation},reason:.settingsChanged,in:self)}
         if !value.passiveAttentionEnabled {
@@ -202,6 +206,7 @@ public final class BehaviorEngine {
         beginRecordingInput(.command(command));defer {endRecordingInput()}
         switch command {
         case .relocate(let id): return relocate(id)
+        case .edgePeek(let source):return requestEdgePeek(source:source)
         case .sideHop(let source):return requestSideHop(source:source)
         case .prepareTakeoff(let source):return requestTakeoffPreparation(source:source)
         case .pointerVisit(let source): return requestPointer(source)
@@ -603,7 +608,7 @@ public final class BehaviorEngine {
             } else if runtime.owners[id]==nil && !paused && autonomousRouting && bird.needsDestination {routeAutonomously(bird,id:id)}
         }
         if !paused {
-            if !updateAttention(),!updateSideHops() {updatePerchActivities(dt)}
+            if !updateAttention(),!updateSideHops(),!updateEdgePeeks(dt) {updatePerchActivities(dt)}
         }
         let encounterRate=ActivityRhythmPolicy.ambientRate(mode:settings.activityRhythm,minute:world.localMinuteOfDay)
         if !paused && ambientEnabled && encounterRate>0,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,

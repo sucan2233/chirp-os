@@ -111,7 +111,7 @@ final class ActivityRhythmIntegrationTests:XCTestCase {
     func testPriorSimulationVersionsAreRejectedBeforeNestedDecode() throws {
         let e=fixture(.steady,record:true)
         let data=try BehaviorInputLog.encoder().encode(e.recordedInputs())
-        for version in [1,2,3,5] {
+        for version in [1,2,3,4,6] {
             var object=try XCTUnwrap(JSONSerialization.jsonObject(with:data) as? [String:Any])
             object["simulationVersion"]=version;object["settings"]="incompatible"
             XCTAssertThrowsError(try BehaviorInputLog.decode(JSONSerialization.data(withJSONObject:object)))

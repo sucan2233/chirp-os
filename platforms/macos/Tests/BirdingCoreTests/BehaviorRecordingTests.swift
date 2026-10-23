@@ -58,6 +58,13 @@ final class BehaviorRecordingTests:XCTestCase {
         advance(e,10)
         try assertReplay(e)
     }
+    func testPublicEdgePeekCommandRecordsRejectionForReplay() throws {
+        let e=fixture()
+        XCTAssertEqual(e.handle(.edgePeek(.preview)),.rejected(.unavailableBird))
+        XCTAssertEqual(e.events.last?.kind,.edgePeek)
+        XCTAssertEqual(e.events.last?.type,.rejected)
+        try assertReplay(e)
+    }
     func testRecorderRetainsEventsBeyondEngineDiagnosticRing() throws {
         let e=fixture()
         for _ in 0..<300 {e.handle(.remove(BirdID(999)));e.handle(.attention(.watch,.preview))}
@@ -185,7 +192,7 @@ final class BehaviorRecordingTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let folder=root.appendingPathComponent("shared/behavior-fixtures/v1")
         let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="json"}.sorted{$0.path<$1.path}
-        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json"])
+        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
@@ -193,6 +200,14 @@ final class BehaviorRecordingTests:XCTestCase {
             XCTAssertEqual(reference.runs,0,file.lastPathComponent);XCTAssertEqual(reference.leases,0,file.lastPathComponent)
             XCTAssertEqual(reference.reservations,0,file.lastPathComponent);XCTAssertTrue(reference.props.isEmpty,file.lastPathComponent)
             let finished=reference.events.filter{$0.type=="completed"}.compactMap(\.kind)
+            if file.lastPathComponent=="edge-peek.json" {
+                XCTAssertEqual(finished.filter{$0=="edgePeek"}.count,2)
+                let bird=try XCTUnwrap(reference.birds.first)
+                XCTAssertEqual(reference.birds.count,1);XCTAssertEqual(bird.id,"1")
+                XCTAssertEqual(bird.position.x,213.6,accuracy:1e-9)
+                XCTAssertEqual(bird.position.y,900,accuracy:1e-9)
+                XCTAssertFalse(reference.events.contains{$0.type=="failed" || $0.type=="cancelled"})
+            }
             if file.lastPathComponent=="activity-rhythm.json" {
                 XCTAssertTrue(finished.contains("rest"));XCTAssertTrue(finished.contains("flockPass"))
                 XCTAssertTrue(reference.events.contains{$0.kind=="flockPass" && $0.type=="rejected" && $0.reason=="disabled"})

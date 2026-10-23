@@ -36,6 +36,8 @@ final class PerchActivityPlanner {
     final class Rhythm {
         let random:EngineRandom
         let ecologyRandom:EngineRandom
+        let peekRandom:EngineRandom
+        var peekQuiet=0.0,nextPeek:Double,peekRevision:UInt64
         let temperament:BirdTemperament
         let cadence,restDuration,preenDuration,preenRate,landingDelay:Double
         var quiet=0.0,landingAge=0.0,nextRest:Double
@@ -54,6 +56,8 @@ final class PerchActivityPlanner {
         init(seed:UInt64,bird:Bird,temperament:BirdTemperament?=nil) {
             random=EngineRandom(seed:seed)
             ecologyRandom=EngineRandom(seed:seed ^ 0x45434F4C4F475952)
+            peekRandom=EngineRandom(seed:seed ^ 0x454447455045454B)
+            nextPeek=10+12*peekRandom.unit();peekRevision=bird.motionRevision
             let traits=temperament ?? BirdTemperament(seed:seed,birdID:BirdID(0))
             self.temperament=traits
             cadence=(0.8+0.4*random.unit())*(1.2-0.4*traits.activity)
@@ -81,7 +85,9 @@ final class PerchActivityPlanner {
     }
     func remove(_ id:BirdID) {rhythms.removeValue(forKey:id)}
     func suppress(_ id:BirdID) {rhythms[id]?.suppress()}
-    func suppressAll() {for id in rhythms.keys.sorted() {suppress(id)}}
+    func suppressAll() {
+        for id in rhythms.keys.sorted() {suppress(id);rhythms[id]?.peekQuiet=0}
+    }
     func select(_ ids:[BirdID]) -> BirdID? {selection.element(ids)}
     func ecology(_ id:BirdID) -> BirdEcologySnapshot? {
         guard let rhythm=rhythms[id] else {return nil}
@@ -169,15 +175,32 @@ final class PerchActivityPlanner {
         if kind == .alert {
             return rhythm.disturbance>=0.2 ? (1.2-traits.boldness)*(0.8+0.4*traits.activity):0
         }
-        if rhythm.disturbance>=0.35 && (kind == .rest || kind == .preen || kind.isSocial || kind == .leafPlay || kind == .watch) {return 0}
+        if rhythm.disturbance>=0.35 && (kind == .rest || kind == .preen || kind.isSocial || kind == .leafPlay || kind == .watch || kind == .edgePeek) {return 0}
         if kind.isSocial {return (0.4+1.2*traits.sociability)*(0.8+0.4*traits.boldness)}
         switch kind {
         case .rest:return 1.2-0.4*traits.activity
         case .preen:return (0.6+0.8*traits.boldness)*(0.9+0.2*traits.curiosity)
         case .leafPlay:return (0.3+1.4*traits.curiosity)*(0.6+0.8*traits.activity)*(0.7+0.6*traits.boldness)
         case .watch:return (0.4+1.2*traits.curiosity)*(1+0.2*rhythm.familiarity)
+        case .edgePeek:return (0.3+traits.curiosity)*(0.7+0.6*traits.boldness)
         default:return 1
         }
+    }
+    func resetEdgePeekOpportunities() {
+        for rhythm in rhythms.values {rhythm.peekQuiet=0}
+    }
+    /// One opportunity after a calm wait, discarded when geometry is unsuitable.
+    /// Existing poses may finish while this waits; there is no queued retry.
+    func edgePeekOpportunity(_ id:BirdID,bird:Bird,dt:Double,enabled:Bool,occupied:Bool,quiet:Bool) -> Bool {
+        guard let rhythm=rhythms[id] else {return false}
+        if rhythm.peekRevision != bird.motionRevision {rhythm.peekRevision=bird.motionRevision;rhythm.peekQuiet=0}
+        guard enabled,bird.state == .perched,!bird.isDeparting,!bird.needsDestination,
+              quiet,rhythm.disturbance<0.35 else {rhythm.peekQuiet=0;return false}
+        guard !occupied else {return false}
+        rhythm.peekQuiet+=dt
+        guard rhythm.peekQuiet>=rhythm.nextPeek else {return false}
+        rhythm.peekQuiet=0;rhythm.nextPeek=10+12*rhythm.peekRandom.unit()
+        return automaticWeight(id,kind:.edgePeek)>0
     }
     func didStart(_ id:BirdID,kind:BehaviorKind) {
         guard let rhythm=rhythms[id] else {return}

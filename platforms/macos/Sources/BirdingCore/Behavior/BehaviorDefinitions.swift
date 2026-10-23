@@ -49,6 +49,7 @@ public struct BehaviorDefinition {
         case .watch,.alert:return settings.perchActions && settings.passiveAttentionEnabled
         case .sideHop:return settings.perchActions && settings.sideHopEnabled
         case .takeoffPreparation:return settings.perchActions && settings.takeoffPreparationEnabled
+        case .edgePeek:return settings.perchActions && settings.edgePeekEnabled
         case .socialGreeting,.sideBySide,.giveWay,.pairedTakeoff:return settings.socialInteractions
         case .leafPlay:return settings.leafPlayEnabled && (source != .automatic || settings.ambientLeafPlayEnabled)
         }
@@ -91,6 +92,9 @@ public enum BehaviorDefinitions {
         case .sideHop:
             return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.landing],occupiesEncounter:false,
                 runsWhilePaused:false,priority:30,cooldown:24)
+        case .edgePeek:
+            return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.greeting,.landing],occupiesEncounter:false,
+                runsWhilePaused:false,priority:15,cooldown:45)
         case .takeoffPreparation:
             return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.flight],occupiesEncounter:false,
                 runsWhilePaused:false,priority:30,cooldown:4)
@@ -103,7 +107,7 @@ public enum BehaviorDefinitions {
     /// Stable content order, independent of dictionary or Set iteration.
     public static var all:[BehaviorDefinition] {
         let kinds:[BehaviorKind] = [.relocate,.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,
-            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation]
+            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek]
         return kinds.map {definition(for:$0)}
     }
 
@@ -116,10 +120,10 @@ public enum BehaviorDefinitions {
             switch current {
             case .rest,.preen,.watch:return true
             case .relocate,.pointerVisit,.flockPass,.socialGreeting,.sideBySide,.giveWay,
-                 .pairedTakeoff,.leafPlay,.alert,.sideHop,.takeoffPreparation:return false
+                 .pairedTakeoff,.leafPlay,.alert,.sideHop,.takeoffPreparation,.edgePeek:return false
             }
         case .pointerVisit,.flockPass,.rest,.preen,.socialGreeting,.sideBySide,.giveWay,
-             .pairedTakeoff,.leafPlay,.watch,.sideHop,.takeoffPreparation:return false
+             .pairedTakeoff,.leafPlay,.watch,.sideHop,.takeoffPreparation,.edgePeek:return false
         }
     }
 }
