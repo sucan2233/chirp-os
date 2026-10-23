@@ -48,8 +48,10 @@ final class BirdArt {
     static let names = ["stand","breathe","blink","preen0","preen1","land0","land1","land2","fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","idle0","idle1","idle2","stretch","shake","poop0","poop1","cling0","cling1","peck0","peck1","glide0","glide1","glide2","bank0","bank1","bank2","bound"]
     static let allopreeningNames = ["allopreenGive0","allopreenGive1","allopreenGive2",
                                    "allopreenReceive0","allopreenReceive1","allopreenReceive2"]
+    static let feedingNames = ["feedLook","feedDown0","feedDown1","feedLift"]
     static func names(for species:SpeciesID) -> [String] {
-        names + ([SpeciesID.barnSwallow,.swinhoesWhiteEye].contains(species) ? allopreeningNames : [])
+        names + ([SpeciesID.barnSwallow,.swinhoesWhiteEye].contains(species) ? allopreeningNames : []) +
+            ([SpeciesID.treeSparrow,.spottedDove].contains(species) ? feedingNames : [])
     }
     let frames: [String: CGImage]
     let species: SpeciesID

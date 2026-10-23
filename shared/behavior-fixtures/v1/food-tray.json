@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "simulationVersion": 10,
+  "seed": "1414",
+  "settings": {
+    "schemaVersion": 1,
+    "catalog": {"species": [
+      {"id":"treeSparrow","name":"麻雀","englishName":"Eurasian Tree Sparrow","adultLengthCM":14.5,"weight":18647,"weightBasis":"上海2017–2023观鸟研究表2：18647只次","speed":1.12,"flapFPS":48,"perchMin":16,"perchMax":36},
+      {"id":"spottedDove","name":"珠颈斑鸠","englishName":"Spotted Dove","adultLengthCM":30,"weight":100,"weightBasis":"B14 deterministic fixture","speed":1,"flapFPS":24,"perchMin":16,"perchMax":36}
+    ]},
+    "probabilities": {"entries": [
+      {"id":"treeSparrow","points":10000,"locked":false},
+      {"id":"spottedDove","points":0,"locked":false}
+    ]},
+    "perchDefaultsVersion": 1,
+    "foodTrayEnabled": true,
+    "perchActions": false,
+    "passiveAttentionEnabled": false,
+    "pointerVisits": false,
+    "flockPasses": false,
+    "socialInteractions": false,
+    "ambientLeafPlayEnabled": false
+  },
+  "initialWorld": {
+    "screens": [{"x":0,"y":0,"width":2000,"height":1400}],
+    "displays": [{"x":0,"y":0,"width":2000,"height":1400}],
+    "surfaces": [{"id":141,"pid":42,"layer":0,"isGround":false,"rect":{"x":200,"y":1050,"width":400,"height":150}}],
+    "scale": 1,
+    "pointer": {"x":20,"y":20},
+    "buttonsDown": false,
+    "foodTrayArtAvailable": true,
+    "availableFrames": {
+      "treeSparrow": ["stand","fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","land0","land1","land2","feedLook","feedDown0","feedDown1","feedLift"],
+      "spottedDove": ["stand","fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","land0","land1","land2","feedLook","feedDown0","feedDown1","feedLift"]
+    }
+  },
+  "fixtureBirds": [{"species":"treeSparrow","host":141,"fraction":0.5,"perchDuration":600,"facingRight":true}],
+  "inputs": [
+    {"kind":"advance","elapsed":0.03333333333333333,"repeatCount":18,"options":{"population":false,"ambient":false,"routing":false}},
+    {"kind":"command","command":{"name":"placeFoodTray","point":{"x":1300,"y":700}}},
+    {"kind":"command","command":{"name":"foodTrayVisit","source":"preview"}},
+    {"kind":"advance","elapsed":0.03333333333333333,"repeatCount":90,"options":{"population":false,"ambient":false,"routing":false}},
+    {"kind":"command","command":{"name":"pause","flag":true}},
+    {"kind":"advance","elapsed":0.03333333333333333,"repeatCount":60,"options":{"population":false,"ambient":false,"routing":false}},
+    {"kind":"command","command":{"name":"pause","flag":false}},
+    {"kind":"advance","elapsed":0.03333333333333333,"repeatCount":1200,"options":{"population":false,"ambient":false,"routing":false}}
+  ]
+}

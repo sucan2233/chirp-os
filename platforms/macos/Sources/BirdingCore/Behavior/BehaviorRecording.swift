@@ -25,20 +25,22 @@ public struct RecordedSurface:Codable,Equatable {
     public var rect:RecordedRect
     public var isGround:Bool
     public var isFixedPerch:Bool?
-    init(_ surface:Surface) {id=surface.id;pid=surface.pid;layer=surface.layer;rect=RecordedRect(surface.rect);isGround=surface.isGround;isFixedPerch=surface.isFixedPerch}
-    var value:Surface {Surface(id:id,pid:pid,rect:rect.value,layer:layer,isGround:isGround,isFixedPerch:isFixedPerch ?? false)}
+    public var habitatKind:HabitatSurfaceKind?
+    init(_ surface:Surface) {id=surface.id;pid=surface.pid;layer=surface.layer;rect=RecordedRect(surface.rect);isGround=surface.isGround;isFixedPerch=surface.isFixedPerch;habitatKind=surface.habitatKind}
+    var value:Surface {Surface(id:id,pid:pid,rect:rect.value,layer:layer,isGround:isGround,isFixedPerch:isFixedPerch ?? false,habitatKind:habitatKind)}
 }
 public struct RecordedWorld:Codable,Equatable {
     public var screens,displays:[RecordedRect]
     public var displayIDs:[String]?
     public var fixedPerchArtAvailable:Bool?
+    public var foodTrayArtAvailable:Bool?
     public var surfaces:[RecordedSurface]
     public var scale:Double,pointer:RecordedPoint
     public var buttonsDown:Bool
     public var localMinuteOfDay:Int?
     public var availableFrames:[String:[String]]?
     public init(_ world:BehaviorWorld) {
-        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable
+        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable;foodTrayArtAvailable=world.foodTrayArtAvailable
         surfaces=world.surfaces.map(RecordedSurface.init);scale=Double(world.scale);pointer=RecordedPoint(world.pointer)
         buttonsDown=world.buttonsDown;localMinuteOfDay=world.localMinuteOfDay
         availableFrames=Dictionary(uniqueKeysWithValues:world.availableFrames.map{($0.key.rawValue,$0.value.sorted())})
@@ -60,7 +62,7 @@ public struct RecordedWorld:Codable,Equatable {
         return BehaviorWorld(screens:screens.map(\.value),displays:displays.map(\.value),surfaces:surfaces.map(\.value),
             scale:scale,pointer:pointer.value,buttonsDown:buttonsDown,
             availableFrames:Dictionary(uniqueKeysWithValues:frames.map{(SpeciesID(rawValue:$0.key)!,Set($0.value))}),
-            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true)
+            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true,foodTrayArtAvailable:foodTrayArtAvailable ?? true)
     }
 }
 public struct RecordedSimulationOptions:Codable,Equatable {
@@ -83,6 +85,11 @@ public struct RecordedCommand:Codable {
         case .socialMotion(let kind,let value):name="socialMotion";action=kind.rawValue;source=value.rawValue
         case .perchAction(let kind,let value):name="perchAction";action=kind.rawValue;source=value.rawValue
         case .fixedPerchVisit(let value):name="fixedPerchVisit";source=value.rawValue
+        case .placeFoodTray(let value):name="placeFoodTray";point=RecordedPoint(value)
+        case .placeFoodTrayAfter(let value):name="placeFoodTrayAfter";delay=max(0,min(10,value.isFinite ? value:3))
+        case .cancelFoodTrayPlacement:name="cancelFoodTrayPlacement"
+        case .removeFoodTray:name="removeFoodTray"
+        case .foodTrayVisit(let value):name="foodTrayVisit";source=value.rawValue
         case .allopreening(let value):name="allopreening";source=value.rawValue
         case .travelTogether(let value):name="travelTogether";source=value.rawValue
         case .chase(let value):name="chase";source=value.rawValue
@@ -93,6 +100,7 @@ public struct RecordedCommand:Codable {
         case .previewPointerAfter(let value):name="previewPointerAfter";delay=max(0,min(10,value.isFinite ? value:3))
         case .leafPlay(let value,let origin):name="leafPlay";point=RecordedPoint(value);source=origin.rawValue
         case .releaseLeafAfter(let value):name="releaseLeafAfter";delay=max(0,min(10,value.isFinite ? value:3))
+        case .clearLeaf:name="clearLeaf"
         case .clearProps:name="clearProps"
         case .removeProp(let id):name="removeProp";target=String(id.rawValue)
         case .pointerClick:name="pointerClick"
@@ -115,6 +123,11 @@ public struct RecordedCommand:Codable {
         case "socialMotion":guard let action,let kind=SocialMotionKind(rawValue:action) else {throw bad()};return .socialMotion(kind,try origin())
         case "perchAction":guard let action,let kind=PerchActionKind(rawValue:action) else {throw bad()};return .perchAction(kind,try origin())
         case "fixedPerchVisit":return .fixedPerchVisit(try origin())
+        case "placeFoodTray":guard let point,point.valid else {throw bad()};return .placeFoodTray(at:point.value)
+        case "placeFoodTrayAfter":return .placeFoodTrayAfter(try wait())
+        case "cancelFoodTrayPlacement":return .cancelFoodTrayPlacement
+        case "removeFoodTray":return .removeFoodTray
+        case "foodTrayVisit":return .foodTrayVisit(try origin())
         case "allopreening":return .allopreening(try origin())
         case "travelTogether":return .travelTogether(try origin())
         case "chase":return .chase(try origin())
@@ -125,6 +138,7 @@ public struct RecordedCommand:Codable {
         case "previewPointerAfter":return .previewPointerAfter(try wait())
         case "leafPlay":guard let point,point.valid else {throw bad()};return .leafPlay(at:point.value,source:try origin())
         case "releaseLeafAfter":return .releaseLeafAfter(try wait())
+        case "clearLeaf":return .clearLeaf
         case "clearProps":return .clearProps
         case "removeProp":return .removeProp(ScenePropID(try id()))
         case "pointerClick":return .pointerClick
@@ -210,17 +224,30 @@ public struct RecordedFixedPerchState:Codable,Equatable {
     public var slot:Int,surface:RecordedSurface,foot:RecordedPoint,rect:RecordedRect
     init(_ perch:ResolvedFixedPerch) {slot=perch.slot;surface=RecordedSurface(perch.surface);foot=RecordedPoint(perch.foot);rect=RecordedRect(perch.rect)}
 }
+public struct RecordedHabitatObjectState:Codable,Equatable {
+    public var id:String,kind:String,rect:RecordedRect,blockers:[RecordedRect]
+    public var remainingUses:Int,retiring:Bool,remainingLifetime:Double
+    init(_ object:HabitatObjectRenderState) {
+        id=String(object.id.rawValue);kind=object.kind.rawValue;rect=RecordedRect(object.rect)
+        blockers=object.blockers.map(RecordedRect.init);remainingUses=object.remainingUses
+        retiring=object.retiring;remainingLifetime=object.remainingLifetime
+    }
+}
 public struct BehaviorReplayReport:Codable,Equatable {
     public var time:Double,paused:Bool,residents:Int,transients:Int,pending:Int,runs:Int,leases:Int,reservations:Int
     public var events:[RecordedEvent],birds:[RecordedBirdState],props:[RecordedPropState]
     public var visitorMemory:VisitorMemoryArchive
     public var fixedPerches:[RecordedFixedPerchState]
+    public var habitats:[RecordedHabitatObjectState]
+    public var hasFoodTrayPlacement:Bool,habitatReservations:Int
     init(engine:BehaviorEngine,events:[RecordedEvent]) {
         time=engine.time;paused=engine.paused;residents=engine.residentCount;transients=engine.passingCount;pending=engine.pendingCount
         runs=engine.activeRunCount;leases=engine.leasedBirdCount;reservations=engine.reservedLandingCount
         self.events=events;birds=engine.renderSnapshot().map{RecordedBirdState($0,engine:engine)}
         props=engine.propSnapshot().map(RecordedPropState.init)
         fixedPerches=engine.fixedPerchSnapshot().map(RecordedFixedPerchState.init)
+        habitats=engine.habitatSnapshot().map(RecordedHabitatObjectState.init)
+        hasFoodTrayPlacement=engine.hasFoodTrayPlacement;habitatReservations=engine.habitatReservationCount
         visitorMemory=engine.visitorMemoryArchive
     }
     public func save(to url:URL) throws {try BehaviorInputLog.encoder().encode(self).write(to:url,options:.atomic)}
@@ -229,7 +256,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=9,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=10,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

@@ -14,6 +14,7 @@ final class DesktopView: NSView {
     private var sprites: [CALayer] = []
     private let propRenderer=ScenePropRenderer()
     private let fixedPerchRenderer=FixedPerchRenderer()
+    private let habitatRenderer=HabitatObjectRenderer()
     private let nameLabel=CATextLayer()
     override var isFlipped: Bool { true }
     override var isOpaque: Bool { false }
@@ -33,6 +34,7 @@ final class DesktopView: NSView {
         CATransaction.begin(); CATransaction.setDisableActions(true)
         propRenderer.update(propSnapshot,on:root,desktopRect:desktopRect)
         fixedPerchRenderer.update(controller.engine.fixedPerchSnapshot(),world:controller.engine.world,on:root,desktopRect:desktopRect)
+        habitatRenderer.update(controller.engine.habitatSnapshot(),on:root,desktopRect:desktopRect)
         while sprites.count > snapshot.count { sprites.removeLast().removeFromSuperlayer() }
         while sprites.count < snapshot.count {
             let container = CALayer()
@@ -230,6 +232,7 @@ final class DesktopController: NSObject {
     @objc func waking() { lastSample = 0; startTimer() }
     @objc func spaceChanged() { engine.handle(.cancelAmbient(.spaceChanged));lastSample = 0; sampleWindows(dt: 1); for v in views { v.needsDisplay = true } }
     @objc func rebuildScreens() {
+        engine.handle(.cancelFoodTrayPlacement)
         engine.handle(.cancelAmbient(.screensChanged))
         panels.forEach { $0.orderOut(nil) }; panels.removeAll(); views.removeAll()
         for screen in NSScreen.screens {
@@ -282,6 +285,7 @@ final class DesktopController: NSObject {
         engine.autonomousRouting=integration == nil
         engine.advance(dt)
         consumeBehaviorEvents()
+        settingsWindow?.refreshFoodTrayControls()
     }
     func tick() {
         let now = ProcessInfo.processInfo.systemUptime

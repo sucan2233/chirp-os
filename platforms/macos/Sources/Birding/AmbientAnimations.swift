@@ -9,8 +9,10 @@ extension DesktopController {
     }
     var ambientBusy:Bool {engine.ambientBusy}
     func syncWorld(sampleDT:Double?=nil,at point:CGPoint?=nil,buttonsDown:Bool?=nil) {
-        engine.updateWorld(BehaviorWorld(screens:screenRects,displays:displayRects,surfaces:surfaces,
-            scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? (NSEvent.pressedMouseButtons != 0),availableFrames:frameCapabilities,localMinuteOfDay:activityMinuteOfDay(),displayIDs:fixedPerchDisplayIDs,fixedPerchArtAvailable:FixedPerchArt.shared != nil),sampleDT:sampleDT)
+        var world=BehaviorWorld(screens:screenRects,displays:displayRects,surfaces:surfaces,
+            scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? (NSEvent.pressedMouseButtons != 0),availableFrames:frameCapabilities,localMinuteOfDay:activityMinuteOfDay(),displayIDs:fixedPerchDisplayIDs,fixedPerchArtAvailable:FixedPerchArt.shared != nil)
+        world.foodTrayArtAvailable=HabitatObjectRenderer.foodTrayArtAvailable
+        engine.updateWorld(world,sampleDT:sampleDT)
     }
     func renderSnapshot() -> [BirdRenderState] {syncWorld();return engine.renderSnapshot()}
     @discardableResult func startPointerVisit(at point:CGPoint) -> Bool {
@@ -25,8 +27,15 @@ extension DesktopController {
     func consumeBehaviorEvents() {
         for event in engine.events where event.sequence>lastBehaviorEvent {
             if event.type == .previewResult {
-                settingsWindow?.message.stringValue=event.reason.map(behaviorMessage) ??
-                    (event.kind == .leafPlay ? leafPlayMessage:pointerVisitPreviewMessage)
+                if event.kind == .foodTrayVisit {
+                    settingsWindow?.message.stringValue=event.reason.map {reason in
+                        settingsWindow?.foodTrayMessage(reason,placing:true) ?? behaviorMessage(reason)
+                    } ?? t("临时食盘已放置，请把鼠标移远后预览访问。","Temporary tray placed. Move the pointer away before previewing a visit.")
+                    settingsWindow?.refreshFoodTrayControls()
+                } else {
+                    settingsWindow?.message.stringValue=event.reason.map(behaviorMessage) ??
+                        (event.kind == .leafPlay ? leafPlayMessage:pointerVisitPreviewMessage)
+                }
             }
             lastBehaviorEvent=event.sequence
         }

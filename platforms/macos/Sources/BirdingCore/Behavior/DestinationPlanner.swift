@@ -47,7 +47,7 @@ enum DestinationPlanner {
         }
         if bird.profile.id == .greatSpottedWoodpecker {
             var sides:[(Surface,PerchEdge,ClosedRange<CGFloat>)]=[]
-            for host in surfaces where !host.isGround && !host.isFixedPerch && host.layer == 0 && host.rect.height >= 180 {
+            for host in surfaces where !host.isGround && !host.isHabitat && host.layer == 0 && host.rect.height >= 180 {
                 for edge in [PerchEdge.left,.right] { for screen in screenRects {
                     for range in Geometry.sideRanges(on:host,edge:edge,surfaces:surfaces,screen:screen,scale:scale,occupied:occupied) { sides.append((host,edge,range)) }
                 }}
@@ -64,7 +64,7 @@ enum DestinationPlanner {
             }
         }
         var choices: [(Surface, ClosedRange<CGFloat>)] = []
-        for host in surfaces where !host.isGround && !host.isFixedPerch && host.layer == 0 && host.rect.width >= 180 && host.rect.height >= 100 {
+        for host in surfaces where !host.isGround && !host.isHabitat && host.layer == 0 && host.rect.width >= 180 && host.rect.height >= 100 {
             for screen in screenRects {
                 for range in Geometry.landingRanges(on: host, surfaces: surfaces, screen: screen, scale: scale, occupied: occupied) {
                     choices.append((host, range))

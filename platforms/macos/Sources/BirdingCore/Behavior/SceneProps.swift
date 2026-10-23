@@ -24,6 +24,7 @@ public struct ScenePropRenderState {
 }
 
 public enum ScenePropAssets {
+    public static var foodTrayURL:URL? {Bundle.module.url(forResource:"food-tray",withExtension:"png")}
     public static var fixedPerchURL:URL? {Bundle.module.url(forResource:"fixed-perch",withExtension:"png")}
     public static var leafURL:URL? {Bundle.module.url(forResource:"leaf",withExtension:"png")}
 }

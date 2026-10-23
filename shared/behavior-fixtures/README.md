@@ -3,8 +3,8 @@
 这些 JSON 是引擎输入，采用 Quartz 桌面坐标（向右为 x 正方向，向下为 y 正方向）。它们不依赖 AppKit、窗口标题、桌面截图或用户配置，供 macOS 与后续 Windows 核心运行同一场景。
 
 - `version`：文件格式版本；未知版本拒绝，不能忽略无法理解的事件。
-- `simulationVersion`：当前为 9，加入固定栖木、屏幕锚点解析与自然访问后更新。版本 1–8 的录制明确拒绝；需要在对应旧提交重放或重新录制，不能直接修改版本标签假装迁移。模拟语义版本。改变随机算法、调度或固定步契约时需明确迁移，不能让旧期望静默漂移。
-- `seed`、鸟/运行/道具 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
+- `simulationVersion`：当前为 10，加入独立栖息地对象、食盘访问和独立自然访问随机流。版本 1–9 的生产录制明确拒绝；需要在对应旧提交重放或重新录制，不能直接修改版本标签假装迁移。改变随机算法、调度或固定步契约时需明确迁移，不能让旧期望静默漂移。本目录 13 个既有手写场景只升级输入版本，保留原输入和独立行为断言；没有生成或覆盖 `expected`，统一验证由本批实现完成后的验收执行。
+- `seed`、鸟/运行/道具/栖息地对象 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
 - `settings`：完整配置或合法的旧格式配置；按 BirdSettings schema 迁移。
 - `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟；可选 `flightOrigin` 让鸟从该坐标开始普通直达飞行，仍需 `advance` 输入才能移动和产生速度。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。
 - `inputs`：严格按数组顺序处理。支持 world、settings、visitorMemory、command、advance、population、reconcileLayout、arrive、depart、route。visitorMemory 仅允许在尚无鸟注册时恢复档案，随输入一起记录，不读取重放机器上的用户档案。
@@ -12,9 +12,35 @@
 - `advance.options`：此时实际启用的数量调度、环境调度和自主选路开关。
 - `world.availableFrames`：首次输入或素材变化时写入完整清单；省略时继承上一世界，显式空字典会清空。避免每帧重复记录不变素材。
 - `world.displayIDs`：与 displays 顺序对应的稳定标识；省略为空。`fixedPerchArtAvailable` 表示真实栖木素材是否可用，省略为 true；生产平台必须按实际资源填写。
+- `world.foodTrayArtAvailable`：真实食盘素材是否可用，省略为 true。每次 world 输入都是该能力的完整快照；省略不继承前次 false。该字段的变化参与录制去重，不能被省略素材清单的压缩逻辑吞掉。
+- `world.surfaces[].habitatKind`：可选 `fixedPerch` 或 `foodTray`；未知标签拒绝。保留 `isFixedPerch` 旧格式兼容，缺少新标签时 true 映射为 `fixedPerch`；显式新标签优先。普通窗口缺少标签。对象表面由引擎对象存储生成，录制表面标签不能凭空恢复对象、食物或预约。
 - `world.localMinuteOfDay`：本地民用时钟的分钟（0–1439）；缺失或 null 表示没有时钟输入，日夜模式采用中性节奏。重放不读取机器时区或当前时间；世界更新中省略该字段会清空，不继承。
 - `world` 输入的 `sampleDT`：窗口采样时长。无该字段的世界更新只校验世界，不推进窗口跟随。
-- `expected`：生产录制保存终态报告和完整事件序列。重放命令逐项比较，包括鸟坐标、姿态、生态记忆、道具、租约和熟客档案。共享手写夹具另由 XCTest 对完成行为、取消原因及零残留作独立断言，不用当前实现反向生成通过标准。
+- `expected`：生产录制保存终态报告和完整事件序列。重放命令逐项比较，包括鸟坐标、姿态、生态记忆、道具、租约和熟客档案，以及下述栖息地对象状态。共享手写夹具另由 XCTest 对完成行为、取消原因及零残留作独立断言，不用当前实现反向生成通过标准。
+
+## B14 食盘命令与报告
+
+命令均使用 `kind: "command"`，payload 位于 `command`。下列名字区分大小写；缺少必填字段、未知来源、非法坐标或非法延时均拒绝。
+
+| command.name | 必填 payload | 行为 |
+| --- | --- | --- |
+| `placeFoodTray` | `point: {x, y}` | 在指定脚锚放置一个食盘；不触发访问。完整图形与鸟体空间必须落在单块工作区及物理显示器内，避开占位和高层面板；已有盘返回 busy，不能覆盖、补食或重置寿命。 |
+| `placeFoodTrayAfter` | `delay: 0...10` | 延时后按当时 world.pointer 尝试放置；只调度放盘。生产入口将非有限值替换为 3 秒并截断到 0...10，磁盘 payload 必须已规范化。 |
+| `cancelFoodTrayPlacement` | 无 | 取消待放置倒计时。 |
+| `removeFoodTray` | 无 | 取消待放置和访客，删除盘；飞行恢复从实际脚坐标开始。 |
+| `foodTrayVisit` | `source: user / preview / automatic` | 仅复用已有麻雀或珠颈斑鸠，不能新增鸟。 |
+
+`clearLeaf` 无 payload，仅清除落叶及待释放落叶，保留已放置食盘和食盘待放置；`clearProps` 同时清除食盘、食盘待放置并取消访客；两者均完整录制和重放。`cancelAmbient` 取消待放置。`pause(true)` 冻结待放置倒计时、对象寿命及访问阶段；继续后从剩余时间推进。`settings.foodTrayEnabled` 默认 true，关闭后取消待放置并移除食盘。quiet 不新增自动访问，允许已启动访问完成及手动预览。
+
+访问需要真实 `stand`、`fly0...fly7`、`land0...land2` 和四帧 `feedLook / feedDown0 / feedDown1 / feedLift`，缺帧不得降级为通用姿态。先观察 0.8 秒，再真实接近及着陆，进食 3.6 秒后真实返回原脚锚并落稳。全程持有食盘对象槽和两个落点预约，每次完整进食只消费一份。食盘初始三份、180 秒模拟寿命；耗尽或到期先 retiring，等待已有访问结束后删除。明确移除则立即取消访问和释放预约。
+
+自然访问只在居民原有 departure 机会用 25% 概率尝试，同一 motionRevision 只尝试一次；使用独立 SplitMix64 流 `seed XOR 0x464F4F4454524159`，遵守 quiet、素材、冷却和环境安全门槛。放盘不创建新的随机计时器或强制离栖。
+
+version 10 的报告增加：
+
+- `habitats`：按对象 ID 排序的快照。每项包含十进制字符串 `id`、`kind: "foodTray"`、命名坐标 `rect`、`blockers` 矩形数组、`remainingUses`、`retiring`、`remainingLifetime`（秒）。对象独立于 run，访问完成后仍可存在。
+- `hasFoodTrayPlacement`：是否有待放置倒计时。
+- `habitatReservations`：运行持有的对象槽数量。原 `reservations` 继续统计落点预约；食盘访问活跃时分别为 1 和 2，完成/取消后均为 0。
 
 安全边界：最多 32 MiB、60,000 条输入、216,000 个回调、一小时有效模拟；最多 16 个显示器、256 个表面、64 个初始鸟。不完整/超限录制不能保存为正常记录。生产输入通过命令行显式启用，仅保存在指定本地文件。
 
@@ -39,3 +65,5 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 `allopreening.json` 从同窗相邻的家燕开始，接近、理羽、暂停继续并退回两个原位；独立断言检查完成、原落点和资源释放。
 
 `fixed-perch.json` 从已有居民的窗口脚位出发，真实飞往保存的栖木中心并落稳；独立断言检查目标坐标、原居民 ID、完整完成、栖木快照和资源释放。
+
+`food-tray.json` 是第 14 个共享场景：已有麻雀停稳后放盘，观察、真实接近、暂停继续、进食并返回窗口原脚锚。独立断言检查原居民 ID、原脚坐标、一次完整完成、两份余粮和零运行/预约；三种回调频率比较完整报告。`FoodTrayTests` 另对两种鸟的中间状态、到期/耗尽延迟删除、取消恢复及自动种子样本设断言。

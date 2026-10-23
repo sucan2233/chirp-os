@@ -10,6 +10,10 @@ public final class BehaviorEngine {
     private var order:[BirdID]=[]
     private var nextBirdID:UInt64=1
     let runtime=BehaviorRuntime()
+    let habitatObjects=HabitatObjectStore()
+    private var foodDepartureAttempts:[BirdID:UInt64]=[:]
+    private var pendingFoodTrayPlacement:Double?
+    private let foodRandom:EngineRandom
     private let inputRecorder:BehaviorInputRecorder?
     var eventObserver:((BehaviorEvent)->Void)?
     let poseMixer=PoseMixer()
@@ -54,6 +58,7 @@ public final class BehaviorEngine {
         self.inputRecorder=recordInputs ? BehaviorInputRecorder(seed:seed,settings:settings):nil
         self.perchPlanner=PerchActivityPlanner(seed:seed)
         self.visitorMemory=VisitorMemory(seed:seed)
+        self.foodRandom=EngineRandom(seed:seed ^ 0x464F4F4454524159)
         self.habitatRandom=EngineRandom(seed:seed ^ 0x5045524348524E47)
         self.socialRandom=EngineRandom(seed:seed ^ 0x534F4349414C524E)
         self.ecologyRandom=EngineRandom(seed:seed ^ 0x45434F5343484544)
@@ -89,6 +94,9 @@ public final class BehaviorEngine {
     public var ambientBusy:Bool {runtime.encounterBusy}
     public var hasPointerPreview:Bool {scheduledEncounter?.kind == .pointerVisit}
     public var hasLeafPreview:Bool {scheduledEncounter?.kind == .leafPlay}
+    public var hasFoodTrayPlacement:Bool {pendingFoodTrayPlacement != nil}
+    public var habitatReservationCount:Int {runtime.habitatReservations.count}
+    public func habitatSnapshot()->[HabitatObjectRenderState] {habitatObjects.snapshot(in:self)}
     public var scenePropCount:Int {runtime.propIDs.count}
     public func propSnapshot() -> [ScenePropRenderState] {runtime.propSnapshots(in:self)}
     public func fixedPerchSnapshot() -> [ResolvedFixedPerch] {fixedPerches}
@@ -144,6 +152,7 @@ public final class BehaviorEngine {
         identities.removeValue(forKey:ObjectIdentifier(record.bird));order.removeAll{$0==id}
         if let visitorID=visitorIDs.removeValue(forKey:id) {visitorMemory.release(visitorID)}
         fixedPerchDepartureAttempts.removeValue(forKey:id)
+        foodDepartureAttempts.removeValue(forKey:id)
         perchPlanner.remove(id);poseMixer.remove(id);attentionRanges.remove(id)
         emit(.birdRemoved,participants:[id],reason:.removed)
     }
@@ -160,6 +169,7 @@ public final class BehaviorEngine {
         let previousPerches=world.surfaces.filter(\.isFixedPerch)
         world=value
         refreshFixedPerches(previous:previousPerches)
+        refreshHabitatObjects()
         if !value.buttonsDown {clickHandled=false}
         // Contact scenes use fixed anchors. Release them against the new world
         // before host tracking can translate a perched partner or an active hop.
@@ -173,8 +183,10 @@ public final class BehaviorEngine {
             runtime.cancel(where:{$0.kind == .pointerVisit},reason:.settingsChanged,in:self)
         }
         settings=value;scheduler.reset(value.ambientFrequency)
+        if !value.foodTrayEnabled {pendingFoodTrayPlacement=nil;removeHabitatObjects(reason:.settingsChanged)}
         if !value.fixedPerchesEnabled {runtime.cancel(where:{$0.kind == .fixedPerchVisit},reason:.settingsChanged,in:self)}
         refreshFixedPerches(previous:world.surfaces.filter(\.isFixedPerch))
+        refreshHabitatObjects()
         for id in visitorIDs.keys {
             let familiarity=value.visitorMemoryEnabled ? visitorIDs[id].flatMap{visitorMemory.profile($0)?.familiarity} ?? 0:0
             perchPlanner.setFamiliarity(familiarity,for:id)
@@ -222,6 +234,16 @@ public final class BehaviorEngine {
         beginRecordingInput(.command(command));defer {endRecordingInput()}
         switch command {
         case .relocate(let id): return relocate(id)
+        case .placeFoodTray(let point):return placeFoodTray(at:point)
+        case .foodTrayVisit(let source):return requestFoodTrayVisit(source:source)
+        case .placeFoodTrayAfter(let delay):
+            guard !paused else {return reject(.foodTrayVisit,.user,.paused)}
+            guard settings.foodTrayEnabled else {return reject(.foodTrayVisit,.user,.disabled)}
+            guard habitatObjects.objects.isEmpty,!hasFoodTrayPlacement else {return reject(.foodTrayVisit,.user,.busy)}
+            pendingFoodTrayPlacement=max(0,min(10,delay.isFinite ? delay:3));return .scheduled
+        case .cancelFoodTrayPlacement:pendingFoodTrayPlacement=nil;return .accepted
+        case .removeFoodTray:
+            pendingFoodTrayPlacement=nil;removeHabitatObjects(reason:.removed);return .accepted
         case .fixedPerchVisit(let source):return requestFixedPerchVisit(source:source)
         case .allopreening(let source):return requestAllopreening(source:source)
         case .travelTogether(let source):return requestTravelTogether(source:source)
@@ -247,7 +269,8 @@ public final class BehaviorEngine {
             guard !ambientBusy,scheduledEncounter == nil else {return reject(.leafPlay,.preview,.busy)}
             scheduledEncounter=ScheduledEncounter(kind:.leafPlay,remaining:max(0,min(10,delay.isFinite ? delay:3)))
             return .scheduled
-        case .clearProps:
+        case .clearProps,.clearLeaf:
+            if case .clearProps=command {pendingFoodTrayPlacement=nil;removeHabitatObjects(reason:.userInput)}
             if hasLeafPreview {cancelPreview(.userInput)}
             runtime.cancel(where:{!$0.propIDs.isEmpty},reason:.userInput,in:self)
             scheduler.suppress();return .accepted
@@ -257,7 +280,7 @@ public final class BehaviorEngine {
         case .pointerClick:
             recordPointerClick(explicit:true)
             scheduler.suppress()
-            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind.isPerchActivity || $0.kind.isSocial || $0.kind == .leafPlay || $0.kind == .fixedPerchVisit},reason:.userInput,in:self)
+            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind.isPerchActivity || $0.kind.isSocial || $0.kind == .leafPlay || $0.kind == .fixedPerchVisit || $0.kind == .foodTrayVisit},reason:.userInput,in:self)
             perchPlanner.suppressAll()
         case .pause(let value):
             guard paused != value else {return .accepted}
@@ -267,6 +290,7 @@ public final class BehaviorEngine {
                 runtime.cancel(where:{$0.kind == .pointerVisit},reason:.paused,in:self)
             }
         case .cancelAmbient(let reason):
+            pendingFoodTrayPlacement=nil
             cancelPreview(reason);accumulator=0;scheduler.suppress();perchPlanner.suppressAll();resetPerception()
             let all:[BehaviorReason]=[.sleep,.screensChanged,.spaceChanged,.shutdown]
             runtime.cancel(where:{all.contains(reason) || $0.occupiesEncounter},reason:reason,in:self)
@@ -545,6 +569,62 @@ public final class BehaviorEngine {
             if bird.hostID==old.id,bird.hostPID==old.pid,!bird.isDeparting {bird.requestFlightRecovery()}
         }
     }
+    private func placeFoodTray(at point:CGPoint)->BehaviorResult {
+        guard !paused else {return reject(.foodTrayVisit,.user,.paused)}
+        guard settings.foodTrayEnabled else {return reject(.foodTrayVisit,.user,.disabled)}
+        guard world.foodTrayArtAvailable else {return reject(.foodTrayVisit,.user,.missingFrames)}
+        guard !world.buttonsDown else {return reject(.foodTrayVisit,.user,.userInput)}
+        guard habitatObjects.objects.isEmpty else {return reject(.foodTrayVisit,.user,.busy)}
+        guard habitatObjects.placeFood(at:point,in:self) else {return reject(.foodTrayVisit,.user,.noSpace)}
+        refreshHabitatObjects();return .accepted
+    }
+    private func requestFoodTrayVisit(source:BehaviorSource,target:BirdID?=nil)->BehaviorResult {
+        guard !paused else {return reject(.foodTrayVisit,source,.paused)}
+        guard BehaviorDefinitions.definition(for:.foodTrayVisit).isEnabled(settings:settings,source:source) else {return reject(.foodTrayVisit,source,.disabled)}
+        guard !world.buttonsDown else {return reject(.foodTrayVisit,source,.userInput)}
+        guard !ambientBusy,scheduledEncounter==nil,!hasFoodTrayPlacement,habitatReservationCount==0 else {return reject(.foodTrayVisit,source,.busy)}
+        guard world.foodTrayArtAvailable else {return reject(.foodTrayVisit,source,.missingFrames)}
+        guard !habitatObjects.objects.isEmpty else {return reject(.foodTrayVisit,source,.noSpace)}
+        let candidates=FoodTrayVisitPlan.candidates(in:self,source:source,target:target)
+        guard let plan=(source == .automatic ? ecologicalChoice(candidates,weight:{self.perchPlanner.automaticWeight($0.id,kind:.foodTrayVisit)}):foodRandom.element(candidates)) else {
+            let supported=birds.filter{FoodTrayBehavior.supportedSpecies.contains($0.profile.id)}
+            let reason:BehaviorReason = supported.isEmpty ? .noSpecies:
+                supported.allSatisfy({!FoodTrayVisitPlan.requiredFrames.isSubset(of:world.availableFrames[$0.profile.id] ?? [])}) ? .missingFrames:.noSpace
+            return reject(.foodTrayVisit,source,reason)
+        }
+        let result=runtime.start(FoodTrayVisitExecution(plan:plan),source:source,in:self)
+        if result.accepted {perchPlanner.suppress(plan.id)}
+        return result
+    }
+    private func removeHabitatObjects(reason:BehaviorReason,ids:[HabitatObjectID]?=nil) {
+        let targets=Set(ids ?? Array(habitatObjects.objects.keys))
+        guard !targets.isEmpty else {return}
+        runtime.cancel(where:{!targets.isDisjoint(with:$0.habitatReservations)},reason:reason,in:self)
+        for id in targets.sorted() {
+            guard let object=habitatObjects.objects[id] else {continue}
+            for bird in birds where bird.hostID==object.surface.id && bird.hostPID==object.surface.pid && !bird.isDeparting {bird.requestFlightRecovery()}
+            world.surfaces.removeAll{$0==object.surface};habitatObjects.remove(id)
+        }
+    }
+    private func collectRetiredHabitatObjects() {
+        let retired=habitatObjects.objects.values.filter{$0.retiring && !runtime.habitatReservations.contains($0.id)}.map(\.id)
+        removeHabitatObjects(reason:.removed,ids:retired)
+    }
+    private func refreshHabitatObjects() {
+        let invalid=habitatObjects.objects.values.filter {object in
+            !world.foodTrayArtAvailable || !settings.foodTrayEnabled || world.scale != object.scale ||
+            world.screens != object.screens || world.displays != object.displays ||
+            world.surfaces.contains(where:{$0.id==object.surface.id && $0 != object.surface}) ||
+            fixedPerches.contains(where:{$0.rect.insetBy(dx:-50*world.scale,dy:-80*world.scale).intersects(object.rect)})
+        }.map(\.id)
+        removeHabitatObjects(reason:.targetInvalid,ids:invalid)
+        world.surfaces.removeAll{$0.habitatKind == .foodTray}
+        world.surfaces.append(contentsOf:habitatObjects.objects.keys.sorted().compactMap{habitatObjects.objects[$0]?.surface})
+        // Validate fixed anchors before native host-following has a chance to
+        // move a resting bird when a window changes during a visit.
+        runtime.validate(in:self,where:{$0.kind == .foodTrayVisit})
+        collectRetiredHabitatObjects()
+    }
     private func requestFixedPerchVisit(source:BehaviorSource,target:BirdID?=nil) -> BehaviorResult {
         guard !paused else {return reject(.fixedPerchVisit,source,.paused)}
         guard BehaviorDefinitions.definition(for:.fixedPerchVisit).isEnabled(settings:settings,source:source)
@@ -556,8 +636,15 @@ public final class BehaviorEngine {
         if source == .preview {
             let arriving=candidates.filter{!$0.originHost.isFixedPerch}
             if !arriving.isEmpty {candidates=arriving}
+            // Preview takes the nearest feasible journey. Random long crossings
+            // can occupy a rail between other residents and their empty slots.
+            candidates.sort {
+                if $0.duration != $1.duration {return $0.duration<$1.duration}
+                if $0.id != $1.id {return $0.id<$1.id}
+                return $0.perch.slot<$1.perch.slot
+            }
         }
-        guard let plan=(source == .automatic ? ecologicalChoice(candidates,weight:{self.perchPlanner.automaticWeight($0.id,kind:.fixedPerchVisit)}):habitatRandom.element(candidates)) else {
+        guard let plan=(source == .preview ? candidates.first:source == .automatic ? ecologicalChoice(candidates,weight:{self.perchPlanner.automaticWeight($0.id,kind:.fixedPerchVisit)}):habitatRandom.element(candidates)) else {
             let supported=birds.filter{role(of:$0) == .resident && FixedPerchVisitBehavior.supportedSpecies.contains($0.profile.id)}
             let settled=supported.filter{$0.state == .perched}
             let reason:BehaviorReason
@@ -691,6 +778,12 @@ public final class BehaviorEngine {
     private func routeAutonomously(_ bird:Bird,id:BirdID) {
         // One optional choice at the existing departure opportunity. No new
         // timer, resident, or forced takeoff is created by placing a perch.
+        if ambientEnabled,!habitatObjects.objects.isEmpty,bird.state == .perched,
+           foodDepartureAttempts[id] != bird.motionRevision,
+           BehaviorDefinitions.definition(for:.foodTrayVisit).isEnabled(settings:settings,source:.automatic) {
+            foodDepartureAttempts[id]=bird.motionRevision
+            if foodRandom.unit()<0.25,requestFoodTrayVisit(source:.automatic,target:id).accepted {return}
+        }
         if ambientEnabled,!fixedPerches.isEmpty,bird.state == .perched,
            fixedPerchDepartureAttempts[id] != bird.motionRevision,
            BehaviorDefinitions.definition(for:.fixedPerchVisit).isEnabled(settings:settings,source:.automatic) {
@@ -743,6 +836,17 @@ public final class BehaviorEngine {
     private func step(_ dt:Double) {
         time+=dt
         if !paused {
+            habitatObjects.advance(dt)
+            if let pending=pendingFoodTrayPlacement {
+                let remaining=pending-dt;pendingFoodTrayPlacement=remaining
+                if remaining<=1e-10 {
+                    pendingFoodTrayPlacement=nil
+                    let result=placeFoodTray(at:world.pointer)
+                    let reason:BehaviorReason?;if case .rejected(let why)=result {reason=why}else{reason=nil}
+                    emit(.previewResult,kind:.foodTrayVisit,source:.user,reason:reason)
+                }
+            }
+            collectRetiredHabitatObjects()
             observeEnvironment(dt)
             poseMixer.advance(dt)
             if populationEnabled,let event=population.tick(dt,residents:residentCount,total:residentCount+departingCount,random:random.unit) {
@@ -763,6 +867,7 @@ public final class BehaviorEngine {
         }
         // Resolve input cancellations and pending spawns before integrating motion.
         runtime.advance(dt,in:self)
+        collectRetiredHabitatObjects()
         for id in order {
             guard let record=records[id],record.visible,runtime.canAdvance(id,paused:paused) else {continue}
             record.bird.tick(dt)

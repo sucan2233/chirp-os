@@ -65,6 +65,6 @@ extension BirdArt {
                 guard stride(from:3,to:bytes.count,by:4).filter({ bytes[$0] > 0 }).count > 100 else { throw NSError(domain:"Preview",code:5) }
             }
         }
-        print("Species art: PASS — \(arts.count) distinct birds, \(arts.count*names.count) nonempty frames, \(arts.count*8) distinct flight poses")
+        print("Species art: PASS — \(arts.count) distinct birds, \(arts.reduce(0){$0+$1.frames.count}) nonempty frames, \(arts.count*8) distinct flight poses")
     }
 }

@@ -68,7 +68,7 @@ struct SideHopPlan {
     }
 
     static func make(id:BirdID,in engine:BehaviorEngine) -> SideHopPlan? {
-        guard let bird=engine.bird(id),let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isFixedPerch else {return nil}
+        guard let bird=engine.bird(id),let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isHabitat else {return nil}
         let scale=engine.spriteScale(for:bird),start=bird.position,pointer=engine.world.pointer
         guard scale.isFinite,scale>0,pointer.x.isFinite,pointer.y.isFinite,
               let display=engine.world.displays.first(where:{$0.contains(Geometry.landingFootprint(at:start,scale:scale))}),

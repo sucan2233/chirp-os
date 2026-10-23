@@ -22,9 +22,9 @@ final class ActivityRhythmIntegrationTests:XCTestCase {
         let e=fixture(.quiet),bird=perch(e)
         let commands:[EngineCommand]=[.pointerVisit(.automatic),.flockPass(.automatic),.socialGreeting(.automatic),
             .socialMotion(.sideBySide,.automatic),.socialMotion(.giveWay,.automatic),.socialMotion(.pairedTakeoff,.automatic),
-            .leafPlay(at:CGPoint(x:500,y:500),source:.automatic),.fixedPerchVisit(.automatic)]
+            .leafPlay(at:CGPoint(x:500,y:500),source:.automatic),.fixedPerchVisit(.automatic),.foodTrayVisit(.automatic)]
         for command in commands {XCTAssertEqual(e.handle(command),.rejected(.disabled))}
-        for definition in BehaviorDefinitions.all where !definition.occupiesEncounter && definition.kind != .fixedPerchVisit {
+        for definition in BehaviorDefinitions.all where !definition.occupiesEncounter && definition.kind != .fixedPerchVisit && definition.kind != .foodTrayVisit {
             XCTAssertTrue(definition.isEnabled(settings:e.settings,source:.automatic),definition.kind.rawValue)
         }
         XCTAssertTrue(e.handle(.flockPass(.preview)).accepted)

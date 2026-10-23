@@ -93,10 +93,14 @@ enum AllopreeningArtVerification {
         checks["allopreenArtUsesFixed24UnitContactSeparation"]=separation == 24
         var onlySupported=true
         for id in SpeciesID.allCases {
-            let art=BirdArt(species:id),extra=Set(art.frames.keys).subtracting(BirdArt.names)
-            onlySupported = onlySupported && extra == (species.contains(id) ? Set(names):Set<String>())
+            let art=BirdArt(species:id)
+            // Other behaviors may append their own frames (for example B14
+            // feeding). Inspect this family's names, including unexpected
+            // allopreen variants, rather than every non-common34 frame.
+            let allopreening=Set(art.frames.keys.filter {$0.hasPrefix("allopreen")})
+            onlySupported = onlySupported && allopreening == (species.contains(id) ? Set(names):Set<String>())
         }
-        checks["allopreenArtOnlySupportedSpeciesHaveExtraFrames"]=onlySupported
+        checks["allopreenArtOnlySupportedSpeciesHaveAllopreeningFrames"]=onlySupported
         var evidence=[[String:Any]]()
         for id in species {
             let art=BirdArt(species:id),key="allopreenArt-\(id.rawValue)-"

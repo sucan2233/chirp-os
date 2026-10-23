@@ -12,6 +12,7 @@ protocol BehaviorExecution: AnyObject {
     var timeout: Double {get}
     var landingReservations: [LandingReservation] {get}
     var propIDs:[ScenePropID] {get}
+    var habitatReservations:[HabitatObjectID] {get}
     func propSnapshots(in engine:BehaviorEngine) -> [ScenePropRenderState]
     func start(in engine:BehaviorEngine)
     /// Pure validity checks also run while animation time is paused.
@@ -25,6 +26,7 @@ extension BehaviorExecution {
     var occupiesEncounter:Bool {BehaviorDefinitions.definition(for:kind).occupiesEncounter}
     var runsWhilePaused:Bool {BehaviorDefinitions.definition(for:kind).runsWhilePaused}
     var propIDs:[ScenePropID] {[]}
+    var habitatReservations:[HabitatObjectID] {[]}
     func propSnapshots(in engine:BehaviorEngine) -> [ScenePropRenderState] {[]}
     var landingReservations: [LandingReservation] {[]}
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {nil}
@@ -41,6 +43,7 @@ final class BehaviorRuntime {
     private(set) var runs: [BehaviorRunID:Run] = [:]
     private(set) var owners: [BirdID:BehaviorRunID] = [:]
     private var nextID: UInt64 = 1
+    var habitatReservations:Set<HabitatObjectID> {Set(runs.values.flatMap{$0.execution.habitatReservations})}
     var encounterBusy: Bool {runs.values.contains{$0.execution.occupiesEncounter}}
     var propIDs:Set<ScenePropID> {Set(runs.values.flatMap{$0.execution.propIDs})}
     func propSnapshots(in engine:BehaviorEngine) -> [ScenePropRenderState] {
@@ -58,6 +61,9 @@ final class BehaviorRuntime {
     }
     func start(_ execution:BehaviorExecution,source:BehaviorSource,in engine:BehaviorEngine) -> BehaviorResult {
         guard !execution.participants.contains(where:{owners[$0] != nil}),
+              Set(execution.habitatReservations).count==execution.habitatReservations.count,
+              habitatReservations.isDisjoint(with:execution.habitatReservations),
+              execution.habitatReservations.allSatisfy({engine.habitatObjects.objects[$0].map{!$0.retiring} ?? false}),
               Set(execution.propIDs).count==execution.propIDs.count,
               propIDs.isDisjoint(with:execution.propIDs),
               !execution.occupiesEncounter || !encounterBusy else {return .rejected(.busy)}
@@ -79,6 +85,9 @@ final class BehaviorRuntime {
     func validate(in engine:BehaviorEngine,where matches:(BehaviorExecution)->Bool = {_ in true}) {
         for id in runs.keys.sorted() {
             guard let run=runs[id],matches(run.execution) else {continue}
+            guard run.execution.habitatReservations.allSatisfy({engine.habitatObjects.objects[$0] != nil}) else {
+                finish(id,result:.failed(.targetInvalid),in:engine);continue
+            }
             let slots=run.execution.landingReservations
             let foreign=runs.keys.sorted().filter{$0 != id}.flatMap{runs[$0]?.execution.landingReservations ?? []}
             if slots.contains(where:{!$0.isValid(in:engine)}) || slots.enumerated().contains(where:{index,slot in

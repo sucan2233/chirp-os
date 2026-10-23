@@ -1,15 +1,19 @@
 import Foundation
 import CoreGraphics
 
+public enum HabitatSurfaceKind:String,Codable {case fixedPerch,foodTray}
+
 public struct Surface: Equatable {
     public let id: UInt32
     public let pid: Int32
     public var rect: CGRect // Quartz desktop coordinates: y grows downward.
     public let layer: Int
     public let isGround: Bool
-    public let isFixedPerch: Bool
-    public init(id: UInt32, pid: Int32 = 0, rect: CGRect, layer: Int = 0, isGround: Bool = false, isFixedPerch:Bool = false) {
-        self.id = id; self.pid = pid; self.rect = rect; self.layer = layer; self.isGround = isGround; self.isFixedPerch=isFixedPerch
+    public let habitatKind:HabitatSurfaceKind?
+    public var isFixedPerch:Bool {habitatKind == .fixedPerch}
+    public var isHabitat:Bool {habitatKind != nil}
+    public init(id: UInt32, pid: Int32 = 0, rect: CGRect, layer: Int = 0, isGround: Bool = false, isFixedPerch:Bool = false,habitatKind:HabitatSurfaceKind?=nil) {
+        self.id = id; self.pid = pid; self.rect = rect; self.layer = layer; self.isGround = isGround; self.habitatKind=habitatKind ?? (isFixedPerch ? .fixedPerch:nil)
     }
 }
 
@@ -24,9 +28,9 @@ public enum Geometry {
     public static func blockers(on host:Surface,surfaces:[Surface]) -> [Surface] {
         // Ground birds share the floating overlay with birds in flight. Normal
         // windows cannot invalidate this last-resort ledge, but utility panels can.
-        if host.isGround || host.isFixedPerch { return surfaces.filter { !$0.isGround && !$0.isFixedPerch && $0.layer>0 } }
+        if host.isGround || host.isHabitat { return surfaces.filter { !$0.isGround && !$0.isHabitat && $0.layer>0 } }
         guard let depth=surfaces.firstIndex(where:{$0.id==host.id}) else { return [] }
-        return surfaces.prefix(depth).filter { !$0.isGround && !$0.isFixedPerch }
+        return surfaces.prefix(depth).filter { !$0.isGround && !$0.isHabitat }
     }
     // Sequential subtraction, not even-odd clipping: overlapping occluders stay opaque.
     public static func subtract(_ rect: CGRect, _ blocker: CGRect) -> [CGRect] {

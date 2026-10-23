@@ -106,7 +106,7 @@ enum SocialMotionPlanner {
     private static func make(_ action:SocialMotionKind,first:BirdID,second:BirdID,budget:Budget,in engine:BehaviorEngine) -> SocialMotionPlan? {
         guard let a=engine.bird(first),let b=engine.bird(second),
               let host=engine.world.surfaces.first(where:{$0.id==a.hostID}),
-              !host.isFixedPerch,host.isGround || host.layer==0 else {return nil}
+              !host.isHabitat,host.isGround || host.layer==0 else {return nil}
         let sa=engine.spriteScale(for:a),sb=engine.spriteScale(for:b)
         guard let display=engine.world.displays.first(where:{
             $0.contains(Geometry.landingFootprint(at:a.position,scale:sa)) &&

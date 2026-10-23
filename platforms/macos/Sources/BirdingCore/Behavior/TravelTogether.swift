@@ -99,7 +99,7 @@ struct TravelTogetherPlan {
                   Geometry.distance(.zero,flight.velocity)>0,
                   requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
                   !engine.pointerNear(bird),
-                  let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isFixedPerch,host.isGround || host.layer==0
+                  let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isHabitat,host.isGround || host.layer==0
             else {return nil}
             // The existing ecology clock carries cooldowns even while airborne.
             // Perched dwell/quiet time has no bearing on this opportunity.

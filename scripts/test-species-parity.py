@@ -25,9 +25,12 @@ assert set(manifest['frameSizes']) == ids, 'Missing species in atlas manifest'
 # Optional species atlases append contact poses without moving common indices.
 contact_frames = [f'allopreen{role}{i}' for role in ('Give', 'Receive') for i in range(3)]
 specific = manifest.get('speciesFrames', {})
-assert set(specific) == {'barnSwallow', 'swinhoesWhiteEye'}, 'Contact poses advertised for the wrong species'
+feeding_frames = ['feedLook', 'feedDown0', 'feedDown1', 'feedLift']
+expected_extras = {'barnSwallow': contact_frames, 'swinhoesWhiteEye': contact_frames,
+                   'treeSparrow': feeding_frames, 'spottedDove': feeding_frames}
+assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
-    assert names == frames + contact_frames, f'Invalid species frame order: {bird}'
+    assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'
 
 assert all((ROOT / 'shared/art' / f'{id}.png').is_file() for id in ids)
 print(f'PASS: {len(ids)} matching species schedules and {len(frames)} shared frame names')

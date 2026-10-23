@@ -49,6 +49,9 @@ public enum BehaviorStress {
         public internal(set) var pauseTransitions=0, settingsChanges=0, lifecycleCancellations=0
         public internal(set) var events=0, startedRuns=0, completedRuns=0, cancelledRuns=0, failedRuns=0
         public internal(set) var automaticStartedRuns=0, automaticCompletedRuns=0
+        public internal(set) var automaticStartedByKind:[String:Int]=[:], automaticCompletedByKind:[String:Int]=[:]
+        public internal(set) var foodTrayWarmupRun:UInt64=0
+        public internal(set) var foodTrayWarmupTerminal="",foodTrayWarmupPortionsAfter = -1
         public internal(set) var drainCompletions=0, explicitCleanupCancellations=0, removedBirdEvents=0
         public internal(set) var previewResults=0, successfulPreviews=0
         public internal(set) var startedByKind: [String:Int]=[:]
@@ -62,6 +65,7 @@ public enum BehaviorStress {
         public internal(set) var activeRuns=0, birds=0, leases=0, reservations=0, props=0, events=0
         public internal(set) var ecologyMemories=0, pendingBirds=0
         public internal(set) var visitorProfiles=0, visitorLeases=0
+        public internal(set) var habitatObjects=0, habitatReservations=0
     }
     public struct Integrity: Codable, Equatable {
         public let samples: Int
@@ -83,12 +87,14 @@ public enum BehaviorStress {
         public let leases: Int
         public let reservations: Int
         public let props: Int
+        public let habitatObjects: Int
+        public let habitatReservations: Int
         public let ecologyMemories: Int
         public let visitorLeases:Int
         public let retainedVisitorProfiles:Int
         public let pendingPreviews: Int
         public var passed: Bool {
-            [activeRuns,birds,pendingBirds,leases,reservations,props,ecologyMemories,pendingPreviews,visitorLeases].allSatisfy{$0==0} && retainedVisitorProfiles<=VisitorMemoryArchive.maximumProfiles
+            [activeRuns,birds,pendingBirds,leases,reservations,props,habitatObjects,habitatReservations,ecologyMemories,pendingPreviews,visitorLeases].allSatisfy{$0==0} && retainedVisitorProfiles<=VisitorMemoryArchive.maximumProfiles
         }
     }
     public struct Timing: Codable, Equatable {
@@ -162,7 +168,7 @@ public enum BehaviorStress {
         private var samples=0
         private var violations:[String:Int]=[:]
         private static let names=["eventSequence","runLifecycle","leaseOwnership","reservations","propOwnership",
-                                  "finitePresentation","uniqueBirds","ecologyMemory","boundedResources","finalRunBalance","successfulWork","noTimeouts","actionCoverage","autonomousCoverage","visitorMemory"]
+                                  "finitePresentation","uniqueBirds","ecologyMemory","boundedResources","finalRunBalance","successfulWork","noTimeouts","actionCoverage","autonomousCoverage","visitorMemory","habitatOwnership","foodTrayWarmup"]
         func check(_ name:String,_ condition:Bool) {if !condition {violations[name,default:0]+=1}}
         private func hash(_ value:UInt64,into digest:inout UInt64) {digest=(digest ^ value) &* 1099511628211}
         private func hash(_ value:String,into digest:inout UInt64) {for byte in value.utf8 {hash(UInt64(byte),into:&digest)}; hash(255,into:&digest)}
@@ -176,14 +182,18 @@ public enum BehaviorStress {
             for id in event.participants {hash(id.rawValue,into:&eventHash)}
             switch event.type {
             case .started:
-                if event.source == .automatic {metrics.automaticStartedRuns+=1}
+                if event.source == .automatic {
+                    metrics.automaticStartedRuns+=1;metrics.automaticStartedByKind[event.kind?.rawValue ?? "unknown",default:0]+=1
+                }
                 metrics.startedRuns+=1; metrics.startedByKind[event.kind?.rawValue ?? "unknown",default:0]+=1
                 guard let id=event.runID else {check("runLifecycle",false); return}
                 check("runLifecycle",id.rawValue>highestRun && open[id]==nil && !event.participants.isEmpty && Set(event.participants).count==event.participants.count)
                 highestRun=max(highestRun,id.rawValue)
                 open[id]=Open(participants:event.participants,kind:event.kind,source:event.source)
             case .completed,.cancelled,.failed:
-                if event.type == .completed && event.source == .automatic {metrics.automaticCompletedRuns+=1}
+                if event.type == .completed && event.source == .automatic {
+                    metrics.automaticCompletedRuns+=1;metrics.automaticCompletedByKind[event.kind?.rawValue ?? "unknown",default:0]+=1
+                }
                 if event.type == .completed {metrics.completedRuns+=1; metrics.completedByKind[event.kind?.rawValue ?? "unknown",default:0]+=1}
                 if event.type == .cancelled {
                     metrics.cancelledRuns+=1; metrics.cancellationReasons[event.reason?.rawValue ?? "unspecified",default:0]+=1
@@ -214,6 +224,12 @@ public enum BehaviorStress {
                 guard let id=owners[slot.bird],let run=runs[id] else {return false}
                 return run.execution.participants.contains(slot.bird) && slot.isValid(in:engine)
             } && !slots.enumerated().contains {index,slot in slots.dropFirst(index+1).contains{slot.conflicts(with:$0,in:engine)}})
+            let habitats=engine.habitatSnapshot(),habitatIDs=runs.values.flatMap{$0.execution.habitatReservations}
+            check("habitatOwnership",Set(habitatIDs).count==habitatIDs.count && Set(habitatIDs)==engine.runtime.habitatReservations &&
+                habitatIDs.allSatisfy{id in habitats.contains{$0.id==id}} && habitats.count<=1 && habitats.allSatisfy {object in
+                    object.remainingLifetime.isFinite && (0...180).contains(object.remainingLifetime) && (0...3).contains(object.remainingUses) &&
+                    (!object.retiring || habitatIDs.contains(object.id))
+                })
             let propIDs=runs.values.flatMap{$0.execution.propIDs}
             check("propOwnership",Set(propIDs).count==propIDs.count && Set(props.map(\.id)).count==props.count && Set(props.map(\.id)).isSubset(of:Set(propIDs)))
             check("finitePresentation",birds.allSatisfy {b in
@@ -237,7 +253,7 @@ public enum BehaviorStress {
             let reservationCounts=Dictionary(grouping:slots,by: \.bird).mapValues(\.count)
             let perBirdSlotsBounded=reservationCounts.allSatisfy {bird,count in
                 guard let owner=owners[bird],let run=runs[owner] else {return false}
-                return count <= (run.execution.kind == .edgePeek ? 2:1)
+                return count <= ([BehaviorKind.edgePeek,.foodTrayVisit].contains(run.execution.kind) ? 2:1)
             }
             check("boundedResources",total<=birdLimit+5 && runs.count<=birdLimit+1 && owners.count<=birdLimit+5 &&
                 slots.count<=2*birdLimit+5 && perBirdSlotsBounded && propIDs.count<=1 && engine.events.count<=256)
@@ -247,7 +263,12 @@ public enum BehaviorStress {
             peaks.ecologyMemories=max(peaks.ecologyMemories,engine.perchPlanner.rhythms.count); peaks.pendingBirds=max(peaks.pendingBirds,engine.pendingCount)
             peaks.visitorProfiles=max(peaks.visitorProfiles,engine.rememberedVisitorCount)
             peaks.visitorLeases=max(peaks.visitorLeases,engine.activeVisitorCount)
+            peaks.habitatObjects=max(peaks.habitatObjects,habitats.count);peaks.habitatReservations=max(peaks.habitatReservations,habitatIDs.count)
             hash(UInt64(runs.count),into:&stateHash); hash(UInt64(slots.count),into:&stateHash)
+            for object in habitats {
+                hash(object.id.rawValue,into:&stateHash);hash(UInt64(object.remainingUses),into:&stateHash)
+                hash(object.remainingLifetime.bitPattern,into:&stateHash)
+            }
             for b in birds {
                 hash(b.id.rawValue,into:&stateHash); hash(b.species.rawValue,into:&stateHash)
                 hash(Double(b.position.x).bitPattern,into:&stateHash); hash(Double(b.position.y).bitPattern,into:&stateHash)
@@ -297,7 +318,11 @@ public enum BehaviorStress {
         let species:[SpeciesID]
         var phase="warmup"
         var timings:[String:[String:WallSamples]]=[:]
-        let warmupSteps=128*60, drainLimit=120*60
+        let warmupSteps=160*60, drainLimit=120*60
+        var foodWarmupBirds:[BirdID]=[]
+        var foodWarmupRun:BehaviorRunID?
+        var foodWarmupTerminal:BehaviorEvent?
+        var settingsBeforeFood:BirdSettings?
         var moving=false, removed=false, sweep=false
         var sampleTick=0
 
@@ -329,8 +354,10 @@ public enum BehaviorStress {
                 "fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","idle0","idle1","idle2",
                 "stretch","shake","poop0","poop1","cling0","cling1","peck0","peck1","glide0","glide1","glide2","bank0","bank1","bank2","bound"]
             let contact:Set<String>=["allopreenGive0","allopreenGive1","allopreenGive2","allopreenReceive0","allopreenReceive1","allopreenReceive2"]
+            let feeding:Set<String>=["feedLook","feedDown0","feedDown1","feedLift"]
             frames=Dictionary(uniqueKeysWithValues:settings.catalog.species.map{
-                ($0.id,AllopreeningBehavior.supportedSpecies.contains($0.id) ? names.union(contact):names)
+                ($0.id,names.union(AllopreeningBehavior.supportedSpecies.contains($0.id) ? contact:[])
+                    .union(FoodTrayBehavior.supportedSpecies.contains($0.id) ? feeding:[]))
             })
             // The first pair is small enough for every optional behavior; the
             // remaining residents cover the catalog in its stable content order.
@@ -433,10 +460,52 @@ public enum BehaviorStress {
             measured("settings"){engine.applySettings(value)};auditor.metrics.settingsChanges+=1
             command(.fixedPerchVisit(.preview))
         }
+        func prepareFoodTrayResident() {
+            // Reuse the existing resident and its ordinary flight integrator;
+            // never install a fixture replacement or move a bird instantaneously.
+            settingsBeforeFood=engine.settings
+            // Keep the preceding warmup's perch: its visitor is selected by the
+            // engine and need not be birds.first. Removing it releases that peer
+            // into recovery while only the first bird is staged below, allowing
+            // its flight envelope to block/cancel the food visit. The tray's low
+            // corridor is already separate from this retained occupied perch.
+            var value=engine.settings;value.foodTrayEnabled=true
+            value.perchActions=false;value.passiveAttentionEnabled=false;value.sideHopEnabled=false
+            value.takeoffPreparationEnabled=false;value.edgePeekEnabled=false
+            measured("settings"){engine.applySettings(value)};auditor.metrics.settingsChanges+=1
+            foodWarmupBirds=engine.birds.compactMap{engine.id(of:$0)}
+            prepareFixedPerchResident()
+        }
+        func foodTrayWarmup() {
+            let point=CGPoint(x:screens[0].minX+1800,y:screens[0].minY+1700)
+            let placed=command(.placeFoodTray(at:point)).accepted
+            let result=command(.foodTrayVisit(.preview))
+            if case .started(let id)=result {foodWarmupRun=id;auditor.metrics.foodTrayWarmupRun=id.rawValue}
+            auditor.check("foodTrayWarmup",placed && foodWarmupRun != nil && engine.habitatSnapshot().first?.remainingUses==3 &&
+                engine.habitatReservationCount==1 && engine.birds.compactMap{engine.id(of:$0)}==foodWarmupBirds)
+        }
+        func finishFoodTrayWarmup() {
+            // Preserve a specific run's terminal before the bounded event ring
+            // can evict it; aggregate completion of another visit is insufficient.
+            let end=foodWarmupTerminal
+            auditor.metrics.foodTrayWarmupTerminal=end?.type.rawValue ?? "missing"
+            auditor.metrics.foodTrayWarmupPortionsAfter=engine.habitatSnapshot().first?.remainingUses ?? -1
+            auditor.check("foodTrayWarmup",end?.type == .completed && end?.participants.count==1 &&
+                engine.habitatSnapshot().first?.remainingUses==2 && engine.habitatReservationCount==0 &&
+                engine.birds.compactMap{engine.id(of:$0)}==foodWarmupBirds)
+            command(.removeFoodTray)
+            auditor.check("foodTrayWarmup",engine.habitatSnapshot().isEmpty && engine.habitatReservationCount==0)
+            if let value=settingsBeforeFood {
+                measured("settings"){engine.applySettings(value)};auditor.metrics.settingsChanges+=1
+            }
+        }
         func tick(_ index:Int) {
             sampleTick=index
             if index%6==0 {sampleWorld()}
             measured("advance"){engine.advance(BehaviorEngine.step)}
+            if let id=foodWarmupRun,foodWarmupTerminal==nil {
+                foodWarmupTerminal=engine.events.first{$0.runID==id && [.completed,.cancelled,.failed].contains($0.type)}
+            }
             inspect()
         }
         func settings(_ enabled:Bool) {
@@ -444,7 +513,7 @@ public enum BehaviorStress {
             value.pointerVisits=enabled; value.flockPasses=enabled; value.socialInteractions=enabled
             value.perchActions=enabled; value.leafPlayEnabled=enabled; value.ambientLeafPlayEnabled=enabled
             value.sideHopEnabled=enabled; value.takeoffPreparationEnabled=enabled; value.passiveAttentionEnabled=enabled
-            value.pointerFollowEnabled=enabled;value.edgePeekEnabled=enabled;value.chaseEnabled=enabled;value.travelTogetherEnabled=enabled;value.allopreeningEnabled=enabled;value.fixedPerchesEnabled=enabled
+            value.pointerFollowEnabled=enabled;value.edgePeekEnabled=enabled;value.chaseEnabled=enabled;value.travelTogetherEnabled=enabled;value.allopreeningEnabled=enabled;value.fixedPerchesEnabled=enabled;value.foodTrayEnabled=enabled
             measured("settings"){engine.applySettings(value)}; auditor.metrics.settingsChanges+=1; inspect()
         }
         func pause(_ value:Bool) {
@@ -522,6 +591,9 @@ public enum BehaviorStress {
                 if tickIndex==86*60,config.birds>=5 {command(.allopreening(.preview))}
                 if tickIndex==96*60 {prepareFixedPerchResident()}
                 if tickIndex==108*60 {installFixedPerch()}
+                if tickIndex==128*60 {prepareFoodTrayResident()}
+                if tickIndex==138*60 {foodTrayWarmup()}
+                if tickIndex==156*60 {finishFoodTrayWarmup()}
                 tick(tickIndex)
             }
             phase="active"
@@ -537,12 +609,12 @@ public enum BehaviorStress {
             pause(false)
             let beforeDrain=engine.activeRunCount, completed=auditor.metrics.completedRuns
             var drainSteps=0
-            while drainSteps<drainLimit && (engine.activeRunCount>0 || engine.hasPointerPreview || engine.hasLeafPreview) {
+            while drainSteps<drainLimit && (engine.activeRunCount>0 || engine.hasPointerPreview || engine.hasLeafPreview || engine.hasFoodTrayPlacement) {
                 measured("advance"){engine.advance(BehaviorEngine.step)}; inspect(); drainSteps+=1
             }
             let afterDrain=engine.activeRunCount
             auditor.metrics.drainCompletions=auditor.metrics.completedRuns-completed
-            let idle=afterDrain==0 && !engine.hasPointerPreview && !engine.hasLeafPreview
+            let idle=afterDrain==0 && !engine.hasPointerPreview && !engine.hasLeafPreview && !engine.hasFoodTrayPlacement
             phase="cleanup"
             let cancellations=auditor.metrics.cancelledRuns
             lifecycle(.shutdown)
@@ -559,14 +631,15 @@ public enum BehaviorStress {
                 auditor.metrics.repeatedRemovalChecks+=1
             }
             command(.clearProps); lifecycle(.shutdown); inspect()
-            auditor.finish(requiredCompletedKinds:["preen","leafPlay","fixedPerchVisit"]+(config.birds>=3 ? ["edgePeek"]:[])+(config.birds>=2 ? ["chase","travelTogether"]:[])+(config.birds>=5 ? ["allopreening"]:[]),requireAutonomy:config.autonomous && config.seconds>=120)
+            auditor.finish(requiredCompletedKinds:["preen","leafPlay","fixedPerchVisit","foodTrayVisit"]+(config.birds>=3 ? ["edgePeek"]:[])+(config.birds>=2 ? ["chase","travelTogether"]:[])+(config.birds>=5 ? ["allopreening"]:[]),requireAutonomy:config.autonomous && config.seconds>=120)
             let cleanup=Cleanup(activeRunsBeforeDrain:beforeDrain,activeRunsAfterDrain:afterDrain,drainReachedIdle:idle,
                 naturallyCompletedDuringDrain:auditor.metrics.drainCompletions,explicitlyCancelledRuns:auditor.metrics.explicitCleanupCancellations,
                 residentsBeforeRemoval:retained,explicitlyRemovedBirds:removedBirds,activeRuns:engine.activeRunCount,birds:engine.birds.count,
                 pendingBirds:engine.pendingCount,leases:engine.leasedBirdCount,reservations:engine.reservedLandingCount,props:engine.scenePropCount,
+                habitatObjects:engine.habitatSnapshot().count,habitatReservations:engine.habitatReservationCount,
                 ecologyMemories:engine.perchPlanner.rhythms.count,visitorLeases:engine.activeVisitorCount,
-                retainedVisitorProfiles:engine.rememberedVisitorCount,pendingPreviews:(engine.hasLeafPreview ? 1:0)+(engine.hasPointerPreview ? 1:0))
-            return Report(configuration:config,workload:Workload(version:6,fixedStepSeconds:BehaviorEngine.step,activeSteps:activeSteps,
+                retainedVisitorProfiles:engine.rememberedVisitorCount,pendingPreviews:(engine.hasLeafPreview ? 1:0)+(engine.hasPointerPreview ? 1:0)+(engine.hasFoodTrayPlacement ? 1:0))
+            return Report(configuration:config,workload:Workload(version:7,fixedStepSeconds:BehaviorEngine.step,activeSteps:activeSteps,
                 warmupSteps:warmupSteps,drainSteps:drainSteps,drainLimitSteps:drainLimit,worldSampleEverySteps:6,timingSampleLimit:WallSamples.limit,
                 frameManifest:"Existing BirdArt atlas vocabulary, keyed by SpeciesCatalog.standard entries; no renderer assets loaded",
                 species:Array(Set((0..<config.birds).map{fixtureSpecies($0).rawValue})).sorted()),auditor:auditor,cleanup:cleanup,

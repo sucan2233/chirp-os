@@ -108,6 +108,9 @@ enum DetailedBirdArt {
         }
     }
     static func make(_ frame:String,species id:SpeciesID)->CGImage {
+        // B14 is an independent native drawing; old peck/common poses do not
+        // enter this path and retain their original raster operations.
+        if let image=feedingImage(frame,species:id) {return image}
         // Only the six new names take this path. Every existing frame retains
         // its original raster operations, order and species pixel density.
         if let image=allopreeningImage(frame,species:id) {return image}
@@ -236,6 +239,108 @@ enum DetailedBirdArt {
         if flying {c.ctx.restoreGState()}
         return c.image
     }
+    enum FeedingPart:CaseIterable {case body,feet,headNeck,bill}
+
+    /// Logical, top-down 48-unit anatomy. Right-facing foot anchor is (29,39).
+    /// Both down poses put the ordinary bill's tip at (40,39): eleven units
+    /// ahead of the feet, with no sprite translation or elongated bill.
+    static func feedingImage(_ frame:String,species id:SpeciesID,
+                             part:FeedingPart?=nil)->CGImage? {
+        guard id == .treeSparrow || id == .spottedDove,
+              BirdArt.feedingNames.contains(frame) else {return nil}
+        let density=SpeciesCatalog.standard.profile(id).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let a=shape(id),s=colours(id),dove=id == .spottedDove
+        let down=frame == "feedDown0" || frame == "feedDown1"
+        let second=frame == "feedDown1",lift=frame == "feedLift"
+        let tilt=down ? (second ? 1.10:0.88):(lift ? -0.32:0.08)
+        let billRoot=a.headWidth/2-0.5,billLength=dove ? 4.0:3.5
+        let tipX=billRoot+billLength,tipY=0.5
+        // Solve the head position from a fixed ground contact. The two down
+        // phases rotate crown, eye, cheek and bill together around this head.
+        let hx=down ? 40-tipX*cos(tilt)+tipY*sin(tilt):32.0
+        let hy=down ? 39-tipX*sin(tilt)-tipY*cos(tilt):(lift ? 18.5:21.0)
+        func headTransform() {
+            c.ctx.translateBy(x:hx,y:hy);c.ctx.rotate(by:CGFloat(tilt))
+        }
+        if part == nil || part == .body {
+            let by=down ? (second ? 24.8:24.0):22.0
+            let tailY=down ? a.tailY-2:a.tailY
+            c.poly([(21,27),(25,31),(a.tailX+4,tailY+1),(a.tailX,tailY)],s.1,outline:true)
+            c.line([(21,29),(a.tailX+1,tailY)],s.0)
+            if dove {c.line([(a.tailX,tailY),(a.tailX+3,tailY+0.7)],"silver")}
+            // The shoulder rolls forward while the belly stays over the legs.
+            c.oval(34-a.width,by,a.width+(down ? 2:0),35-by,s.0,outline:true)
+            c.oval(dove ? 25:27,by+2,down ? 9:7,33-by,s.3)
+            c.poly([(18,by+1),(24,by),(30,by+4),(27,32),(18,34),(16,32),(17,by+5)],s.1,outline:true)
+            c.poly([(19,by+1),(24,by+1),(27,by+4),(22,31),(18,32)],s.0)
+            for n in 0..<5 {
+                let x=18+Double(n)*1.6
+                c.line([(x+4,by+3),(x,33)],n%2 == 0 ? s.0:"umber")
+            }
+            if dove {
+                for n in 0..<8 {
+                    let x=19+Double(n%3)*2.5,y=by+2+Double(n/3)*2
+                    c.line([(x,y),(x+1,y-0.5),(x+2,y+0.5)],"buff")
+                }
+            } else {
+                c.line([(19,by+3),(25,by+4)],"cream")
+                c.line([(18,by+5),(23,by+6)],"buff")
+            }
+        }
+        if part == nil || part == .feet {
+            // Identical lower-leg/toe operations in every feeding pose and in
+            // common34 stand. The (29,39) draw anchor never moves with the head.
+            for x in [27.0,31.0] {
+                c.line([(x-1,33),(x,35),(x-0.5,38.5)],"brown",width:1)
+                c.line([(x-2,39),(x,38.5),(x+2,39)],"brown")
+            }
+        }
+        if part == nil || part == .headNeck {
+            // Rebuild the nape and throat between the shoulder and bowed head;
+            // translating an upright head would leave a vertical neck behind.
+            c.poly([(26,down ? 26:24),(hx-2,hy-2),(hx+2,hy),
+                    (hx+2,hy+3),(33,down ? 33:29)],s.3,outline:true)
+            c.poly([(26,down ? 26:24),(hx-2,hy-2),(hx-1,hy+1),(29,29)],s.0)
+            if lift {
+                // A visible throat bulge and raised, closed bill read as a
+                // swallow, followed by the open-eyed feedLook observation.
+                c.oval(31,24,3,dove ? 4:3,s.3)
+            }
+            c.ctx.saveGState();headTransform()
+            let x = -a.headWidth/2,y = -a.headHeight/2
+            c.oval(x,y,a.headWidth,a.headHeight,s.2,outline:true)
+            if dove {
+                c.poly([(x,y+3),(x+3,y+4),(x+3,y+7),(x,y+6)],"black")
+                for p in [(x+0.5,y+4),(x+1.8,y+4.7),(x+0.7,y+5.7)] {
+                    c.oval(p.0,p.1,0.8,0.8,"white")
+                }
+                c.poly([(x+3,y+4),(x+6,y+4),(x+5,y+6),(x+3,y+6)],"silver")
+            } else {
+                c.poly([(x,y+4),(x+4,y+3),(x+a.headWidth,y+4),
+                        (x+a.headWidth-1,y+7),(x+2,y+7)],"cream")
+                c.oval(x+2,y+4,2,2,"black")
+                c.poly([(x+5,y+6),(x+a.headWidth,y+5),
+                        (x+a.headWidth,y+8),(x+5,y+8)],"black")
+            }
+            let ex=x+a.headWidth*0.72,ey=y+a.headHeight*0.38
+            if lift {c.line([(ex-0.2,ey+0.6),(ex+1,ey+0.6)],"eye")}
+            else {c.oval(ex,ey,1,1.1,"eye");c.oval(ex+0.4,ey,0.45,0.45,"white")}
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .bill {
+            c.ctx.saveGState();headTransform()
+            c.poly([(billRoot,-0.7),(tipX,tipY),(tipX-1,1.2),(billRoot,1.3)],"dark")
+            if second {
+                // A small lower-mandible opening, still above the contact
+                // plane; the upper bill keeps exactly the same target tip.
+                c.line([(billRoot+0.4,0.8),(tipX-1,0.8)],"cream",width:0.45)
+            }
+            c.ctx.restoreGState()
+        }
+        return c.image
+    }
+
     // App-only semantic layers let the art verifier measure the actual raster
     // silhouette independently of the pose's intended contact landmarks.
     enum AllopreeningPart:CaseIterable {case body,feet,headNeck,bill}

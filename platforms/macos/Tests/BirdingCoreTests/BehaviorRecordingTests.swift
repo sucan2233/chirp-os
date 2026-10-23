@@ -139,8 +139,10 @@ final class BehaviorRecordingTests:XCTestCase {
     }
     func testEveryCommandHasAStableRoundTrip() throws {
         let commands:[EngineCommand]=[.fixedPerchVisit(.preview),.allopreening(.preview),.travelTogether(.preview),.chase(.preview),.edgePeek(.preview),.sideHop(.preview),.prepareTakeoff(.automatic),.relocate(BirdID(1)),.pointerVisit(.automatic),.flockPass(.preview),.socialGreeting(.user),
+            .placeFoodTray(at:CGPoint(x:800,y:500)),.placeFoodTrayAfter(2),.cancelFoodTrayPlacement,.removeFoodTray,
+            .foodTrayVisit(.user),.foodTrayVisit(.preview),.foodTrayVisit(.automatic),
             .socialMotion(.giveWay,.automatic),.perchAction(.preen,.preview),.attention(.alert,.preview),.previewPointerAfter(3),
-            .leafPlay(at:CGPoint(x:400,y:400),source:.preview),.releaseLeafAfter(2),.clearProps,.removeProp(ScenePropID(9)),
+            .leafPlay(at:CGPoint(x:400,y:400),source:.preview),.releaseLeafAfter(2),.clearLeaf,.clearProps,.removeProp(ScenePropID(9)),
             .pointerClick,.pause(true),.cancelAmbient(.sleep),.scatter,.remove(BirdID(3))]
         for command in commands {
             let first=RecordedCommand(command),data=try BehaviorInputLog.encoder().encode(first)
@@ -206,14 +208,27 @@ final class BehaviorRecordingTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let folder=root.appendingPathComponent("shared/behavior-fixtures/v1")
         let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="json"}.sorted{$0.path<$1.path}
-        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json"])
+        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json","food-tray.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
             XCTAssertEqual(try log.replay(callbackHz:120),reference,file.lastPathComponent)
             XCTAssertEqual(reference.runs,0,file.lastPathComponent);XCTAssertEqual(reference.leases,0,file.lastPathComponent)
             XCTAssertEqual(reference.reservations,0,file.lastPathComponent);XCTAssertTrue(reference.props.isEmpty,file.lastPathComponent)
+            XCTAssertEqual(reference.habitatReservations,0,file.lastPathComponent)
+            XCTAssertFalse(reference.hasFoodTrayPlacement,file.lastPathComponent)
             let finished=reference.events.filter{$0.type=="completed"}.compactMap(\.kind)
+            if file.lastPathComponent=="food-tray.json" {
+                XCTAssertEqual(finished.filter{$0=="foodTrayVisit"}.count,1)
+                XCTAssertEqual(reference.birds.map(\.id),["1"])
+                XCTAssertEqual(reference.birds.map(\.position.x),[400]);XCTAssertEqual(reference.birds.map(\.position.y),[1050])
+                XCTAssertEqual(reference.birds.map(\.state),["perched"])
+                XCTAssertEqual(reference.habitats.count,1)
+                XCTAssertEqual(reference.habitats.first?.kind,"foodTray")
+                XCTAssertEqual(reference.habitats.first?.remainingUses,2)
+                XCTAssertFalse(try XCTUnwrap(reference.habitats.first).retiring)
+                XCTAssertFalse(reference.events.contains{$0.type=="failed" || $0.type=="cancelled" || $0.type=="rejected"})
+            } else {XCTAssertTrue(reference.habitats.isEmpty,file.lastPathComponent)}
             if file.lastPathComponent=="fixed-perch.json" {
                 XCTAssertEqual(finished.filter{$0=="fixedPerchVisit"}.count,1)
                 XCTAssertEqual(reference.birds.map(\.id),["1"])

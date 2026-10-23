@@ -89,22 +89,8 @@ struct FixedPerchVisitPlan {
                     $0.contains(Geometry.landingFootprint(at:bird.position,scale:scale)) &&
                     $0.contains(Geometry.landingFootprint(at:perch.foot,scale:scale))
                 }) else {continue}
-                let a=bird.position,d=perch.foot,distance=Geometry.distance(a,d)
-                guard distance>1 else {continue}
-                // The ordinary flight's cubic arch and species cruise speed,
-                // with native takeoff/braking ramps and no orbit or time warp.
-                let arc=min(90*scale,distance*0.2,max(0,min(a.y,d.y)-display.minY-39*scale)*0.7)
-                let path=FlightPath(a,CGPoint(x:a.x+(d.x-a.x)/3,y:a.y+(d.y-a.y)/3-arc*4/3),
-                    CGPoint(x:a.x+(d.x-a.x)*2/3,y:a.y+(d.y-a.y)*2/3-arc*4/3),d)
-                let bounds=path.bounds
-                let footprint=CGRect(x:bounds.minX-29*scale,y:bounds.minY-39*scale,
-                    width:bounds.width+58*scale,height:bounds.height+48*scale)
-                guard display.contains(footprint),
-                      let route=CoordinatedFlightRoute(legs:[CoordinatedFlightLeg(path:path,
-                        timing:FlightTiming(distance:path.length,speed:FlightBehavior.cruiseSpeed(bird.profile.id,multiplier:bird.profile.speed)))])
-                else {continue}
-                guard let envelope=FlightSceneEnvelope(routes:[route],offsets:[0],scales:[scale],maximumDuration:30)
-                else {continue}
+                guard let journey=HabitatJourney.make(from:bird.position,to:perch.foot,display:display,scale:scale,profile:bird.profile) else {continue}
+                let route=journey.route,envelope=journey.envelope
                 let plan=Self(id:id,perch:perch,destination:LandingReservation(bird:id,host:perch.surface,fraction:0.5),
                     route:route,scale:scale,display:display,screens:engine.world.screens,displays:engine.world.displays,
                     worldScale:engine.world.scale,initialRevision:bird.motionRevision,

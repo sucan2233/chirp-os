@@ -91,6 +91,41 @@ final class FixedPerchSchedulingTests:XCTestCase {
         XCTAssertEqual(Set(e.birds.compactMap(\.hostID)).count,2)
         XCTAssertEqual(e.leasedBirdCount,0);XCTAssertEqual(e.reservedLandingCount,0)
     }
+    func testThreePreviewSlotsFillWithDifferentResidentsWithoutCrossingOccupiedRails() throws {
+        let display=CGRect(x:0,y:0,width:2000,height:1400)
+        let host=Surface(id:181,pid:42,rect:CGRect(x:24,y:1050,width:1952,height:100))
+        let frames:Set<String>=["stand","fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","land0","land1","land2"]
+        for seed:UInt64 in 1...4 {for mirror in [false,true] {
+            var settings=BirdSettings();settings.perchActions=false;settings.passiveAttentionEnabled=false
+            settings.fixedPerches=[0.2,0.5,0.8].enumerated().map {slot,x in
+                FixedPerchAnchor(slot:slot+1,displayID:"",displayFrame:display,x:mirror ? 1-x:x,y:900/1400)
+            }
+            let e=BehaviorEngine(seed:seed,settings:settings)
+            e.populationEnabled=false;e.ambientEnabled=false;e.autonomousRouting=false
+            e.updateWorld(BehaviorWorld(screens:[display],displays:[display],surfaces:[host],scale:0.75,
+                pointer:CGPoint(x:30,y:30),availableFrames:[.treeSparrow:frames]))
+            let lo=Geometry.perchX(0,rect:host.rect),hi=Geometry.perchX(1,rect:host.rect)
+            let birds:[Bird]=[0.15,0.38,0.62,0.85].map {x in
+                let footX=(mirror ? 1-x:x)*display.width
+                let bird=Bird(position:.zero,fraction:(footX-lo)/(hi-lo),profile:settings.catalog.profile(.treeSparrow),random:{0.5})
+                bird.perch(on:host,spriteScale:e.spriteScale(for:bird));bird.perchDuration=600;bird.tick(0.6)
+                return bird
+            }
+            e.installFixtureBirds(birds)
+            var settled:[BirdID:CGPoint]=[:]
+            for _ in 0..<3 {
+                XCTAssertTrue(e.handle(.fixedPerchVisit(.preview)).accepted)
+                advance(e,20)
+                for (id,point) in settled {XCTAssertEqual(e.bird(id)?.position,point,"A settled resident must keep its occupied rail")}
+                settled=Dictionary(uniqueKeysWithValues:birds.filter{$0.hostID != host.id}.map{(e.id(of:$0)!,$0.position)})
+            }
+            XCTAssertEqual(settled.count,3)
+            XCTAssertEqual(e.handle(.fixedPerchVisit(.preview)),.rejected(.noSpace))
+            XCTAssertEqual(e.reservedLandingCount,0);XCTAssertEqual(e.activeRunCount,0)
+            XCTAssertEqual(e.events.filter{$0.kind == .fixedPerchVisit && $0.type == .completed}.count,3)
+            XCTAssertEqual(Set(e.events.filter{$0.kind == .fixedPerchVisit && $0.type == .started}.flatMap(\.participants)).count,3)
+        }}
+    }
     func testMissingArtDuringFlightOrAfterSettlingRecoversFromActualFoot() {
         for seconds in [0.5,20.0] {
             let e=fixture();XCTAssertTrue(e.handle(.fixedPerchVisit(.preview)).accepted);advance(e,seconds)

@@ -63,6 +63,14 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var placeFixedPerchButton:NSButton!
     var removeFixedPerchButton:NSButton!
     var previewFixedPerchButton:NSButton!
+    var foodTrayButton:NSButton!
+    var placeFoodTrayButton:NSButton!
+    var removeFoodTrayButton:NSButton!
+    var cancelFoodTrayPlacementButton:NSButton!
+    var previewFoodTrayButton:NSButton!
+    var foodTrayStatus:NSTextField!
+    private weak var foodTrayEngine:BehaviorEngine?
+    private var ownsFoodTrayPlacement=false
     private(set) var selectedFixedPerchSlot=1
     private(set) var fixedPerchCaptureTimer:Timer?
     private(set) var fixedPerchCaptureRequest:UUID?
@@ -72,6 +80,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     func t(_ zh:String,_ en:String) -> String { language.text(zh,en) }
     init(desktop:DesktopController) {
         self.desktop = desktop; self.draft = desktop.settings
+        foodTrayEngine=desktop.engine
         let window = NSWindow(contentRect:NSRect(x:0,y:0,width:840,height:690),styleMask:[.titled,.closable,.miniaturizable],backing:.buffered,defer:false)
         window.isReleasedWhenClosed = false
         super.init(window:window)
@@ -82,6 +91,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     required init?(coder:NSCoder) { fatalError() }
     deinit {
         fixedPerchCaptureTimer?.invalidate()
+        if ownsFoodTrayPlacement,foodTrayEngine?.hasFoodTrayPlacement == true {foodTrayEngine?.handle(.cancelFoodTrayPlacement)}
         NotificationCenter.default.removeObserver(self)
     }
     @discardableResult func label(_ text:String,_ rect:NSRect,in view:NSView,size:CGFloat = 13) -> NSTextField {
@@ -97,6 +107,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     }
     func build() {
         cancelFixedPerchCapture()
+        cancelFoodTrayPlacement()
         let selected = tabs?.indexOfTabViewItem(tabs!.selectedTabViewItem!) ?? 0
         sliders=[]; fields=[]; locks=[]; detailFields=[]
         let root = SettingsContentView(frame:NSRect(x:0,y:0,width:840,height:690)); root.wantsLayer=true; window!.contentView = root
@@ -147,7 +158,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:4656))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:5230))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -277,6 +288,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         previewAllopreeningButton.identifier=NSUserInterfaceItemIdentifier("previewAllopreening")
         label(t("预览使用已保存的设置和现有小鸟，不会增加小鸟。请让两只上述同种鸟在同一窗口边缘相邻停稳，并把鼠标移远。\n暂停、尚未保存开启、没有合适同伴或空间不足时，下方会提示原因。安静陪伴仍可手动预览。","Previews use saved settings and existing birds, without adding birds. Let two supported birds of the same species settle beside each other on one window and move the pointer away.\nPausing, saved switches being off, no suitable companion or insufficient space are explained below. Manual preview works in Quiet companionship."),NSRect(x:20,y:4062,width:710,height:88),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("allopreeningPreviewHelp")
         buildFixedPerches(in:interactionView)
+        buildFoodTray(in:interactionView)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -401,7 +413,9 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         // Do not overwrite native checkbox/input values before Save reads them.
         refreshFixedPerchPlacementButton()
     }
-    @objc private func fixedPerchWindowWillClose(_ notification:Notification) {cancelFixedPerchCapture()}
+    @objc private func fixedPerchWindowWillClose(_ notification:Notification) {
+        cancelFixedPerchCapture();cancelFoodTrayPlacement()
+    }
     @objc func previewFixedPerch() {
         desktop.syncWorld()
         let result=desktop.engine.handle(.fixedPerchVisit(.preview))
@@ -427,6 +441,115 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
                 return t("已保存栖木暂无可用屏幕空间，请调整位置并保存。","Saved perches have no usable display space. Adjust their positions and save.")
             }
             return t("栖木或飞行空间不足，请调整位置并保存。","Not enough perch or flight space. Adjust the position and save.")
+        default:return desktop.behaviorMessage(reason)
+        }
+    }
+    private func buildFoodTray(in view:NSView) {
+        label(t("临时食盘","Temporary food tray"),NSRect(x:20,y:4670,width:710,height:30),in:view,size:20).identifier=NSUserInterfaceItemIdentifier("foodTraySectionTitle")
+        foodTrayButton=NSButton(checkboxWithTitle:t("启用临时食盘","Enable temporary food tray"),target:self,action:#selector(foodTraySettingsChanged))
+        foodTrayButton.frame=NSRect(x:20,y:4712,width:710,height:26)
+        foodTrayButton.state=draft.foodTrayEnabled ? .on:.off
+        foodTrayButton.identifier=NSUserInterfaceItemIdentifier("foodTrayEnabled")
+        foodTrayButton.setAccessibilityLabel(foodTrayButton.title);view.addSubview(foodTrayButton)
+        placeFoodTrayButton=button(t("3 秒后在鼠标处放置食盘","Place tray at pointer in 3 seconds"),#selector(placeFoodTray),NSRect(x:20,y:4758,width:350,height:32),in:view)
+        removeFoodTrayButton=button(t("移除食盘","Remove food tray"),#selector(removeFoodTray),NSRect(x:390,y:4758,width:340,height:32),in:view)
+        cancelFoodTrayPlacementButton=button(t("取消等待中的放置","Cancel pending placement"),#selector(cancelFoodTrayPlacementClicked),NSRect(x:20,y:4804,width:350,height:32),in:view)
+        previewFoodTrayButton=button(t("预览食盘访问","Preview food tray visit"),#selector(previewFoodTray),NSRect(x:390,y:4804,width:340,height:32),in:view)
+        for (control,id) in [(placeFoodTrayButton!,"placeFoodTray"),(removeFoodTrayButton!,"removeFoodTray"),
+                             (cancelFoodTrayPlacementButton!,"cancelFoodTrayPlacement"),(previewFoodTrayButton!,"previewFoodTray")] {
+            control.identifier=NSUserInterfaceItemIdentifier(id);control.setAccessibilityLabel(control.title)
+        }
+        label(t("每次放置含 3 份食物，最多保留 180 秒；暂停动画会冻结食盘寿命和放置倒计时。仅树麻雀（麻雀）和珠颈斑鸠参加，鼠标靠近会取消取食。\n\n开关默认开启，保存后生效。同时只保留一个食盘，请先移除再放置。放置和移除立即生效，不修改栖木位置草稿，不保存食盘位置；下次启动需重新放置。移除会取消等待中的放置，让访问中的小鸟安全恢复；不会删除栖木。\n\n点击放置后把鼠标移到目标处，3 秒后由引擎采样光标。关闭、取消或重建设置窗口会取消等待中的放置。预览使用已保存开关、已放置食盘与现有小鸟，不生成鸟。无需定时喂养，不喂没有惩罚。",
+                "Each tray holds 3 portions and lasts up to 180 seconds. Pausing animation freezes its lifetime and placement countdown. Only Tree Sparrows and Spotted Doves participate; a nearby pointer cancels feeding.\n\nOn by default; save to apply the switch. Only one tray at a time: remove it before placing another. Place and Remove apply immediately, without editing perch position drafts or saving tray positions. Place again after restarting. Removal cancels pending placement and safely restores visiting birds; perches stay in place.\n\nAfter clicking Place, move the pointer to the target; the engine samples it after 3 seconds. Closing, cancelling or rebuilding Settings cancels pending placement. Preview uses the saved switch, a placed tray and existing birds, without spawning birds. No feeding schedule or penalty for not feeding."),NSRect(x:20,y:4852,width:710,height:274),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("foodTrayHelp")
+        foodTrayStatus=label("",NSRect(x:20,y:5142,width:710,height:62),in:view,size:12)
+        foodTrayStatus.identifier=NSUserInterfaceItemIdentifier("foodTrayStatus")
+        foodTrayStatus.setAccessibilityLabel(t("临时食盘状态","Temporary food tray status"))
+        refreshFoodTrayControls()
+    }
+    /// Read engine state only; never copy temporary placement into the settings draft.
+    func refreshFoodTrayControls() {
+        guard foodTrayStatus != nil else {return}
+        let pending=desktop.engine.hasFoodTrayPlacement
+        if !pending {ownsFoodTrayPlacement=false}
+        placeFoodTrayButton.isEnabled = !pending
+        cancelFoodTrayPlacementButton.isEnabled=pending
+        let tray=desktop.engine.habitatSnapshot().first{$0.kind == .foodTray}
+        removeFoodTrayButton.isEnabled=pending || tray != nil
+        // These actions read saved settings, even if the checkbox draft is off.
+        previewFoodTrayButton.isEnabled=true
+        if pending {
+            foodTrayStatus.stringValue=t("等待引擎计时：请移动鼠标到目标位置；暂停时倒计时冻结。","Waiting on the engine clock: move the pointer to the target. Pausing freezes the countdown.")
+        } else if let tray {
+            let seconds=Int(ceil(min(180,max(0,tray.remainingLifetime))))
+            foodTrayStatus.stringValue=tray.retiring
+                ? t("食盘正在收回，访问中的小鸟将安全恢复。","Tray is retiring; visiting birds will recover safely.")
+                : t("临时食盘已放置 · 剩余 \(tray.remainingUses) / 3 份 · \(seconds) 秒","Temporary tray placed · \(tray.remainingUses) / 3 portions · \(seconds) seconds remaining")
+        } else {
+            foodTrayStatus.stringValue=HabitatObjectRenderer.foodTrayArtAvailable
+                ? t("尚未放置临时食盘；位置不会保存。","No temporary tray placed; its position is never saved.")
+                : t("食盘图像未能载入，暂不能放置食盘。","Food tray artwork could not load; placement is unavailable.")
+        }
+    }
+    @objc func foodTraySettingsChanged() {
+        draft.foodTrayEnabled=foodTrayButton.state == .on
+        if !draft.foodTrayEnabled {cancelFoodTrayPlacement()}
+        message.stringValue=t("尚未保存 · 食盘开关保存后生效。","Unsaved · Save to apply the tray switch.")
+    }
+    @objc func placeFoodTray() {
+        guard window?.isVisible == true else {return}
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.placeFoodTrayAfter(3))
+        if case .rejected(let reason)=result {message.stringValue=foodTrayMessage(reason,placing:true)}
+        else {
+            ownsFoodTrayPlacement=true
+            message.stringValue=t("3 秒后直接放置临时食盘，请移动鼠标到目标位置。","Placing a temporary tray in 3 seconds; move the pointer to the target.")
+        }
+        refreshFoodTrayControls()
+    }
+    func cancelFoodTrayPlacement() {
+        if desktop.engine.hasFoodTrayPlacement {desktop.engine.handle(.cancelFoodTrayPlacement)}
+        ownsFoodTrayPlacement=false
+        refreshFoodTrayControls()
+    }
+    @objc func cancelFoodTrayPlacementClicked() {
+        cancelFoodTrayPlacement()
+        desktop.consumeBehaviorEvents()
+        message.stringValue=t("已取消等待中的食盘放置；已放置食盘保留。","Pending placement cancelled; an existing tray stays in place.")
+    }
+    @objc func removeFoodTray() {
+        desktop.engine.handle(.removeFoodTray)
+        desktop.consumeBehaviorEvents()
+        refreshFoodTrayControls()
+        message.stringValue=t("已移除食盘并取消等待中的放置；栖木保留。","Tray removed and pending placement cancelled; perches stay in place.")
+    }
+    @objc func previewFoodTray() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.foodTrayVisit(.preview))
+        if case .rejected(let reason)=result {message.stringValue=foodTrayMessage(reason)}
+        else {message.stringValue=t("正在预览现有小鸟访问食盘，不会生成鸟。","Previewing an existing bird’s tray visit; no birds are spawned.")}
+        refreshFoodTrayControls()
+    }
+    func foodTrayMessage(_ reason:BehaviorReason,placing:Bool=false) -> String {
+        if !HabitatObjectRenderer.foodTrayArtAvailable {
+            return t("食盘图像未能载入，请安装完整版本后重试。","Food tray artwork could not load. Install the complete app and try again.")
+        }
+        switch reason {
+        case .busy:
+            if placing,!desktop.engine.habitatSnapshot().isEmpty {
+                return t("已有临时食盘，请先移除食盘再放置；食物和剩余时间不会重置。","A temporary tray is already placed. Remove it before placing another; food and remaining time stay unchanged.")
+            }
+            return desktop.behaviorMessage(reason)
+        case .disabled,.settingsChanged:return t("请先保存并启用临时食盘。","Save and enable the temporary food tray first.")
+        case .noSpecies,.noCompanion,.missingBird,.unavailableBird:
+            return t("请等待现有树麻雀或珠颈斑鸠空闲并停稳；预览不会生成鸟。","Wait for an existing Tree Sparrow or Spotted Dove to settle and become available; preview never spawns birds.")
+        case .targetInvalid,.removed:
+            return t("请先放置可用食盘，再把鼠标移远后预览。","Place an available tray first, then move the pointer away before previewing.")
+        case .noSpace:
+            if desktop.engine.habitatSnapshot().isEmpty {
+                return t("请先在开阔位置放置食盘，留出小鸟访问的空间。","Place a tray in a clear area first, with room for birds to visit.")
+            }
+            return t("食盘访问路线空间不足，请移除后在更开阔的位置重新放置。","Not enough flight space to visit. Remove the tray, then place it in a clearer area.")
+        case .pointerNearby:return t("鼠标靠近会取消取食，请先把鼠标移离食盘与小鸟。","A nearby pointer cancels feeding. Move it away from the tray and birds.")
         default:return desktop.behaviorMessage(reason)
         }
     }
@@ -495,7 +618,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         else {message.stringValue=t("3 秒后尝试放下落叶：请将鼠标移到屏幕中部的空旷位置。","Releasing in 3 seconds: move the pointer to a clear area near screen center.")}
     }
     @objc func clearLeaf() {
-        desktop.engine.handle(.clearProps)
+        desktop.engine.handle(.clearLeaf)
         // Consume the cancellation before presenting this explicit result, so
         // the next frame cannot replace it with an input-rejection message.
         desktop.consumeBehaviorEvents()
@@ -727,11 +850,13 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.visitorMemoryEnabled=visitorMemoryButton.state == .on
         draft.activityRhythm=ActivityRhythmMode.allCases[activityRhythmPopup.indexOfSelectedItem]
         draft.fixedPerchesEnabled=fixedPerchesButton.state == .on
+        draft.foodTrayEnabled=foodTrayButton.state == .on
         refreshFixedPerchControls()
         return true
     }
     @objc func save() {
         cancelFixedPerchCapture()
+        cancelFoodTrayPlacement()
         window?.makeFirstResponder(nil)
         guard readInteraction() else {tabs.selectTabViewItem(at:2);message.stringValue=t("请输入 0–10 秒之间的有效等待时间。","Enter a valid hover delay between 0 and 10 seconds.");return}
         guard readDetails() else { tabs.selectTabViewItem(at:1); message.stringValue=t("请检查体型与动作数值：最长停留不能小于最短停留。","Check size and behavior ranges; maximum perch time must not be below minimum."); return }
@@ -739,7 +864,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         catch { message.stringValue=t("保存失败，请重试。当前设置未改变。","Could not save. Try again; active settings are unchanged.") }
     }
     @objc func resetDefaults() { cancelFixedPerchCapture();window?.makeFirstResponder(nil); draft=BirdSettings();selectedFixedPerchSlot=1; build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
-    @objc func cancel() { cancelFixedPerchCapture();window?.close() }
+    @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();window?.close() }
     func relocalize() {
         cancelFixedPerchCapture()
         window?.makeFirstResponder(nil)

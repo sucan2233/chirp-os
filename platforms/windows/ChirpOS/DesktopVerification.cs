@@ -11,7 +11,18 @@ internal static class DesktopVerification
         var checks = new Dictionary<string, bool>(); Directory.CreateDirectory(Program.DataFolder);
         using var stream = Program.Resource("species.json"); var species = JsonSerializer.Deserialize<Catalog>(stream, Program.Json)!.Species;
         using var manifestStream=Program.Resource("art/manifest.json");using var manifest=JsonDocument.Parse(manifestStream);var frameCount=manifest.RootElement.GetProperty("frames").GetArrayLength();
-        foreach (var s in species) { using var png = Program.Resource("art/" + s.Id + ".png"); using var img = Image.FromStream(png); checks["atlas_" + s.Id] = img.Width == img.Height*frameCount && img.Height >= 48 && img.Height <= 120; }
+        var commonFrames = manifest.RootElement.GetProperty("frames").EnumerateArray().Select(f => f.GetString()).ToArray();
+        foreach (var s in species)
+        {
+            using var png = Program.Resource("art/" + s.Id + ".png"); using var img = Image.FromStream(png);
+            var names = manifest.RootElement.TryGetProperty("speciesFrames", out var specific) && specific.TryGetProperty(s.Id, out var entry)
+                ? entry.EnumerateArray().Select(f => f.GetString()).ToArray() : commonFrames;
+            // Optional poses extend the atlas; ordinary desktop rendering still
+            // indexes the unchanged common prefix using each atlas's height.
+            checks["atlas_" + s.Id] = names.Take(frameCount).SequenceEqual(commonFrames) &&
+                names.Distinct().Count() == names.Length && names.All(n => !string.IsNullOrEmpty(n)) &&
+                img.Width == img.Height*names.Length && img.Height >= 48 && img.Height <= 120;
+        }
         using var imageStream = Program.Resource("art/redWhiskeredBulbul.png"); using var source = Image.FromStream(imageStream); using var atlas = new Bitmap(source);
         using var fixture = Process.Start(new ProcessStartInfo(Environment.ProcessPath!, "--fixture") { UseShellExecute = false })!;
         using var overlay = new Overlay(); var bird = new Bird(species[0], new(200, 200), new Random(1));
