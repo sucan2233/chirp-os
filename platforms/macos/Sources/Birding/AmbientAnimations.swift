@@ -25,10 +25,15 @@ extension DesktopController {
     func consumeBehaviorEvents() {
         for event in engine.events where event.sequence>lastBehaviorEvent {
             if event.type == .previewResult {
-                settingsWindow?.message.stringValue=event.reason.map(behaviorMessage) ?? pointerVisitPreviewMessage
+                settingsWindow?.message.stringValue=event.reason.map(behaviorMessage) ??
+                    (event.kind == .leafPlay ? leafPlayMessage:pointerVisitPreviewMessage)
             }
             lastBehaviorEvent=event.sequence
         }
+    }
+    var leafPlayMessage:String {
+        t("落叶游戏开始了：小鸟会追随叶片一小段，再回到停靠点。",
+          "Leaf play started: a bird will follow the leaf briefly, then return to its perch.")
     }
     var pointerVisitPreviewMessage:String {
         settings.pointerFollowEnabled

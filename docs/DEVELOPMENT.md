@@ -1,6 +1,6 @@
 # 开发指南 / Development
 
-行为扩展与架构规划见 [行为与互动引擎设计](BEHAVIOR-ENGINE-DESIGN.md)：包含动作储备、现有架构评估、运行时边界、迁移路线与验收标准。macOS M0–M4 实际范围、迁移桥和验收状态见文档第 16–19 节；已加入鼠标跟随、落点预约、双鸟招呼、并排停靠、让座和结伴起飞，道具及额外素材仍为后续设计。
+行为扩展与架构规划见 [行为与互动引擎设计](BEHAVIOR-ENGINE-DESIGN.md)：包含动作储备、现有架构评估、运行时边界、迁移路线与验收标准。macOS M0–M4 实际范围、迁移桥和验收状态见文档第 16–19 节；M5a 落叶道具场景见第 20 节。整个引擎的完成审计不能只依据单个场景通过；共享夹具、能力与配置版本、跨平台对齐仍须逐项验收。
 
 ## 项目结构 / Layout
 
@@ -63,6 +63,9 @@ macOS 行为统一从 `BirdingCore/Behavior/BehaviorEngine` 进入：平台先�
 `SocialMotionExecution` 管理并排停靠、让座、结伴起飞，沿用 `socialInteractions` 开关。先得到两个安全预约，再按角色错峰移动；预演与真实飞行复用 `SocialMotionFlight`，每类候选最多进行 12 次有界路径检查。
 `Bird.fly(allowsOrbit:false)` 复用直接飞行的速度与帧，不将短途社交扩展成长盘旋。诊断新增 `reservedLandings`。
 `SocialMotionTests`、`SocialMotionSchedulingTests` 和真实鸟图层检查验证阶段、轨迹间距、动态遮挡、暂停、取消、共同释放及共享发生频率。
+
+`LeafPlayExecution` 是首个道具场景，使用一个常驻鸟、返程落点和 `ScenePropID`；观察、追随、淡出、返回共享仿真时钟。`leafPlayEnabled` 默认开启，但落叶只由用户按钮触发。`releaseLeafAfter` 与绕鼠标预览共享一个待触发槽，`clearProps` 清除场景与待触发落叶，`removeProp` 按稳定 ID 取消所属运行实例。
+平台 `ScenePropRenderer` 消费 `ScenePropRenderState`，不决定运动、不安装鼠标处理器。叶片 PNG 随 BirdingCore 资源包复制，`ScenePropAssets` 提供 URL；构建时必须保留 SwiftPM bundle。诊断包含 `sceneProps` 与 `pendingLeafPlay`。
 
 `BehaviorEngine(seed:)` 支持核心场景重放，需同时给定相同配置、初始鸟、世界输入和命令时间线。
 飞行、社交选择和每鸟停栖节奏使用独立随机流，不保证跨版本或 Swift/C# 两端轨迹一致；诊断里的 seed 不能单独重放真实桌面。

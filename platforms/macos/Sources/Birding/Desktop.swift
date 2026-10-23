@@ -12,6 +12,7 @@ final class DesktopView: NSView {
     weak var controller: DesktopController?
     var desktopRect: CGRect = .zero
     private var sprites: [CALayer] = []
+    private let propRenderer=ScenePropRenderer()
     private let nameLabel=CATextLayer()
     override var isFlipped: Bool { true }
     override var isOpaque: Bool { false }
@@ -27,7 +28,9 @@ final class DesktopView: NSView {
     func updateSprites() {
         guard let controller, let root = layer else { return }
         let snapshot=controller.renderSnapshot()
+        let propSnapshot=controller.engine.propSnapshot()
         CATransaction.begin(); CATransaction.setDisableActions(true)
+        propRenderer.update(propSnapshot,on:root,desktopRect:desktopRect)
         while sprites.count > snapshot.count { sprites.removeLast().removeFromSuperlayer() }
         while sprites.count < snapshot.count {
             let container = CALayer()
@@ -78,6 +81,7 @@ final class DesktopView: NSView {
         }
         CATransaction.commit()
     }
+
 }
 
 final class DesktopController: NSObject {
@@ -301,6 +305,7 @@ final class DesktopController: NSObject {
             "passingCount":engine.passingCount,"pendingCount":engine.pendingCount,
             "behaviorSeed":String(engine.seed),"behaviorTime":engine.time,
             "activeBehaviors":engine.activeRunCount,"leasedBirds":engine.leasedBirdCount,"reservedLandings":engine.reservedLandingCount,
+            "sceneProps":engine.scenePropCount,"pendingLeafPlay":engine.hasLeafPreview,
             "behaviorEvents":engine.events.map {event in
                 ["sequence":event.sequence,"time":event.time,"type":event.type.rawValue,
                  "run":event.runID?.rawValue ?? 0,"kind":event.kind?.rawValue ?? "",

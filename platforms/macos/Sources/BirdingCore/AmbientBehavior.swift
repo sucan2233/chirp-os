@@ -57,12 +57,17 @@ public struct PointerOrbit {
     public let center: CGPoint
     public let radius: CGFloat
     public let path: FlightPath
-    public init?(center: CGPoint, origin: CGPoint, area: CGRect, spriteScale: CGFloat) {
+    static func isPossible(center:CGPoint,origin:CGPoint,area:CGRect,spriteScale:CGFloat) -> Bool {
         let radius = 140 + 35 * spriteScale
         let margin = 45 * spriteScale
-        guard area.width > 2*(radius+margin), area.height > 2*(radius+margin),
-              area.insetBy(dx: radius + margin, dy: radius + margin).contains(center),
-              Geometry.distance(origin, center) > radius + margin else { return nil }
+        return spriteScale.isFinite && spriteScale>0 &&
+            area.width > 2*(radius+margin) && area.height > 2*(radius+margin) &&
+            area.insetBy(dx:radius+margin,dy:radius+margin).contains(center) &&
+            Geometry.distance(origin,center)>radius+margin
+    }
+    public init?(center: CGPoint, origin: CGPoint, area: CGRect, spriteScale: CGFloat) {
+        guard Self.isPossible(center:center,origin:origin,area:area,spriteScale:spriteScale) else {return nil}
+        let radius = 140 + 35 * spriteScale
         self.center = center; self.radius = radius
         let angle = atan2(origin.y - center.y, origin.x - center.x)
         path = FlightPath(points: (0...512).map { i in

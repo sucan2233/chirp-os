@@ -15,7 +15,9 @@ public final class BehaviorEngine {
     let perchPlanner:PerchActivityPlanner
     private let socialRandom:EngineRandom
     var scheduler=AmbientScheduler()
-    private var previewDelay:Double?
+    private struct ScheduledEncounter {let kind:BehaviorKind;var remaining:Double}
+    private var scheduledEncounter:ScheduledEncounter?
+    private var nextPropID:UInt64=1
     private var accumulator=0.0
     public static let step=1.0/60
     public let seed:UInt64
@@ -49,7 +51,10 @@ public final class BehaviorEngine {
     public var leasedBirdCount:Int {runtime.owners.count}
     public var reservedLandingCount:Int {runtime.landingReservations.count}
     public var ambientBusy:Bool {runtime.encounterBusy}
-    public var hasPointerPreview:Bool {previewDelay != nil}
+    public var hasPointerPreview:Bool {scheduledEncounter?.kind == .pointerVisit}
+    public var hasLeafPreview:Bool {scheduledEncounter?.kind == .leafPlay}
+    public var scenePropCount:Int {runtime.propIDs.count}
+    public func propSnapshot() -> [ScenePropRenderState] {runtime.propSnapshots(in:self)}
     public func id(of bird:Bird) -> BirdID? {identities[ObjectIdentifier(bird)]}
     public func bird(_ id:BirdID) -> Bird? {records[id]?.bird}
     public func role(of bird:Bird) -> BirdRole? {id(of:bird).flatMap{records[$0]?.role}}
@@ -99,6 +104,10 @@ public final class BehaviorEngine {
             runtime.cancel(where:{$0.kind == .pointerVisit},reason:.settingsChanged,in:self)
         }
         settings=value;scheduler.reset(value.ambientFrequency)
+        if !value.leafPlayEnabled {
+            if hasLeafPreview {cancelPreview(.settingsChanged)}
+            runtime.cancel(where:{$0.kind == .leafPlay},reason:.settingsChanged,in:self)
+        }
         if !value.socialInteractions {
             runtime.cancel(where:{$0.kind.isSocial},reason:.settingsChanged,in:self)
         }
@@ -107,7 +116,7 @@ public final class BehaviorEngine {
             perchPlanner.suppressAll()
         }
         if !value.pointerVisits {
-            cancelPreview(.settingsChanged)
+            if hasPointerPreview {cancelPreview(.settingsChanged)}
             runtime.cancel(where:{$0.kind == .pointerVisit},reason:.settingsChanged,in:self)
         }
         if !value.flockPasses {
@@ -127,11 +136,25 @@ public final class BehaviorEngine {
         case .previewPointerAfter(let delay):
             guard !paused else {return reject(.pointerVisit,.preview,.paused)}
             guard settings.pointerVisits else {return reject(.pointerVisit,.preview,.disabled)}
-            guard !ambientBusy,previewDelay == nil else {return reject(.pointerVisit,.preview,.busy)}
-            previewDelay=max(0,min(10,delay.isFinite ? delay:3));return .scheduled
+            guard !ambientBusy,scheduledEncounter == nil else {return reject(.pointerVisit,.preview,.busy)}
+            scheduledEncounter=ScheduledEncounter(kind:.pointerVisit,remaining:max(0,min(10,delay.isFinite ? delay:3)));return .scheduled
+        case .leafPlay(let point,let source):return requestLeaf(at:point,source:source)
+        case .releaseLeafAfter(let delay):
+            guard !paused else {return reject(.leafPlay,.preview,.paused)}
+            guard settings.leafPlayEnabled else {return reject(.leafPlay,.preview,.disabled)}
+            guard !ambientBusy,scheduledEncounter == nil else {return reject(.leafPlay,.preview,.busy)}
+            scheduledEncounter=ScheduledEncounter(kind:.leafPlay,remaining:max(0,min(10,delay.isFinite ? delay:3)))
+            return .scheduled
+        case .clearProps:
+            if hasLeafPreview {cancelPreview(.userInput)}
+            runtime.cancel(where:{!$0.propIDs.isEmpty},reason:.userInput,in:self)
+            scheduler.suppress();return .accepted
+        case .removeProp(let id):
+            runtime.cancel(where:{$0.propIDs.contains(id)},reason:.removed,in:self)
+            return .accepted
         case .pointerClick:
             scheduler.suppress()
-            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind == .rest || $0.kind == .preen || $0.kind.isSocial},reason:.userInput,in:self)
+            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind == .rest || $0.kind == .preen || $0.kind.isSocial || $0.kind == .leafPlay},reason:.userInput,in:self)
             perchPlanner.suppressAll()
         case .pause(let value):
             guard paused != value else {return .accepted}
@@ -146,7 +169,7 @@ public final class BehaviorEngine {
             runtime.cancel(where:{all.contains(reason) || $0.occupiesEncounter},reason:reason,in:self)
         case .scatter:
             cancelPreview(.userInput);perchPlanner.suppressAll()
-            runtime.cancel(where:{!$0.occupiesEncounter || $0.kind == .pointerVisit || $0.kind.isSocial},reason:.replaced,in:self)
+            runtime.cancel(where:{!$0.occupiesEncounter || $0.kind == .pointerVisit || $0.kind.isSocial || $0.kind == .leafPlay},reason:.replaced,in:self)
             scheduler.suppress()
             for bird in birds where !bird.isDeparting {_=route(bird)}
         case .remove(let id):
@@ -156,9 +179,9 @@ public final class BehaviorEngine {
         return .accepted
     }
     private func cancelPreview(_ reason:BehaviorReason) {
-        guard previewDelay != nil else {return}
-        previewDelay=nil
-        emit(.previewResult,kind:.pointerVisit,source:.preview,reason:reason)
+        guard let pending=scheduledEncounter else {return}
+        scheduledEncounter=nil
+        emit(.previewResult,kind:pending.kind,source:.preview,reason:reason)
     }
     private func reject(_ kind:BehaviorKind,_ source:BehaviorSource,_ reason:BehaviorReason) -> BehaviorResult {
         emit(.rejected,kind:kind,source:source,reason:reason);return .rejected(reason)
@@ -173,10 +196,50 @@ public final class BehaviorEngine {
         scheduler.suppress()
         return runtime.start(RelocationExecution(id:id,origin:bird.position,plan:plan),source:.user,in:self)
     }
+    private func requestLeaf(at point:CGPoint,source:BehaviorSource) -> BehaviorResult {
+        guard !paused else {return reject(.leafPlay,source,.paused)}
+        guard settings.leafPlayEnabled else {return reject(.leafPlay,source,.disabled)}
+        guard !ambientBusy,scheduledEncounter == nil else {return reject(.leafPlay,source,.busy)}
+        guard !world.buttonsDown else {return reject(.leafPlay,source,.userInput)}
+        guard point.x.isFinite,point.y.isFinite else {return reject(.leafPlay,source,.noSpace)}
+        let settled=order.filter {id in
+            guard let record=records[id],record.visible,record.role == .resident else {return false}
+            return record.bird.state == .perched && record.bird.edge == .top && !record.bird.isDeparting && !record.bird.needsDestination
+        }
+        guard !settled.isEmpty else {return reject(.leafPlay,source,.unavailableBird)}
+        let free=settled.filter{runtime.owners[$0]==nil}
+        guard !free.isEmpty else {return reject(.leafPlay,source,.busy)}
+        let supported=free.filter {id in
+            guard let bird=bird(id) else {return false}
+            return LeafPlayPlan.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? [])
+        }
+        guard !supported.isEmpty else {return reject(.leafPlay,source,.missingFrames)}
+        guard let screen=world.screens.first(where:{$0.contains(point)}) else {return reject(.leafPlay,source,.noSpace)}
+        // Cheap geometric rejection precedes the eight expensive path probes.
+        // Ineligible birds on another display must not exhaust that budget.
+        let candidates=supported.filter {id in
+            guard let bird=bird(id) else {return false}
+            let scale=spriteScale(for:bird),position=bird.position
+            return scale<=1.8 && position.x>=screen.minX && position.x<=screen.maxX &&
+                position.y>=screen.minY && position.y<=screen.maxY &&
+                PointerOrbit.isPossible(center:point,origin:position,area:screen,spriteScale:scale)
+        }.sorted {
+            let a=Geometry.distance(bird($0)!.position,point),b=Geometry.distance(bird($1)!.position,point)
+            return a == b ? $0<$1:a<b
+        }
+        for id in candidates.prefix(8) {
+            guard let plan=LeafPlayPlan.make(id:id,center:point,in:self) else {continue}
+            let prop=ScenePropID(nextPropID);nextPropID+=1
+            let result=runtime.start(LeafPlayExecution(plan:plan,propID:prop),source:source,in:self)
+            if result.accepted {scheduler.suppress();perchPlanner.suppress(id)}
+            return result
+        }
+        return reject(.leafPlay,source,.noSpace)
+    }
     private func requestPointer(_ source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.pointerVisit,source,.paused)}
         guard settings.pointerVisits else {return reject(.pointerVisit,source,.disabled)}
-        guard !ambientBusy,previewDelay == nil else {return reject(.pointerVisit,source,.busy)}
+        guard !ambientBusy,scheduledEncounter == nil else {return reject(.pointerVisit,source,.busy)}
         guard !world.buttonsDown,let screen=world.screens.first(where:{$0.contains(world.pointer)}) else {return reject(.pointerVisit,source,.noSpace)}
         let candidates=birds.filter {bird in
             bird.state == .perched && bird.edge == .top && !bird.isDeparting && behavior(of:bird)==nil &&
@@ -196,7 +259,7 @@ public final class BehaviorEngine {
     private func requestFlock(_ source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.flockPass,source,.paused)}
         guard settings.flockPasses else {return reject(.flockPass,source,.disabled)}
-        guard !ambientBusy,previewDelay == nil else {return reject(.flockPass,source,.busy)}
+        guard !ambientBusy,scheduledEncounter == nil else {return reject(.flockPass,source,.busy)}
         guard let screen=random.element(world.displays) else {return reject(.flockPass,source,.noSpace)}
         let entries=settings.probabilities.entries.filter{$0.points>0 && AmbientFlock.species.contains($0.id)}
         let total=entries.reduce(0){$0+$1.points}
@@ -223,7 +286,7 @@ public final class BehaviorEngine {
     private func requestSocialGreeting(_ source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.socialGreeting,source,.paused)}
         guard settings.socialInteractions else {return reject(.socialGreeting,source,.disabled)}
-        guard !ambientBusy,previewDelay == nil else {return reject(.socialGreeting,source,.busy)}
+        guard !ambientBusy,scheduledEncounter == nil else {return reject(.socialGreeting,source,.busy)}
         guard !world.buttonsDown else {return reject(.socialGreeting,source,.userInput)}
         var reasons:[BehaviorReason]=[]
         let candidates=order.filter {id in
@@ -274,7 +337,7 @@ public final class BehaviorEngine {
     private func requestSocialMotion(_ action:SocialMotionKind,source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(action.behavior,source,.paused)}
         guard settings.socialInteractions else {return reject(action.behavior,source,.disabled)}
-        guard !ambientBusy,previewDelay==nil else {return reject(action.behavior,source,.busy)}
+        guard !ambientBusy,scheduledEncounter==nil else {return reject(action.behavior,source,.busy)}
         guard !world.buttonsDown else {return reject(action.behavior,source,.userInput)}
         let ids=socialMotionCandidates()
         guard ids.count>=2 else {
@@ -407,13 +470,13 @@ public final class BehaviorEngine {
                 case .depart:if let bird=random.element(birds.filter{!$0.isDeparting && behavior(of:$0)==nil}) {sendAway(bird)}
                 }
             }
-            if let delay=previewDelay {
-                previewDelay=delay-dt
-                if delay<=dt {
-                    previewDelay=nil
-                    let result=requestPointer(.preview)
+            if var pending=scheduledEncounter {
+                pending.remaining-=dt;scheduledEncounter=pending
+                if pending.remaining<=1e-10 {
+                    scheduledEncounter=nil
+                    let result=pending.kind == .leafPlay ? requestLeaf(at:world.pointer,source:.preview):requestPointer(.preview)
                     let reason:BehaviorReason?;if case .rejected(let why)=result {reason=why}else{reason=nil}
-                    emit(.previewResult,kind:.pointerVisit,source:.preview,reason:reason)
+                    emit(.previewResult,kind:pending.kind,source:.preview,reason:reason)
                 }
             }
         }
@@ -434,7 +497,7 @@ public final class BehaviorEngine {
         if !paused {updatePerchActivities(dt)}
         if !paused && ambientEnabled,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
             pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,socialEnabled:settings.socialInteractions,frequency:settings.ambientFrequency,
-            busy:ambientBusy || previewDelay != nil,random:random.unit) {
+            busy:ambientBusy || scheduledEncounter != nil,random:random.unit) {
             switch event {
             case .pointerVisit:_=requestPointer(.automatic)
             case .flockPass:_=requestFlock(.automatic)

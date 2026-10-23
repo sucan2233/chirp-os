@@ -180,6 +180,13 @@ public final class Bird {
         return flightAge >= (transitTiming?.brakeStart ?? .infinity)-0.12
     }
     public var isCircling: Bool { orbitDuration > 0 && flightAge >= entryDuration && flightAge < entryDuration + orbitDuration }
+    /// Read-only phase of the current orbit: negative on approach, 0...1 for
+    /// one lap, and greater than one on exit. Retained during landing so scene
+    /// props can join the exit continuously without advancing the bird's clock.
+    var orbitProgress:Double? {
+        guard orbitDuration>0,orbitTurns>0 else {return nil}
+        return (flightAge-entryDuration)/orbitDuration*orbitTurns
+    }
     private var orbitPoint:CGPoint {
         let turns=max(0,(flightAge-entryDuration)/max(0.001,orbitDuration))*orbitTurns
         return orbitPath!.point(turns.truncatingRemainder(dividingBy:1))

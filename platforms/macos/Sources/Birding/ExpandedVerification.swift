@@ -46,6 +46,7 @@ enum ExpandedVerification {
             try PerchActivityVerification.run(into:&checks,folder:folder)
             try SocialGreetingVerification.run(into:&checks,folder:folder)
             try SocialMotionVerification.run(into:&checks,folder:folder)
+            try LeafPlayVerification.run(into:&checks,folder:folder)
             try ArrivalRenderingVerification.run(into:&checks,folder:folder)
             window.orderOut(nil)
             saveJSON(["passed":checks.values.allSatisfy{$0},"checks":checks],to:folder.appendingPathComponent("report.json"))

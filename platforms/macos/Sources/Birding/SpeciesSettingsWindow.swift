@@ -36,6 +36,9 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var perchActionsButton:NSButton!
     var previewRestButton:NSButton!
     var previewPreenButton:NSButton!
+    var leafPlayButton:NSButton!
+    var releaseLeafButton:NSButton!
+    var clearLeafButton:NSButton!
     private var debugEnabled=false
     private var debugButton:NSButton!
     var language: AppLanguage { desktop.language }
@@ -110,7 +113,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:1154))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:1450))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -155,6 +158,14 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         previewRestButton=button(t("预览闭眼休息","Preview eyes-closed rest"),#selector(previewRest),NSRect(x:20,y:1046,width:230,height:32),in:interactionView)
         previewPreenButton=button(t("预览整理羽毛","Preview preening"),#selector(previewPreen),NSRect(x:270,y:1046,width:210,height:32),in:interactionView)
         label(t("预览使用已保存的设置，请先让小鸟停稳并把鼠标移开。条件不合适时会提示原因。","Previews use saved settings. Let a bird settle and move the pointer away. If it cannot start, the reason appears below."),NSRect(x:20,y:1094,width:710,height:44),in:interactionView,size:12)
+        label(t("落叶游戏","Leaf play"),NSRect(x:20,y:1162,width:710,height:30),in:interactionView,size:20)
+        leafPlayButton=NSButton(checkboxWithTitle:t("开启落叶游戏","Enable leaf play"),target:self,action:#selector(leafSettingsChanged))
+        leafPlayButton.frame=NSRect(x:20,y:1204,width:710,height:26);leafPlayButton.state=draft.leafPlayEnabled ? .on:.off
+        interactionView.addSubview(leafPlayButton)
+        label(t("手动放下一片落叶，让一只已停稳的小鸟观察、跟随落叶，再返回停靠处；不会生成小鸟。\n默认开启，保存后生效。落叶只由按钮触发，不会自动生成。","Release a leaf manually: a settled bird observes it, follows it, then returns to its perch. No birds are spawned.\nOn by default; applies after saving. Leaves appear only when requested, never automatically."),NSRect(x:20,y:1242,width:710,height:66),in:interactionView,size:12)
+        releaseLeafButton=button(t("放一片落叶","Release a leaf"),#selector(releaseLeaf),NSRect(x:20,y:1320,width:210,height:32),in:interactionView)
+        clearLeafButton=button(t("清除落叶","Clear leaf"),#selector(clearLeaf),NSRect(x:250,y:1320,width:210,height:32),in:interactionView)
+        label(t("预览使用已保存的设置。点击后有 3 秒准备时间，请把鼠标移到屏幕中部的空旷位置。\n清除落叶会取消等待中的预览和正在进行的落叶场景。条件不合适时会在下方提示原因。","Previews use saved settings. After clicking, move the pointer to a clear area near screen center within 3 seconds.\nClear leaf cancels both pending previews and the active leaf scene. If unavailable, the reason appears below."),NSRect(x:20,y:1368,width:710,height:66),in:interactionView,size:12)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -195,6 +206,23 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     @objc func perchSettingsChanged() {
         draft.perchActions=perchActionsButton.state == .on
         message.stringValue=t("尚未保存","Unsaved changes")
+    }
+    @objc func leafSettingsChanged() {
+        draft.leafPlayEnabled=leafPlayButton.state == .on
+        message.stringValue=t("尚未保存","Unsaved changes")
+    }
+    @objc func releaseLeaf() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.releaseLeafAfter(3))
+        if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
+        else {message.stringValue=t("3 秒后尝试放下落叶：请将鼠标移到屏幕中部的空旷位置。","Releasing in 3 seconds: move the pointer to a clear area near screen center.")}
+    }
+    @objc func clearLeaf() {
+        desktop.engine.handle(.clearProps)
+        // Consume the cancellation before presenting this explicit result, so
+        // the next frame cannot replace it with an input-rejection message.
+        desktop.consumeBehaviorEvents()
+        message.stringValue=t("已清除落叶，并取消等待中的预览。","Leaf cleared; pending preview cancelled.")
     }
     @objc func previewSocialGreeting() {
         desktop.syncWorld()
@@ -312,6 +340,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.ambientFrequency=AmbientFrequency.allCases[ambientFrequencyPopup.indexOfSelectedItem]
         draft.perchActions=perchActionsButton.state == .on
         draft.socialInteractions=socialInteractionsButton.state == .on
+        draft.leafPlayEnabled=leafPlayButton.state == .on
         return true
     }
     @objc func save() {

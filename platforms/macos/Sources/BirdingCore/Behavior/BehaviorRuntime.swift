@@ -11,6 +11,8 @@ protocol BehaviorExecution: AnyObject {
     var runsWhilePaused: Bool {get}
     var timeout: Double {get}
     var landingReservations: [LandingReservation] {get}
+    var propIDs:[ScenePropID] {get}
+    func propSnapshots(in engine:BehaviorEngine) -> [ScenePropRenderState]
     func start(in engine:BehaviorEngine)
     /// Pure validity checks also run while animation time is paused.
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion?
@@ -20,6 +22,8 @@ protocol BehaviorExecution: AnyObject {
 }
 
 extension BehaviorExecution {
+    var propIDs:[ScenePropID] {[]}
+    func propSnapshots(in engine:BehaviorEngine) -> [ScenePropRenderState] {[]}
     var landingReservations: [LandingReservation] {[]}
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {nil}
     func presentation(for bird:BirdID,in engine:BehaviorEngine) -> BirdPose? {nil}
@@ -36,6 +40,10 @@ final class BehaviorRuntime {
     private(set) var owners: [BirdID:BehaviorRunID] = [:]
     private var nextID: UInt64 = 1
     var encounterBusy: Bool {runs.values.contains{$0.execution.occupiesEncounter}}
+    var propIDs:Set<ScenePropID> {Set(runs.values.flatMap{$0.execution.propIDs})}
+    func propSnapshots(in engine:BehaviorEngine) -> [ScenePropRenderState] {
+        runs.keys.sorted().flatMap{runs[$0]?.execution.propSnapshots(in:engine) ?? []}
+    }
     var landingReservations:[LandingReservation] {
         runs.keys.sorted().flatMap {runs[$0]?.execution.landingReservations ?? []}
     }
@@ -48,6 +56,8 @@ final class BehaviorRuntime {
     }
     func start(_ execution:BehaviorExecution,source:BehaviorSource,in engine:BehaviorEngine) -> BehaviorResult {
         guard !execution.participants.contains(where:{owners[$0] != nil}),
+              Set(execution.propIDs).count==execution.propIDs.count,
+              propIDs.isDisjoint(with:execution.propIDs),
               !execution.occupiesEncounter || !encounterBusy else {return .rejected(.busy)}
         let requested=execution.landingReservations
         guard requested.allSatisfy({execution.participants.contains($0.bird) && $0.isValid(in:engine)}),

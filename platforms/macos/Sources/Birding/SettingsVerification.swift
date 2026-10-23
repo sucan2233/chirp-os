@@ -176,7 +176,7 @@ enum SettingsVerification {
                 try snapshot(w.window!,to:folder.appendingPathComponent("encounters-en.png"))
                 checkSocialLayout(w,language:"English",checks:&checks)
                 try snapshot(w.window!,to:folder.appendingPathComponent("social-greetings-en.png"))
-                scroll.contentView.scroll(to:CGPoint(x:0,y:scroll.documentView!.bounds.height-scroll.contentView.bounds.height));scroll.reflectScrolledClipView(scroll.contentView)
+                scroll.contentView.scroll(to:CGPoint(x:0,y:w.perchActionsButton.frame.minY-42));scroll.reflectScrolledClipView(scroll.contentView)
                 checks["perchPreviewsReachableEnglish"] = scroll.documentView!.visibleRect.contains(w.perchActionsButton.frame) && scroll.documentView!.visibleRect.contains(w.previewRestButton.frame) && scroll.documentView!.visibleRect.contains(w.previewPreenButton.frame)
                 try snapshot(w.window!,to:folder.appendingPathComponent("perch-activities-en.png"))
             }
@@ -199,7 +199,7 @@ enum SettingsVerification {
                 try snapshot(w.window!,to:folder.appendingPathComponent("encounters-zh.png"))
                 checkSocialLayout(w,language:"Chinese",checks:&checks)
                 try snapshot(w.window!,to:folder.appendingPathComponent("social-greetings-zh.png"))
-                scroll.contentView.scroll(to:CGPoint(x:0,y:scroll.documentView!.bounds.height-scroll.contentView.bounds.height));scroll.reflectScrolledClipView(scroll.contentView)
+                scroll.contentView.scroll(to:CGPoint(x:0,y:w.perchActionsButton.frame.minY-42));scroll.reflectScrolledClipView(scroll.contentView)
                 checks["perchPreviewsReachableChinese"] = scroll.documentView!.visibleRect.contains(w.perchActionsButton.frame) && scroll.documentView!.visibleRect.contains(w.previewRestButton.frame) && scroll.documentView!.visibleRect.contains(w.previewPreenButton.frame)
                 try snapshot(w.window!,to:folder.appendingPathComponent("perch-activities-zh.png"))
             }
@@ -259,6 +259,7 @@ enum SettingsVerification {
                 checks["manualMigrationScrollsToFirstNewBird"] = scroll.documentView!.visibleRect.intersects(w.fields[7].frame)
             }
             w.cancel()
+            try checkLeafSettings(folder:folder,checks:&checks)
             d.showSpeciesGallery()
             checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.title=="图鉴…"} && d.gallery?.window?.isVisible == true
             if let gallery=d.gallery?.window {
@@ -291,6 +292,98 @@ enum SettingsVerification {
         } catch {
             saveJSON(["passed":false,"error":error.localizedDescription,"checks":checks],to:folder.appendingPathComponent("report.json"));exit(1)
         }
+    }
+    private static func checkLeafSettings(folder:URL,checks:inout [String:Bool]) throws {
+        // Keep leaf fixtures independent of the existing settings checks.
+        let d=DesktopController();d.automaticPopulation=false
+        d.engine.populationEnabled=false;d.engine.ambientEnabled=false;d.engine.autonomousRouting=false
+        d.settingsURL=folder.appendingPathComponent("leaf-settings.json")
+        d.legacyURL=folder.appendingPathComponent("leaf-legacy.json")
+        let cancelled=SpeciesSettingsWindow(desktop:d)
+        cancelled.showWindow(nil)
+        cancelled.leafPlayButton.performClick(nil)
+        checks["leafToggleOnlyChangesDraft"] = !cancelled.draft.leafPlayEnabled && d.settings.leafPlayEnabled
+        cancelled.cancel()
+        checks["leafCancelDoesNotApplyOrSave"] = cancelled.window?.isVisible == false && d.settings.leafPlayEnabled && !FileManager.default.fileExists(atPath:d.settingsURL.path)
+        let w=SpeciesSettingsWindow(desktop:d);d.settingsWindow=w
+        w.showWindow(nil)
+        defer {w.cancel()}
+        checks["leafDefaultOnAndCancelledDraftDiscarded"] = w.draft.leafPlayEnabled && w.leafPlayButton.state == .on
+        w.leafPlayButton.performClick(nil)
+        let before=d.engine.birds.count
+        w.releaseLeafButton.performClick(nil)
+        checks["leafPreviewUsesSavedEnabledSwitch"] = !w.draft.leafPlayEnabled && d.settings.leafPlayEnabled && d.engine.hasLeafPreview && d.engine.scenePropCount == 0 && w.message.stringValue.contains("3 秒")
+        w.clearLeafButton.performClick(nil)
+        d.consumeBehaviorEvents()
+        checks["leafClearCancelsPendingPreview"] = !d.engine.hasLeafPreview && d.engine.scenePropCount == 0 && d.engine.birds.count == before && w.message.stringValue == "已清除落叶，并取消等待中的预览。"
+        for _ in 0..<240 {d.engine.advance(BehaviorEngine.step)}
+        checks["leafClearedPreviewNeverStartsLater"] = !d.engine.hasLeafPreview && d.engine.scenePropCount == 0 && d.engine.birds.count == before && !d.engine.events.contains{$0.kind == .leafPlay && $0.type == .started}
+        w.save()
+        let saved=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
+        checks["leafSettingSavedAndAppliedImmediately"] = !saved.leafPlayEnabled && !d.settings.leafPlayEnabled
+        let reloaded=DesktopController();reloaded.settingsURL=d.settingsURL;reloaded.legacyURL=d.legacyURL
+        try reloaded.loadSpeciesConfig()
+        checks["leafSettingSurvivesRestart"] = !reloaded.settings.leafPlayEnabled
+        w.leafPlayButton.performClick(nil)
+        for language:AppLanguage in [.chinese,.english] {
+            d.language=language;w.relocalize();w.tabs.selectTabViewItem(at:2)
+            let suffix=language == .chinese ? "zh":"en"
+            checks["leafDraftSurvivesRelocalization-\(suffix)"] = w.draft.leafPlayEnabled && w.leafPlayButton.state == .on && !d.settings.leafPlayEnabled
+            checks["leafLabels-\(suffix)"] = w.leafPlayButton.title == w.t("开启落叶游戏","Enable leaf play") && w.releaseLeafButton.title == w.t("放一片落叶","Release a leaf") && w.clearLeafButton.title == w.t("清除落叶","Clear leaf")
+            let sequence=d.engine.events.last?.sequence
+            w.releaseLeafButton.performClick(nil)
+            let event=d.engine.events.last
+            checks["leafPreviewUsesSavedDisabledSwitch-\(suffix)"] = event?.sequence != sequence && event?.kind == .leafPlay && event?.source == .preview && event?.type == .rejected && event?.reason == .disabled && !d.engine.hasLeafPreview && w.message.stringValue == d.behaviorMessage(.disabled)
+            checks["leafRejectedPreviewPreservesPopulation-\(suffix)"] = d.engine.birds.count == before && d.engine.scenePropCount == 0 && d.engine.leasedBirdCount == 0
+            if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView,let document=scroll.documentView {
+                scroll.contentView.scroll(to:CGPoint(x:0,y:document.bounds.height-scroll.contentView.bounds.height))
+                scroll.reflectScrolledClipView(scroll.contentView)
+                let controls=[w.leafPlayButton!,w.releaseLeafButton!,w.clearLeafButton!]
+                checks["leafControlsReachable-\(suffix)"] = controls.allSatisfy{document.visibleRect.contains($0.frame)}
+                checks["leafControlTitlesFit-\(suffix)"] = controls.allSatisfy{$0.intrinsicContentSize.width <= $0.frame.width}
+                checks["leafSectionFollowsPerchActivities-\(suffix)"] = w.leafPlayButton.frame.minY > w.previewPreenButton.frame.maxY
+                checks["leafLayoutDoesNotOverlap-\(suffix)"] = document.subviews.enumerated().allSatisfy { index,view in
+                    document.bounds.contains(view.frame) && document.subviews.dropFirst(index+1).allSatisfy{!view.frame.intersects($0.frame)}
+                }
+                let leafLabels=document.subviews.compactMap{$0 as? NSTextField}.filter{$0.frame.minY >= 1162}
+                checks["leafHelpFullyVisible-\(suffix)"] = leafLabels.count == 3 && leafLabels.allSatisfy {
+                    document.visibleRect.contains($0.frame) && ($0.cell?.cellSize(forBounds:$0.bounds).height ?? .infinity) <= $0.frame.height
+                }
+                try snapshot(w.window!,to:folder.appendingPathComponent("leaf-play-\(suffix).png"))
+            } else {checks["leafControlsReachable-\(suffix)"]=false}
+        }
+        let url=d.settingsURL;d.settingsURL=folder
+        w.save();d.settingsURL=url
+        let afterFailure=try BirdSettings.decode(Data(contentsOf:url))
+        checks["leafFailedSavePreservesActiveAndStoredSettings"] = w.draft.leafPlayEnabled && !d.settings.leafPlayEnabled && !afterFailure.leafPlayEnabled && w.message.stringValue == "Could not save. Try again; active settings are unchanged."
+        w.resetDefaults()
+        checks["leafDefaultsRestoredWithoutApplying"] = w.draft.leafPlayEnabled && w.leafPlayButton.state == .on && !d.settings.leafPlayEnabled
+        w.save()
+        let restored=try BirdSettings.decode(Data(contentsOf:url))
+        checks["leafDefaultsSaveAndReload"] = d.settings.leafPlayEnabled && restored.leafPlayEnabled
+        d.paused=true;w.releaseLeafButton.performClick(nil)
+        checks["leafPausedPreviewExplained"] = !d.engine.hasLeafPreview && d.engine.events.last?.kind == .leafPlay && d.engine.events.last?.reason == .paused && w.message.stringValue == d.behaviorMessage(.paused)
+        d.paused=false
+        w.releaseLeafButton.performClick(nil)
+        for _ in 0..<120 {d.engine.advance(BehaviorEngine.step)}
+        checks["leafPreviewWaitsThreeSeconds"] = d.engine.hasLeafPreview && d.engine.scenePropCount == 0
+        for _ in 0..<66 {d.engine.advance(BehaviorEngine.step)}
+        d.consumeBehaviorEvents()
+        checks["leafDelayedUnavailableBirdExplained"] = !d.engine.hasLeafPreview && d.engine.events.last(where:{$0.kind == .leafPlay && $0.type == .previewResult})?.reason == .unavailableBird && w.message.stringValue == d.behaviorMessage(.unavailableBird) && d.engine.birds.count == before
+        // Use a deterministic world to exercise the same clear button on a live scene.
+        let screen=CGRect(x:0,y:0,width:1400,height:1000)
+        let host=Surface(id:951,rect:CGRect(x:100,y:750,width:1200,height:180))
+        let bird=Bird(position:.zero,fraction:0.5,profile:d.catalog.profile(.treeSparrow),random:{0.5})
+        bird.perch(on:host);bird.perchDuration=600
+        d.engine.installFixtureBirds([bird])
+        d.engine.updateWorld(BehaviorWorld(screens:[screen],displays:[screen],surfaces:[host],scale:1,
+            pointer:CGPoint(x:20,y:20),buttonsDown:false,availableFrames:d.frameCapabilities))
+        let result=d.engine.handle(.leafPlay(at:CGPoint(x:700,y:450),source:.preview))
+        checks["leafActiveSceneUsesExistingBird"] = result.accepted && d.engine.scenePropCount == 1 && d.engine.propSnapshot().count == 1 && d.engine.birds.count == 1 && d.engine.birds.first === bird
+        w.clearLeafButton.performClick(nil)
+        checks["leafClearCancelsActiveScene"] = result.accepted && d.engine.scenePropCount == 0 && d.engine.propSnapshot().isEmpty && d.engine.activeRunCount == 0 && d.engine.leasedBirdCount == 0 && d.engine.birds.first === bird
+        w.clearLeafButton.performClick(nil)
+        checks["leafClearIsRepeatable"] = d.engine.scenePropCount == 0 && !d.engine.hasLeafPreview && d.engine.birds.count == 1 && w.message.stringValue == "Leaf cleared; pending preview cancelled."
     }
     private static func socialMotionPreviews(_ window:SpeciesSettingsWindow) -> [(kind:BehaviorKind,button:NSButton,chinese:String,english:String)] {
         [(.sideBySide,window.previewSideBySideButton,"预览并排停靠","Preview side-by-side perch"),
