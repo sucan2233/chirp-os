@@ -25,6 +25,9 @@ final class FixtureController {
     }
     func window(frame: CGRect,title:String,color:NSColor) -> NSWindow {
         let window = NSWindow(contentRect:frame,styleMask:[.titled,.closable,.resizable,.miniaturizable],backing:.buffered,defer:false)
+        // Fixtures measure exact WindowServer geometry. System order-in/out
+        // animation can expose a scaled intermediate frame or a closing snapshot.
+        window.animationBehavior = .none
         window.title = title; window.backgroundColor = color; window.isReleasedWhenClosed = false
         let label = NSTextField(wrappingLabelWithString: title.contains("Foreground") ? "FOREGROUND\n\nThis window should hide the bird.\n\nDrag me over its perch." : "BIRDING  /  红耳鹎\n\nA little life between your windows.\n\nMove this window slowly: the bird rides along.\nMove it quickly: the bird takes flight.")
         label.font = .systemFont(ofSize:18,weight:.medium); label.textColor = .white
@@ -46,8 +49,17 @@ final class FixtureController {
             case "quit": NSApp.terminate(nil)
             default: break
             }
+            try? command.write(to:folder.appendingPathComponent("applied-command"),atomically:true,encoding:.utf8)
+            recordState()
         }
-        if slowRemaining > 0 { host.setFrameOrigin(CGPoint(x:host.frame.minX+3,y:host.frame.minY)); slowRemaining -= 1 }
+        if slowRemaining > 0 {
+            host.setFrameOrigin(CGPoint(x:host.frame.minX+3,y:host.frame.minY)); slowRemaining -= 1
+            if slowRemaining==0 {recordState()}
+        }
+    }
+    private func recordState() {
+        saveJSON(["command":previousCommand,"host":NSStringFromRect(host.frame),"cover":NSStringFromRect(cover.frame),
+            "coverVisible":cover.isVisible,"slowRemaining":slowRemaining],to:folder.appendingPathComponent("fixture-state.json"))
     }
 }
 
@@ -115,16 +127,34 @@ final class IntegrationCheck {
             self.results["frontWindowMasksPartOfBird"] = visibleArea>0 && visibleArea<bbox.width*bbox.height && blockers.contains{$0.intersects(bbox)}
             self.saveMaskedBird()
             self.saveLayerSnapshot()
-            self.command("uncover")
+            self.observeUncoverAndStartle()
         }
-        after(3.8) {
-            self.results["zOrderRefreshesWhenCoverHidden"] = !self.bird.blockers(in:self.desktop.surfaces).contains{$0.intersects(self.desktop.bounds(of:self.bird))}
-            self.command("fast")
+    }
+    private func observeUncoverAndStartle() {
+        // Pixel inspection may take longer than a wall-clock callback interval.
+        // Do not overwrite "uncover" with "fast" before the fixture consumed it.
+        command("uncover")
+        var waitingForStartle=false
+        wallDeadline=ProcessInfo.processInfo.systemUptime+6
+        let timer=Timer(timeInterval:1.0/60,repeats:true) { [weak self] _ in
+            guard let self else {return}
+            guard ProcessInfo.processInfo.systemUptime<self.wallDeadline else {
+                self.finish(error:waitingForStartle ? "fixture fast movement was not observed":"fixture uncover was not observed");return
+            }
+            let applied=try? String(contentsOf:self.folder.appendingPathComponent("applied-command"),encoding:.utf8)
+            if !waitingForStartle {
+                guard applied=="uncover",self.bird.state == .perched,
+                      !self.bird.blockers(in:self.desktop.surfaces).contains(where:{$0.intersects(self.desktop.bounds(of:self.bird))}) else {return}
+                self.results["zOrderRefreshesWhenCoverHidden"]=true
+                waitingForStartle=true;self.wallDeadline=ProcessInfo.processInfo.systemUptime+6
+                self.command("fast")
+            } else if applied=="fast",self.bird.state == .flying,self.bird.startledCount==1,self.bird.hostID==nil {
+                self.results["fastMoveStartles"]=true
+                self.observationTimer?.invalidate();self.observationTimer=nil
+                self.beginReturnObservation()
+            }
         }
-        after(4.4) {
-            self.results["fastMoveStartles"] = self.bird.state == .flying && self.bird.startledCount == 1 && self.bird.hostID == nil
-            self.beginReturnObservation()
-        }
+        RunLoop.main.add(timer,forMode:.common);observationTimer=timer
     }
     private func beginReturnObservation() {
         guard let host = host() else { finish(error:"fixture host missing before return flight"); return }
@@ -260,6 +290,10 @@ final class IntegrationCheck {
     func finish(error:String?) {
         observationTimer?.invalidate(); observationTimer = nil
         desktop.writeDiagnostics(to:folder.appendingPathComponent("diagnostics.json").path)
+        saveJSON(["hostID":hostID,"fixturePID":fixturePID,"initial":NSStringFromPoint(initial),
+            "bounds":NSStringFromRect(desktop.bounds(of:bird)),
+            "surfaces":desktop.surfaces.map{["id":$0.id,"pid":$0.pid,"rect":NSStringFromRect($0.rect),"layer":$0.layer,"ground":$0.isGround] as [String:Any]}],
+            to:folder.appendingPathComponent("window-evidence.json"))
         let passed = error == nil && Set(results.keys) == Set(Self.expectedChecks) && results.values.allSatisfy{$0}
         saveJSON(["passed":passed,"checks":results,"error":error ?? "","os":ProcessInfo.processInfo.operatingSystemVersionString],to:folder.appendingPathComponent("report.json"))
         command("quit")
