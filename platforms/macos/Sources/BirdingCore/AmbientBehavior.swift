@@ -51,8 +51,8 @@ public struct AmbientScheduler {
     }
 }
 
-/// A fixed center avoids chasing a working pointer. Entry is the nearest point
-/// on the circle; its tangent supports the approach and exit outside the ring.
+/// Initial orbit geometry. Optional pointer following translates the center in
+/// Bird's motion integrator; entry and exit retain their tangential joins.
 public struct PointerOrbit {
     public let center: CGPoint
     public let radius: CGFloat

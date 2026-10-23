@@ -84,6 +84,7 @@ public struct BirdSettings: Codable {
     public var probabilities: ProbabilityDistribution
     public var hoverDelay:Double = 1
     public var pointerVisits = true
+    public var pointerFollowEnabled = false
     public var flockPasses = true
     public var socialInteractions = true
     public var perchActions = true
@@ -95,7 +96,7 @@ public struct BirdSettings: Codable {
     }
     private enum CodingKeys:String,CodingKey {
         case catalog,probabilities,hoverDelay,perchDefaultsVersion,pendingSpecies
-        case pointerVisits,flockPasses,ambientFrequency,perchActions,socialInteractions
+        case pointerVisits,pointerFollowEnabled,flockPasses,ambientFrequency,perchActions,socialInteractions
     }
     public init(from decoder:Decoder) throws {
         let values=try decoder.container(keyedBy:CodingKeys.self)
@@ -103,6 +104,7 @@ public struct BirdSettings: Codable {
         probabilities=try values.decode(ProbabilityDistribution.self,forKey:.probabilities)
         hoverDelay=try values.decodeIfPresent(Double.self,forKey:.hoverDelay) ?? 1
         pointerVisits=try values.decodeIfPresent(Bool.self,forKey:.pointerVisits) ?? true
+        pointerFollowEnabled=try values.decodeIfPresent(Bool.self,forKey:.pointerFollowEnabled) ?? false
         flockPasses=try values.decodeIfPresent(Bool.self,forKey:.flockPasses) ?? true
         socialInteractions=try values.decodeIfPresent(Bool.self,forKey:.socialInteractions) ?? true
         perchActions=try values.decodeIfPresent(Bool.self,forKey:.perchActions) ?? true

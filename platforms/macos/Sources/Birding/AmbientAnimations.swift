@@ -25,11 +25,15 @@ extension DesktopController {
     func consumeBehaviorEvents() {
         for event in engine.events where event.sequence>lastBehaviorEvent {
             if event.type == .previewResult {
-                settingsWindow?.message.stringValue=event.reason.map(behaviorMessage) ??
-                    t("正在预览绕鼠标飞行。移动鼠标即可结束。","Pointer visit preview started. Move the pointer to end it.")
+                settingsWindow?.message.stringValue=event.reason.map(behaviorMessage) ?? pointerVisitPreviewMessage
             }
             lastBehaviorEvent=event.sequence
         }
+    }
+    var pointerVisitPreviewMessage:String {
+        settings.pointerFollowEnabled
+            ? t("正在预览绕鼠标飞行。移动鼠标会继续跟随，点击可结束。","Pointer visit started. Moving keeps it following; click to end it.")
+            : t("正在预览绕鼠标飞行。移动鼠标或点击可结束。","Pointer visit started. Move the pointer or click to end it.")
     }
     func behaviorMessage(_ reason:BehaviorReason) -> String {
         switch reason {

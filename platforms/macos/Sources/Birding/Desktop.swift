@@ -300,7 +300,7 @@ final class DesktopController: NSObject {
             "residentCount":residentCount,"departingCount":engine.departingCount,
             "passingCount":engine.passingCount,"pendingCount":engine.pendingCount,
             "behaviorSeed":String(engine.seed),"behaviorTime":engine.time,
-            "activeBehaviors":engine.activeRunCount,"leasedBirds":engine.leasedBirdCount,
+            "activeBehaviors":engine.activeRunCount,"leasedBirds":engine.leasedBirdCount,"reservedLandings":engine.reservedLandingCount,
             "behaviorEvents":engine.events.map {event in
                 ["sequence":event.sequence,"time":event.time,"type":event.type.rawValue,
                  "run":event.runID?.rawValue ?? 0,"kind":event.kind?.rawValue ?? "",

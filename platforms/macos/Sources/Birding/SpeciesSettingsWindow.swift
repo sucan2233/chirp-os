@@ -25,6 +25,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var hoverDelaySlider:NSSlider!
     var hoverDelayField:NSTextField!
     var pointerVisitsButton:NSButton!
+    var pointerFollowButton:NSButton!
     var flockPassesButton:NSButton!
     var socialInteractionsButton:NSButton!
     var previewSocialGreetingButton:NSButton!
@@ -106,7 +107,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:1070))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:1154))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -121,30 +122,34 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         label(t("偶尔来点小惊喜","Occasional encounters"),NSRect(x:20,y:266,width:710,height:30),in:interactionView,size:20)
         pointerVisitsButton=NSButton(checkboxWithTitle:t("偶尔绕鼠标飞一圈","Occasionally circle the pointer"),target:self,action:#selector(ambientSettingsChanged))
         pointerVisitsButton.frame=NSRect(x:20,y:310,width:710,height:26);pointerVisitsButton.state=draft.pointerVisits ? .on:.off;interactionView.addSubview(pointerVisitsButton)
+        pointerFollowButton=NSButton(checkboxWithTitle:t("绕飞时跟随鼠标移动","Follow pointer movement while circling"),target:self,action:#selector(ambientSettingsChanged))
+        pointerFollowButton.frame=NSRect(x:40,y:346,width:690,height:26);pointerFollowButton.state=draft.pointerFollowEnabled ? .on:.off
+        pointerFollowButton.isEnabled=draft.pointerVisits;interactionView.addSubview(pointerFollowButton)
         flockPassesButton=NSButton(checkboxWithTitle:t("偶尔有 3–5 只鸟结伴飞过","Occasionally let 3–5 birds fly past together"),target:self,action:#selector(ambientSettingsChanged))
-        flockPassesButton.frame=NSRect(x:20,y:346,width:710,height:26);flockPassesButton.state=draft.flockPasses ? .on:.off;interactionView.addSubview(flockPassesButton)
+        flockPassesButton.frame=NSRect(x:20,y:382,width:710,height:26);flockPassesButton.state=draft.flockPasses ? .on:.off;interactionView.addSubview(flockPassesButton)
         socialInteractionsButton=NSButton(checkboxWithTitle:t("双鸟招呼","Two-bird greetings"),target:self,action:#selector(ambientSettingsChanged))
-        socialInteractionsButton.frame=NSRect(x:20,y:382,width:710,height:26);socialInteractionsButton.state=draft.socialInteractions ? .on:.off;interactionView.addSubview(socialInteractionsButton)
-        label(t("发生频率","Frequency"),NSRect(x:20,y:429,width:120,height:26),in:interactionView)
-        ambientFrequencyPopup=NSPopUpButton(frame:NSRect(x:145,y:423,width:420,height:32),pullsDown:false)
+        socialInteractionsButton.frame=NSRect(x:20,y:418,width:710,height:26);socialInteractionsButton.state=draft.socialInteractions ? .on:.off;interactionView.addSubview(socialInteractionsButton)
+        label(t("发生频率","Frequency"),NSRect(x:20,y:465,width:120,height:26),in:interactionView)
+        ambientFrequencyPopup=NSPopUpButton(frame:NSRect(x:145,y:459,width:420,height:32),pullsDown:false)
         ambientFrequencyPopup.addItems(withTitles:[t("低 · 每 3–6 分钟尝试一次（默认）","Low · One attempt every 3–6 minutes (default)"),t("中 · 每 1.5–3 分钟尝试一次","Medium · One attempt every 1.5–3 minutes"),t("高 · 每 45–90 秒尝试一次","High · One attempt every 45–90 seconds")])
         ambientFrequencyPopup.selectItem(at:AmbientFrequency.allCases.firstIndex(of:draft.ambientFrequency)!)
         ambientFrequencyPopup.target=self;ambientFrequencyPopup.action=#selector(ambientSettingsChanged)
         ambientFrequencyPopup.setAccessibilityLabel(t("偶发动作频率","Encounter frequency"));interactionView.addSubview(ambientFrequencyPopup)
-        label(t("三种互动共用频率，每次至多发生一种；条件不合适时跳过。鼠标静止 3 秒且周围有空间才会绕飞，移动或点击即可结束。过境鸟不占常驻数量。","All three encounters share this frequency; at most one starts per attempt. Unsuitable opportunities are skipped. Circling needs 3 seconds of pointer stillness and enough space. Moving or clicking ends it. Passing birds do not count as residents."),NSRect(x:20,y:471,width:710,height:70),in:interactionView,size:12)
-        label(t("双鸟招呼需要两只距离合适、在同一窗口或地面边缘停稳的小鸟。它们会轮流朝同伴做已有的小动作，不发出声音。默认开启，保存后生效。","Greetings need two birds settled at a suitable distance on the same window or ground edge. They take turns facing their companion and performing familiar small movements, without sound. On by default; applies after saving."),NSRect(x:20,y:548,width:710,height:76),in:interactionView,size:12)
-        _=button(t("预览绕鼠标","Preview pointer visit"),#selector(previewPointerVisit),NSRect(x:20,y:638,width:210,height:32),in:interactionView)
-        _=button(t("预览鸟群过境","Preview passing flock"),#selector(previewFlockPass),NSRect(x:250,y:638,width:210,height:32),in:interactionView)
-        previewSocialGreetingButton=button(t("预览双鸟招呼","Preview two-bird greeting"),#selector(previewSocialGreeting),NSRect(x:480,y:638,width:250,height:32),in:interactionView)
-        label(t("预览使用已保存的设置。双鸟招呼预览不会生成临时鸟或改变鸟的数量；条件不合适时会在下方提示原因。绕飞预览将在 3 秒后尝试，请把鼠标移到屏幕中部并停住。","Previews use saved settings. Greeting previews never create temporary birds or change the bird count; if unavailable, the reason appears below. Pointer preview tries after 3 seconds; move the pointer near screen center and hold still."),NSRect(x:20,y:684,width:710,height:76),in:interactionView,size:12)
-        label(t("停栖时的小动作","While perched"),NSRect(x:20,y:790,width:710,height:30),in:interactionView,size:20)
+        label(t("三种互动共用频率，每次至多发生一种；条件不合适时跳过。鼠标静止 3 秒且周围有空间才会绕飞；默认移动或点击结束。开启跟随后，移动继续绕飞，点击结束。过境鸟不占常驻数量。","All three encounters share this frequency; at most one starts per attempt. Unsuitable opportunities are skipped. Circling needs 3 seconds of pointer stillness and space. By default, moving or clicking ends it. With following enabled, movement continues circling; clicking ends it. Passing birds do not count as residents."),NSRect(x:20,y:507,width:710,height:70),in:interactionView,size:12)
+        label(t("双鸟招呼需要两只距离合适、在同一窗口或地面边缘停稳的小鸟。它们会轮流朝同伴做已有的小动作，不发出声音。默认开启，保存后生效。","Greetings need two birds settled at a suitable distance on the same window or ground edge. They take turns facing their companion and performing familiar small movements, without sound. On by default; applies after saving."),NSRect(x:20,y:584,width:710,height:76),in:interactionView,size:12)
+        _=button(t("预览绕鼠标","Preview pointer visit"),#selector(previewPointerVisit),NSRect(x:20,y:674,width:210,height:32),in:interactionView)
+        _=button(t("预览鸟群过境","Preview passing flock"),#selector(previewFlockPass),NSRect(x:250,y:674,width:210,height:32),in:interactionView)
+        previewSocialGreetingButton=button(t("预览双鸟招呼","Preview two-bird greeting"),#selector(previewSocialGreeting),NSRect(x:480,y:674,width:250,height:32),in:interactionView)
+        label(t("预览使用已保存的设置。双鸟招呼预览不会生成临时鸟或改变鸟的数量；条件不合适时会在下方提示原因。绕飞预览将在 3 秒后尝试，请把鼠标移到屏幕中部并停住。","Previews use saved settings. Greeting previews never create temporary birds or change the bird count; if unavailable, the reason appears below. Pointer preview tries after 3 seconds; move the pointer near screen center and hold still."),NSRect(x:20,y:720,width:710,height:76),in:interactionView,size:12)
+        // Reserve one additional preview-button row (y:810–842) for future encounters.
+        label(t("停栖时的小动作","While perched"),NSRect(x:20,y:874,width:710,height:30),in:interactionView,size:20)
         perchActionsButton=NSButton(checkboxWithTitle:t("停栖小动作","Perch activities"),target:self,action:#selector(perchSettingsChanged))
-        perchActionsButton.frame=NSRect(x:20,y:832,width:710,height:26);perchActionsButton.state=draft.perchActions ? .on:.off
+        perchActionsButton.frame=NSRect(x:20,y:916,width:710,height:26);perchActionsButton.state=draft.perchActions ? .on:.off
         interactionView.addSubview(perchActionsButton)
-        label(t("停稳后偶尔闭眼休息，着陆后可能整理羽毛。鼠标靠近或点击会结束动作；每只鸟的节奏错开。\n默认开启，保存后立即生效，同时控制自动动作和预览。","Birds occasionally rest with eyes closed once settled, and may preen after landing. Moving the pointer close or clicking ends the activity. Each bird follows its own timing.\nOn by default. Saving applies immediately to automatic activities and previews."),NSRect(x:20,y:870,width:710,height:78),in:interactionView,size:12)
-        previewRestButton=button(t("预览闭眼休息","Preview eyes-closed rest"),#selector(previewRest),NSRect(x:20,y:962,width:230,height:32),in:interactionView)
-        previewPreenButton=button(t("预览整理羽毛","Preview preening"),#selector(previewPreen),NSRect(x:270,y:962,width:210,height:32),in:interactionView)
-        label(t("预览使用已保存的设置，请先让小鸟停稳并把鼠标移开。条件不合适时会提示原因。","Previews use saved settings. Let a bird settle and move the pointer away. If it cannot start, the reason appears below."),NSRect(x:20,y:1010,width:710,height:44),in:interactionView,size:12)
+        label(t("停稳后偶尔闭眼休息，着陆后可能整理羽毛。鼠标靠近或点击会结束动作；每只鸟的节奏错开。\n默认开启，保存后立即生效，同时控制自动动作和预览。","Birds occasionally rest with eyes closed once settled, and may preen after landing. Moving the pointer close or clicking ends the activity. Each bird follows its own timing.\nOn by default. Saving applies immediately to automatic activities and previews."),NSRect(x:20,y:954,width:710,height:78),in:interactionView,size:12)
+        previewRestButton=button(t("预览闭眼休息","Preview eyes-closed rest"),#selector(previewRest),NSRect(x:20,y:1046,width:230,height:32),in:interactionView)
+        previewPreenButton=button(t("预览整理羽毛","Preview preening"),#selector(previewPreen),NSRect(x:270,y:1046,width:210,height:32),in:interactionView)
+        label(t("预览使用已保存的设置，请先让小鸟停稳并把鼠标移开。条件不合适时会提示原因。","Previews use saved settings. Let a bird settle and move the pointer away. If it cannot start, the reason appears below."),NSRect(x:20,y:1094,width:710,height:44),in:interactionView,size:12)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -163,6 +168,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     }
     @objc func ambientSettingsChanged() {
         draft.pointerVisits=pointerVisitsButton.state == .on
+        draft.pointerFollowEnabled=pointerFollowButton.state == .on
+        pointerFollowButton.isEnabled=draft.pointerVisits
         draft.flockPasses=flockPassesButton.state == .on
         draft.socialInteractions=socialInteractionsButton.state == .on
         draft.ambientFrequency=AmbientFrequency.allCases[ambientFrequencyPopup.indexOfSelectedItem]
@@ -279,6 +286,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.hoverDelay=value;hoverDelaySlider.doubleValue=value
         hoverDelayField.stringValue=String(format:"%g",value)
         draft.pointerVisits=pointerVisitsButton.state == .on
+        draft.pointerFollowEnabled=pointerFollowButton.state == .on
+        pointerFollowButton.isEnabled=draft.pointerVisits
         draft.flockPasses=flockPassesButton.state == .on
         draft.ambientFrequency=AmbientFrequency.allCases[ambientFrequencyPopup.indexOfSelectedItem]
         draft.perchActions=perchActionsButton.state == .on

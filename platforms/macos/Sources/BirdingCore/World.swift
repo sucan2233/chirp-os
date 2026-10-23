@@ -128,6 +128,7 @@ public final class Bird {
     public var position: CGPoint
     public var state: BirdState = .flying
     public var hostID: UInt32?
+    private var hostPID: Int32?
     public var depthID: UInt32?
     public var fraction: CGFloat
     public var facingRight = true
@@ -154,6 +155,16 @@ public final class Bird {
     private var orbitRadius: CGFloat = 100
     private var orbitHeight: CGFloat = 100
     private var orbitPath:FlightPath?
+    /// Translation is deliberately slower than the bird's 160...240 pt/s orbit.
+    public static let pointerFollowSpeed:CGFloat = 90
+    private struct PointerFollowMotion {
+        let area:CGRect, footArea:CGRect, centers:CGRect
+        var target:CGPoint
+        var velocity:CGPoint = .zero
+        var exiting=false
+    }
+    private var pointerFollow:PointerFollowMotion?
+    var pointerFollowCenter:CGPoint? {pointerFollow == nil ? nil:orbitCenter}
     private var urgentFlight = false
     private var entryDuration=0.0, exitDuration=0.0, orbitTurns=1.0
     private var approach:FlightPath?, exitPath:FlightPath?, transitPath:FlightPath?
@@ -177,10 +188,11 @@ public final class Bird {
     // squeezed into the old window-to-window travel duration.
 
     public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false, pointerOrbit: PointerOrbit? = nil, random: () -> Double = { Double.random(in:0...1) }) {
+        pointerFollow=nil
         isDeparting = false
         motionRevision &+= 1; wingPhase = 0
         if host?.isGround == true { edge = .top }
-        origin = position; target = point; hostID = host?.id; depthID = nil
+        origin = position; target = point; hostID = host?.id; hostPID = host?.pid; depthID = nil
         previousHost = nil
         let m = FlightBehavior.motion(profile.id)
         urgentFlight = urgent
@@ -250,6 +262,82 @@ public final class Bird {
         flightDuration=transitDuration+orbitDuration
         flightAge = 0; stateTime = 0; state = .flying; destinationInvalidated = false
     }
+    /// Opt in immediately after planning a pointer orbit. The approach stays fixed;
+    /// input collected during entry becomes the target when circling starts.
+    /// Following never resets flightAge, motionRevision, or the one-lap deadline.
+    @discardableResult
+    public func enablePointerFollow(in area:CGRect,spriteScale:CGFloat) -> Bool {
+        guard state == .flying,flightAge == 0,orbitDuration>0,
+              spriteScale.isFinite,spriteScale>0,
+              area.minX.isFinite,area.minY.isFinite,area.width.isFinite,area.height.isFinite else {return false}
+        let margin=45*spriteScale
+        guard area.width>2*(orbitRadius+margin),area.height>2*(orbitHeight+margin) else {return false}
+        let centers=area.insetBy(dx:orbitRadius+margin,dy:orbitHeight+margin)
+        guard centers.contains(orbitCenter) else {return false}
+        pointerFollow=PointerFollowMotion(area:area,footArea:area.insetBy(dx:margin,dy:margin),
+                                         centers:centers,target:orbitCenter)
+        return true
+    }
+    /// Same-screen input is clamped to the safe circle-center rectangle. This
+    /// changes only a target; tick integrates the center once per simulation step.
+    @discardableResult
+    public func updatePointerFollowTarget(_ point:CGPoint) -> Bool {
+        guard var follow=pointerFollow,point.x.isFinite,point.y.isFinite,
+              follow.area.contains(point) else {return false}
+        follow.target=CGPoint(x:min(follow.centers.maxX,max(follow.centers.minX,point.x)),
+                              y:min(follow.centers.maxY,max(follow.centers.minY,point.y)))
+        pointerFollow=follow
+        return true
+    }
+    private func advancePointerFollow(from oldAge:Double,to age:Double) {
+        guard var follow=pointerFollow,!follow.exiting else {return}
+        let end=entryDuration+orbitDuration
+        let start=max(oldAge,entryDuration),stop=min(age,end)
+        if stop>start {
+            let dt=stop-start,mid=(start+stop)/2
+            // Ease translation in and out without slowing the bird's orbit. The
+            // center is stationary at both joins, preserving their tangents.
+            let ramp=min(0.6,orbitDuration/2)
+            let phase=min(1,max(0,min(mid-entryDuration,end-mid)/ramp))
+            let envelope=phase*phase*(3-2*phase)
+            let delta=CGPoint(x:follow.target.x-orbitCenter.x,y:follow.target.y-orbitCenter.y)
+            let distance=Geometry.distance(.zero,delta)
+            let speed=min(Self.pointerFollowSpeed,distance/0.35)
+            let desired=distance>0 ? CGPoint(x:delta.x/distance*speed,y:delta.y/distance*speed):.zero
+            let blend=1-exp(-dt/0.18)
+            follow.velocity.x+=(desired.x-follow.velocity.x)*blend
+            follow.velocity.y+=(desired.y-follow.velocity.y)*blend
+            let candidate=CGPoint(x:orbitCenter.x+follow.velocity.x*dt*envelope,
+                                  y:orbitCenter.y+follow.velocity.y*dt*envelope)
+            orbitCenter=CGPoint(x:min(follow.centers.maxX,max(follow.centers.minX,candidate.x)),
+                                y:min(follow.centers.maxY,max(follow.centers.minY,candidate.y)))
+            if candidate.x != orbitCenter.x {follow.velocity.x=0}
+            if candidate.y != orbitCenter.y {follow.velocity.y=0}
+        }
+        if age>=end {
+            follow.exiting=true;follow.velocity = .zero
+            // Plan exactly once from the translated ring, using the current host
+            // target. Future pointer movement cannot extend or bend this exit.
+            let p=orbitPath!.point(orbitTurns.truncatingRemainder(dividingBy:1))
+            let exit=CGPoint(x:orbitCenter.x+p.x,y:orbitCenter.y+p.y)
+            let tangent=orbitPath!.loopTangent(orbitTurns)
+            var bend=min(orbitHeight*0.8,Geometry.distance(exit,target)*0.4)
+            let area=follow.footArea
+            if tangent.x>0.000001 {bend=min(bend,(area.maxX-exit.x)/tangent.x)}
+            if tangent.x < -0.000001 {bend=min(bend,(area.minX-exit.x)/tangent.x)}
+            if tangent.y>0.000001 {bend=min(bend,(area.maxY-exit.y)/tangent.y)}
+            if tangent.y < -0.000001 {bend=min(bend,(area.minY-exit.y)/tangent.y)}
+            bend=max(0,bend)
+            exitPath=FlightPath(exit,CGPoint(x:exit.x+tangent.x*bend,y:exit.y+tangent.y*bend),
+                                CGPoint(x:exit.x+(target.x-exit.x)*0.65,y:exit.y+(target.y-exit.y)*0.65),target)
+            plannedTarget=target
+            exitTiming=FlightTiming(distance:exitPath!.length,speed:cruiseSpeed,acceleration:0,
+                                    deceleration:min(0.85,1.8*exitPath!.length/cruiseSpeed))
+            exitDuration=exitTiming!.duration;transitDuration=entryDuration+exitDuration
+            flightDuration=end+exitDuration
+        }
+        pointerFollow=follow
+    }
     public func depart(to point: CGPoint, duration: Double) {
         fly(to: point, host: nil, duration: duration, arc: 30, urgent: true)
         isDeparting = true
@@ -265,9 +353,10 @@ public final class Bird {
     }
     public var departureFinished: Bool { isDeparting && flightAge >= flightDuration }
     public func perch(on host: Surface, spriteScale:CGFloat=1) {
+        pointerFollow=nil
         motionRevision &+= 1;isDeparting=false
         if host.isGround { edge = .top }
-        hostID = host.id; depthID = host.id; previousHost = host.rect
+        hostID = host.id; hostPID = host.pid; depthID = host.id; previousHost = host.rect
         position = Geometry.foot(on:host,fraction:fraction,edge:edge,scale:spriteScale)
         state = .perched; stateTime = 0; destinationInvalidated = false;isGliding=false;flightSpeed=0
         if edge != .top { facingRight = edge == .left }
@@ -279,12 +368,14 @@ public final class Bird {
     // Called at the actual metadata sampling interval, independent of animation frames.
     public func updateHost(surfaces: [Surface], sampleDT: Double, spriteScale: CGFloat = 1) {
         guard let id = hostID else { return }
-        guard let host = surfaces.first(where: { $0.id == id }) else { flee(); return }
+        // Window IDs can be reused between samples, including the first landing
+        // frame. Reject a different owner before calculating or adopting its feet.
+        guard let host = surfaces.first(where: { $0.id == id && $0.pid == hostPID }) else { flee(); return }
         let point = Geometry.foot(on:host,fraction:fraction,edge:edge,scale:spriteScale)
         if state == .flying && !Geometry.isLandingVisible(on: id, at: point, surfaces: surfaces, scale: spriteScale) {
             // Stay exactly where we are until the controller chooses a new route.
             // This is a blocked destination, not a startle or an instantaneous landing.
-            hostID = nil; depthID = nil; previousHost = nil
+            hostID = nil; hostPID = nil; depthID = nil; previousHost = nil
             destinationInvalidated = true
             return
         }
@@ -305,7 +396,9 @@ public final class Bird {
         guard !destinationInvalidated else { return }
         stateTime += dt
         if state == .flying {
+            let oldAge=flightAge
             flightAge += dt
+            advancePointerFollow(from:oldAge,to:flightAge)
             let t = min(1, flightAge / flightDuration)
             let m = FlightBehavior.motion(profile.id)
             let next: CGPoint

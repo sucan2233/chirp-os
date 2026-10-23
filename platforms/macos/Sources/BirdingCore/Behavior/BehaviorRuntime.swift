@@ -10,6 +10,7 @@ protocol BehaviorExecution: AnyObject {
     var occupiesEncounter: Bool {get}
     var runsWhilePaused: Bool {get}
     var timeout: Double {get}
+    var landingReservations: [LandingReservation] {get}
     func start(in engine:BehaviorEngine)
     /// Pure validity checks also run while animation time is paused.
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion?
@@ -19,6 +20,7 @@ protocol BehaviorExecution: AnyObject {
 }
 
 extension BehaviorExecution {
+    var landingReservations: [LandingReservation] {[]}
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {nil}
     func presentation(for bird:BirdID,in engine:BehaviorEngine) -> BirdPose? {nil}
 }
@@ -34,6 +36,9 @@ final class BehaviorRuntime {
     private(set) var owners: [BirdID:BehaviorRunID] = [:]
     private var nextID: UInt64 = 1
     var encounterBusy: Bool {runs.values.contains{$0.execution.occupiesEncounter}}
+    var landingReservations:[LandingReservation] {
+        runs.keys.sorted().flatMap {runs[$0]?.execution.landingReservations ?? []}
+    }
     func kind(for bird:BirdID) -> BehaviorKind? {owners[bird].flatMap{runs[$0]?.execution.kind}}
     func canAdvance(_ bird:BirdID,paused:Bool) -> Bool {
         !paused || owners[bird].flatMap{runs[$0]?.execution.runsWhilePaused} == true
@@ -44,6 +49,12 @@ final class BehaviorRuntime {
     func start(_ execution:BehaviorExecution,source:BehaviorSource,in engine:BehaviorEngine) -> BehaviorResult {
         guard !execution.participants.contains(where:{owners[$0] != nil}),
               !execution.occupiesEncounter || !encounterBusy else {return .rejected(.busy)}
+        let requested=execution.landingReservations
+        guard requested.allSatisfy({execution.participants.contains($0.bird) && $0.isValid(in:engine)}),
+              !requested.enumerated().contains(where:{index,slot in
+                  requested.dropFirst(index+1).contains{slot.conflicts(with:$0,in:engine)} ||
+                  landingReservations.contains{slot.conflicts(with:$0,in:engine)}
+              }) else {return .rejected(.noSpace)}
         let id=BehaviorRunID(rawValue:nextID);nextID+=1
         runs[id]=Run(id:id,source:source,execution:execution)
         for bird in execution.participants {owners[bird]=id}
@@ -53,6 +64,15 @@ final class BehaviorRuntime {
     }
     func validate(in engine:BehaviorEngine) {
         for id in runs.keys.sorted() {
+            guard let run=runs[id] else {continue}
+            let slots=run.execution.landingReservations
+            let foreign=runs.keys.sorted().filter{$0 != id}.flatMap{runs[$0]?.execution.landingReservations ?? []}
+            if slots.contains(where:{!$0.isValid(in:engine)}) || slots.enumerated().contains(where:{index,slot in
+                slots.dropFirst(index+1).contains{slot.conflicts(with:$0,in:engine)} ||
+                    foreign.contains{slot.conflicts(with:$0,in:engine)}
+            }) {
+                finish(id,result:.failed(.targetInvalid),in:engine);continue
+            }
             if let result=runs[id]?.execution.validate(in:engine) {finish(id,result:result,in:engine)}
         }
     }

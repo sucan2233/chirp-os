@@ -36,12 +36,26 @@ enum SettingsVerification {
             checks["loginExternalChangeRefreshes"] = d.loginItem?.state == .on
             d.showSpeciesSettings()
             let cancelledWindow=d.settingsWindow!
+            cancelledWindow.pointerFollowButton.performClick(nil)
+            checks["pointerFollowCancelledDraftWasEdited"] = cancelledWindow.draft.pointerFollowEnabled && !d.settings.pointerFollowEnabled
             cancelledWindow.socialInteractionsButton.performClick(nil)
             checks["socialCancelledDraftWasEdited"] = !cancelledWindow.draft.socialInteractions && d.settings.socialInteractions
             cancelledWindow.cancel()
             checks["socialCancelDoesNotApplyOrSave"] = cancelledWindow.window?.isVisible == false && d.settings.socialInteractions && !FileManager.default.fileExists(atPath:d.settingsURL.path)
+            checks["pointerFollowCancelDoesNotApplyOrSave"] = !d.settings.pointerFollowEnabled && !FileManager.default.fileExists(atPath:d.settingsURL.path)
             d.showSpeciesSettings()
             let w=d.settingsWindow!
+            checks["pointerFollowReopeningDiscardsCancelledDraft"] = w !== cancelledWindow && !w.draft.pointerFollowEnabled && w.pointerFollowButton.state == .off && w.pointerFollowButton.isEnabled
+            checks["pointerFollowChineseLabel"] = w.pointerFollowButton.title == "绕飞时跟随鼠标移动"
+            w.pointerFollowButton.performClick(nil)
+            checks["pointerFollowToggleOnlyChangesDraft"] = w.draft.pointerFollowEnabled && !d.settings.pointerFollowEnabled
+            checks["pointerPreviewMessageUsesSavedOffChinese"] = d.pointerVisitPreviewMessage == "正在预览绕鼠标飞行。移动鼠标或点击可结束。"
+            w.pointerVisitsButton.performClick(nil)
+            checks["pointerMasterDisablesFollowWithoutClearingDraft"] = !w.draft.pointerVisits && !w.pointerFollowButton.isEnabled && w.pointerFollowButton.state == .on && w.draft.pointerFollowEnabled
+            w.pointerFollowButton.performClick(nil)
+            checks["disabledPointerFollowCannotBeToggled"] = w.draft.pointerFollowEnabled && w.pointerFollowButton.state == .on
+            w.pointerVisitsButton.performClick(nil)
+            checks["pointerMasterReenablesFollowingPreference"] = w.draft.pointerVisits && w.pointerFollowButton.isEnabled && w.pointerFollowButton.state == .on
             checks["socialReopeningDiscardsCancelledDraft"] = w !== cancelledWindow && w.draft.socialInteractions && w.socialInteractionsButton.state == .on
             checks["socialInteractionsDefaultOn"] = w.draft.socialInteractions && d.settings.socialInteractions && w.socialInteractionsButton.state == .on
             checks["socialInteractionsChineseLabels"] = w.socialInteractionsButton.title == "双鸟招呼" && w.previewSocialGreetingButton.title == "预览双鸟招呼"
@@ -98,6 +112,9 @@ enum SettingsVerification {
             checks["perchActivitiesEnglishLabels"] = w.perchActionsButton.title == "Perch activities" && w.previewRestButton.title == "Preview eyes-closed rest" && w.previewPreenButton.title == "Preview preening"
             checks["socialDraftSurvivesLanguageChange"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off && d.settings.socialInteractions
             checks["socialInteractionsEnglishLabels"] = w.socialInteractionsButton.title == "Two-bird greetings" && w.previewSocialGreetingButton.title == "Preview two-bird greeting"
+            checks["pointerFollowDraftSurvivesLanguageChange"] = w.draft.pointerFollowEnabled && w.pointerFollowButton.state == .on && w.pointerFollowButton.isEnabled && !d.settings.pointerFollowEnabled
+            checks["pointerFollowEnglishLabel"] = w.pointerFollowButton.title == "Follow pointer movement while circling"
+            checks["pointerPreviewMessageUsesSavedOffEnglish"] = d.pointerVisitPreviewMessage == "Pointer visit started. Move the pointer or click to end it."
             let beforePausedGreeting=birdCounts(),beforePausedGreetingSequence=d.engine.events.last?.sequence
             w.previewSocialGreetingButton.performClick(nil)
             checks["socialPreviewPaused"] = d.engine.events.last?.sequence != beforePausedGreetingSequence && d.engine.events.last?.kind == .socialGreeting && d.engine.events.last?.source == .preview && d.engine.events.last?.reason == .paused && w.message.stringValue == d.behaviorMessage(.paused) && birdCounts() == beforePausedGreeting
@@ -112,11 +129,15 @@ enum SettingsVerification {
             checks["hoverDelaySavedAndAppliedImmediately"] = saved.hoverDelay == 0.25 && d.settings.hoverDelay == 0.25
             checks["perchSettingSavedAndAppliedImmediately"] = !saved.perchActions && !d.settings.perchActions
             checks["socialSettingSavedAndAppliedImmediately"] = !saved.socialInteractions && !d.settings.socialInteractions
+            checks["pointerFollowSavedAndAppliedImmediately"] = saved.pointerFollowEnabled && d.settings.pointerFollowEnabled
             let reloaded=DesktopController();reloaded.settingsURL=d.settingsURL;reloaded.legacyURL=d.legacyURL
             try reloaded.loadSpeciesConfig()
             checks["hoverDelaySurvivesRestart"] = reloaded.settings.hoverDelay == 0.25
             checks["perchSettingSurvivesRestart"] = !reloaded.settings.perchActions
             checks["socialSettingSurvivesRestart"] = !reloaded.settings.socialInteractions
+            checks["pointerFollowSurvivesRestart"] = reloaded.settings.pointerFollowEnabled
+            w.pointerFollowButton.performClick(nil)
+            checks["pointerPreviewMessageUsesSavedOnEnglish"] = !w.draft.pointerFollowEnabled && d.pointerVisitPreviewMessage == "Pointer visit started. Moving keeps it following; click to end it."
             // The UI may contain an enabled draft while the saved switch is off.
             // Both buttons must still go through the engine's saved-settings gate.
             d.paused=false;w.perchActionsButton.performClick(nil)
@@ -136,6 +157,8 @@ enum SettingsVerification {
             let afterFailedSave=try BirdSettings.decode(Data(contentsOf:settingsURL))
             checks["failedPerchSavePreservesActiveAndStoredSettings"] = w.draft.perchActions && !d.settings.perchActions && !afterFailedSave.perchActions && w.message.stringValue == "Could not save. Try again; active settings are unchanged."
             checks["failedSocialSavePreservesActiveAndStoredSettings"] = w.draft.socialInteractions && !d.settings.socialInteractions && !afterFailedSave.socialInteractions && w.message.stringValue == "Could not save. Try again; active settings are unchanged."
+            checks["failedPointerFollowSavePreservesActiveAndStoredSettings"] = !w.draft.pointerFollowEnabled && d.settings.pointerFollowEnabled && afterFailedSave.pointerFollowEnabled
+            w.pointerFollowButton.performClick(nil)
             w.socialInteractionsButton.performClick(nil)
             w.perchActionsButton.performClick(nil);d.paused=true
             w.tabs.selectTabViewItem(at:2)
@@ -158,6 +181,8 @@ enum SettingsVerification {
             checks["chineseToggleRestored"] = d.status.menu!.items.contains{$0.title == "English"} && w.window!.title == "鸟种设置"
             checks["perchChineseToggleRestored"] = !w.draft.perchActions && w.perchActionsButton.state == .off && w.perchActionsButton.title == "停栖小动作" && w.previewRestButton.title == "预览闭眼休息" && w.previewPreenButton.title == "预览整理羽毛"
             checks["socialChineseToggleRestored"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off && w.socialInteractionsButton.title == "双鸟招呼" && w.previewSocialGreetingButton.title == "预览双鸟招呼"
+            checks["pointerFollowChineseToggleRestored"] = w.draft.pointerFollowEnabled && w.pointerFollowButton.state == .on && w.pointerFollowButton.title == "绕飞时跟随鼠标移动"
+            checks["pointerPreviewMessageUsesSavedOnChinese"] = d.pointerVisitPreviewMessage == "正在预览绕鼠标飞行。移动鼠标会继续跟随，点击可结束。"
             w.tabs.selectTabViewItem(at:2)
             try snapshot(w.window!,to:folder.appendingPathComponent("interaction-zh.png"))
             if let scroll=w.tabs.tabViewItems[2].view as? NSScrollView {
@@ -174,11 +199,17 @@ enum SettingsVerification {
             w.relocalize()
             checks["ambientDraftSurvivesRebuild"] = !w.draft.pointerVisits && !w.draft.flockPasses && w.ambientFrequencyPopup.indexOfSelectedItem == 2
             checks["socialDraftSurvivesAmbientRebuild"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off
+            checks["pointerFollowDisabledPreferenceSurvivesRebuild"] = w.draft.pointerFollowEnabled && w.pointerFollowButton.state == .on && !w.pointerFollowButton.isEnabled
             w.save()
             let ambientSaved=try BirdSettings.decode(Data(contentsOf:d.settingsURL))
             checks["ambientSettingsPersistAndApply"] = !ambientSaved.pointerVisits && !d.settings.pointerVisits && !ambientSaved.flockPasses && ambientSaved.ambientFrequency == .high
             checks["ambientEditsPreservePerchAndHoverSettings"] = !ambientSaved.perchActions && !d.settings.perchActions && ambientSaved.hoverDelay == 0.25 && d.settings.hoverDelay == 0.25
             checks["ambientEditsPreserveSocialSetting"] = !ambientSaved.socialInteractions && !d.settings.socialInteractions
+            checks["pointerFollowPreferencePersistsWithVisitsDisabled"] = ambientSaved.pointerFollowEnabled && d.settings.pointerFollowEnabled && !ambientSaved.pointerVisits
+            var oldPointerObject=try JSONSerialization.jsonObject(with:Data(contentsOf:d.settingsURL)) as! [String:Any]
+            oldPointerObject.removeValue(forKey:"pointerFollowEnabled")
+            let pointerMigrated=try BirdSettings.decode(JSONSerialization.data(withJSONObject:oldPointerObject))
+            checks["oldSettingsDisablePointerFollowingWithoutLosingOtherEdits"] = !pointerMigrated.pointerFollowEnabled && pointerMigrated.pointerVisits == ambientSaved.pointerVisits && pointerMigrated.socialInteractions == ambientSaved.socialInteractions && pointerMigrated.perchActions == ambientSaved.perchActions && pointerMigrated.hoverDelay == ambientSaved.hoverDelay && pointerMigrated.flockPasses == ambientSaved.flockPasses && pointerMigrated.ambientFrequency == ambientSaved.ambientFrequency && pointerMigrated.probabilities == ambientSaved.probabilities && pointerMigrated.catalog.species == ambientSaved.catalog.species
             var oldSocialObject=try JSONSerialization.jsonObject(with:Data(contentsOf:d.settingsURL)) as! [String:Any]
             oldSocialObject.removeValue(forKey:"socialInteractions")
             let socialMigrated=try BirdSettings.decode(JSONSerialization.data(withJSONObject:oldSocialObject))
@@ -208,10 +239,12 @@ enum SettingsVerification {
             checks["resetRestoresDefaultsAndUnlocks"] = w.draft.probabilities == BirdSettings().probabilities && w.draft.hoverDelay == 1 && w.hoverDelayField.doubleValue == 1
             checks["perchDefaultsRestoredWithoutApplying"] = w.draft.perchActions && w.perchActionsButton.state == .on && !d.settings.perchActions
             checks["socialDefaultsRestoredWithoutApplying"] = w.draft.socialInteractions && w.socialInteractionsButton.state == .on && !d.settings.socialInteractions
+            checks["pointerFollowDefaultsRestoredWithoutApplying"] = !w.draft.pointerFollowEnabled && w.pointerFollowButton.state == .off && w.pointerFollowButton.isEnabled && d.settings.pointerFollowEnabled
             w.save()
             let defaultsSaved=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
             checks["perchDefaultsSaveAndReload"] = defaultsSaved.perchActions && d.settings.perchActions && defaultsSaved.hoverDelay == 1 && defaultsSaved.pointerVisits && defaultsSaved.flockPasses && defaultsSaved.ambientFrequency == .low
             checks["socialDefaultsSaveAndReload"] = defaultsSaved.socialInteractions && d.settings.socialInteractions
+            checks["pointerFollowDefaultsSaveAndReload"] = !defaultsSaved.pointerFollowEnabled && !d.settings.pointerFollowEnabled
             w.scrollToSpecies(.nightHeron)
             if let scroll=w.tabs.tabViewItems[0].view as? NSScrollView {
                 checks["manualMigrationScrollsToFirstNewBird"] = scroll.documentView!.visibleRect.intersects(w.fields[7].frame)
@@ -253,8 +286,13 @@ enum SettingsVerification {
     private static func checkSocialLayout(_ window:SpeciesSettingsWindow,language:String,checks:inout [String:Bool]) {
         guard let scroll=window.tabs.tabViewItems[2].view as? NSScrollView,let document=scroll.documentView else {
             checks["socialControlsReachable\(language)"]=false
+            checks["pointerFollowControlReachable\(language)"]=false
             return
         }
+        scroll.contentView.scroll(to:CGPoint(x:0,y:max(0,window.pointerVisitsButton.frame.minY-20)))
+        scroll.reflectScrolledClipView(scroll.contentView)
+        checks["pointerFollowControlReachable\(language)"] = document.visibleRect.contains(window.pointerVisitsButton.frame) && document.visibleRect.contains(window.pointerFollowButton.frame)
+        checks["pointerFollowTitleFits\(language)"] = window.pointerFollowButton.intrinsicContentSize.width <= window.pointerFollowButton.frame.width
         scroll.contentView.scroll(to:CGPoint(x:0,y:max(0,window.socialInteractionsButton.frame.minY-20)))
         scroll.reflectScrolledClipView(scroll.contentView)
         checks["socialControlsReachable\(language)"] = document.visibleRect.contains(window.socialInteractionsButton.frame) && document.visibleRect.contains(window.previewSocialGreetingButton.frame) && document.visibleRect.contains(window.ambientFrequencyPopup.frame)

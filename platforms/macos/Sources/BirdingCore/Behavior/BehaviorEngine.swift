@@ -47,6 +47,7 @@ public final class BehaviorEngine {
     public var pendingCount:Int {records.values.filter{!$0.visible}.count}
     public var activeRunCount:Int {runtime.runs.count}
     public var leasedBirdCount:Int {runtime.owners.count}
+    public var reservedLandingCount:Int {runtime.landingReservations.count}
     public var ambientBusy:Bool {runtime.encounterBusy}
     public var hasPointerPreview:Bool {previewDelay != nil}
     public func id(of bird:Bird) -> BirdID? {identities[ObjectIdentifier(bird)]}
@@ -94,6 +95,9 @@ public final class BehaviorEngine {
         runtime.validate(in:self)
     }
     public func applySettings(_ value:BirdSettings) {
+        if value.pointerFollowEnabled != settings.pointerFollowEnabled {
+            runtime.cancel(where:{$0.kind == .pointerVisit},reason:.settingsChanged,in:self)
+        }
         settings=value;scheduler.reset(value.ambientFrequency)
         if !value.socialInteractions {
             runtime.cancel(where:{$0.kind == .socialGreeting},reason:.settingsChanged,in:self)
@@ -175,7 +179,8 @@ public final class BehaviorEngine {
         guard !world.buttonsDown,let screen=world.screens.first(where:{$0.contains(world.pointer)}) else {return reject(.pointerVisit,source,.noSpace)}
         let candidates=birds.filter {bird in
             bird.state == .perched && bird.edge == .top && !bird.isDeparting && behavior(of:bird)==nil &&
-                spriteScale(for:bird)<=1.8 && screen.contains(bird.position)
+                spriteScale(for:bird)<=1.8 && bird.position.x>=screen.minX && bird.position.x<=screen.maxX &&
+                bird.position.y>=screen.minY && bird.position.y<=screen.maxY
         }
         // Evaluate geometry without consuming RNG; select only from eligible birds.
         let eligible=candidates.compactMap {bird -> (Bird,Surface,PointerOrbit)? in
@@ -307,7 +312,8 @@ public final class BehaviorEngine {
         }
     }
     func plan(for bird:Bird,entering:Bool=false,avoiding:CGPoint?=nil) -> DestinationPlan? {
-        DestinationPlanner.plan(for:bird,birds:birds,world:world,entering:entering,avoiding:avoiding,random:random)
+        DestinationPlanner.plan(for:bird,birds:birds,world:world,entering:entering,avoiding:avoiding,
+            reserved:runtime.landingReservations.filter{$0.bird != id(of:bird)}.compactMap{$0.footprint(in:self)},random:random)
     }
     @discardableResult public func route(_ bird:Bird,entering:Bool=false,avoiding:CGPoint?=nil) -> Bool {
         guard let plan=plan(for:bird,entering:entering,avoiding:avoiding) else {return false}

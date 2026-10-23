@@ -19,7 +19,7 @@ struct DestinationPlan {
 
 // Geometry-only planning. No AppKit or state changes before a plan is accepted.
 enum DestinationPlanner {
-    static func plan(for bird: Bird, birds: [Bird], world: BehaviorWorld, entering: Bool = false, avoiding: CGPoint? = nil, random: EngineRandom) -> DestinationPlan? {
+    static func plan(for bird: Bird, birds: [Bird], world: BehaviorWorld, entering: Bool = false, avoiding: CGPoint? = nil, reserved:[CGRect]=[], random: EngineRandom) -> DestinationPlan? {
         let screenRects=world.screens, displayRects=world.displays, surfaces=world.surfaces
         func spriteScale(for bird: Bird) -> CGFloat {world.scale * bird.profile.relativeScale}
         guard !bird.isDeparting else { return nil }
@@ -39,6 +39,7 @@ enum DestinationPlanner {
             let foot = Geometry.foot(on:host,fraction:other.fraction,edge:other.edge,scale:spriteScale(for:other))
             return Geometry.landingFootprint(at: foot, scale: spriteScale(for: other)).insetBy(dx: -8, dy: -8)
         }
+        occupied.append(contentsOf:reserved)
         if let avoiding {
             // Reserve the area the user wants to uncover, so a click cannot
             // select the same perch or a point only a few pixels away.
