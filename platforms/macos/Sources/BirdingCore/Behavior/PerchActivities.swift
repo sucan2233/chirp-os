@@ -5,7 +5,7 @@ public enum PerchActionKind:String,CaseIterable {
     case rest, preen
     var behavior:BehaviorKind {self == .rest ? .rest:.preen}
     var requiredFrames:Set<String> {
-        self == .rest ? ["stand","blink"]:["stand","preen0","preen1"]
+        BehaviorDefinitions.definition(for:behavior).requiredFrames
     }
 }
 
@@ -163,14 +163,7 @@ final class PerchActivityPlanner {
     }
     func didFinish(_ id:BirdID,kind:BehaviorKind) {
         guard let rhythm=rhythms[id],rhythm.active.remove(kind) != nil else {return}
-        let duration:Double
-        switch kind {
-        case .watch:duration=8
-        case .alert:duration=12
-        case .rest,.preen:duration=6
-        case .leafPlay:duration=90
-        default:duration=kind.isSocial ? 20:0
-        }
+        let duration=BehaviorDefinitions.definition(for:kind).cooldown
         guard duration>0 else {return}
         // Social opportunities share one recovery period across all variants.
         let kinds:[BehaviorKind]=kind.isSocial ? [.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff]:[kind]
@@ -209,7 +202,6 @@ final class PerchActivityPlanner {
 
 final class PerchActivityExecution:BehaviorExecution {
     let id:BirdID,plan:PerchActionPlan
-    let occupiesEncounter=false,runsWhilePaused=false
     var kind:BehaviorKind {plan.kind.behavior}
     var participants:[BirdID] {[id]}
     var timeout:Double {plan.duration+1}

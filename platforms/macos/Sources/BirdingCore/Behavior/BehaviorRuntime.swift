@@ -22,6 +22,8 @@ protocol BehaviorExecution: AnyObject {
 }
 
 extension BehaviorExecution {
+    var occupiesEncounter:Bool {BehaviorDefinitions.definition(for:kind).occupiesEncounter}
+    var runsWhilePaused:Bool {BehaviorDefinitions.definition(for:kind).runsWhilePaused}
     var propIDs:[ScenePropID] {[]}
     func propSnapshots(in engine:BehaviorEngine) -> [ScenePropRenderState] {[]}
     var landingReservations: [LandingReservation] {[]}

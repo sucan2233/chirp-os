@@ -1,0 +1,186 @@
+import XCTest
+@testable import BirdingCore
+
+final class BehaviorRecordingTests:XCTestCase {
+    let screen=CGRect(x:0,y:0,width:1600,height:1200)
+    let host=Surface(id:61,pid:42,rect:CGRect(x:100,y:900,width:1400,height:250))
+    func fixture(record:Bool=true) -> BehaviorEngine {
+        var settings=BirdSettings();settings.ambientLeafPlayEnabled=false
+        let e=BehaviorEngine(seed:UInt64.max-100,settings:settings,recordInputs:record)
+        e.populationEnabled=false;e.ambientEnabled=false;e.autonomousRouting=false
+        let frames=Set(["stand","blink","preen0","preen1","idle0","idle1","idle2","land0","land1","land2"]+(0...7).map{"fly\($0)"})
+        e.updateWorld(BehaviorWorld(screens:[screen],displays:[screen],surfaces:[host],pointer:CGPoint(x:30,y:30),
+            availableFrames:Dictionary(uniqueKeysWithValues:SpeciesID.allCases.map{($0,frames)})))
+        return e
+    }
+    func advance(_ e:BehaviorEngine,_ seconds:Double) {for _ in 0..<Int(seconds*30) {e.advance(1.0/30)}}
+    func decoded(_ e:BehaviorEngine) throws -> BehaviorInputLog {try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))}
+    func assertReplay(_ e:BehaviorEngine,file:StaticString=#filePath,line:UInt=#line) throws {
+        let log=try decoded(e)
+        XCTAssertNil(log.failure,file:file,line:line)
+        for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),log.expected,"\(hz)Hz",file:file,line:line)}
+        XCTAssertEqual(try log.replay(),log.expected,file:file,line:line)
+    }
+    func testRecordReplayPreservesExternalInputsAndDoesNotDoubleRecordNestedRoutes() throws {
+        let e=fixture()
+        e.bringInBird();advance(e,20)
+        let bird=try XCTUnwrap(e.birds.first),id=try XCTUnwrap(e.id(of:bird))
+        XCTAssertEqual(bird.state,.perched)
+        _=e.handle(.attention(.watch,.preview));advance(e,0.5)
+        e.handle(.pause(true));advance(e,2)
+        e.handle(.relocate(id));advance(e,5)
+        e.handle(.pause(false));advance(e,2)
+        var settings=e.settings;settings.hoverDelay=0.3;e.applySettings(settings)
+        e.population.setRange(PopulationRange(lower:8,upper:12)!)
+        e.reconcileLayout();advance(e,10)
+        let log=try e.recordedInputs()
+        XCTAssertEqual(log.seed,String(UInt64.max-100))
+        XCTAssertEqual(log.inputs.filter{$0.kind == "arrive"}.count,1)
+        XCTAssertFalse(log.inputs.contains{$0.kind == "route"},"Internal routes are consequences, not external inputs")
+        XCTAssertEqual(log.inputs.filter{$0.kind == "reconcileLayout"}.count,1)
+        XCTAssertTrue(log.expected?.events.contains{$0.kind == "watch" && $0.type == "started"} ?? false)
+        try assertReplay(e)
+    }
+    func testAutomaticPopulationAndEcologyUseTheSameRandomStreamsWhenRecorded() throws {
+        let e=fixture(),control=fixture(record:false)
+        for engine in [e,control] {engine.populationEnabled=true;engine.ambientEnabled=true;engine.autonomousRouting=true;advance(engine,60)}
+        let a=e.renderSnapshot(),b=control.renderSnapshot()
+        XCTAssertEqual(a.map(\.position),b.map(\.position));XCTAssertEqual(a.map(\.frameName),b.map(\.frameName))
+        for _ in 0..<16 {XCTAssertEqual(e.random.unit(),control.random.unit())}
+        try assertReplay(e)
+    }
+    func testWorldHostSamplingAndPopulationReplacementAreRecordedInOrder() throws {
+        let e=fixture();e.bringInBird();advance(e,15)
+        var world=e.world;world.surfaces[0].rect.origin.x+=20;e.updateWorld(world,sampleDT:1.0/30)
+        e.population=Population(range:PopulationRange(lower:1,upper:1)!)
+        e.populationEnabled=true;advance(e,5)
+        if let bird=e.birds.first {e.sendAway(bird)}
+        advance(e,10)
+        try assertReplay(e)
+    }
+    func testRecorderRetainsEventsBeyondEngineDiagnosticRing() throws {
+        let e=fixture()
+        for _ in 0..<300 {e.handle(.remove(BirdID(999)));e.handle(.attention(.watch,.preview))}
+        XCTAssertEqual(e.events.count,256)
+        XCTAssertEqual(try e.recordedInputs().expected?.events.count,300)
+        try assertReplay(e)
+    }
+    func testRecordingsRoundTripThroughDiskAndRejectUnsupportedEnvelopes() throws {
+        let e=fixture();e.bringInBird();advance(e,1)
+        let folder=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+        defer {try? FileManager.default.removeItem(at:folder)}
+        let file=folder.appendingPathComponent("replay.json");try e.saveRecording(to:file)
+        let loaded=try BehaviorInputLog.load(from:file)
+        XCTAssertEqual(try loaded.replay(),loaded.expected)
+        var object=try XCTUnwrap(JSONSerialization.jsonObject(with:Data(contentsOf:file)) as? [String:Any])
+        for bad:Any in [2,-1,true,"1",1.5] {
+            object["version"]=bad;object["settings"]="future incompatible payload"
+            XCTAssertThrowsError(try BehaviorInputLog.decode(JSONSerialization.data(withJSONObject:object)))
+        }
+    }
+    func testUnknownOrInvalidInputsAreRejectedWithoutSilentSkipping() throws {
+        let e=fixture();var log=try e.recordedInputs()
+        for kind in ["unknown","world","settings","command","advance","population","route","depart"] {
+            log.inputs=[RecordedInput(kind:kind)]
+            XCTAssertThrowsError(try log.replay(),kind)
+        }
+        log=try e.recordedInputs();var input=RecordedInput(kind:"advance")
+        input.elapsed = -.infinity;input.options=RecordedSimulationOptions(e);log.inputs=[input]
+        XCTAssertThrowsError(try log.replay())
+        input.elapsed=Double.greatestFiniteMagnitude;log.inputs=[input];XCTAssertNoThrow(try log.replay())
+        log.inputs=[];XCTAssertThrowsError(try log.replay(callbackHz:0))
+        log.failure="incomplete";XCTAssertThrowsError(try log.replay())
+    }
+    func testWorldManifestDeltaPreservesChangesAndClearsAndLongHostSamples() throws {
+        let e=fixture();e.bringInBird();advance(e,3)
+        var world=e.world;world.pointer.x+=5;e.updateWorld(world,sampleDT:9000)
+        let log=try e.recordedInputs()
+        XCTAssertNotNil(log.inputs.first{$0.kind == "world"}?.world?.availableFrames)
+        XCTAssertNil(log.inputs.last?.world?.availableFrames)
+        world.availableFrames=[:];e.updateWorld(world)
+        XCTAssertEqual(try e.recordedInputs().inputs.last?.world?.availableFrames,[:])
+        try assertReplay(e)
+    }
+    func testWorldValidationAfterACommandIsNotElided() throws {
+        let e=fixture();let world=e.world
+        e.handle(.pause(true));e.updateWorld(world)
+        XCTAssertEqual(try e.recordedInputs().inputs.suffix(2).map(\.kind),["command","world"])
+        let count=try e.recordedInputs().inputs.count
+        e.updateWorld(world)
+        XCTAssertEqual(try e.recordedInputs().inputs.count,count)
+        try assertReplay(e)
+    }
+    func testEveryCommandHasAStableRoundTrip() throws {
+        let commands:[EngineCommand]=[.relocate(BirdID(1)),.pointerVisit(.automatic),.flockPass(.preview),.socialGreeting(.user),
+            .socialMotion(.giveWay,.automatic),.perchAction(.preen,.preview),.attention(.alert,.preview),.previewPointerAfter(3),
+            .leafPlay(at:CGPoint(x:400,y:400),source:.preview),.releaseLeafAfter(2),.clearProps,.removeProp(ScenePropID(9)),
+            .pointerClick,.pause(true),.cancelAmbient(.sleep),.scatter,.remove(BirdID(3))]
+        for command in commands {
+            let first=RecordedCommand(command),data=try BehaviorInputLog.encoder().encode(first)
+            let decoded=try JSONDecoder().decode(RecordedCommand.self,from:data)
+            XCTAssertEqual(try BehaviorInputLog.encoder().encode(RecordedCommand(decoded.validated())),data)
+        }
+        var command=RecordedCommand(.pause(true));command.flag=nil;XCTAssertThrowsError(try command.validated())
+        command=RecordedCommand(.relocate(BirdID(1)));command.target="18446744073709551616";XCTAssertThrowsError(try command.validated())
+        command.name="future";XCTAssertThrowsError(try command.validated())
+    }
+    func testClampedLongCallbackAndSubstepRemainderArePreserved() throws {
+        let e=fixture();e.bringInBird()
+        for dt in [0.001,0.1,0.005,0.034,0,0.008,0.05] {e.advance(dt)}
+        try assertReplay(e)
+    }
+    func testClampedCommandsIgnoredNegativeTimeAndTinyCallbacksReplayExactly() throws {
+        let e=fixture()
+        e.handle(.previewPointerAfter(-5));e.handle(.cancelAmbient(.userInput))
+        e.handle(.releaseLeafAfter(100));e.handle(.clearProps)
+        e.handle(.previewPointerAfter(.nan));e.handle(.cancelAmbient(.userInput))
+        e.advance(-1);e.advance(.nan);e.advance(.infinity)
+        XCTAssertFalse(try e.recordedInputs().inputs.contains{$0.kind == "advance"})
+        e.advance(BehaviorEngine.step-1.2e-10)
+        for _ in 0..<30 {e.advance(1e-12)}
+        XCTAssertEqual(e.time,BehaviorEngine.step)
+        try assertReplay(e)
+    }
+    func testDirectPopulationClockMutationIsCapturedWithoutDuplicatingEngineTicks() throws {
+        let e=fixture();e.populationEnabled=true
+        _=e.population.tick(1,residents:0,total:0,random:{0.42})
+        XCTAssertEqual(try e.recordedInputs().inputs.filter{$0.kind == "population"}.count,1)
+        advance(e,10)
+        XCTAssertEqual(try e.recordedInputs().inputs.filter{$0.kind == "population"}.count,1)
+        try assertReplay(e)
+    }
+    func testMutableFixtureInjectionCannotProduceAFalseReplaySuccess() {
+        let e=fixture();e.installFixtureBirds([])
+        XCTAssertThrowsError(try e.recordedInputs())
+        XCTAssertThrowsError(try fixture(record:false).recordedInputs())
+    }
+    func testOversizedRecordingCannotBeReplayedOrSavedAsComplete() throws {
+        let e=fixture()
+        for _ in 0...BehaviorInputLog.maximumInputs {e.handle(.clearProps)}
+        XCTAssertThrowsError(try e.recordedInputs())
+        XCTAssertThrowsError(try BehaviorInputLog.decode(Data(repeating:32,count:BehaviorInputLog.maximumBytes+1)))
+    }
+    func testSharedFilesExerciseCompletedScenesAndReleaseAllResources() throws {
+        let root=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let folder=root.appendingPathComponent("shared/behavior-fixtures/v1")
+        let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="json"}.sorted{$0.path<$1.path}
+        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json"])
+        for file in files {
+            let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
+            XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
+            XCTAssertEqual(try log.replay(callbackHz:120),reference,file.lastPathComponent)
+            XCTAssertEqual(reference.runs,0,file.lastPathComponent);XCTAssertEqual(reference.leases,0,file.lastPathComponent)
+            XCTAssertEqual(reference.reservations,0,file.lastPathComponent);XCTAssertTrue(reference.props.isEmpty,file.lastPathComponent)
+            let finished=reference.events.filter{$0.type=="completed"}.compactMap(\.kind)
+            if file.lastPathComponent=="attention.json" {XCTAssertTrue(finished.contains("watch"));XCTAssertTrue(finished.contains("alert"))}
+            if file.lastPathComponent=="leaf.json" {XCTAssertTrue(finished.contains("leafPlay"))}
+            if file.lastPathComponent=="social.json" {XCTAssertTrue(finished.contains("socialGreeting"))}
+            if file.lastPathComponent=="interruptions.json" {
+                XCTAssertTrue(reference.events.contains{$0.kind=="watch" && $0.type=="cancelled" && $0.reason=="userInput"})
+                XCTAssertTrue(finished.contains("relocate"))
+            }
+        }
+    }
+}

@@ -10,6 +10,8 @@ public final class BehaviorEngine {
     private var order:[BirdID]=[]
     private var nextBirdID:UInt64=1
     let runtime=BehaviorRuntime()
+    private let inputRecorder:BehaviorInputRecorder?
+    var eventObserver:((BehaviorEvent)->Void)?
     let poseMixer=PoseMixer()
     let random:EngineRandom
     let perchPlanner:PerchActivityPlanner
@@ -30,7 +32,9 @@ public final class BehaviorEngine {
     public private(set) var paused=false
     public private(set) var settings:BirdSettings
     public private(set) var world=BehaviorWorld()
-    public var population=Population()
+    public var population=Population() {
+        didSet {oldValue.stateObserver=nil;observePopulation();recordPopulation(population)}
+    }
     public var populationEnabled=true
     public var ambientEnabled=true
     public var autonomousRouting=true
@@ -40,13 +44,33 @@ public final class BehaviorEngine {
     public private(set) var events:[BehaviorEvent]=[]
     private var nextEvent:UInt64=1
 
-    public init(seed:UInt64=UInt64.random(in:0...UInt64.max),settings:BirdSettings=BirdSettings()) {
+    public init(seed:UInt64=UInt64.random(in:0...UInt64.max),settings:BirdSettings=BirdSettings(),recordInputs:Bool=false) {
         self.seed=seed;self.random=EngineRandom(seed:seed);self.settings=settings
+        self.inputRecorder=recordInputs ? BehaviorInputRecorder(seed:seed,settings:settings):nil
         self.perchPlanner=PerchActivityPlanner(seed:seed)
         self.socialRandom=EngineRandom(seed:seed ^ 0x534F4349414C524E)
         self.ecologyRandom=EngineRandom(seed:seed ^ 0x45434F5343484544)
-        scheduler.reset(settings.ambientFrequency)
+        scheduler.reset(settings.ambientFrequency);observePopulation()
     }
+    private func observePopulation() {
+        population.stateObserver={ [weak self] value in self?.recordPopulation(value) }
+    }
+    private func recordPopulation(_ value:Population) {
+        if let recorder=inputRecorder,recorder.depth==0 {recorder.append(.population(value))}
+    }
+    private func beginRecordingInput(_ value:@autoclosure ()->RecordedInput) {
+        guard let recorder=inputRecorder else {return}
+        if recorder.depth==0 {recorder.append(value())}
+        recorder.depth+=1
+    }
+    private func endRecordingInput() {if let recorder=inputRecorder {recorder.depth-=1}}
+    public func recordedInputs() throws -> BehaviorInputLog {
+        guard let recorder=inputRecorder,recorder.depth==0 else {throw BehaviorRecordingError.invalid("recording is not enabled or an input is in progress")}
+        var result=recorder.log
+        result.expected=BehaviorReplayReport(engine:self,events:recorder.events)
+        try result.validateEnvelope();return result
+    }
+    public func saveRecording(to url:URL) throws {try recordedInputs().save(to:url)}
     public var birds:[Bird] {order.compactMap{records[$0].flatMap{$0.visible ? $0.bird:nil}}}
     public var residentCount:Int {records.values.filter{$0.visible && $0.role == .resident && !$0.bird.isDeparting}.count}
     public var passingCount:Int {records.values.filter{$0.visible && $0.role == .transient}.count}
@@ -79,6 +103,7 @@ public final class BehaviorEngine {
     // Fixture bridge for the existing desktop verifiers. Production spawning
     // goes through the engine's population or behavior commands.
     public func installFixtureBirds(_ values:[Bird]) {
+        inputRecorder?.log.failure="mutable fixture injection is not recordable; use initial fixtureBirds in a replay file"
         let keep=Set(values.map(ObjectIdentifier.init))
         for id in order where records[id].map({!keep.contains(ObjectIdentifier($0.bird))}) == true {
             runtime.cancel(bird:id,reason:.removed,in:self);removeRecord(id)
@@ -97,10 +122,12 @@ public final class BehaviorEngine {
     func emit(_ type:BehaviorEventType,run:BehaviorRunID?=nil,kind:BehaviorKind?=nil,
               source:BehaviorSource = .automatic,participants:[BirdID]=[],reason:BehaviorReason?=nil) {
         events.append(BehaviorEvent(sequence:nextEvent,time:time,runID:run,kind:kind,source:source,type:type,participants:participants,reason:reason))
+        if let event=events.last {inputRecorder?.event(event);eventObserver?(event)}
         nextEvent+=1
         if events.count>256 {events.removeFirst(events.count-256)}
     }
     public func updateWorld(_ value:BehaviorWorld,sampleDT:Double?=nil) {
+        beginRecordingInput(.world(value,sampleDT:sampleDT));defer {endRecordingInput()}
         if world.screens != value.screens || world.displays != value.displays {resetPerception()}
         world=value
         if !value.buttonsDown {clickHandled=false}
@@ -108,6 +135,7 @@ public final class BehaviorEngine {
         runtime.validate(in:self)
     }
     public func applySettings(_ value:BirdSettings) {
+        beginRecordingInput(.settings(value));defer {endRecordingInput()}
         if value.pointerFollowEnabled != settings.pointerFollowEnabled {
             runtime.cancel(where:{$0.kind == .pointerVisit},reason:.settingsChanged,in:self)
         }
@@ -143,6 +171,7 @@ public final class BehaviorEngine {
         }
     }
     @discardableResult public func handle(_ command:EngineCommand) -> BehaviorResult {
+        beginRecordingInput(.command(command));defer {endRecordingInput()}
         switch command {
         case .relocate(let id): return relocate(id)
         case .pointerVisit(let source): return requestPointer(source)
@@ -217,7 +246,7 @@ public final class BehaviorEngine {
     }
     private func requestLeaf(at point:CGPoint,source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.leafPlay,source,.paused)}
-        guard settings.leafPlayEnabled,source != .automatic || settings.ambientLeafPlayEnabled else {return reject(.leafPlay,source,.disabled)}
+        guard BehaviorDefinitions.definition(for:.leafPlay).isEnabled(settings:settings,source:source) else {return reject(.leafPlay,source,.disabled)}
         guard !ambientBusy,scheduledEncounter == nil else {return reject(.leafPlay,source,.busy)}
         guard !world.buttonsDown else {return reject(.leafPlay,source,.userInput)}
         guard point.x.isFinite,point.y.isFinite else {return reject(.leafPlay,source,.noSpace)}
@@ -261,7 +290,7 @@ public final class BehaviorEngine {
     }
     private func requestPointer(_ source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.pointerVisit,source,.paused)}
-        guard settings.pointerVisits else {return reject(.pointerVisit,source,.disabled)}
+        guard BehaviorDefinitions.definition(for:.pointerVisit).isEnabled(settings:settings,source:source) else {return reject(.pointerVisit,source,.disabled)}
         guard !ambientBusy,scheduledEncounter == nil else {return reject(.pointerVisit,source,.busy)}
         guard !world.buttonsDown,let screen=world.screens.first(where:{$0.contains(world.pointer)}) else {return reject(.pointerVisit,source,.noSpace)}
         let candidates=birds.filter {bird in
@@ -281,7 +310,7 @@ public final class BehaviorEngine {
     }
     private func requestFlock(_ source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.flockPass,source,.paused)}
-        guard settings.flockPasses else {return reject(.flockPass,source,.disabled)}
+        guard BehaviorDefinitions.definition(for:.flockPass).isEnabled(settings:settings,source:source) else {return reject(.flockPass,source,.disabled)}
         guard !ambientBusy,scheduledEncounter == nil else {return reject(.flockPass,source,.busy)}
         guard let screen=random.element(world.displays) else {return reject(.flockPass,source,.noSpace)}
         let entries=settings.probabilities.entries.filter{$0.points>0 && AmbientFlock.species.contains($0.id)}
@@ -308,7 +337,7 @@ public final class BehaviorEngine {
     }
     private func requestSocialGreeting(_ source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.socialGreeting,source,.paused)}
-        guard settings.socialInteractions else {return reject(.socialGreeting,source,.disabled)}
+        guard BehaviorDefinitions.definition(for:.socialGreeting).isEnabled(settings:settings,source:source) else {return reject(.socialGreeting,source,.disabled)}
         guard !ambientBusy,scheduledEncounter == nil else {return reject(.socialGreeting,source,.busy)}
         guard !world.buttonsDown else {return reject(.socialGreeting,source,.userInput)}
         var reasons:[BehaviorReason]=[]
@@ -361,7 +390,7 @@ public final class BehaviorEngine {
     }
     private func requestSocialMotion(_ action:SocialMotionKind,source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(action.behavior,source,.paused)}
-        guard settings.socialInteractions else {return reject(action.behavior,source,.disabled)}
+        guard BehaviorDefinitions.definition(for:action.behavior).isEnabled(settings:settings,source:source) else {return reject(action.behavior,source,.disabled)}
         guard !ambientBusy,scheduledEncounter==nil else {return reject(action.behavior,source,.busy)}
         guard !world.buttonsDown else {return reject(action.behavior,source,.userInput)}
         let ids=socialMotionCandidates()
@@ -422,7 +451,7 @@ public final class BehaviorEngine {
     }
     private func requestPerchAction(_ action:PerchActionKind,source:BehaviorSource,target:BirdID?=nil) -> BehaviorResult {
         guard !paused else {return reject(action.behavior,source,.paused)}
-        guard settings.perchActions else {return reject(action.behavior,source,.disabled)}
+        guard BehaviorDefinitions.definition(for:action.behavior).isEnabled(settings:settings,source:source) else {return reject(action.behavior,source,.disabled)}
         let candidates=target.map{[$0]} ?? order
         var reasons:[BehaviorReason]=[]
         let eligible=candidates.filter {id in
@@ -457,11 +486,14 @@ public final class BehaviorEngine {
             reserved:runtime.landingReservations.filter{$0.bird != id(of:bird)}.compactMap{$0.footprint(in:self)},random:random)
     }
     @discardableResult public func route(_ bird:Bird,entering:Bool=false,avoiding:CGPoint?=nil) -> Bool {
+        var input=RecordedInput(kind:"route");input.bird=id(of:bird).map{String($0.rawValue)};input.entering=entering;input.avoiding=avoiding.map(RecordedPoint.init)
+        beginRecordingInput(input);defer {endRecordingInput()}
         guard let plan=plan(for:bird,entering:entering,avoiding:avoiding) else {return false}
         if let id=id(of:bird) {runtime.cancel(bird:id,reason:.replaced,in:self)}
         plan.apply(to:bird,random:random);return true
     }
     public func bringInBird() {
+        beginRecordingInput(RecordedInput(kind:"arrive"));defer {endRecordingInput()}
         guard let point=Migration.outsidePoint(screens:world.displays,right:random.unit()<0.5,fraction:random.value(in:0.2...0.75),margin:80*world.scale*3+20) else {return}
         let bird=Bird(position:point,fraction:random.value(in:0.12...0.88),profile:settings.catalog.profile(settings.probabilities.choose(unit:random.unit())),random:random.unit)
         // Publish an arrival only after it has a continuous route from its real
@@ -472,11 +504,14 @@ public final class BehaviorEngine {
         register(bird);lastArrivalPosition=point;arrivalCount+=1
     }
     public func sendAway(_ bird:Bird) {
+        var input=RecordedInput(kind:"depart");input.bird=id(of:bird).map{String($0.rawValue)}
+        beginRecordingInput(input);defer {endRecordingInput()}
         guard let point=Migration.outsidePoint(screens:world.displays,right:random.unit()<0.5,fraction:random.value(in:0.2...0.75),margin:80*world.scale*3+20) else {return}
         if let id=id(of:bird) {runtime.cancel(bird:id,reason:.replaced,in:self)}
         bird.depart(to:point,duration:max(2.8,Double(Geometry.distance(bird.position,point))/400*Bird.flightSpeedMultiplier))
     }
     public func reconcileLayout() {
+        beginRecordingInput(RecordedInput(kind:"reconcileLayout"));defer {endRecordingInput()}
         for bird in birds {
             if bird.isDeparting {sendAway(bird)}
             else if bird.state != .flying && world.surfaces.contains(where:{$0.isGround && $0.id==bird.hostID}) {
@@ -486,6 +521,7 @@ public final class BehaviorEngine {
     }
     public func advance(_ elapsed:Double) {
         guard elapsed.isFinite,elapsed>=0 else {return}
+        beginRecordingInput(.advance(elapsed,in:self));defer {endRecordingInput()}
         accumulator+=min(0.05,elapsed)
         var steps=0
         while accumulator+1e-10>=Self.step && steps<3 {

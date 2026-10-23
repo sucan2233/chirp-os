@@ -78,7 +78,23 @@ public struct ProbabilityDistribution: Codable, Equatable {
         return entries.last(where: { $0.points > 0 })!.id
     }
 }
+public enum BirdSettingsVersionError: Error, Equatable, LocalizedError {
+    case unsupportedVersion(Int)
+    case invalidVersion
+
+    public var errorDescription: String? {
+        switch self {
+        case .unsupportedVersion(let version):
+            return "配置文件版本 \(version) 高于当前支持的版本 \(BirdSettings.currentSchemaVersion)，请升级应用后再打开。"
+        case .invalidVersion:
+            return "配置文件的 schemaVersion 无效：必须是非负整数。"
+        }
+    }
+}
+
 public struct BirdSettings: Codable {
+    public static let currentSchemaVersion = 1
+    public let schemaVersion: Int
     public static let hoverDelayRange:ClosedRange<Double> = 0...10
     public var catalog: SpeciesCatalog
     public var probabilities: ProbabilityDistribution
@@ -95,15 +111,35 @@ public struct BirdSettings: Codable {
     public var perchDefaultsVersion: Int? = nil
     public var pendingSpecies: [SpeciesID]? = nil
     public init(catalog:SpeciesCatalog = .standard) {
+        schemaVersion=Self.currentSchemaVersion
         self.catalog = catalog; probabilities = ProbabilityDistribution(catalog:catalog); perchDefaultsVersion=1
     }
     private enum CodingKeys:String,CodingKey {
+        case schemaVersion
         case catalog,probabilities,hoverDelay,perchDefaultsVersion,pendingSpecies
         case pointerVisits,pointerFollowEnabled,flockPasses,ambientFrequency,perchActions,socialInteractions,leafPlayEnabled
         case passiveAttentionEnabled,ambientLeafPlayEnabled
     }
+    private static func validateSchemaVersion(in values:KeyedDecodingContainer<CodingKeys>) throws {
+        // Absence alone denotes version 0; null and malformed values are not legacy versions.
+        let version: Int
+        if values.contains(.schemaVersion) {
+            do { version=try values.decode(Int.self,forKey:.schemaVersion) }
+            catch { throw BirdSettingsVersionError.invalidVersion }
+        } else { version=0 }
+        guard version>=0 else { throw BirdSettingsVersionError.invalidVersion }
+        guard version<=currentSchemaVersion else { throw BirdSettingsVersionError.unsupportedVersion(version) }
+    }
+    // Check only the version contract when replacing a file, not its catalog or settings.
+    private struct SchemaVersionHeader: Decodable {
+        init(from decoder:Decoder) throws {
+            try BirdSettings.validateSchemaVersion(in:decoder.container(keyedBy:CodingKeys.self))
+        }
+    }
     public init(from decoder:Decoder) throws {
         let values=try decoder.container(keyedBy:CodingKeys.self)
+        try Self.validateSchemaVersion(in:values)
+        schemaVersion=Self.currentSchemaVersion
         catalog=try values.decode(SpeciesCatalog.self,forKey:.catalog)
         probabilities=try values.decode(ProbabilityDistribution.self,forKey:.probabilities)
         hoverDelay=try values.decodeIfPresent(Double.self,forKey:.hoverDelay) ?? 1
@@ -154,6 +190,11 @@ public struct BirdSettings: Codable {
         return value
     }
     public func save(to url:URL) throws {
+        // A caller may have fallen back to defaults after load failed. Never overwrite
+        // a configuration whose version this app cannot safely read.
+        if FileManager.default.fileExists(atPath:url.path) {
+            _ = try JSONDecoder().decode(SchemaVersionHeader.self,from:Data(contentsOf:url))
+        }
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted,.sortedKeys]
         let data = try encoder.encode(self)
         _ = try Self.decode(data)

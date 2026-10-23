@@ -80,8 +80,8 @@ extension BehaviorEngine {
         guard let bird=bird(id),role(of:bird) == .resident,bird.state == .perched,bird.edge == .top,
               !bird.isDeparting,!bird.needsDestination,bird.perchDuration-bird.stateTime>3 else {return .unavailableBird}
         if let owner=runtime.owners[id],let run=runtime.runs[owner] {
-            let canInterrupt=source == .automatic && action == .alert && run.source == .automatic &&
-                [.rest,.preen,.watch].contains(run.execution.kind)
+            let canInterrupt=BehaviorDefinitions.canPreempt(incoming:action.behavior,source:source,
+                current:run.execution.kind,currentSource:run.source)
             if !canInterrupt {return .busy}
         }
         guard action.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? []) else {return .missingFrames}
@@ -102,7 +102,7 @@ extension BehaviorEngine {
             emit(.rejected,kind:action.behavior,source:source,reason:reason);return .rejected(reason)
         }
         guard !paused else {return reject(.paused)}
-        guard settings.perchActions && settings.passiveAttentionEnabled else {return reject(.disabled)}
+        guard BehaviorDefinitions.definition(for:action.behavior).isEnabled(settings:settings,source:source) else {return reject(.disabled)}
         let ids=target.map{[$0]} ?? birds.compactMap{id(of:$0)}
         var reasons:[BehaviorReason]=[]
         let candidates=ids.filter {id in

@@ -4,7 +4,7 @@ import CoreGraphics
 /// A bounded, immutable plan. Preflight uses an isolated Bird and constant
 /// samples; neither selection nor rendering consumes the live flight RNG.
 struct LeafPlayPlan {
-    static let requiredFrames:Set<String> = Set(["stand"]+(0...7).map{"fly\($0)"}+(0...2).map{"land\($0)"})
+    static let requiredFrames=BehaviorDefinitions.definition(for:.leafPlay).requiredFrames
     static let observeDuration=0.6,settleDuration=0.6,fadeDuration=1.5
     let id:BirdID
     let center:CGPoint
@@ -159,7 +159,7 @@ struct LeafPlayPlan {
 
 final class LeafPlayExecution:BehaviorExecution {
     let kind:BehaviorKind = .leafPlay
-    let occupiesEncounter=true,runsWhilePaused=false,timeout=35.0
+    let timeout=35.0
     let plan:LeafPlayPlan
     let propID:ScenePropID
     var participants:[BirdID] {[plan.id]}

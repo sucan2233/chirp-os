@@ -91,7 +91,7 @@ final class DesktopController: NSObject {
     let art = BirdArt()
     let arts = Dictionary(uniqueKeysWithValues: SpeciesID.allCases.map { ($0, BirdArt(species:$0)) })
     lazy var frameCapabilities=arts.mapValues{Set($0.frames.keys)}
-    let engine=BehaviorEngine()
+    let engine=BehaviorEngine(recordInputs:CommandLine.arguments.contains("--record-behavior"))
     var settings:BirdSettings {
         get {engine.settings}
         set {engine.applySettings(newValue)}
@@ -178,6 +178,7 @@ final class DesktopController: NSObject {
     var status: NSStatusItem!
     var statusLine: NSMenuItem!
     var diagnosticPath: String?
+    var recordingPath:String?
     var integration: IntegrationCheck?
     var primaryHeight: CGFloat { NSScreen.screens.first?.frame.height ?? 900 }
     var screenRects: [CGRect] { NSScreen.screens.map { Geometry.quartz($0.visibleFrame, primaryHeight: primaryHeight) } }
@@ -279,7 +280,7 @@ final class DesktopController: NSObject {
         let now = ProcessInfo.processInfo.systemUptime
         let dt = min(0.05, max(0,now-lastTick)); lastTick = now
         if now-lastSample >= 1.0/30 {
-            sampleWindows(dt: now-lastSample); lastSample = now
+            sampleWindows(dt: lastSample>0 ? now-lastSample:1); lastSample = now
         }
         advanceBirds(dt)
         updateHover(now:now)

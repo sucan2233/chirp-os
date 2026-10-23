@@ -15,15 +15,19 @@ public enum PopulationAction { case arrive, depart }
 
 // One event at a time, with a simulation clock (pause/sleep cannot cause a burst).
 public final class Population {
+    var stateObserver:((Population)->Void)?
     public private(set) var range: PopulationRange
     public private(set) var remaining: Double = 0.8
     public init(range: PopulationRange = .standard) { self.range = range }
+    init(range:PopulationRange,remaining:Double) {self.range=range;self.remaining=remaining}
     public func setRange(_ value: PopulationRange) {
         range = value
         remaining = min(remaining, 1.5)
+        stateObserver?(self)
     }
     public func tick(_ dt: Double, residents: Int, total: Int,
                      random: () -> Double = { Double.random(in: 0..<1) }) -> PopulationAction? {
+        defer {stateObserver?(self)}
         remaining -= max(0, dt)
         guard remaining <= 0 else { return nil }
         let filling = residents < range.lower

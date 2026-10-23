@@ -3,7 +3,7 @@ import CoreGraphics
 
 /// A visual exchange using each species' existing idle artwork, without audio.
 struct SocialGreetingPlan {
-    static let requiredFrames:Set<String> = ["stand","blink","idle0","idle1","idle2"]
+    static let requiredFrames=BehaviorDefinitions.definition(for:.socialGreeting).requiredFrames
     let initiator:BirdID
     let responder:BirdID
 
@@ -54,7 +54,6 @@ struct SocialGreetingPlan {
 final class SocialGreetingExecution:BehaviorExecution {
     let plan:SocialGreetingPlan
     let kind:BehaviorKind = .socialGreeting
-    let occupiesEncounter=true,runsWhilePaused=false
     private let duration=4.6
     var timeout:Double {duration+1}
     var participants:[BirdID] {[plan.initiator,plan.responder]}

@@ -13,7 +13,7 @@ public enum SocialMotionKind:String,CaseIterable {
 }
 
 struct SocialMotionPlan {
-    static let requiredFrames:Set<String> = Set(["stand","blink"]+(0...7).map{"fly\($0)"}+(0...2).map{"land\($0)"})
+    static let requiredFrames=BehaviorDefinitions.definition(for:.sideBySide).requiredFrames
     let action:SocialMotionKind
     /// Host/leader first; visitor/follower second. Selection is deterministic.
     let participants:[BirdID]
@@ -190,7 +190,7 @@ final class SocialMotionExecution:BehaviorExecution {
     var kind:BehaviorKind {plan.action.behavior}
     var participants:[BirdID] {plan.participants}
     var landingReservations:[LandingReservation] {plan.destinations}
-    let occupiesEncounter=true,runsWhilePaused=false,timeout=30.0
+    let timeout=30.0
     private struct Actor {
         var revision:UInt64
         let origin:LandingReservation

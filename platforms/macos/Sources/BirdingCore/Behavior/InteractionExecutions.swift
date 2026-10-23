@@ -3,7 +3,7 @@ import CoreGraphics
 
 final class RelocationExecution:BehaviorExecution {
     let kind:BehaviorKind = .relocate
-    let occupiesEncounter=false, runsWhilePaused=true, timeout=45.0
+    let timeout=45.0
     let id:BirdID,origin:CGPoint,plan:DestinationPlan
     private var revision:UInt64=0
     var participants:[BirdID] {[id]}
@@ -29,7 +29,6 @@ final class RelocationExecution:BehaviorExecution {
 
 final class PointerVisitExecution:BehaviorExecution {
     let kind:BehaviorKind = .pointerVisit
-    let occupiesEncounter=true,runsWhilePaused=false
     let id:BirdID,center:CGPoint,host:Surface,screen:CGRect,orbit:PointerOrbit
     private var revision:UInt64=0
     // Frozen for this run. BehaviorEngine cancels the run when the setting changes.
@@ -105,7 +104,6 @@ final class PointerVisitExecution:BehaviorExecution {
 
 final class FlockPassExecution:BehaviorExecution {
     let kind:BehaviorKind = .flockPass
-    let occupiesEncounter=true,runsWhilePaused=false
     let members:[(BirdID,FlockMemberPlan)]
     private var pending:[BirdID:Double]=[:]
     private(set) var timeout=60.0

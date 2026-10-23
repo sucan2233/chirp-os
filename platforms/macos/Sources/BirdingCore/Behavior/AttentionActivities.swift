@@ -4,7 +4,7 @@ import CoreGraphics
 public enum AttentionKind:String,CaseIterable {
     case watch, alert
     public var behavior:BehaviorKind {self == .watch ? .watch:.alert}
-    public var requiredFrames:Set<String> {self == .watch ? ["stand","blink"]:["stand"]}
+    public var requiredFrames:Set<String> {BehaviorDefinitions.definition(for:behavior).requiredFrames}
 }
 
 struct AttentionPlan {
@@ -24,7 +24,6 @@ struct AttentionPlan {
 public final class AttentionExecution:BehaviorExecution {
     let id:BirdID,plan:AttentionPlan
     let requiresNearbyPointer:Bool
-    let occupiesEncounter=false,runsWhilePaused=false
     var kind:BehaviorKind {plan.kind.behavior}
     var participants:[BirdID] {[id]}
     var timeout:Double {plan.duration+0.5}
