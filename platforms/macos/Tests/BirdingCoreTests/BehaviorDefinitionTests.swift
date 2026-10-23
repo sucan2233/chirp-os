@@ -16,7 +16,7 @@ final class BehaviorDefinitionTests:XCTestCase {
     }
 
     private let kinds:[BehaviorKind] = [.relocate,.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,
-        .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek]
+        .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase]
     private let sources:[BehaviorSource] = [.user,.preview,.automatic]
 
     // Literal expectations intentionally do not read existing plan requirements
@@ -39,7 +39,8 @@ final class BehaviorDefinitionTests:XCTestCase {
             Expected(kind:.alert,capabilities:[.standing],frames:["stand"],encounter:false,paused:false,priority:40,cooldown:12,settingsMask:12),
             Expected(kind:.sideHop,capabilities:[.standing,.landing],frames:["stand","land0","land1","land2"],encounter:false,paused:false,priority:30,cooldown:24,settingsMask:260),
             Expected(kind:.takeoffPreparation,capabilities:[.standing,.flight],frames:["stand","fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7"],encounter:false,paused:false,priority:30,cooldown:4,settingsMask:516),
-            Expected(kind:.edgePeek,capabilities:[.standing,.greeting,.landing],frames:["stand","idle0","idle1","idle2","land0","land1","land2"],encounter:false,paused:false,priority:15,cooldown:45,settingsMask:1028)
+            Expected(kind:.edgePeek,capabilities:[.standing,.greeting,.landing],frames:["stand","idle0","idle1","idle2","land0","land1","land2"],encounter:false,paused:false,priority:15,cooldown:45,settingsMask:1028),
+            Expected(kind:.chase,capabilities:[.standing,.flight,.landing],frames:leafFlight,encounter:true,paused:false,priority:60,cooldown:60,settingsMask:2064)
         ]
     }
 
@@ -65,7 +66,7 @@ final class BehaviorDefinitionTests:XCTestCase {
 
     func testAllDefinitionsHaveFixedOrderAndExactSchedulingPolicy() {
         XCTAssertEqual(BehaviorDefinitions.all.map(\.kind),kinds)
-        XCTAssertEqual(Set(BehaviorDefinitions.all.map { $0.kind.rawValue }).count,15)
+        XCTAssertEqual(Set(BehaviorDefinitions.all.map { $0.kind.rawValue }).count,16)
         for fixture in expected {
             let definition=BehaviorDefinitions.definition(for:fixture.kind)
             let label=fixture.kind.rawValue
@@ -126,9 +127,9 @@ final class BehaviorDefinitionTests:XCTestCase {
 
     func testSettingsGatingForEverySwitchCombinationAndSource() {
         var settings=BirdSettings()
-        // Eleven independent bits include pointerFollowEnabled, which must never
+        // Twelve independent bits include pointerFollowEnabled, which must never
         // disable pointerVisit, and the automatic-only ambient leaf preference.
-        for bits in 0..<2048 {
+        for bits in 0..<4096 {
             settings.pointerVisits=bits & 1 != 0
             settings.flockPasses=bits & 2 != 0
             settings.perchActions=bits & 4 != 0
@@ -140,6 +141,7 @@ final class BehaviorDefinitionTests:XCTestCase {
             settings.sideHopEnabled=bits & 256 != 0
             settings.takeoffPreparationEnabled=bits & 512 != 0
             settings.edgePeekEnabled=bits & 1024 != 0
+            settings.chaseEnabled=bits & 2048 != 0
             for fixture in expected {
                 for source in sources {
                     let mask=fixture.settingsMask | (fixture.kind == .leafPlay && source == .automatic ? 64:0)
@@ -153,7 +155,7 @@ final class BehaviorDefinitionTests:XCTestCase {
 
     func testPreemptionAllowsOnlyExplicitUserRelocationAndAutomaticAlert() {
         let relocationTargets:Set<BehaviorKind> = [.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,
-            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek]
+            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase]
         let alertTargets:Set<BehaviorKind> = [.rest,.preen,.watch]
         for incoming in kinds {
             for source in sources {

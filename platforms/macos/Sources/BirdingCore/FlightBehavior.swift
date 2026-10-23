@@ -116,9 +116,15 @@ public struct FlightPath {
     private let points:[CGPoint]
     private let distances:[Double]
     public let length:Double
+    /// The polyline is contained in this rectangle, including between samples.
+    let bounds:CGRect
     public init(points:[CGPoint]) {
         precondition(points.count>=2)
         self.points=points
+        if points.allSatisfy({$0.x.isFinite && $0.y.isFinite}) {
+            let xs=points.map(\.x),ys=points.map(\.y)
+            bounds=CGRect(x:xs.min()!,y:ys.min()!,width:xs.max()!-xs.min()!,height:ys.max()!-ys.min()!)
+        } else {bounds = .null}
         var distances=[0.0]
         for i in 1..<points.count { distances.append(distances.last!+Double(Geometry.distance(points[i-1],points[i]))) }
         self.distances=distances;length=distances.last!

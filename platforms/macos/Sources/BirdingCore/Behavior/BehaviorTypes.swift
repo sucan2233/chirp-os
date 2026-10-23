@@ -12,9 +12,9 @@ public struct BehaviorRunID: Hashable, Codable, Comparable {
 }
 public enum BirdRole: String {case resident, transient}
 public enum BehaviorKind: String {
-    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek
+    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase
     var isPerchActivity:Bool {[Self.rest,.preen,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek].contains(self)}
-    var isSocial:Bool {[Self.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff].contains(self)}
+    var isSocial:Bool {[Self.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase].contains(self)}
 }
 public enum BehaviorSource: String {case user, preview, automatic}
 public enum BehaviorReason: String {
@@ -45,6 +45,7 @@ public enum EngineCommand {
     case socialMotion(SocialMotionKind,BehaviorSource)
     case perchAction(PerchActionKind,BehaviorSource)
     case attention(AttentionKind,BehaviorSource)
+    case chase(BehaviorSource)
     case edgePeek(BehaviorSource)
     case sideHop(BehaviorSource)
     case prepareTakeoff(BehaviorSource)

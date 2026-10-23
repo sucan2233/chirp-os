@@ -50,6 +50,7 @@ public struct BehaviorDefinition {
         case .sideHop:return settings.perchActions && settings.sideHopEnabled
         case .takeoffPreparation:return settings.perchActions && settings.takeoffPreparationEnabled
         case .edgePeek:return settings.perchActions && settings.edgePeekEnabled
+        case .chase:return settings.socialInteractions && settings.chaseEnabled
         case .socialGreeting,.sideBySide,.giveWay,.pairedTakeoff:return settings.socialInteractions
         case .leafPlay:return settings.leafPlayEnabled && (source != .automatic || settings.ambientLeafPlayEnabled)
         }
@@ -83,6 +84,9 @@ public enum BehaviorDefinitions {
         case .sideBySide,.giveWay,.pairedTakeoff:
             return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.blinking,.flight,.landing],occupiesEncounter:true,
                 runsWhilePaused:false,priority:60,cooldown:20)
+        case .chase:
+            return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.flight,.landing],occupiesEncounter:true,
+                runsWhilePaused:false,priority:60,cooldown:60)
         case .leafPlay:
             return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.flight,.landing],occupiesEncounter:true,
                 runsWhilePaused:false,priority:60,cooldown:90)
@@ -107,7 +111,7 @@ public enum BehaviorDefinitions {
     /// Stable content order, independent of dictionary or Set iteration.
     public static var all:[BehaviorDefinition] {
         let kinds:[BehaviorKind] = [.relocate,.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,
-            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek]
+            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase]
         return kinds.map {definition(for:$0)}
     }
 
@@ -120,10 +124,10 @@ public enum BehaviorDefinitions {
             switch current {
             case .rest,.preen,.watch:return true
             case .relocate,.pointerVisit,.flockPass,.socialGreeting,.sideBySide,.giveWay,
-                 .pairedTakeoff,.leafPlay,.alert,.sideHop,.takeoffPreparation,.edgePeek:return false
+                 .pairedTakeoff,.leafPlay,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase:return false
             }
         case .pointerVisit,.flockPass,.rest,.preen,.socialGreeting,.sideBySide,.giveWay,
-             .pairedTakeoff,.leafPlay,.watch,.sideHop,.takeoffPreparation,.edgePeek:return false
+             .pairedTakeoff,.leafPlay,.watch,.sideHop,.takeoffPreparation,.edgePeek,.chase:return false
         }
     }
 }

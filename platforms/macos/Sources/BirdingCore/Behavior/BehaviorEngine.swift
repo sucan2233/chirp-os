@@ -175,6 +175,7 @@ public final class BehaviorEngine {
                 runtime.cancel(run.id,reason:.settingsChanged,in:self)
             }
         }
+        if !value.chaseEnabled {runtime.cancel(where:{$0.kind == .chase},reason:.settingsChanged,in:self)}
         if !value.edgePeekEnabled {
             runtime.cancel(where:{$0.kind == .edgePeek},reason:.settingsChanged,in:self)
             perchPlanner.resetEdgePeekOpportunities()
@@ -206,6 +207,7 @@ public final class BehaviorEngine {
         beginRecordingInput(.command(command));defer {endRecordingInput()}
         switch command {
         case .relocate(let id): return relocate(id)
+        case .chase(let source):return requestChase(source:source)
         case .edgePeek(let source):return requestEdgePeek(source:source)
         case .sideHop(let source):return requestSideHop(source:source)
         case .prepareTakeoff(let source):return requestTakeoffPreparation(source:source)
@@ -452,13 +454,45 @@ public final class BehaviorEngine {
         }
         return result
     }
+    private func requestChase(source:BehaviorSource) -> BehaviorResult {
+        guard !paused else {return reject(.chase,source,.paused)}
+        guard BehaviorDefinitions.definition(for:.chase).isEnabled(settings:settings,source:source) else {return reject(.chase,source,.disabled)}
+        guard !ambientBusy,scheduledEncounter==nil else {return reject(.chase,source,.busy)}
+        guard !world.buttonsDown else {return reject(.chase,source,.userInput)}
+        let candidates=ChasePlan.candidates(in:self,source:source)
+        guard let plan=(source == .automatic ? ecologicalChoice(candidates,weight:{plan in
+            plan.participants.reduce(1){$0*self.perchPlanner.automaticWeight($1,kind:.chase)}
+        }):socialRandom.element(candidates)) else {
+            let residents=birds.filter{role(of:$0) == .resident && !$0.isDeparting}
+            let supported=residents.filter{ChaseBehavior.supportedSpecies.contains($0.profile.id)}
+            let paired=supported.filter{bird in supported.contains{$0 !== bird && $0.profile.id==bird.profile.id}}
+            let reason:BehaviorReason
+            if residents.isEmpty {reason = .noCompanion}
+            else if supported.isEmpty {reason = .noSpecies}
+            else if paired.isEmpty {reason = .noCompanion}
+            else if paired.contains(where:{pointerNear($0)}) {reason = .pointerNearby}
+            else if paired.contains(where:{!BehaviorDefinitions.definition(for:.chase).requiredFrames.isSubset(of:world.availableFrames[$0.profile.id] ?? [])}) {reason = .missingFrames}
+            else if paired.contains(where:{behavior(of:$0) != nil}) {reason = .busy}
+            else {reason = .noSpace}
+            return reject(.chase,source,reason)
+        }
+        let result=runtime.start(ChaseExecution(plan:plan,source:source),source:source,in:self)
+        if result.accepted {
+            scheduler.suppress()
+            for id in plan.participants {perchPlanner.suppress(id)}
+        } else if case .rejected(let reason)=result {return reject(.chase,source,reason)}
+        return result
+    }
     private func requestSocialEncounter() {
-        // The scheduler still selects one social opportunity, regardless of how
-        // many social clips exist. Adding content cannot increase its frequency.
+        // All social clips share this one opportunity; adding a clip does not
+        // create another clock or make noticeable events more frequent.
         let ids=socialMotionCandidates()
         let available=SocialMotionKind.allCases.filter{!SocialMotionPlanner.candidates($0,ids:ids,in:self).isEmpty}
-        let choice=Int(socialRandom.unit()*Double(available.count+1))
+        let chase=BehaviorDefinitions.definition(for:.chase).isEnabled(settings:settings,source:.automatic) &&
+            !ChasePlan.candidates(in:self).isEmpty
+        let choice=Int(socialRandom.unit()*Double(available.count+1+(chase ? 1:0)))
         if choice<available.count {_=requestSocialMotion(available[choice],source:.automatic)}
+        else if chase,choice==available.count {_=requestChase(source:.automatic)}
         else {_=requestSocialGreeting(.automatic)}
     }
     func supports(_ action:PerchActionKind,bird:Bird) -> Bool {

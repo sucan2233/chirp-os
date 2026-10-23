@@ -3,7 +3,7 @@
 这些 JSON 是引擎输入，采用 Quartz 桌面坐标（向右为 x 正方向，向下为 y 正方向）。它们不依赖 AppKit、窗口标题、桌面截图或用户配置，供 macOS 与后续 Windows 核心运行同一场景。
 
 - `version`：文件格式版本；未知版本拒绝，不能忽略无法理解的事件。
-- `simulationVersion`：当前为 5，加入边缘探头场景与自主机会调度后更新。版本 1–4 的录制明确拒绝；需要在对应旧提交重放或重新录制，不能直接修改版本标签假装迁移。模拟语义版本。改变随机算法、调度或固定步契约时需明确迁移，不能让旧期望静默漂移。
+- `simulationVersion`：当前为 6，加入双鸟追逐与共享社交机会调度后更新。版本 1–5 的录制明确拒绝；需要在对应旧提交重放或重新录制，不能直接修改版本标签假装迁移。模拟语义版本。改变随机算法、调度或固定步契约时需明确迁移，不能让旧期望静默漂移。
 - `seed`、鸟/运行/道具 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
 - `settings`：完整配置或合法的旧格式配置；按 BirdSettings schema 迁移。
 - `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。
@@ -27,7 +27,7 @@ dist/ChirpOS.app/Contents/MacOS/Birding --record-behavior .build/live-behavior.j
 # 不打开原生窗口即可重放。expected 存在时，不一致会退出 1。
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior .build/live-behavior.json --replay-hz 120 --replay-output .build/replay-report.json
 
-# 手写场景：观察/警觉、完整落叶返程、双鸟招呼、暂停中点击迁移、侧跳、起飞准备、熟客再次到访、安静节奏与手动群飞、边缘探头来回与暂停
+# 手写场景：观察/警觉、完整落叶返程、双鸟招呼、暂停中点击迁移、侧跳、起飞准备、熟客再次到访、安静节奏与手动群飞、边缘探头来回与暂停、双鸟追逐与暂停
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/leaf.json
 ```
 

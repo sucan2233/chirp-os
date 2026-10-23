@@ -153,6 +153,16 @@ public final class Bird {
         var age=0.0
     }
     private var sideHopMotion:SideHopMotion?
+    private struct CoordinatedMotion {
+        let route:CoordinatedFlightRoute
+        let host:Surface
+        let scale:CGFloat
+        let delay:Double
+        var age=0.0
+    }
+    private var coordinatedMotion:CoordinatedMotion?
+    var isCoordinatedFlying:Bool {coordinatedMotion != nil}
+    var coordinatedFlightAge:Double? {coordinatedMotion.map{max(0,$0.age-$0.delay)}}
     var isSideHopping:Bool {sideHopMotion != nil}
     static let sideHopDuration=0.36
     static func sideHopRise(scale:CGFloat) -> CGFloat {12*scale}
@@ -186,6 +196,7 @@ public final class Bird {
     public private(set) var flightSpeed=0.0
     public private(set) var isGliding=false
     public var isBraking:Bool {
+        if let motion=coordinatedMotion {return motion.route.isBraking(at:max(0,motion.age-motion.delay))}
         if orbitDuration>0 {
             return flightAge>=entryDuration+orbitDuration && flightAge-entryDuration-orbitDuration >= (exitTiming?.brakeStart ?? .infinity)-0.12
         }
@@ -207,6 +218,7 @@ public final class Bird {
     // squeezed into the old window-to-window travel duration.
 
     public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false, allowsOrbit:Bool = true, pointerOrbit: PointerOrbit? = nil, random: () -> Double = { Double.random(in:0...1) }) {
+        coordinatedMotion=nil
         sideHopMotion=nil
         pointerFollow=nil
         isDeparting = false
@@ -373,6 +385,7 @@ public final class Bird {
     }
     public var departureFinished: Bool { isDeparting && flightAge >= flightDuration }
     public func perch(on host: Surface, spriteScale:CGFloat=1) {
+        coordinatedMotion=nil
         sideHopMotion=nil
         pointerFollow=nil
         motionRevision &+= 1;isDeparting=false
@@ -385,7 +398,7 @@ public final class Bird {
     /// Installs motion without changing position. Only tick advances feet or age.
     @discardableResult
     func beginSideHop(on host:Surface,to endFraction:CGFloat,spriteScale:CGFloat) -> Bool {
-        guard sideHopMotion == nil,state == .perched,edge == .top,!isDeparting,!needsDestination,
+        guard sideHopMotion == nil,coordinatedMotion == nil,state == .perched,edge == .top,!isDeparting,!needsDestination,
               host.id==hostID,host.pid==hostPID,spriteScale.isFinite,spriteScale>0,
               endFraction.isFinite,(0...1).contains(endFraction),fraction.isFinite,
               Geometry.distance(position,Geometry.foot(on:host,fraction:fraction,edge:.top,scale:spriteScale))<0.001 else {return false}
@@ -453,6 +466,62 @@ public final class Bird {
         }
         sideHopMotion=hop
     }
+    /// Reserve/plan first, then install without changing the current feet. Host
+    /// geometry remains fixed for this route; changes request safe recovery.
+    @discardableResult
+    func beginCoordinatedFlight(_ route:CoordinatedFlightRoute,on host:Surface,fraction:CGFloat,spriteScale:CGFloat,delay:Double=0) -> Bool {
+        guard coordinatedMotion==nil,sideHopMotion==nil,state == .perched,edge == .top,
+              !isDeparting,!needsDestination,spriteScale.isFinite,spriteScale>0,
+              fraction.isFinite,(0...1).contains(fraction),delay.isFinite,(0...5).contains(delay),
+              delay==0 || (hostID==host.id && hostPID==host.pid),
+              Geometry.distance(position,route.position(at:0))<0.001,
+              Geometry.distance(Geometry.foot(on:host,fraction:fraction,edge:.top,scale:spriteScale),
+                                route.position(at:route.duration))<0.001 else {return false}
+        fly(to:route.position(at:route.duration),host:host,arc:0,urgent:true,allowsOrbit:false,random:{0.5})
+        self.fraction=fraction
+        coordinatedMotion=CoordinatedMotion(route:route,host:host,scale:spriteScale,delay:delay)
+        if delay>0 {state = .perched;depthID=host.id;previousHost=host.rect}
+        flightDuration=route.duration;cruiseSpeed=route.legs.map{$0.timing.peakSpeed}.max() ?? 1
+        return true
+    }
+    func cancelCoordinatedFlight() {
+        guard coordinatedMotion != nil else {return}
+        requestFlightRecovery()
+    }
+    /// Release an interrupted scene at its actual feet. Ordinary routing can
+    /// choose a fresh destination once simulation resumes.
+    func requestFlightRecovery() {
+        coordinatedMotion=nil;sideHopMotion=nil;pointerFollow=nil;motionRevision &+= 1
+        hostID=nil;hostPID=nil;depthID=nil;previousHost=nil
+        state = .flying;stateTime=0;destinationInvalidated=true;flightSpeed=0;isGliding=false
+    }
+    func finishCoordinatedFlight() {
+        guard state == .perched else {return}
+        coordinatedMotion=nil
+    }
+    private func advanceCoordinatedFlight(_ dt:Double) {
+        guard var motion=coordinatedMotion else {return}
+        let wasWaiting=motion.age<=motion.delay && state == .perched
+        motion.age=min(motion.delay+motion.route.duration,motion.age+dt)
+        if wasWaiting {
+            guard motion.age>motion.delay else {coordinatedMotion=motion;return}
+            state = .flying;stateTime=motion.age-motion.delay;depthID=nil
+        }
+        if state == .flying {
+            let flightTime=max(0,motion.age-motion.delay)
+            let next=motion.route.position(at:flightTime)
+            if abs(next.x-position.x)>0.05 {facingRight=next.x>position.x}
+            flightSpeed=Double(Geometry.distance(position,next))/max(0.000001,dt)
+            position=next;flightAge=flightTime;isGliding=false
+            if flightTime+1e-10>=motion.route.duration {
+                position=motion.route.position(at:motion.route.duration)
+                depthID=hostID;state = .landing;stateTime=0;landedCount+=1;flightSpeed=0
+            }
+        } else if state == .landing,stateTime>0.42 {
+            state = .perched;stateTime=0;previousHost=motion.host.rect
+        }
+        coordinatedMotion=motion
+    }
     public func flee() {
         startledCount += 1
         fly(to: CGPoint(x: position.x + (facingRight ? 210 : -210), y: position.y - 100), host: nil, duration: 1.25, arc: 45, urgent: true)
@@ -460,6 +529,11 @@ public final class Bird {
     // Called at the actual metadata sampling interval, independent of animation frames.
     public func updateHost(surfaces: [Surface], sampleDT: Double, spriteScale: CGFloat = 1) {
         guard let id = hostID else { return }
+        if let motion=coordinatedMotion {
+            guard let host=surfaces.first(where:{$0.id==id && $0.pid==hostPID}),
+                  host==motion.host,spriteScale==motion.scale else {cancelCoordinatedFlight();return}
+            return
+        }
         if let hop=sideHopMotion {
             guard let host=surfaces.first(where:{$0.id==id && $0.pid==hostPID}),
                   updateSideHopHost(host,spriteScale:spriteScale) else {cancelSideHop();return}
@@ -494,6 +568,7 @@ public final class Bird {
     public func tick(_ dt: Double) {
         guard !destinationInvalidated else { return }
         stateTime += dt
+        if coordinatedMotion != nil {advanceCoordinatedFlight(dt);return}
         if sideHopMotion != nil {advanceSideHop(dt);return}
         if state == .flying {
             let oldAge=flightAge
@@ -536,6 +611,41 @@ public final class Bird {
     public var needsDestination: Bool {
         !isDeparting && (destinationInvalidated || (state == .flying && flightAge >= flightDuration && hostID == nil) ||
         (state == .perched && stateTime >= perchDuration))
+    }
+    /// Conservative read-only envelope for a peer's already planned flight.
+    /// Host correction can exceed last frame's velocity; include its entire
+    /// translated path, not just a speed-based margin around the current feet.
+    func plannedFlightFootprint(scale:CGFloat) -> CGRect? {
+        guard state == .flying,scale.isFinite,scale>0 else {return nil}
+        if destinationInvalidated {return Geometry.landingFootprint(at:position,scale:scale)}
+        var area=CGRect(origin:position,size:.zero)
+        func include(_ rect:CGRect) {if !rect.isNull {area=area.union(rect)}}
+        if let motion=coordinatedMotion {
+            for leg in motion.route.legs {include(leg.path.bounds)}
+        } else if let hop=sideHopMotion {
+            for host in [hop.host,hop.followedHost] {
+                for fraction in [hop.startFraction,hop.endFraction] {
+                    let foot=Geometry.foot(on:host,fraction:fraction,edge:.top,scale:hop.scale)
+                    include(CGRect(origin:foot,size:.zero))
+                    include(CGRect(x:foot.x,y:foot.y-Self.sideHopRise(scale:hop.scale),width:0,height:0))
+                }
+            }
+        } else {
+            let dx=target.x-plannedTarget.x,dy=target.y-plannedTarget.y
+            for path in [transitPath,exitPath].compactMap({$0}) {
+                include(path.bounds);include(path.bounds.offsetBy(dx:dx,dy:dy))
+            }
+            if let approach {include(approach.bounds)}
+            if let orbitPath {include(orbitPath.bounds.offsetBy(dx:orbitCenter.x,dy:orbitCenter.y))}
+            // Pointer following's future exit controls stay in the permitted
+            // airspace or on the segment to its destination.
+            if let follow=pointerFollow {include(follow.footArea)}
+            include(CGRect(origin:target,size:.zero))
+            let wave=urgentFlight ? 0:abs(FlightBehavior.motion(profile.id).wave)
+            area=area.insetBy(dx:0,dy:-wave)
+        }
+        guard area.minX.isFinite,area.minY.isFinite,area.width.isFinite,area.height.isFinite else {return nil}
+        return CGRect(x:area.minX-29*scale,y:area.minY-39*scale,width:area.width+58*scale,height:area.height+48*scale)
     }
     public func blockers(in surfaces: [Surface]) -> [CGRect] {
         if let depthID, let host = surfaces.first(where: { $0.id == depthID }) {
