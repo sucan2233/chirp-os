@@ -187,7 +187,7 @@ public final class Bird {
     // Transit speed and time spent airborne are separate: soaring must not be
     // squeezed into the old window-to-window travel duration.
 
-    public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false, pointerOrbit: PointerOrbit? = nil, random: () -> Double = { Double.random(in:0...1) }) {
+    public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false, allowsOrbit:Bool = true, pointerOrbit: PointerOrbit? = nil, random: () -> Double = { Double.random(in:0...1) }) {
         pointerFollow=nil
         isDeparting = false
         motionRevision &+= 1; wingPhase = 0
@@ -197,7 +197,7 @@ public final class Bird {
         let m = FlightBehavior.motion(profile.id)
         urgentFlight = urgent
         transitDuration = max(0.3, duration) / (Self.flightSpeedMultiplier * profile.speed)
-        orbitDuration = urgent ? 0 : m.orbit
+        orbitDuration = urgent || !allowsOrbit ? 0 : m.orbit
         flightDuration = transitDuration + orbitDuration
         self.arc = arc
         let normalCruise=FlightBehavior.cruiseSpeed(profile.id,multiplier:profile.speed)*Self.flightSpeedMultiplier/2

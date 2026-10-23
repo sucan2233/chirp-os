@@ -58,7 +58,8 @@ enum SettingsVerification {
             checks["pointerMasterReenablesFollowingPreference"] = w.draft.pointerVisits && w.pointerFollowButton.isEnabled && w.pointerFollowButton.state == .on
             checks["socialReopeningDiscardsCancelledDraft"] = w !== cancelledWindow && w.draft.socialInteractions && w.socialInteractionsButton.state == .on
             checks["socialInteractionsDefaultOn"] = w.draft.socialInteractions && d.settings.socialInteractions && w.socialInteractionsButton.state == .on
-            checks["socialInteractionsChineseLabels"] = w.socialInteractionsButton.title == "双鸟招呼" && w.previewSocialGreetingButton.title == "预览双鸟招呼"
+            checks["socialInteractionsChineseLabels"] = w.socialInteractionsButton.title == "双鸟互动" && w.previewSocialGreetingButton.title == "预览双鸟招呼"
+            checkSocialMotionLabels(w,language:"Chinese",checks:&checks)
             w.socialInteractionsButton.performClick(nil)
             checks["socialToggleOnlyChangesDraft"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off && d.settings.socialInteractions
             let beforeMissingCompanion=birdCounts(),beforeMissingCompanionSequence=d.engine.events.last?.sequence
@@ -66,6 +67,7 @@ enum SettingsVerification {
             checks["socialPreviewUsesSavedEnabledSwitch"] = !w.draft.socialInteractions && d.settings.socialInteractions && d.engine.events.last?.sequence != beforeMissingCompanionSequence && d.engine.events.last?.kind == .socialGreeting && d.engine.events.last?.source == .preview && d.engine.events.last?.type == .rejected && d.engine.events.last?.reason == .noCompanion
             checks["socialMissingCompanionExplainedChinese"] = w.message.stringValue == d.behaviorMessage(.noCompanion) && w.message.stringValue.contains("两只")
             checks["socialMissingCompanionDoesNotCreateBirds"] = birdCounts() == beforeMissingCompanion && d.engine.activeRunCount == 0 && d.engine.leasedBirdCount == 0
+            checkSocialMotionRejections(w,reason:.noCompanion,language:"Chinese",checks:&checks)
             checks["hoverDelayDefaultsToOneSecond"] = w.hoverDelayField.doubleValue == 1 && w.hoverDelaySlider.doubleValue == 1
             checks["perchActivitiesDefaultOn"] = w.draft.perchActions && d.settings.perchActions && w.perchActionsButton.state == .on
             checks["perchActivitiesChineseLabels"] = w.perchActionsButton.title == "停栖小动作" && w.previewRestButton.title == "预览闭眼休息" && w.previewPreenButton.title == "预览整理羽毛"
@@ -111,13 +113,18 @@ enum SettingsVerification {
             checks["perchDraftSurvivesLanguageChange"] = !w.draft.perchActions && w.perchActionsButton.state == .off && d.settings.perchActions
             checks["perchActivitiesEnglishLabels"] = w.perchActionsButton.title == "Perch activities" && w.previewRestButton.title == "Preview eyes-closed rest" && w.previewPreenButton.title == "Preview preening"
             checks["socialDraftSurvivesLanguageChange"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off && d.settings.socialInteractions
-            checks["socialInteractionsEnglishLabels"] = w.socialInteractionsButton.title == "Two-bird greetings" && w.previewSocialGreetingButton.title == "Preview two-bird greeting"
+            checks["socialInteractionsEnglishLabels"] = w.socialInteractionsButton.title == "Two-bird interactions" && w.previewSocialGreetingButton.title == "Preview two-bird greeting"
+            checkSocialMotionLabels(w,language:"English",checks:&checks)
             checks["pointerFollowDraftSurvivesLanguageChange"] = w.draft.pointerFollowEnabled && w.pointerFollowButton.state == .on && w.pointerFollowButton.isEnabled && !d.settings.pointerFollowEnabled
             checks["pointerFollowEnglishLabel"] = w.pointerFollowButton.title == "Follow pointer movement while circling"
             checks["pointerPreviewMessageUsesSavedOffEnglish"] = d.pointerVisitPreviewMessage == "Pointer visit started. Move the pointer or click to end it."
+            d.paused=false
+            checkSocialMotionRejections(w,reason:.noCompanion,language:"English",checks:&checks)
+            d.paused=true
             let beforePausedGreeting=birdCounts(),beforePausedGreetingSequence=d.engine.events.last?.sequence
             w.previewSocialGreetingButton.performClick(nil)
             checks["socialPreviewPaused"] = d.engine.events.last?.sequence != beforePausedGreetingSequence && d.engine.events.last?.kind == .socialGreeting && d.engine.events.last?.source == .preview && d.engine.events.last?.reason == .paused && w.message.stringValue == d.behaviorMessage(.paused) && birdCounts() == beforePausedGreeting
+            checkSocialMotionRejections(w,reason:.paused,language:"English",checks:&checks)
             for (name,button) in [("rest",w.previewRestButton!),("preen",w.previewPreenButton!)] {
                 let sequence=d.engine.events.last?.sequence
                 button.performClick(nil)
@@ -146,6 +153,7 @@ enum SettingsVerification {
             w.previewSocialGreetingButton.performClick(nil)
             checks["socialPreviewUsesSavedDisabledSwitch"] = w.draft.socialInteractions && !d.settings.socialInteractions && d.engine.events.last?.sequence != beforeDisabledGreetingSequence && d.engine.events.last?.kind == .socialGreeting && d.engine.events.last?.source == .preview && d.engine.events.last?.type == .rejected && d.engine.events.last?.reason == .disabled && w.message.stringValue == d.behaviorMessage(.disabled)
             checks["socialDisabledPreviewPreservesPopulation"] = birdCounts() == beforeDisabledGreeting && d.engine.activeRunCount == 0 && d.engine.leasedBirdCount == 0
+            checkSocialMotionRejections(w,reason:.disabled,language:"English",checks:&checks)
             for (name,button) in [("rest",w.previewRestButton!),("preen",w.previewPreenButton!)] {
                 let sequence=d.engine.events.last?.sequence
                 button.performClick(nil)
@@ -180,7 +188,8 @@ enum SettingsVerification {
             d.toggleLanguage();w.tabs.selectTabViewItem(at:0)
             checks["chineseToggleRestored"] = d.status.menu!.items.contains{$0.title == "English"} && w.window!.title == "鸟种设置"
             checks["perchChineseToggleRestored"] = !w.draft.perchActions && w.perchActionsButton.state == .off && w.perchActionsButton.title == "停栖小动作" && w.previewRestButton.title == "预览闭眼休息" && w.previewPreenButton.title == "预览整理羽毛"
-            checks["socialChineseToggleRestored"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off && w.socialInteractionsButton.title == "双鸟招呼" && w.previewSocialGreetingButton.title == "预览双鸟招呼"
+            checks["socialChineseToggleRestored"] = !w.draft.socialInteractions && w.socialInteractionsButton.state == .off && w.socialInteractionsButton.title == "双鸟互动" && w.previewSocialGreetingButton.title == "预览双鸟招呼"
+            checkSocialMotionLabels(w,language:"Chinese",checks:&checks)
             checks["pointerFollowChineseToggleRestored"] = w.draft.pointerFollowEnabled && w.pointerFollowButton.state == .on && w.pointerFollowButton.title == "绕飞时跟随鼠标移动"
             checks["pointerPreviewMessageUsesSavedOnChinese"] = d.pointerVisitPreviewMessage == "正在预览绕鼠标飞行。移动鼠标会继续跟随，点击可结束。"
             w.tabs.selectTabViewItem(at:2)
@@ -283,10 +292,43 @@ enum SettingsVerification {
             saveJSON(["passed":false,"error":error.localizedDescription,"checks":checks],to:folder.appendingPathComponent("report.json"));exit(1)
         }
     }
+    private static func socialMotionPreviews(_ window:SpeciesSettingsWindow) -> [(kind:BehaviorKind,button:NSButton,chinese:String,english:String)] {
+        [(.sideBySide,window.previewSideBySideButton,"预览并排停靠","Preview side-by-side perch"),
+         (.giveWay,window.previewGiveWayButton,"预览让座","Preview giving way"),
+         (.pairedTakeoff,window.previewPairedTakeoffButton,"预览结伴起飞","Preview paired takeoff")]
+    }
+    private static func checkSocialMotionLabels(_ window:SpeciesSettingsWindow,language:String,checks:inout [String:Bool]) {
+        for preview in socialMotionPreviews(window) {
+            checks["socialMotionLabel\(language)-\(preview.kind.rawValue)"] = preview.button.title == window.t(preview.chinese,preview.english)
+        }
+        checks["socialCompanionReason\(language)"] = window.desktop.behaviorMessage(.noCompanion) == window.t("请等待两只距离合适的小鸟在可见边缘停稳，再预览双鸟互动。","Wait for two suitably spaced birds to settle on visible edges, then try the two-bird interaction.")
+        checks["socialSpaceReason\(language)"] = window.desktop.behaviorMessage(.noSpace) == window.t("可见空间不足。请等待小鸟在更开阔、未被遮挡的位置停稳。","Not enough visible space. Wait for birds to settle in a clear, unobstructed area.")
+    }
+    private static func checkSocialMotionRejections(_ window:SpeciesSettingsWindow,reason:BehaviorReason,language:String,checks:inout [String:Bool]) {
+        let desktop=window.desktop,engine=desktop.engine
+        func population() -> [Int] {
+            [engine.birds.count,engine.residentCount,engine.passingCount,engine.departingCount,
+             engine.pendingCount,engine.arrivalCount,engine.departureCount]
+        }
+        for preview in socialMotionPreviews(window) {
+            let key="socialMotion\(language)-\(reason.rawValue)-\(preview.kind.rawValue)"
+            let before=population(),sequence=engine.events.last?.sequence
+            preview.button.performClick(nil)
+            let event=engine.events.last
+            checks[key] = event?.sequence != sequence && event?.kind == preview.kind && event?.source == .preview && event?.type == .rejected && event?.reason == reason && window.message.stringValue == desktop.behaviorMessage(reason)
+            checks[key+"PreservesPopulation"] = population() == before && engine.activeRunCount == 0 && engine.leasedBirdCount == 0
+            if reason == .disabled {
+                checks[key+"UsesSavedSwitch"] = window.draft.socialInteractions && !desktop.settings.socialInteractions
+            } else if reason == .noCompanion {
+                checks[key+"UsesSavedSwitch"] = !window.draft.socialInteractions && desktop.settings.socialInteractions
+            }
+        }
+    }
     private static func checkSocialLayout(_ window:SpeciesSettingsWindow,language:String,checks:inout [String:Bool]) {
         guard let scroll=window.tabs.tabViewItems[2].view as? NSScrollView,let document=scroll.documentView else {
             checks["socialControlsReachable\(language)"]=false
             checks["pointerFollowControlReachable\(language)"]=false
+            for preview in socialMotionPreviews(window) {checks["socialMotionReachable\(language)-\(preview.kind.rawValue)"]=false}
             return
         }
         scroll.contentView.scroll(to:CGPoint(x:0,y:max(0,window.pointerVisitsButton.frame.minY-20)))
@@ -296,6 +338,10 @@ enum SettingsVerification {
         scroll.contentView.scroll(to:CGPoint(x:0,y:max(0,window.socialInteractionsButton.frame.minY-20)))
         scroll.reflectScrolledClipView(scroll.contentView)
         checks["socialControlsReachable\(language)"] = document.visibleRect.contains(window.socialInteractionsButton.frame) && document.visibleRect.contains(window.previewSocialGreetingButton.frame) && document.visibleRect.contains(window.ambientFrequencyPopup.frame)
+        for preview in socialMotionPreviews(window) {
+            checks["socialMotionReachable\(language)-\(preview.kind.rawValue)"] = document.visibleRect.contains(preview.button.frame)
+            checks["socialMotionTitleFits\(language)-\(preview.kind.rawValue)"] = preview.button.intrinsicContentSize.width <= preview.button.frame.width
+        }
         checks["interactionControlsDoNotOverlap\(language)"] = document.subviews.enumerated().allSatisfy { index,view in
             document.bounds.contains(view.frame) && document.subviews.dropFirst(index+1).allSatisfy{!view.frame.intersects($0.frame)}
         }

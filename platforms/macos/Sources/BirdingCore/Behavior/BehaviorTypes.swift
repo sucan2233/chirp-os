@@ -11,7 +11,10 @@ public struct BehaviorRunID: Hashable, Codable, Comparable {
     public static func < (lhs:Self,rhs:Self) -> Bool {lhs.rawValue<rhs.rawValue}
 }
 public enum BirdRole: String {case resident, transient}
-public enum BehaviorKind: String {case relocate, pointerVisit, flockPass, rest, preen, socialGreeting}
+public enum BehaviorKind: String {
+    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff
+    var isSocial:Bool {[Self.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff].contains(self)}
+}
 public enum BehaviorSource: String {case user, preview, automatic}
 public enum BehaviorReason: String {
     case paused, disabled, busy, missingBird, unavailableBird, noSpace, noSpecies, missingFrames, pointerNearby, noCompanion
@@ -38,6 +41,7 @@ public enum EngineCommand {
     case pointerVisit(BehaviorSource)
     case flockPass(BehaviorSource)
     case socialGreeting(BehaviorSource)
+    case socialMotion(SocialMotionKind,BehaviorSource)
     case perchAction(PerchActionKind,BehaviorSource)
     case previewPointerAfter(Double)
     case pointerClick

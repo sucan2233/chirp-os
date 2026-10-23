@@ -29,6 +29,9 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var flockPassesButton:NSButton!
     var socialInteractionsButton:NSButton!
     var previewSocialGreetingButton:NSButton!
+    var previewSideBySideButton:NSButton!
+    var previewGiveWayButton:NSButton!
+    var previewPairedTakeoffButton:NSButton!
     var ambientFrequencyPopup:NSPopUpButton!
     var perchActionsButton:NSButton!
     var previewRestButton:NSButton!
@@ -127,7 +130,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         pointerFollowButton.isEnabled=draft.pointerVisits;interactionView.addSubview(pointerFollowButton)
         flockPassesButton=NSButton(checkboxWithTitle:t("偶尔有 3–5 只鸟结伴飞过","Occasionally let 3–5 birds fly past together"),target:self,action:#selector(ambientSettingsChanged))
         flockPassesButton.frame=NSRect(x:20,y:382,width:710,height:26);flockPassesButton.state=draft.flockPasses ? .on:.off;interactionView.addSubview(flockPassesButton)
-        socialInteractionsButton=NSButton(checkboxWithTitle:t("双鸟招呼","Two-bird greetings"),target:self,action:#selector(ambientSettingsChanged))
+        socialInteractionsButton=NSButton(checkboxWithTitle:t("双鸟互动","Two-bird interactions"),target:self,action:#selector(ambientSettingsChanged))
         socialInteractionsButton.frame=NSRect(x:20,y:418,width:710,height:26);socialInteractionsButton.state=draft.socialInteractions ? .on:.off;interactionView.addSubview(socialInteractionsButton)
         label(t("发生频率","Frequency"),NSRect(x:20,y:465,width:120,height:26),in:interactionView)
         ambientFrequencyPopup=NSPopUpButton(frame:NSRect(x:145,y:459,width:420,height:32),pullsDown:false)
@@ -135,13 +138,15 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         ambientFrequencyPopup.selectItem(at:AmbientFrequency.allCases.firstIndex(of:draft.ambientFrequency)!)
         ambientFrequencyPopup.target=self;ambientFrequencyPopup.action=#selector(ambientSettingsChanged)
         ambientFrequencyPopup.setAccessibilityLabel(t("偶发动作频率","Encounter frequency"));interactionView.addSubview(ambientFrequencyPopup)
-        label(t("三种互动共用频率，每次至多发生一种；条件不合适时跳过。鼠标静止 3 秒且周围有空间才会绕飞；默认移动或点击结束。开启跟随后，移动继续绕飞，点击结束。过境鸟不占常驻数量。","All three encounters share this frequency; at most one starts per attempt. Unsuitable opportunities are skipped. Circling needs 3 seconds of pointer stillness and space. By default, moving or clicking ends it. With following enabled, movement continues circling; clicking ends it. Passing birds do not count as residents."),NSRect(x:20,y:507,width:710,height:70),in:interactionView,size:12)
-        label(t("双鸟招呼需要两只距离合适、在同一窗口或地面边缘停稳的小鸟。它们会轮流朝同伴做已有的小动作，不发出声音。默认开启，保存后生效。","Greetings need two birds settled at a suitable distance on the same window or ground edge. They take turns facing their companion and performing familiar small movements, without sound. On by default; applies after saving."),NSRect(x:20,y:584,width:710,height:76),in:interactionView,size:12)
+        label(t("绕飞、过境、双鸟互动三类共享频率，每次至多发生一种；条件不合适时跳过。绕飞需要鼠标静止 3 秒且周围有空间；默认移动或点击结束，开启跟随后移动继续、点击结束。过境鸟不占常驻数量。","Pointer visits, passing flocks and two-bird interactions share this frequency; at most one starts per attempt. Unsuitable opportunities are skipped. Circling needs 3 seconds of pointer stillness and space. Moving or clicking ends it; with following enabled, movement continues and clicking ends it. Passing birds do not count as residents."),NSRect(x:20,y:507,width:710,height:70),in:interactionView,size:12)
+        label(t("双鸟互动包括招呼、并排停靠、让座和结伴起飞，需要两只距离合适、在可见边缘停稳的小鸟及足够空间。四种动作共用此开关，默认开启，保存后生效。","Two-bird interactions include greetings, side-by-side perching, giving way and paired takeoff. They need two suitably spaced birds settled on visible edges, with room to move. This switch controls all four; on by default and applied after saving."),NSRect(x:20,y:584,width:710,height:76),in:interactionView,size:12)
         _=button(t("预览绕鼠标","Preview pointer visit"),#selector(previewPointerVisit),NSRect(x:20,y:674,width:210,height:32),in:interactionView)
         _=button(t("预览鸟群过境","Preview passing flock"),#selector(previewFlockPass),NSRect(x:250,y:674,width:210,height:32),in:interactionView)
         previewSocialGreetingButton=button(t("预览双鸟招呼","Preview two-bird greeting"),#selector(previewSocialGreeting),NSRect(x:480,y:674,width:250,height:32),in:interactionView)
-        label(t("预览使用已保存的设置。双鸟招呼预览不会生成临时鸟或改变鸟的数量；条件不合适时会在下方提示原因。绕飞预览将在 3 秒后尝试，请把鼠标移到屏幕中部并停住。","Previews use saved settings. Greeting previews never create temporary birds or change the bird count; if unavailable, the reason appears below. Pointer preview tries after 3 seconds; move the pointer near screen center and hold still."),NSRect(x:20,y:720,width:710,height:76),in:interactionView,size:12)
-        // Reserve one additional preview-button row (y:810–842) for future encounters.
+        previewSideBySideButton=button(t("预览并排停靠","Preview side-by-side perch"),#selector(previewSideBySide),NSRect(x:20,y:720,width:210,height:32),in:interactionView)
+        previewGiveWayButton=button(t("预览让座","Preview giving way"),#selector(previewGiveWay),NSRect(x:250,y:720,width:210,height:32),in:interactionView)
+        previewPairedTakeoffButton=button(t("预览结伴起飞","Preview paired takeoff"),#selector(previewPairedTakeoff),NSRect(x:480,y:720,width:250,height:32),in:interactionView)
+        label(t("预览使用已保存的设置。双鸟互动预览不会生成临时鸟或改变鸟的数量；没有合适同伴或空间不足时会在下方提示原因。绕飞预览将在 3 秒后尝试，请把鼠标移到屏幕中部并停住。","Previews use saved settings. Two-bird previews never create temporary birds or change the bird count. Missing companions or insufficient space are explained below. Pointer preview tries after 3 seconds; move the pointer near screen center and hold still."),NSRect(x:20,y:766,width:710,height:76),in:interactionView,size:12)
         label(t("停栖时的小动作","While perched"),NSRect(x:20,y:874,width:710,height:30),in:interactionView,size:20)
         perchActionsButton=NSButton(checkboxWithTitle:t("停栖小动作","Perch activities"),target:self,action:#selector(perchSettingsChanged))
         perchActionsButton.frame=NSRect(x:20,y:916,width:710,height:26);perchActionsButton.state=draft.perchActions ? .on:.off
@@ -196,6 +201,21 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         let result=desktop.engine.handle(.socialGreeting(.preview))
         if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
         else {message.stringValue=t("正在预览双鸟招呼。小鸟会轮流朝同伴做小动作，不发出声音。","Previewing a two-bird greeting. The birds take turns making small movements toward each other, silently.")}
+    }
+    @objc func previewSideBySide() { previewSocialMotion(.sideBySide) }
+    @objc func previewGiveWay() { previewSocialMotion(.giveWay) }
+    @objc func previewPairedTakeoff() { previewSocialMotion(.pairedTakeoff) }
+    private func previewSocialMotion(_ kind:SocialMotionKind) {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.socialMotion(kind,.preview))
+        if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
+        else {
+            switch kind {
+            case .sideBySide:message.stringValue=t("正在预览并排停靠：一只小鸟会移到同伴身旁停下。","Previewing side-by-side perching: one bird moves to settle beside its companion.")
+            case .giveWay:message.stringValue=t("正在预览让座：一只小鸟会让出位置，另一只随后移入。","Previewing giving way: one bird makes room, then its companion moves into the space.")
+            case .pairedTakeoff:message.stringValue=t("正在预览结伴起飞：两只小鸟会相继起飞，一起飞向新的停靠位置。","Previewing paired takeoff: two birds take off in sequence and fly to new perches together.")
+            }
+        }
     }
     @objc func previewRest() { previewPerchAction(.rest) }
     @objc func previewPreen() { previewPerchAction(.preen) }

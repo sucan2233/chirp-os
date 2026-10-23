@@ -100,7 +100,7 @@ public final class BehaviorEngine {
         }
         settings=value;scheduler.reset(value.ambientFrequency)
         if !value.socialInteractions {
-            runtime.cancel(where:{$0.kind == .socialGreeting},reason:.settingsChanged,in:self)
+            runtime.cancel(where:{$0.kind.isSocial},reason:.settingsChanged,in:self)
         }
         if !value.perchActions {
             runtime.cancel(where:{$0.kind == .rest || $0.kind == .preen},reason:.settingsChanged,in:self)
@@ -122,6 +122,7 @@ public final class BehaviorEngine {
         case .pointerVisit(let source): return requestPointer(source)
         case .flockPass(let source): return requestFlock(source)
         case .socialGreeting(let source): return requestSocialGreeting(source)
+        case .socialMotion(let kind,let source): return requestSocialMotion(kind,source:source)
         case .perchAction(let kind,let source):return requestPerchAction(kind,source:source)
         case .previewPointerAfter(let delay):
             guard !paused else {return reject(.pointerVisit,.preview,.paused)}
@@ -130,7 +131,7 @@ public final class BehaviorEngine {
             previewDelay=max(0,min(10,delay.isFinite ? delay:3));return .scheduled
         case .pointerClick:
             scheduler.suppress()
-            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind == .rest || $0.kind == .preen || $0.kind == .socialGreeting},reason:.userInput,in:self)
+            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind == .rest || $0.kind == .preen || $0.kind.isSocial},reason:.userInput,in:self)
             perchPlanner.suppressAll()
         case .pause(let value):
             guard paused != value else {return .accepted}
@@ -145,7 +146,7 @@ public final class BehaviorEngine {
             runtime.cancel(where:{all.contains(reason) || $0.occupiesEncounter},reason:reason,in:self)
         case .scatter:
             cancelPreview(.userInput);perchPlanner.suppressAll()
-            runtime.cancel(where:{!$0.occupiesEncounter || $0.kind == .pointerVisit || $0.kind == .socialGreeting},reason:.replaced,in:self)
+            runtime.cancel(where:{!$0.occupiesEncounter || $0.kind == .pointerVisit || $0.kind.isSocial},reason:.replaced,in:self)
             scheduler.suppress()
             for bird in birds where !bird.isDeparting {_=route(bird)}
         case .remove(let id):
@@ -259,6 +260,51 @@ public final class BehaviorEngine {
             perchPlanner.suppress(pair.0);perchPlanner.suppress(pair.1)
         }
         return result
+    }
+    private func socialMotionCandidates() -> [BirdID] {
+        order.filter {id in
+            guard let record=records[id],record.visible,record.role == .resident else {return false}
+            let bird=record.bird
+            return bird.state == .perched && bird.edge == .top && !bird.isDeparting &&
+                !bird.needsDestination && bird.perchDuration-bird.stateTime>3 &&
+                runtime.owners[id]==nil && hasUsablePerch(bird) && !pointerNear(bird) &&
+                SocialMotionPlan.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? [])
+        }
+    }
+    private func requestSocialMotion(_ action:SocialMotionKind,source:BehaviorSource) -> BehaviorResult {
+        guard !paused else {return reject(action.behavior,source,.paused)}
+        guard settings.socialInteractions else {return reject(action.behavior,source,.disabled)}
+        guard !ambientBusy,previewDelay==nil else {return reject(action.behavior,source,.busy)}
+        guard !world.buttonsDown else {return reject(action.behavior,source,.userInput)}
+        let ids=socialMotionCandidates()
+        guard ids.count>=2 else {
+            let settled=birds.filter{role(of:$0) == .resident && !$0.isDeparting && $0.state == .perched && $0.edge == .top}
+            let reason:BehaviorReason
+            if settled.count<2 {reason = .noCompanion}
+            else if settled.contains(where:{pointerNear($0)}) {reason = .pointerNearby}
+            else if settled.contains(where:{!SocialMotionPlan.requiredFrames.isSubset(of:world.availableFrames[$0.profile.id] ?? [])}) {reason = .missingFrames}
+            else if settled.contains(where:{behavior(of:$0) != nil}) {reason = .busy}
+            else {reason = .noSpace}
+            return reject(action.behavior,source,reason)
+        }
+        guard let plan=socialRandom.element(SocialMotionPlanner.candidates(action,ids:ids,in:self)) else {
+            return reject(action.behavior,source,.noSpace)
+        }
+        let result=runtime.start(SocialMotionExecution(plan:plan),source:source,in:self)
+        if result.accepted {
+            scheduler.suppress()
+            for id in plan.participants {perchPlanner.suppress(id)}
+        }
+        return result
+    }
+    private func requestSocialEncounter() {
+        // The scheduler still selects one social opportunity, regardless of how
+        // many social clips exist. Adding content cannot increase its frequency.
+        let ids=socialMotionCandidates()
+        let available=SocialMotionKind.allCases.filter{!SocialMotionPlanner.candidates($0,ids:ids,in:self).isEmpty}
+        let choice=Int(socialRandom.unit()*Double(available.count+1))
+        if choice<available.count {_=requestSocialMotion(available[choice],source:.automatic)}
+        else {_=requestSocialGreeting(.automatic)}
     }
     func supports(_ action:PerchActionKind,bird:Bird) -> Bool {
         action.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? [])
@@ -392,7 +438,7 @@ public final class BehaviorEngine {
             switch event {
             case .pointerVisit:_=requestPointer(.automatic)
             case .flockPass:_=requestFlock(.automatic)
-            case .socialGreeting:_=requestSocialGreeting(.automatic)
+            case .socialGreeting:requestSocialEncounter()
             }
         }
     }
