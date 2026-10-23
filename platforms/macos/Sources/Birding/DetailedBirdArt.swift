@@ -108,6 +108,9 @@ enum DetailedBirdArt {
         }
     }
     static func make(_ frame:String,species id:SpeciesID)->CGImage {
+        // Only the six new names take this path. Every existing frame retains
+        // its original raster operations, order and species pixel density.
+        if let image=allopreeningImage(frame,species:id) {return image}
         let density=SpeciesCatalog.standard.profile(id).relativeScale
         let c=BirdPainter(size:max(48,Int((48*density).rounded())))
         let phase = frame.hasPrefix("glide") ? 8 + (Int(String(frame.last!)) ?? 1) :
@@ -231,6 +234,101 @@ enum DetailedBirdArt {
         if flying {c.ctx.restoreGState()}
         if flying || landing {wing(c,species:id,phase:flying ? phase:[4,6,7][min(2,phase)],fill:style.1,light:style.0,pointed:[.barnSwallow,.peregrineFalcon,.commonKestrel,.blackHeadedGull].contains(id),far:false,bar:wingBar(id))}
         if flying {c.ctx.restoreGState()}
+        return c.image
+    }
+    // App-only semantic layers let the art verifier measure the actual raster
+    // silhouette independently of the pose's intended contact landmarks.
+    enum AllopreeningPart:CaseIterable {case body,feet,headNeck,bill}
+    static func allopreeningImage(_ frame:String,species id:SpeciesID,
+                                 part:AllopreeningPart?=nil)->CGImage? {
+        guard id == .barnSwallow || id == .swinhoesWhiteEye,
+              BirdArt.allopreeningNames.contains(frame) else {return nil}
+        let density=SpeciesCatalog.standard.profile(id).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let anatomy=shape(id),style=colours(id)
+        let giving=frame.hasPrefix("allopreenGive"),phase=Int(String(frame.last!)) ?? 0
+        // A short reach comes from a forward shoulder and a nod at the neck,
+        // never from stretching the bill or translating the entire sprite.
+        let shoulderX=giving ? 2.3:0.0,settle=giving ? 0.0:0.3
+        let hx=giving ? 43.3-anatomy.headWidth:37-anatomy.headWidth
+        let hy=giving ? 20-anatomy.headHeight/2:20-anatomy.headHeight*0.1464466094
+        let pivot=giving ? CGPoint(x:34,y:24):CGPoint(x:31,y:25)
+        let tilt=giving ? [0.0,0.10,0.06][phase]:[0.18,0.25,0.12][phase]
+        func headTransform() {
+            c.ctx.translateBy(x:pivot.x,y:pivot.y);c.ctx.rotate(by:CGFloat(tilt))
+            c.ctx.translateBy(x:-pivot.x,y:-pivot.y)
+        }
+        if part == nil || part == .body {
+            c.ctx.saveGState();c.ctx.translateBy(x:shoulderX,y:settle)
+            if id == .barnSwallow {
+                c.poly([(21,25),(anatomy.tailX,anatomy.tailY-4),
+                        (anatomy.tailX+8,anatomy.tailY),(anatomy.tailX,anatomy.tailY+4),(24,30)],style.1,outline:true)
+            } else {
+                c.poly([(21,27),(24,31),(anatomy.tailX+4,anatomy.tailY+1),
+                        (anatomy.tailX,anatomy.tailY)],style.1,outline:true)
+                c.line([(21,29),(anatomy.tailX+1,anatomy.tailY)],style.0)
+            }
+            let bx=34-anatomy.width,by=22.0
+            c.oval(bx,by,anatomy.width,anatomy.height,style.0,outline:true)
+            c.oval(bx+anatomy.width*0.48,by+2,anatomy.width*0.52-1,anatomy.height-2,style.3)
+            c.poly([(19,by+1),(24,by+1),(29,by+4),(27,by+8),
+                    (18,by+anatomy.height-1),(16,by+anatomy.height-1),(18,by+5)],style.1,outline:true)
+            c.poly([(20,by+2),(24,by+2),(26,by+4),(23,by+7),(18,by+8)],style.0)
+            for n in 0..<5 {
+                let x=18+Double(n)*1.6
+                c.line([(x+4,by+4),(x,by+anatomy.height-1)],n%2 == 0 ? style.0:"dark")
+            }
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .feet {
+            // The lower legs and toes match the old perched path exactly.
+            // Only the upper attachment extends into the leaning shoulder.
+            for x in [27.0,31.0] {
+                c.line([(x-1,29),(x-1,33),(x,35),(x-0.5,38.5)],"brown",width:1)
+                c.line([(x-2,39),(x,38.5),(x+2,39)],"brown")
+            }
+        }
+        if part == nil || part == .headNeck {
+            c.ctx.saveGState();headTransform()
+            c.poly([(27+shoulderX,24),(hx+1,hy+anatomy.headHeight*0.55),
+                    (hx+anatomy.headWidth-1,hy+anatomy.headHeight*0.8),
+                    (33+shoulderX,29)],style.3)
+            c.poly([(27+shoulderX,24),(hx+1,hy+anatomy.headHeight*0.55),
+                    (hx+2,hy+anatomy.headHeight),(30+shoulderX,27)],style.0)
+            c.oval(hx,hy,anatomy.headWidth,anatomy.headHeight,style.2,outline:true)
+            marks(c,id,hx,hy,anatomy.headWidth,22+settle,false)
+            let ex=hx+anatomy.headWidth*0.72,ey=hy+anatomy.headHeight*0.38
+            if id == .swinhoesWhiteEye {c.oval(ex-1.1,ey-1.1,2.9,2.9,"white")}
+            if giving {
+                c.oval(ex,ey,1,1.1,"eye");c.oval(ex+0.4,ey,0.45,0.45,"white")
+            } else {
+                // Shut lid and a few lifted nape feathers expose the crown to
+                // the partner; the bill points down, away from the giver.
+                c.line([(ex-0.5,ey+0.5),(ex+0.25,ey+0.8),(ex+1,ey+0.45)],"eye",width:0.8)
+                let lift=[0.0,0.45,0.8][phase]
+                c.line([(hx+1,hy+2),(hx+0.4-lift,hy+0.7)],style.0)
+                c.line([(hx+2.2,hy+1),(hx+1.8,hy-lift)],style.0)
+            }
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .bill {
+            c.ctx.saveGState();headTransform()
+            let bx=hx+anatomy.headWidth-0.5,by=hy+anatomy.headHeight*0.5
+            if giving {
+                // The ordinary 2.2-unit bill gently opens and closes around
+                // crown feathers. Give0 remains a compact approach pose.
+                let opening=[0.25,0.0,0.55][phase]
+                c.poly([(bx,by-0.7),(bx+2.2,by+0.5),(bx+1.2,by+1.2),(bx,by+1.3)],"dark")
+                if opening > 0 {c.line([(bx+0.25,by+0.9),(bx+1.7,by+0.6+opening)],style.3,width:0.45)}
+            } else {
+                // On the swallow's shallow head, tuck the closed upper bill
+                // into the lower face. Its old root rasterized into (37,22)
+                // in Receive2, meeting Give1's lower bill after reflection.
+                let upperRoot=by+(id == .barnSwallow ? 0.5:-0.2)
+                c.poly([(bx,upperRoot),(bx+1.8,by+1.6),(bx+1.1,by+2.1),(bx-0.2,by+1.2)],"dark")
+            }
+            c.ctx.restoreGState()
+        }
         return c.image
     }
     // Anatomical wing: shoulder -> elbow -> wrist -> fanned primaries. Each

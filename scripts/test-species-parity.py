@@ -22,6 +22,13 @@ art_source = (ROOT / 'platforms/macos/Sources/Birding/PixelArt.swift').read_text
 frames = re.findall(r'"([a-z]+\d*)"', re.search(r'static let names = \[(.*?)\]', art_source).group(1))
 assert manifest['frames'] == frames, 'Atlas frame order is stale'
 assert set(manifest['frameSizes']) == ids, 'Missing species in atlas manifest'
+# Optional species atlases append contact poses without moving common indices.
+contact_frames = [f'allopreen{role}{i}' for role in ('Give', 'Receive') for i in range(3)]
+specific = manifest.get('speciesFrames', {})
+assert set(specific) == {'barnSwallow', 'swinhoesWhiteEye'}, 'Contact poses advertised for the wrong species'
+for bird, names in specific.items():
+    assert names == frames + contact_frames, f'Invalid species frame order: {bird}'
+
 assert all((ROOT / 'shared/art' / f'{id}.png').is_file() for id in ids)
 print(f'PASS: {len(ids)} matching species schedules and {len(frames)} shared frame names')
 

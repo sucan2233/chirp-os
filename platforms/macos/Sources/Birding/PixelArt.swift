@@ -46,11 +46,16 @@ struct PixelCanvas {
 
 final class BirdArt {
     static let names = ["stand","breathe","blink","preen0","preen1","land0","land1","land2","fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","idle0","idle1","idle2","stretch","shake","poop0","poop1","cling0","cling1","peck0","peck1","glide0","glide1","glide2","bank0","bank1","bank2","bound"]
+    static let allopreeningNames = ["allopreenGive0","allopreenGive1","allopreenGive2",
+                                   "allopreenReceive0","allopreenReceive1","allopreenReceive2"]
+    static func names(for species:SpeciesID) -> [String] {
+        names + ([SpeciesID.barnSwallow,.swinhoesWhiteEye].contains(species) ? allopreeningNames : [])
+    }
     let frames: [String: CGImage]
     let species: SpeciesID
     init(species: SpeciesID = .redWhiskeredBulbul) {
         self.species = species
-        frames = Dictionary(uniqueKeysWithValues: Self.names.map {
+        frames = Dictionary(uniqueKeysWithValues: Self.names(for:species).map {
             ($0, DetailedBirdArt.make($0, species: species))
         })
     }
@@ -251,7 +256,8 @@ final class BirdArt {
             let rep = NSBitmapImageRep(cgImage: image)
             try rep.representation(using: .png, properties: [:])!.write(to: folder.appendingPathComponent(name+".png"))
         }
-        let width = 1152, height = ((Self.names.count+7)/8)*210+10
+        let names=Self.names(for:species)
+        let width = 1152, height = ((names.count+7)/8)*210+10
         let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: width, pixelsHigh: height, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
         let graphics = NSGraphicsContext(bitmapImageRep: rep)!
         NSGraphicsContext.saveGraphicsState(); NSGraphicsContext.current = graphics
@@ -259,7 +265,7 @@ final class BirdArt {
         ctx.setFillColor(NSColor(calibratedRed: 0.09, green: 0.13, blue: 0.16, alpha: 1).cgColor)
         ctx.fill(CGRect(x: 0,y: 0,width: width,height: height))
         ctx.translateBy(x: 0,y: CGFloat(height)); ctx.scaleBy(x: 1,y: -1)
-        for (i,name) in Self.names.enumerated() {
+        for (i,name) in names.enumerated() {
             let x = CGFloat(i%8)*144, y = CGFloat(i/8)*210
             draw(name: name, at: CGPoint(x: x+82,y: y+166), scale: 3, right: true, context: ctx)
             ctx.saveGState(); ctx.translateBy(x: x+16,y: y+198); ctx.scaleBy(x: 1,y: -1)

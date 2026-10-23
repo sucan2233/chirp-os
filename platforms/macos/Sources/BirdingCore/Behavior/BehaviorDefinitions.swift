@@ -1,6 +1,6 @@
 /// Capabilities describe complete groups of existing renderer frames.
 public enum BirdCapability:String,CaseIterable,Codable {
-    case standing, blinking, preening, greeting, flight, landing
+    case standing, blinking, preening, greeting, flight, landing, allopreening
 
     public var requiredFrames:Set<String> {
         switch self {
@@ -10,6 +10,7 @@ public enum BirdCapability:String,CaseIterable,Codable {
         case .greeting:return ["idle0","idle1","idle2"]
         case .flight:return ["fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7"]
         case .landing:return ["land0","land1","land2"]
+        case .allopreening:return ["allopreenGive0","allopreenGive1","allopreenGive2","allopreenReceive0","allopreenReceive1","allopreenReceive2"]
         }
     }
 }
@@ -50,6 +51,7 @@ public struct BehaviorDefinition {
         case .sideHop:return settings.perchActions && settings.sideHopEnabled
         case .takeoffPreparation:return settings.perchActions && settings.takeoffPreparationEnabled
         case .edgePeek:return settings.perchActions && settings.edgePeekEnabled
+        case .allopreening:return settings.socialInteractions && settings.allopreeningEnabled
         case .travelTogether:return settings.socialInteractions && settings.travelTogetherEnabled
         case .chase:return settings.socialInteractions && settings.chaseEnabled
         case .socialGreeting,.sideBySide,.giveWay,.pairedTakeoff:return settings.socialInteractions
@@ -85,6 +87,9 @@ public enum BehaviorDefinitions {
         case .sideBySide,.giveWay,.pairedTakeoff:
             return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.blinking,.flight,.landing],occupiesEncounter:true,
                 runsWhilePaused:false,priority:60,cooldown:20)
+        case .allopreening:
+            return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.landing,.allopreening],occupiesEncounter:true,
+                runsWhilePaused:false,priority:60,cooldown:90)
         case .chase,.travelTogether:
             return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.flight,.landing],occupiesEncounter:true,
                 runsWhilePaused:false,priority:60,cooldown:60)
@@ -112,7 +117,7 @@ public enum BehaviorDefinitions {
     /// Stable content order, independent of dictionary or Set iteration.
     public static var all:[BehaviorDefinition] {
         let kinds:[BehaviorKind] = [.relocate,.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,
-            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether]
+            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening]
         return kinds.map {definition(for:$0)}
     }
 
@@ -125,10 +130,10 @@ public enum BehaviorDefinitions {
             switch current {
             case .rest,.preen,.watch:return true
             case .relocate,.pointerVisit,.flockPass,.socialGreeting,.sideBySide,.giveWay,
-                 .pairedTakeoff,.leafPlay,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether:return false
+                 .pairedTakeoff,.leafPlay,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening:return false
             }
         case .pointerVisit,.flockPass,.rest,.preen,.socialGreeting,.sideBySide,.giveWay,
-             .pairedTakeoff,.leafPlay,.watch,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether:return false
+             .pairedTakeoff,.leafPlay,.watch,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening:return false
         }
     }
 }

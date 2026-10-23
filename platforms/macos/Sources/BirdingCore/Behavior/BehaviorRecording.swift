@@ -77,6 +77,7 @@ public struct RecordedCommand:Codable {
         case .socialGreeting(let value):name="socialGreeting";source=value.rawValue
         case .socialMotion(let kind,let value):name="socialMotion";action=kind.rawValue;source=value.rawValue
         case .perchAction(let kind,let value):name="perchAction";action=kind.rawValue;source=value.rawValue
+        case .allopreening(let value):name="allopreening";source=value.rawValue
         case .travelTogether(let value):name="travelTogether";source=value.rawValue
         case .chase(let value):name="chase";source=value.rawValue
         case .edgePeek(let value):name="edgePeek";source=value.rawValue
@@ -107,6 +108,7 @@ public struct RecordedCommand:Codable {
         case "socialGreeting":return .socialGreeting(try origin())
         case "socialMotion":guard let action,let kind=SocialMotionKind(rawValue:action) else {throw bad()};return .socialMotion(kind,try origin())
         case "perchAction":guard let action,let kind=PerchActionKind(rawValue:action) else {throw bad()};return .perchAction(kind,try origin())
+        case "allopreening":return .allopreening(try origin())
         case "travelTogether":return .travelTogether(try origin())
         case "chase":return .chase(try origin())
         case "edgePeek":return .edgePeek(try origin())
@@ -214,7 +216,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=7,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=8,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

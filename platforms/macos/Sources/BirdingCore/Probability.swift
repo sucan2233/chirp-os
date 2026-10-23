@@ -110,6 +110,7 @@ public struct BirdSettings: Codable {
     public var edgePeekEnabled = true
     public var chaseEnabled = true
     public var travelTogetherEnabled = true
+    public var allopreeningEnabled = true
     public var leafPlayEnabled = true
     public var ambientLeafPlayEnabled = true
     public var visitorMemoryEnabled = true
@@ -126,7 +127,7 @@ public struct BirdSettings: Codable {
         case catalog,probabilities,hoverDelay,perchDefaultsVersion,pendingSpecies
         case pointerVisits,pointerFollowEnabled,flockPasses,ambientFrequency,perchActions,socialInteractions,leafPlayEnabled
         case passiveAttentionEnabled,ambientLeafPlayEnabled,sideHopEnabled,takeoffPreparationEnabled
-        case visitorMemoryEnabled,activityRhythm,edgePeekEnabled,chaseEnabled,travelTogetherEnabled
+        case visitorMemoryEnabled,activityRhythm,edgePeekEnabled,chaseEnabled,travelTogetherEnabled,allopreeningEnabled
     }
     private static func validateSchemaVersion(in values:KeyedDecodingContainer<CodingKeys>) throws {
         // Absence alone denotes version 0; null and malformed values are not legacy versions.
@@ -162,6 +163,7 @@ public struct BirdSettings: Codable {
         edgePeekEnabled=try values.decodeIfPresent(Bool.self,forKey:.edgePeekEnabled) ?? true
         chaseEnabled=try values.decodeIfPresent(Bool.self,forKey:.chaseEnabled) ?? true
         travelTogetherEnabled=try values.decodeIfPresent(Bool.self,forKey:.travelTogetherEnabled) ?? true
+        allopreeningEnabled=try values.decodeIfPresent(Bool.self,forKey:.allopreeningEnabled) ?? true
         leafPlayEnabled=try values.decodeIfPresent(Bool.self,forKey:.leafPlayEnabled) ?? true
         ambientLeafPlayEnabled=try values.decodeIfPresent(Bool.self,forKey:.ambientLeafPlayEnabled) ?? true
         visitorMemoryEnabled=try values.decodeIfPresent(Bool.self,forKey:.visitorMemoryEnabled) ?? true

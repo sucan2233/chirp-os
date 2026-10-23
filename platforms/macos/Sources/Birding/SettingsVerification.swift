@@ -266,6 +266,7 @@ enum SettingsVerification {
             try EdgePeekSettingsVerification.run(into:&checks,folder:folder)
             try ChaseSettingsVerification.run(into:&checks,folder:folder)
             try TravelTogetherSettingsVerification.run(into:&checks,folder:folder)
+            try AllopreeningSettingsVerification.run(into:&checks,folder:folder)
             ActivityRhythmClockVerification.run(into:&checks)
             try VisitorMemoryPersistenceVerification.run(into:&checks,folder:folder)
             try checkLeafSettings(folder:folder,checks:&checks)

@@ -76,9 +76,9 @@ final class BehaviorRuntime {
         engine.emit(.started,run:id,kind:execution.kind,source:source,participants:execution.participants)
         return .started(id)
     }
-    func validate(in engine:BehaviorEngine) {
+    func validate(in engine:BehaviorEngine,where matches:(BehaviorExecution)->Bool = {_ in true}) {
         for id in runs.keys.sorted() {
-            guard let run=runs[id] else {continue}
+            guard let run=runs[id],matches(run.execution) else {continue}
             let slots=run.execution.landingReservations
             let foreign=runs.keys.sorted().filter{$0 != id}.flatMap{runs[$0]?.execution.landingReservations ?? []}
             if slots.contains(where:{!$0.isValid(in:engine)}) || slots.enumerated().contains(where:{index,slot in

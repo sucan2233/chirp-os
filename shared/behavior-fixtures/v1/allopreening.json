@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "simulationVersion": 8,
+  "seed": "81",
+  "settings": {
+    "schemaVersion": 1,
+    "catalog": {
+      "species": [
+        {
+          "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate",
+          "perchMin": 12,
+          "weight": 3500,
+          "id": "barnSwallow",
+          "name": "家燕",
+          "perchMax": 32,
+          "speed": 1.5,
+          "englishName": "Barn Swallow",
+          "adultLengthCM": 18,
+          "flapFPS": 48
+        }
+      ]
+    },
+    "probabilities": {
+      "entries": [
+        {
+          "id": "barnSwallow",
+          "points": 10000,
+          "locked": false
+        }
+      ]
+    },
+    "perchDefaultsVersion": 1,
+    "pointerVisits": true,
+    "pointerFollowEnabled": true,
+    "flockPasses": true,
+    "socialInteractions": true,
+    "perchActions": false,
+    "passiveAttentionEnabled": true,
+    "leafPlayEnabled": true,
+    "ambientLeafPlayEnabled": false,
+    "ambientFrequency": "low",
+    "hoverDelay": 1,
+    "edgePeekEnabled": true,
+    "allopreeningEnabled": true
+  },
+  "initialWorld": {
+    "screens": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1200
+      }
+    ],
+    "displays": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1200
+      }
+    ],
+    "surfaces": [
+      {
+        "id": 61,
+        "pid": 42,
+        "rect": {
+          "x": 300,
+          "y": 450,
+          "width": 800,
+          "height": 180
+        },
+        "layer": 0,
+        "isGround": false
+      }
+    ],
+    "scale": 1,
+    "pointer": {
+      "x": 1400,
+      "y": 50
+    },
+    "buttonsDown": false,
+    "availableFrames": {
+      "barnSwallow": [
+        "stand",
+        "land0",
+        "land1",
+        "land2",
+        "fly0",
+        "fly1",
+        "fly2",
+        "fly3",
+        "fly4",
+        "fly5",
+        "fly6",
+        "fly7",
+        "allopreenGive0",
+        "allopreenGive1",
+        "allopreenGive2",
+        "allopreenReceive0",
+        "allopreenReceive1",
+        "allopreenReceive2"
+      ]
+    }
+  },
+  "fixtureBirds": [
+    {
+      "species": "barnSwallow",
+      "host": 61,
+      "fraction": 0.2206703910614525,
+      "perchDuration": 600,
+      "facingRight": true
+    },
+    {
+      "species": "barnSwallow",
+      "host": 61,
+      "fraction": 0.388268156424581,
+      "perchDuration": 600,
+      "facingRight": true
+    }
+  ],
+  "inputs": [
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 30,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "allopreening",
+        "source": "preview"
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 60,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": true
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 60,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": false
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 300,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    }
+  ]
+}

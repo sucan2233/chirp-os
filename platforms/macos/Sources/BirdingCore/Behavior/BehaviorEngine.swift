@@ -153,6 +153,9 @@ public final class BehaviorEngine {
         if world.screens != value.screens || world.displays != value.displays {resetPerception()}
         world=value
         if !value.buttonsDown {clickHandled=false}
+        // Contact scenes use fixed anchors. Release them against the new world
+        // before host tracking can translate a perched partner or an active hop.
+        runtime.validate(in:self,where:{$0.kind == .allopreening})
         if let sampleDT {for bird in birds {bird.updateHost(surfaces:world.surfaces,sampleDT:sampleDT,spriteScale:spriteScale(for:bird))}}
         runtime.validate(in:self)
     }
@@ -187,6 +190,7 @@ public final class BehaviorEngine {
             runtime.cancel(where:{$0.kind == .watch || $0.kind == .alert},reason:.settingsChanged,in:self)
             resetPerception()
         }
+        if !value.allopreeningEnabled {runtime.cancel(where:{$0.kind == .allopreening},reason:.settingsChanged,in:self)}
         if !value.socialInteractions {
             runtime.cancel(where:{$0.kind.isSocial},reason:.settingsChanged,in:self)
         }
@@ -208,6 +212,7 @@ public final class BehaviorEngine {
         beginRecordingInput(.command(command));defer {endRecordingInput()}
         switch command {
         case .relocate(let id): return relocate(id)
+        case .allopreening(let source):return requestAllopreening(source:source)
         case .travelTogether(let source):return requestTravelTogether(source:source)
         case .chase(let source):return requestChase(source:source)
         case .edgePeek(let source):return requestEdgePeek(source:source)
@@ -515,6 +520,36 @@ public final class BehaviorEngine {
         } else if case .rejected(let reason)=result {return reject(.travelTogether,source,reason)}
         return result
     }
+    private func requestAllopreening(source:BehaviorSource) -> BehaviorResult {
+        guard !paused else {return reject(.allopreening,source,.paused)}
+        guard BehaviorDefinitions.definition(for:.allopreening).isEnabled(settings:settings,source:source) else {return reject(.allopreening,source,.disabled)}
+        guard !ambientBusy,scheduledEncounter==nil else {return reject(.allopreening,source,.busy)}
+        guard !world.buttonsDown else {return reject(.allopreening,source,.userInput)}
+        let candidates=AllopreeningPlan.candidates(in:self,source:source)
+        guard let plan=(source == .automatic ? ecologicalChoice(candidates,weight:{plan in
+            plan.participants.reduce(1){$0*self.perchPlanner.automaticWeight($1,kind:.allopreening)}
+        }):socialRandom.element(candidates)) else {
+            let residents=birds.filter{role(of:$0) == .resident && !$0.isDeparting}
+            let supported=residents.filter{AllopreeningBehavior.supportedSpecies.contains($0.profile.id)}
+            let paired=supported.filter{bird in supported.contains{$0 !== bird && $0.profile.id==bird.profile.id}}
+            let reason:BehaviorReason
+            if residents.isEmpty {reason = .noCompanion}
+            else if supported.isEmpty {reason = .noSpecies}
+            else if paired.isEmpty {reason = .noCompanion}
+            else if paired.contains(where:{behavior(of:$0) != nil}) {reason = .busy}
+            else if paired.filter({$0.state == .perched && !$0.needsDestination}).count<2 {reason = .unavailableBird}
+            else if paired.contains(where:{pointerNear($0)}) {reason = .pointerNearby}
+            else if paired.contains(where:{!BehaviorDefinitions.definition(for:.allopreening).requiredFrames.isSubset(of:world.availableFrames[$0.profile.id] ?? [])}) {reason = .missingFrames}
+            else {reason = .noSpace}
+            return reject(.allopreening,source,reason)
+        }
+        let result=runtime.start(AllopreeningExecution(plan:plan,source:source),source:source,in:self)
+        if result.accepted {
+            scheduler.suppress()
+            for id in plan.participants {perchPlanner.suppress(id)}
+        } else if case .rejected(let reason)=result {return reject(.allopreening,source,reason)}
+        return result
+    }
     private func requestSocialEncounter() {
         // All social clips share this one opportunity; adding a clip does not
         // create another clock or make noticeable events more frequent.
@@ -524,10 +559,13 @@ public final class BehaviorEngine {
             !ChasePlan.candidates(in:self).isEmpty
         let together=BehaviorDefinitions.definition(for:.travelTogether).isEnabled(settings:settings,source:.automatic) &&
             !TravelTogetherPlan.candidates(in:self).isEmpty
-        let choice=Int(socialRandom.unit()*Double(available.count+1+(chase ? 1:0)+(together ? 1:0)))
+        let allopreening=BehaviorDefinitions.definition(for:.allopreening).isEnabled(settings:settings,source:.automatic) &&
+            !AllopreeningPlan.candidates(in:self).isEmpty
+        let choice=Int(socialRandom.unit()*Double(available.count+1+(chase ? 1:0)+(together ? 1:0)+(allopreening ? 1:0)))
         if choice<available.count {_=requestSocialMotion(available[choice],source:.automatic)}
         else if chase,choice==available.count {_=requestChase(source:.automatic)}
         else if together,choice==available.count+(chase ? 1:0) {_=requestTravelTogether(source:.automatic)}
+        else if allopreening,choice==available.count+(chase ? 1:0)+(together ? 1:0) {_=requestAllopreening(source:.automatic)}
         else {_=requestSocialGreeting(.automatic)}
     }
     func supports(_ action:PerchActionKind,bird:Bird) -> Bool {

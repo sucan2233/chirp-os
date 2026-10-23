@@ -55,6 +55,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var previewChaseButton:NSButton!
     var travelTogetherButton:NSButton!
     var previewTravelTogetherButton:NSButton!
+    var allopreeningButton:NSButton!
+    var previewAllopreeningButton:NSButton!
     private var debugEnabled=false
     private var debugButton:NSButton!
     var language: AppLanguage { desktop.language }
@@ -129,7 +131,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:3790))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:4180))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -247,6 +249,17 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         previewTravelTogetherButton=button(t("预览飞行中结队","Preview travel together"),#selector(previewTravelTogether),NSRect(x:20,y:3610,width:280,height:32),in:interactionView)
         previewTravelTogetherButton.identifier=NSUserInterfaceItemIdentifier("previewTravelTogether")
         label(t("预览使用已保存的设置，只选择现有、正在独立飞行的同种居民鸟，不会让停栖鸟起飞、生成或传送鸟。没有合适候选时，请等待上述鸟种的两只同种鸟自然飞行，并留出同行与分开的空间。\n暂停、未保存开启、缺少同伴或空间不足时，下方会提示原因。安静陪伴仍可手动预览。","Previews use saved settings and existing same-species residents already flying independently. No takeoff, spawning or teleporting. If no pair is available, wait for two supported birds of the same species to fly naturally, with room to travel together and separate.\nPausing, saved switches being off, missing companions or insufficient space are explained below. Manual previews remain available in Quiet companionship."),NSRect(x:20,y:3656,width:710,height:104),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("travelTogetherPreviewHelp")
+        label(t("同伴理羽","Companion preening"),NSRect(x:20,y:3810,width:710,height:30),in:interactionView,size:20).identifier=NSUserInterfaceItemIdentifier("allopreeningSectionTitle")
+        allopreeningButton=NSButton(checkboxWithTitle:t("同伴理羽","Companion preening"),target:self,action:#selector(ambientSettingsChanged))
+        allopreeningButton.frame=NSRect(x:20,y:3852,width:710,height:26);allopreeningButton.state=draft.allopreeningEnabled ? .on:.off
+        allopreeningButton.isEnabled=draft.socialInteractions;allopreeningButton.identifier=NSUserInterfaceItemIdentifier("allopreeningEnabled")
+        allopreeningButton.setAccessibilityLabel(allopreeningButton.title);interactionView.addSubview(allopreeningButton)
+        let allopreeningNames:[SpeciesID]=[.barnSwallow,.swinhoesWhiteEye]
+        let companionNames=allopreeningNames.map { language.name($0) }.joined(separator:t("、",", "))
+        label(t("相邻的两只同种小鸟在同一窗口边缘停稳后，轻轻靠近、梳理头颈，再退回原位，全程约 6 秒。\n支持鸟种：","Two calm birds of the same species, perched beside each other on one window, draw closer, gently preen the head and neck, then return to their starting spots in about 6 seconds.\nSupported species: ")+companionNames+t("。\n默认开启，受双鸟互动总开关控制；关闭总开关保留此项偏好。保存后生效，安静陪伴仅停止自动理羽。",".\nOn by default, controlled by Two-bird interactions; turning off the master preserves this preference. Save to apply. Quiet companionship stops automatic preening."),NSRect(x:20,y:3890,width:710,height:112),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("allopreeningHelp")
+        previewAllopreeningButton=button(t("预览同伴理羽","Preview companion preening"),#selector(previewAllopreening),NSRect(x:20,y:4016,width:290,height:32),in:interactionView)
+        previewAllopreeningButton.identifier=NSUserInterfaceItemIdentifier("previewAllopreening")
+        label(t("预览使用已保存的设置和现有小鸟，不会增加小鸟。请让两只上述同种鸟在同一窗口边缘相邻停稳，并把鼠标移远。\n暂停、尚未保存开启、没有合适同伴或空间不足时，下方会提示原因。安静陪伴仍可手动预览。","Previews use saved settings and existing birds, without adding birds. Let two supported birds of the same species settle beside each other on one window and move the pointer away.\nPausing, saved switches being off, no suitable companion or insufficient space are explained below. Manual preview works in Quiet companionship."),NSRect(x:20,y:4062,width:710,height:88),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("allopreeningPreviewHelp")
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -273,6 +286,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         chaseButton.isEnabled=draft.socialInteractions
         draft.travelTogetherEnabled=travelTogetherButton.state == .on
         travelTogetherButton.isEnabled=draft.socialInteractions
+        draft.allopreeningEnabled=allopreeningButton.state == .on
+        allopreeningButton.isEnabled=draft.socialInteractions
         draft.ambientFrequency=AmbientFrequency.allCases[ambientFrequencyPopup.indexOfSelectedItem]
         message.stringValue=t("尚未保存","Unsaved changes")
     }
@@ -409,6 +424,25 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         default:return desktop.behaviorMessage(reason)
         }
     }
+    @objc func previewAllopreening() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.allopreening(.preview))
+        if case .rejected(let reason)=result {message.stringValue=allopreeningPreviewMessage(reason)}
+        else {message.stringValue=t("正在预览同伴理羽：两鸟靠近、轻理头颈，再退回原位，约 6 秒。","Previewing companion preening: birds draw closer, gently preen, then return in about 6 seconds.")}
+    }
+    func allopreeningPreviewMessage(_ reason:BehaviorReason) -> String {
+        switch reason {
+        case .noSpecies:
+            return t("同伴理羽支持家燕和暗绿绣眼鸟，请等待其中一种停稳。","Companion preening supports Barn Swallows and Swinhoe’s White-eyes. Wait for them to settle.")
+        case .noCompanion,.missingBird,.unavailableBird:
+            return t("请等待两只家燕或两只暗绿绣眼鸟在同一窗口相邻停稳，并把鼠标移远。","Let two Barn Swallows or two Swinhoe’s White-eyes settle together on one window; move the pointer away.")
+        case .noSpace:
+            return t("同伴理羽的靠近和退回空间不足，请等待更开阔的窗口边缘。","Not enough room to approach and return. Wait for a clearer window edge.")
+        case .disabled,.settingsChanged:
+            return t("请先保存并开启双鸟互动和同伴理羽。","Save and enable Two-bird interactions and Companion preening first.")
+        default:return desktop.behaviorMessage(reason)
+        }
+    }
     @objc func previewWatch() {
         desktop.syncWorld()
         let result=desktop.engine.handle(.attention(.watch,.preview))
@@ -527,6 +561,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         chaseButton.isEnabled=draft.socialInteractions
         draft.travelTogetherEnabled=travelTogetherButton.state == .on
         travelTogetherButton.isEnabled=draft.socialInteractions
+        draft.allopreeningEnabled=allopreeningButton.state == .on
+        allopreeningButton.isEnabled=draft.socialInteractions
         draft.leafPlayEnabled=leafPlayButton.state == .on
         draft.ambientLeafPlayEnabled=ambientLeafPlayButton.state == .on
         ambientLeafPlayButton.isEnabled=draft.leafPlayEnabled
