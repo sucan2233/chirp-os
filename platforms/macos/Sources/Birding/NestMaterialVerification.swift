@@ -386,78 +386,178 @@ enum NestMaterialVerification {
         return completed
     }
 
+    static let buildPhases=["approach","place","adjust0","adjust1","beforeCommit","afterCommit","departure","settle"]
+
+    /// Observe production output rather than reconstructing clip or flight
+    /// durations. In particular, a committed twig alone is not departure, and
+    /// a perched bird on the nest is not the ordinary exit's settle stage.
+    static func seekPhase(_ phase:String,build:Bool,in f:Fixture)->Bool {
+        guard let bird=f.bird else {return false}
+        let kind:BehaviorKind=build ? .nestBuild:.nestMaterialCarry
+        return f.seek {nest,state in
+            guard f.d.engine.behavior(of:bird)==kind else {return false}
+            switch phase {
+            case "approach":return bird.state == .flying && nest.progress==0
+            case "place":return state.frameName=="nestPlace" && nest.progress==0
+            case "adjust0":return state.frameName=="nestAdjust0" && nest.progress==0
+            case "adjust1":return state.frameName=="nestAdjust1" && nest.progress==0
+            case "beforePickup":return state.frameName=="carryLower" && nest.available==3
+            case "afterPickup":return nest.attached==1 && state.frameName=="carryLook"
+            case "beforeDelivery":return nest.attached==1 && state.frameName=="carryPlace"
+            case "afterDelivery":return nest.delivered==1 && bird.state == .perched && bird.hostID==nest.surfaceID
+            case "beforeCommit":return state.frameName=="nestSettle" && nest.progress==0
+            case "afterCommit":return nest.progress==1 && bird.state == .perched && bird.hostID==nest.surfaceID
+            case "departure":return (build ? nest.progress==1:nest.delivered==1) && bird.state == .flying
+            case "settle":return (build ? nest.progress==1:nest.delivered==1) && bird.state == .perched &&
+                bird.hostID==f.host.id && state.frameName=="stand"
+            default:return false
+            }
+        }
+    }
+
+    /// Leave the visit paused so callers can either interrupt it or resume it.
+    static func pauseFreezesVisit(_ f:Fixture,run:BehaviorRunID,kind:BehaviorKind)->Bool {
+        let d=f.d
+        d.paused=true
+        let nest=d.engine.nestSnapshot(),poses=d.engine.renderSnapshot(),props=d.engine.propSnapshot(),archive=d.observationJournal.archive
+        f.advance(0.5)
+        let afterPoses=d.engine.renderSnapshot(),afterProps=d.engine.propSnapshot()
+        return d.engine.nestSnapshot()==nest && d.observationJournal.archive==archive && terminal(d.engine,run).isEmpty &&
+            f.bird.map{d.engine.behavior(of:$0)==kind}==true && poses.count==afterPoses.count && props.count==afterProps.count &&
+            zip(poses,afterPoses).allSatisfy {a,b in
+                a.id==b.id && a.position==b.position && a.frameName==b.frameName && a.facingRight==b.facingRight &&
+                    a.scale==b.scale && a.hopOffset==b.hopOffset && a.blockers==b.blockers
+            } && zip(props,afterProps).allSatisfy {a,b in
+                a.id==b.id && a.kind==b.kind && a.position==b.position && a.size==b.size && a.rotation==b.rotation &&
+                    a.opacity==b.opacity && a.anchor==b.anchor && a.mirrored==b.mirrored && a.frameName==b.frameName && a.blockers==b.blockers
+            }
+    }
+
+    static func safeOrdinaryRest(_ bird:Bird,in d:DesktopController)->Bool {
+        let e=d.engine,scale=d.spriteScale(for:bird)
+        guard e.id(of:bird) != nil,bird.state == .perched,!bird.needsDestination,!bird.isDeparting,
+              bird.edge == .top,e.behavior(of:bird)==nil,
+              let host=e.world.surfaces.first(where:{$0.id==bird.hostID}),
+              !host.isHabitat,host.isGround || host.layer==0 else {return false}
+        return Geometry.distance(bird.position,Geometry.foot(on:host,fraction:bird.fraction,edge:bird.edge,scale:scale))<0.001 &&
+            e.world.displays.contains{$0.contains(Geometry.landingFootprint(at:bird.position,scale:scale))} &&
+            Geometry.isLandingVisible(on:host.id,at:bird.position,surfaces:e.world.surfaces,scale:scale)
+    }
+
+    static func releasedNestMaterials(_ engine:BehaviorEngine)->Bool {
+        engine.habitatReservationCount==0 && engine.reservedLandingCount==0 && engine.nestSnapshot().allSatisfy {nest in
+            nest.reservation==nil && nest.materials.allSatisfy{$0.owner==nil && $0.reservedByRun==nil && $0.reservedBird==nil}
+        }
+    }
+
+    private static func committedStatePreserved(_ before:NestSnapshot,_ after:NestSnapshot)->Bool {
+        conserved(after) && after.id==before.id && after.progress==before.progress && after.completed==before.completed &&
+            after.materials.map(\.id)==before.materials.map(\.id) && after.available==before.available && after.delivered==before.delivered &&
+            after.attached==0 && after.spent==before.spent+before.attached && zip(before.materials,after.materials).allSatisfy {a,b in
+                b.state==(a.state == .attached ? .spent:a.state) && b.pickupRunID==a.pickupRunID &&
+                    b.deliveryRunID==a.deliveryRunID && b.arrangementRunID==a.arrangementRunID
+            }
+    }
+
     static func interruptions(_ f:Fixture,build:Bool,into checks:inout [String:Bool],evidence:inout [[String:Any]],folder:URL) throws {
         let kind:BehaviorKind=build ? .nestBuild:.nestMaterialCarry,prefix=build ? "nestBuildNative":"nestMaterialNative"
-        let phases=build ? ["beforeCommit","afterCommit"]:["beforePickup","afterPickup","beforeDelivery","afterDelivery"]
-        var cases=phases.map{($0,"click")}
-        cases += [(phases[0],"disable"),(phases[0],"remove"),(phases[0],"host-invalid"),
-            (phases[0],"paused-clear"),(phases[0],"bird-removed"),(phases[0],"sleep"),(phases[0],"shutdown")]
-        for (phase,cause) in cases {try autoreleasepool {
+        let phases=build ? buildPhases:["beforePickup","afterPickup","beforeDelivery","afterDelivery","departure","settle"]
+        let causes=["click","disable","remove","host-invalid","host-pid","host-moved","frames","clear",
+                    "bird-removed","buttons-down","sleep","shutdown","screens-changed","space-changed"]
+        for phase in phases {for cause in causes {for paused in [false,true] {try autoreleasepool {
+            let key=prefix+"Interrupt-\(phase)-\(cause)-\(paused ? "paused":"running")"
             try f.install();try f.place()
             if build {
-                let prepared=journey(f,kind:.nestMaterialCarry,source:.preview,key:prefix+"-prepare-\(phase)-\(cause)-",
+                let prepared=journey(f,kind:.nestMaterialCarry,source:.preview,key:key+"-prepare-",
                     capture:false,into:&checks,evidence:&evidence,folder:folder)
-                guard prepared else {checks[prefix+"Interrupt-\(phase)-\(cause)"]=false;return}
+                guard prepared else {checks[key]=false;return}
                 f.settle()
             }
-            let d=f.d,key=prefix+"Interrupt-\(phase)-\(cause)",archive=d.observationJournal.archive
+            let d=f.d,archive=d.observationJournal.archive
             guard let bird=f.bird,let id=d.engine.id(of:bird),let run=f.start(kind) else {checks[key]=false;return}
-            let reached=f.seek {nest,state in
-                switch phase {
-                case "beforePickup":return state.frameName=="carryLower" && nest.available==3
-                case "afterPickup":return nest.attached==1 && state.frameName=="carryLook"
-                case "beforeDelivery":return nest.attached==1 && state.frameName=="carryPlace"
-                case "afterDelivery":return nest.delivered==1
-                case "beforeCommit":return state.frameName=="nestSettle" && nest.progress==0
-                default:return nest.progress==1
-                }
-            }
-            let before=d.engine.nestSnapshot().first,foot=bird.position,sequence=d.engine.events.last?.sequence ?? 0
+            let reached=seekPhase(phase,build:build,in:f)
+            checks[key+"ReachedLiveStageWithoutObservation"]=reached && terminal(d.engine,run).isEmpty && d.observationJournal.archive==archive
+            guard reached,let before=d.engine.nestSnapshot().first else {checks[key]=false;return}
+            if paused {checks[key+"PauseFreezesVisit"]=pauseFreezesVisit(f,run:run,kind:kind)}
+            let foot=bird.position,sequence=d.engine.events.last?.sequence ?? 0
             var hit=false,relocated=false
+            var replacement:BehaviorRunID?
             switch cause {
             case "click":
                 if let state=d.engine.renderSnapshot().first,let p=InsectCatchVerification.visiblePoint(state,in:d) {
                     hit=d.bird(at:p) === bird
                     if hit,let cg=CGEvent(mouseEventSource:nil,mouseType:.leftMouseDown,mouseCursorPosition:p,mouseButton:.left),let event=NSEvent(cgEvent:cg) {
                         d.handleMouseDown(event)
-                        relocated=d.engine.events.contains{$0.sequence>sequence && $0.kind == .relocate && $0.type == .started && $0.participants==[id]}
+                        replacement=d.engine.events.first{$0.sequence>sequence && $0.kind == .relocate && $0.type == .started && $0.participants==[id]}?.runID
+                        relocated=replacement != nil
                     }
                 }
             case "disable":var settings=d.settings;settings.nestBuildingEnabled=false;d.settings=settings
             case "remove":d.engine.handle(.removeNest)
             case "host-invalid":d.surfaces=[];d.syncWorld(buttonsDown:false)
-            case "paused-clear":d.paused=true;d.engine.handle(.clearCurrentScene)
+            case "host-pid":let h=d.surfaces[0];d.surfaces[0]=Surface(id:h.id,pid:h.pid+1,rect:h.rect);d.syncWorld(buttonsDown:false)
+            case "host-moved":d.surfaces[0].rect.origin.x+=1;d.syncWorld(buttonsDown:false)
+            case "frames":d.frameCapabilities[.spottedDove]?.remove(build ? "nestSettle":"carryPlace");d.syncWorld(buttonsDown:false)
+            case "clear":d.engine.handle(.clearCurrentScene)
             case "bird-removed":d.engine.handle(.remove(id))
+            case "buttons-down":d.syncWorld(buttonsDown:true)
             case "sleep":d.engine.handle(.cancelAmbient(.sleep))
-            default:d.engine.handle(.cancelAmbient(.shutdown))
+            case "shutdown":d.engine.handle(.cancelAmbient(.shutdown))
+            case "screens-changed":d.engine.handle(.cancelAmbient(.screensChanged))
+            case "space-changed":d.engine.handle(.cancelAmbient(.spaceChanged))
+            default:throw failure("Unhandled native nest interruption: \(cause)")
             }
             let ends=terminal(d.engine,run),after=d.engine.nestSnapshot().first
             checks[key]=reached && ends.count==1 && ends.first?.type != .completed &&
                 d.observationJournal.archive==archive && (cause != "click" || hit && relocated && ends.first?.reason == .replaced) &&
                 Geometry.distance(foot,bird.position)<0.001
-            if cause=="click",let before,let after {
-                checks[key+"ConservationAndCommittedState"]=conserved(after) && after.progress==before.progress &&
-                    after.delivered==before.delivered && after.available==before.available && after.attached==0 &&
-                    after.spent==before.spent+before.attached
+            let keepsScene=["click","bird-removed","frames","buttons-down","host-moved"].contains(cause)
+            checks[key+"ConservationAndCommittedState"]=keepsScene ? after.map{committedStatePreserved(before,$0)}==true:
+                after==nil && d.engine.scenePropCount==0 && d.engine.sceneFocus==nil && !d.engine.hasNestPlacement
+            checks[key+"ReleasedVisitResources"]=releasedNestMaterials(d.engine) &&
+                (cause=="click" ? relocated && d.engine.behavior(of:bird) == .relocate && d.engine.activeRunCount==1 && d.engine.leasedBirdCount==1:clearRun(d.engine))
+            if paused {
+                let cancelledNest=d.engine.nestSnapshot(),props=d.engine.propSnapshot()
+                f.advance(0.5)
+                // A user relocation keeps running during pause; only the
+                // cancelled visit and its scene clock remain frozen.
+                let expectedMotion=cause=="click" ? Geometry.distance(foot,bird.position)>0:Geometry.distance(foot,bird.position)<0.001
+                checks[key+"CancelledPauseHonorsMotionPolicyAndDoesNotComplete"]=d.paused && expectedMotion &&
+                    d.engine.nestSnapshot()==cancelledNest && d.engine.propSnapshot().map(\.position)==props.map(\.position) &&
+                    terminal(d.engine,run).count==1 && d.observationJournal.archive==archive
             }
             d.paused=false
             for _ in 0..<36*120 {
-                if d.engine.behavior(of:bird)==nil {break};f.step()
+                if d.engine.bird(id)==nil || safeOrdinaryRest(bird,in:d) {break};f.step()
             }
             f.advance(0.25)
-            if cause=="click" {checks[key+"ActualRelocationCompletes"]=bird.state == .perched && d.engine.behavior(of:bird)==nil}
+            checks[key+"ActualRecoveryOrRemoval"]=cause=="bird-removed" || cause=="host-invalid" ?
+                d.engine.bird(id)==nil:safeOrdinaryRest(bird,in:d)
+            if cause=="click" {
+                checks[key+"ActualRelocationCompletes"]=replacement.map{terminal(d.engine,$0).map(\.type)==[.completed]}==true &&
+                    safeOrdinaryRest(bird,in:d)
+            }
+            if keepsScene {checks[key+"CommittedStateAfterRecovery"]=d.engine.nestSnapshot().first.map{committedStatePreserved(before,$0)}==true}
+            checks[key+"NoLateCompletionAndNoResourceLeak"]=terminal(d.engine,run).count==1 &&
+                terminal(d.engine,run).first?.type != .completed && d.observationJournal.archive==archive &&
+                clearRun(d.engine) && releasedNestMaterials(d.engine)
             d.engine.handle(.clearCurrentScene);f.advance(3);f.view.updateSprites()
             checks[key+"FinalCleanup"]=clear(d.engine)
-            evidence.append(["interrupt":key,"reached":reached,"hitOriginal":hit,"relocateStarted":relocated,
-                "reason":ends.first?.reason?.rawValue ?? "none","before":before.map(materialRows) ?? [],"after":after.map(materialRows) ?? []])
-        }}
+            evidence.append(["interrupt":key,"phase":phase,"paused":paused,"reached":reached,"hitOriginal":hit,"relocateStarted":relocated,
+                "replacementRun":replacement?.rawValue ?? 0,"reason":ends.first?.reason?.rawValue ?? "none",
+                "beforeProgress":before.progress,"afterProgress":after.map{$0.progress as Any} ?? NSNull(),
+                "before":materialRows(before),"after":after.map(materialRows) ?? []])
+        }}}}
     }
     static func conserved(_ nest:NestSnapshot)->Bool {
         nest.materials.count==3 && Set(nest.materials.map(\.id)).count==3 &&
             nest.available+nest.attached+nest.delivered+nest.arranged+nest.spent==3 && nest.attached<=1
     }
     static func clearRun(_ engine:BehaviorEngine)->Bool {engine.activeRunCount==0 && engine.leasedBirdCount==0 && engine.reservedLandingCount==0 && engine.habitatReservationCount==0}
-    static func clear(_ engine:BehaviorEngine)->Bool {clearRun(engine) && engine.nestSnapshot().isEmpty && engine.scenePropCount==0 && !engine.hasNestPlacement}
+    static func clear(_ engine:BehaviorEngine)->Bool {
+        clearRun(engine) && engine.nestSnapshot().isEmpty && engine.scenePropCount==0 && !engine.hasNestPlacement &&
+            engine.sceneFocus==nil && !engine.world.surfaces.contains{$0.habitatKind == .nest}
+    }
     static func entry(_ d:DesktopController,kind:BehaviorKind)->ObservationEntry? {d.observationJournal.archive.entries.first{$0.species == .spottedDove && $0.behavior==kind.rawValue}}
     static func counts(_ entry:ObservationEntry?)->[Int] {[entry?.automaticCount ?? 0,entry?.previewCount ?? 0,entry?.userCount ?? 0]}
     static func terminal(_ engine:BehaviorEngine,_ run:BehaviorRunID)->[BehaviorEvent] {engine.events.filter{$0.runID==run && [.completed,.cancelled,.failed].contains($0.type)}}

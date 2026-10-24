@@ -27,6 +27,10 @@ enum NestBuildVerification {
             let f=try NestMaterialVerification.Fixture(folder:output);defer {f.close()}
             try automaticFocus(f,into:&checks,evidence:&evidence)
         }
+        NestMaterialVerification.runCase("pauseAndResume",errors:&caseErrors) {
+            let f=try NestMaterialVerification.Fixture(folder:output);defer {f.close()}
+            try pauseAndResume(f,into:&checks,evidence:&evidence,folder:output)
+        }
         NestMaterialVerification.runCase("interruptions",errors:&caseErrors) {
             let f=try NestMaterialVerification.Fixture(folder:output);defer {f.close()}
             try NestMaterialVerification.interruptions(f,build:true,into:&checks,evidence:&evidence,folder:output)
@@ -34,6 +38,52 @@ enum NestBuildVerification {
         }
         try NestMaterialVerification.requireAllCases(caseErrors)
         completed=true
+    }
+    private static func pauseAndResume(_ f:NestMaterialVerification.Fixture,into checks:inout [String:Bool],
+        evidence:inout [[String:Any]],folder:URL) throws {
+        for phase in NestMaterialVerification.buildPhases {try autoreleasepool {
+            let key="nestBuildNativePauseResume-\(phase)-"
+            try f.install();try f.place()
+            guard NestMaterialVerification.journey(f,kind:.nestMaterialCarry,source:.preview,key:key+"prepare-",capture:false,
+                into:&checks,evidence:&evidence,folder:folder),let bird=f.bird else {checks[key+"Preparation"]=false;return}
+            f.settle()
+            let d=f.d,archive=d.observationJournal.archive,beforeCounts=NestMaterialVerification.counts(NestMaterialVerification.entry(d,kind:.nestBuild))
+            let carryBefore=NestMaterialVerification.entry(d,kind:.nestMaterialCarry)
+            guard let run=f.start(.nestBuild),NestMaterialVerification.seekPhase(phase,build:true,in:f),
+                  let before=d.engine.nestSnapshot().first else {checks[key+"ReachedLiveStage"]=false;return}
+            checks[key+"ReachedLiveStage"]=NestMaterialVerification.terminal(d.engine,run).isEmpty && d.observationJournal.archive==archive
+            checks[key+"FrozenMaterialPoseLifetimeAndObservation"]=NestMaterialVerification.pauseFreezesVisit(f,run:run,kind:.nestBuild)
+            checks[key+"PreviewRejectedWhilePaused"]=d.engine.handle(.nestBuild(.preview)) == .rejected(.paused)
+            d.paused=false
+            var noEarlyObservation=true
+            for _ in 0..<30*120 {
+                if !NestMaterialVerification.terminal(d.engine,run).isEmpty {break}
+                noEarlyObservation = noEarlyObservation && d.observationJournal.archive==archive
+                f.step()
+            }
+            let ends=NestMaterialVerification.terminal(d.engine,run),after=d.engine.nestSnapshot().first
+            let delta=zip(beforeCounts,NestMaterialVerification.counts(NestMaterialVerification.entry(d,kind:.nestBuild))).map{$0.1-$0.0}
+            checks[key+"ActualSafeExitAndUniqueObservation"]=noEarlyObservation && ends.count==1 && ends.first?.type == .completed &&
+                delta==[0,1,0] && NestMaterialVerification.entry(d,kind:.nestMaterialCarry)==carryBefore &&
+                NestMaterialVerification.safeOrdinaryRest(bird,in:d) && bird.hostID==f.host.id &&
+                NestMaterialVerification.clearRun(d.engine) && NestMaterialVerification.releasedNestMaterials(d.engine)
+            checks[key+"ExactlyOneCommittedTwig"]=after.map {nest in
+                NestMaterialVerification.conserved(nest) && nest.progress==1 && nest.delivered==0 && nest.available==2 &&
+                    nest.materials.map(\.id)==before.materials.map(\.id) &&
+                    nest.materials.filter{$0.state == .arranged}.map(\.arrangementRunID)==[run] &&
+                    nest.materials.map(\.deliveryRunID)==before.materials.map(\.deliveryRunID)
+            }==true
+            let completedArchive=d.observationJournal.archive
+            f.advance(0.5)
+            checks[key+"NoDuplicateAfterResume"]=NestMaterialVerification.terminal(d.engine,run).count==1 &&
+                d.observationJournal.archive==completedArchive && d.engine.nestSnapshot().first?.progress==1 &&
+                d.engine.nestSnapshot().first?.materials==after?.materials
+            evidence.append(["pauseResume":phase,"run":run.rawValue,"beforeProgress":before.progress,
+                "afterProgress":after.map{$0.progress as Any} ?? NSNull(),"terminal":ends.first?.type.rawValue ?? "none",
+                "foot":NSStringFromPoint(bird.position),"host":bird.hostID.map{Int($0)} ?? -1])
+            d.engine.handle(.clearCurrentScene);f.advance(3)
+            checks[key+"FinalCleanup"]=NestMaterialVerification.clear(d.engine)
+        }}
     }
     private static func completeThree(_ f:NestMaterialVerification.Fixture,into checks:inout [String:Bool],
         evidence:inout [[String:Any]],folder:URL) throws {
@@ -92,7 +142,8 @@ enum NestBuildVerification {
             ends.count==1 && ends.first?.reason == .replaced && ends.first?.type != .completed &&
             d.engine.nestSnapshot().first?.progress==3 && d.observationJournal.archive==before
         for _ in 0..<36*120 {if d.engine.behavior(of:bird)==nil {break};f.step()}
-        checks["nestBuildNativeFinalCommitClickRelocatesAndSettles"]=bird.state == .perched && NestMaterialVerification.clearRun(d.engine)
+        checks["nestBuildNativeFinalCommitClickRelocatesAndSettles"]=NestMaterialVerification.safeOrdinaryRest(bird,in:d) &&
+            NestMaterialVerification.clearRun(d.engine) && NestMaterialVerification.releasedNestMaterials(d.engine)
         d.engine.handle(.clearCurrentScene);f.advance(3)
     }
     private static func automaticFocus(_ f:NestMaterialVerification.Fixture,into checks:inout [String:Bool],evidence:inout [[String:Any]]) throws {
