@@ -16,7 +16,7 @@ final class BehaviorDefinitionTests:XCTestCase {
     }
 
     private let kinds:[BehaviorKind] = [.relocate,.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,
-        .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit]
+        .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry]
     private let sources:[BehaviorSource] = [.user,.preview,.automatic]
 
     // Literal expectations intentionally do not read existing plan requirements
@@ -45,7 +45,8 @@ final class BehaviorDefinitionTests:XCTestCase {
             Expected(kind:.allopreening,capabilities:[.standing,.landing,.allopreening],frames:["stand","land0","land1","land2","allopreenGive0","allopreenGive1","allopreenGive2","allopreenReceive0","allopreenReceive1","allopreenReceive2"],encounter:true,paused:false,priority:60,cooldown:90,settingsMask:8208),
             Expected(kind:.fixedPerchVisit,capabilities:[.standing,.flight,.landing],frames:leafFlight,encounter:false,paused:false,priority:30,cooldown:60,settingsMask:16384),
             Expected(kind:.foodTrayVisit,capabilities:[.standing,.flight,.landing,.feeding],frames:leafFlight.union(["feedLook","feedDown0","feedDown1","feedLift"]),encounter:false,paused:false,priority:30,cooldown:75,settingsMask:32768),
-            Expected(kind:.bathVisit,capabilities:[.standing,.flight,.landing,.bathing],frames:leafFlight.union(["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise","shake"]),encounter:true,paused:false,priority:30,cooldown:45,settingsMask:65536)
+            Expected(kind:.bathVisit,capabilities:[.standing,.flight,.landing,.bathing],frames:leafFlight.union(["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise","shake"]),encounter:true,paused:false,priority:30,cooldown:45,settingsMask:65536),
+            Expected(kind:.leafCarry,capabilities:[.standing,.flight,.landing,.carryingLeaf],frames:leafFlight.union(["carryLook","carryLower","carryGrip","carryPlace"]),encounter:true,paused:false,priority:60,cooldown:45,settingsMask:131072)
         ]
     }
 
@@ -64,7 +65,8 @@ final class BehaviorDefinitionTests:XCTestCase {
             (.restPose,"restPose",["restLower","restTuck","restWake"]),
             (.takeoffPose,"takeoffPose",["takeoffCrouch","takeoffPush"]),
             (.edgePeekPose,"edgePeekPose",["peekLower","peekLook","peekRecover"]),
-            (.bathing,"bathing",["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise","shake"])
+            (.bathing,"bathing",["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise","shake"]),
+            (.carryingLeaf,"carryingLeaf",["carryLook","carryLower","carryGrip","carryPlace"])
         ]
         XCTAssertEqual(BirdCapability.allCases,fixtures.map {$0.0})
         for (capability,name,frames) in fixtures {
@@ -79,7 +81,7 @@ final class BehaviorDefinitionTests:XCTestCase {
 
     func testAllDefinitionsHaveFixedOrderAndExactSchedulingPolicy() {
         XCTAssertEqual(BehaviorDefinitions.all.map(\.kind),kinds)
-        XCTAssertEqual(Set(BehaviorDefinitions.all.map { $0.kind.rawValue }).count,21)
+        XCTAssertEqual(Set(BehaviorDefinitions.all.map { $0.kind.rawValue }).count,22)
         for fixture in expected {
             let definition=BehaviorDefinitions.definition(for:fixture.kind)
             let label=fixture.kind.rawValue
@@ -142,7 +144,7 @@ final class BehaviorDefinitionTests:XCTestCase {
                 switch capability {
                 case .allopreening:available=supported.contains(species)
                 case .feeding:available=seedVisitors.contains(species)
-                case .observationPose,.alertPose,.restPose,.takeoffPose,.edgePeekPose,.bathing:available=false
+                case .observationPose,.alertPose,.restPose,.takeoffPose,.edgePeekPose,.bathing,.carryingLeaf:available=false
                 default:available=true
                 }
                 XCTAssertEqual(capability.requiredFrames.isSubset(of:frames),available,"\(species): \(capability)")
@@ -152,7 +154,7 @@ final class BehaviorDefinitionTests:XCTestCase {
                 switch fixture.kind {
                 case .allopreening:available=supported.contains(species)
                 case .foodTrayVisit:available=seedVisitors.contains(species)
-                case .bathVisit:available=false
+                case .bathVisit,.leafCarry:available=false
                 default:available=true
                 }
                 XCTAssertEqual(BehaviorDefinitions.definition(for:fixture.kind).missingFrames(in:frames).isEmpty,available,
@@ -198,7 +200,7 @@ final class BehaviorDefinitionTests:XCTestCase {
             settings.allopreeningEnabled=bits & 8192 != 0
             settings.fixedPerchesEnabled=bits & 16384 != 0
             // Food tray is checked independently below; keep this at 2^15.
-            for fixture in expected where fixture.kind != .foodTrayVisit && fixture.kind != .bathVisit {
+            for fixture in expected where fixture.kind != .foodTrayVisit && fixture.kind != .bathVisit && fixture.kind != .leafCarry {
                 for source in sources {
                     let mask=fixture.settingsMask | (fixture.kind == .leafPlay && source == .automatic ? 64:0)
                     let enabled=bits & mask == mask
@@ -238,7 +240,7 @@ final class BehaviorDefinitionTests:XCTestCase {
 
     func testPreemptionAllowsOnlyExplicitUserRelocationAndAutomaticAlert() {
         let relocationTargets:Set<BehaviorKind> = [.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,
-            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit]
+            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry]
         let alertTargets:Set<BehaviorKind> = [.rest,.preen,.watch]
         for incoming in kinds {
             for source in sources {

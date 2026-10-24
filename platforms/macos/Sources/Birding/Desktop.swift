@@ -89,7 +89,7 @@ final class DesktopView: NSView {
         // Keep the physical sibling order consistent with zPosition too.
         // Software layer captures do not implement all CA compositing rules;
         // a newly appended rear basin must never paint over an existing bird.
-        if controller.engine.habitatSnapshot().contains(where:{$0.kind == .bath}) {
+        if propSnapshot.contains(where:{$0.kind == .leafToken}) || controller.engine.habitatSnapshot().contains(where:{$0.kind == .bath}) {
             root.sublayers=(root.sublayers ?? []).enumerated().sorted {a,b in
                 a.element.zPosition==b.element.zPosition ? a.offset<b.offset:a.element.zPosition<b.element.zPosition
             }.map(\.element)
@@ -254,6 +254,7 @@ final class DesktopController: NSObject {
     @objc func rebuildScreens() {
         engine.handle(.cancelFoodTrayPlacement)
         engine.handle(.cancelBathPlacement)
+        engine.handle(.cancelCarryLeafPlacement)
         engine.handle(.cancelAmbient(.screensChanged))
         panels.forEach { $0.orderOut(nil) }; panels.removeAll(); views.removeAll()
         for screen in NSScreen.screens {
@@ -308,6 +309,7 @@ final class DesktopController: NSObject {
         consumeBehaviorEvents()
         settingsWindow?.refreshFoodTrayControls()
         settingsWindow?.refreshBathControls()
+        settingsWindow?.refreshLeafCarryControls()
     }
     func tick() {
         let now = ProcessInfo.processInfo.systemUptime

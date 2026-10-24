@@ -22,7 +22,7 @@ final class ActivityRhythmIntegrationTests:XCTestCase {
         let e=fixture(.quiet),bird=perch(e)
         let commands:[EngineCommand]=[.pointerVisit(.automatic),.flockPass(.automatic),.socialGreeting(.automatic),
             .socialMotion(.sideBySide,.automatic),.socialMotion(.giveWay,.automatic),.socialMotion(.pairedTakeoff,.automatic),
-            .leafPlay(at:CGPoint(x:500,y:500),source:.automatic),.fixedPerchVisit(.automatic),.foodTrayVisit(.automatic),.bathVisit(.automatic)]
+            .leafPlay(at:CGPoint(x:500,y:500),source:.automatic),.fixedPerchVisit(.automatic),.foodTrayVisit(.automatic),.bathVisit(.automatic),.leafCarry(.automatic)]
         for command in commands {XCTAssertEqual(e.handle(command),.rejected(.disabled))}
         for definition in BehaviorDefinitions.all where !definition.occupiesEncounter && definition.kind != .fixedPerchVisit && definition.kind != .foodTrayVisit {
             XCTAssertTrue(definition.isEnabled(settings:e.settings,source:.automatic),definition.kind.rawValue)
@@ -111,7 +111,7 @@ final class ActivityRhythmIntegrationTests:XCTestCase {
     func testPriorSimulationVersionsAreRejectedBeforeNestedDecode() throws {
         let e=fixture(.steady,record:true)
         let data=try BehaviorInputLog.encoder().encode(e.recordedInputs())
-        for version in Array(1...11)+[13] {
+        for version in Array(1...12)+[14] {
             var object=try XCTUnwrap(JSONSerialization.jsonObject(with:data) as? [String:Any])
             object["simulationVersion"]=version;object["settings"]="incompatible"
             XCTAssertThrowsError(try BehaviorInputLog.decode(JSONSerialization.data(withJSONObject:object)))

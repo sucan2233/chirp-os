@@ -120,4 +120,33 @@ final class SceneSchedulingTests:XCTestCase {
         XCTAssertEqual(SceneRandomSalt.bath,0x4241544856495349)
         XCTAssertNotEqual(SceneRandomSalt.scheduler,SceneRandomSalt.bath)
     }
+
+    func testTypedLeafFocusSharesTheBathClockAndAnOldTerminalCannotClearItsReplacement() {
+        let leaf=SceneFocus(leafID:ScenePropID(7)),bath=SceneFocus(objectID:HabitatObjectID(7))
+        XCTAssertEqual(leaf.leafID,ScenePropID(7));XCTAssertNil(leaf.objectID)
+        XCTAssertEqual(bath.objectID,HabitatObjectID(7));XCTAssertNil(bath.leafID)
+        XCTAssertNotEqual(leaf,bath,"Numeric IDs from different stores do not identify the same scene")
+        var hits=0
+        for seed in 0..<512 {
+            var scheduler=AmbientScheduler(seed:UInt64(seed));scheduler.reset(.high)
+            XCTAssertTrue(scheduler.acquireFocus(leaf,frequency:.high))
+            XCTAssertEqual(scheduler.remaining,10)
+            XCTAssertFalse(scheduler.acquireFocus(bath,frequency:.high))
+            XCTAssertFalse(scheduler.canAttemptScene(bath));XCTAssertTrue(scheduler.canAttemptScene(leaf))
+            let event=nextOpportunity(&scheduler)
+            if event == .leafCarry(ScenePropID(7)) {hits+=1} else {XCTAssertEqual(event,.flockPass)}
+            XCTAssertTrue((15.0...25.0).contains(scheduler.remaining))
+            XCTAssertFalse(scheduler.endFocus(matching:bath,frequency:.high))
+            XCTAssertEqual(scheduler.sceneFocus,leaf)
+            XCTAssertTrue(scheduler.endFocus(matching:leaf,frequency:.high))
+            XCTAssertNil(scheduler.sceneFocus);XCTAssertEqual(scheduler.remaining,45)
+            XCTAssertTrue(scheduler.acquireFocus(bath,frequency:.high))
+            XCTAssertFalse(scheduler.endFocus(matching:leaf,frequency:.high))
+            XCTAssertEqual(scheduler.sceneFocus,bath)
+        }
+        XCTAssertEqual(Double(hits)/512,0.7,accuracy:0.06)
+        XCTAssertEqual(SceneRandomSalt.leafCarry,0x4C45414643415252)
+        XCTAssertNotEqual(SceneRandomSalt.leafCarry,SceneRandomSalt.scheduler)
+        XCTAssertNotEqual(SceneRandomSalt.leafCarry,SceneRandomSalt.bath)
+    }
 }

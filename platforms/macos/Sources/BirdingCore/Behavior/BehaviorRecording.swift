@@ -33,6 +33,7 @@ public struct RecordedWorld:Codable,Equatable {
     public var screens,displays:[RecordedRect]
     public var displayIDs:[String]?
     public var fixedPerchArtAvailable:Bool?
+    public var leafCarryArtAvailable:Bool?
     public var bathArtAvailable:Bool?
     public var foodTrayArtAvailable:Bool?
     public var surfaces:[RecordedSurface]
@@ -41,7 +42,7 @@ public struct RecordedWorld:Codable,Equatable {
     public var localMinuteOfDay:Int?
     public var availableFrames:[String:[String]]?
     public init(_ world:BehaviorWorld) {
-        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable;foodTrayArtAvailable=world.foodTrayArtAvailable;bathArtAvailable=world.bathArtAvailable
+        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable;foodTrayArtAvailable=world.foodTrayArtAvailable;bathArtAvailable=world.bathArtAvailable;leafCarryArtAvailable=world.leafCarryArtAvailable
         surfaces=world.surfaces.map(RecordedSurface.init);scale=Double(world.scale);pointer=RecordedPoint(world.pointer)
         buttonsDown=world.buttonsDown;localMinuteOfDay=world.localMinuteOfDay
         availableFrames=Dictionary(uniqueKeysWithValues:world.availableFrames.map{($0.key.rawValue,$0.value.sorted())})
@@ -63,7 +64,7 @@ public struct RecordedWorld:Codable,Equatable {
         return BehaviorWorld(screens:screens.map(\.value),displays:displays.map(\.value),surfaces:surfaces.map(\.value),
             scale:scale,pointer:pointer.value,buttonsDown:buttonsDown,
             availableFrames:Dictionary(uniqueKeysWithValues:frames.map{(SpeciesID(rawValue:$0.key)!,Set($0.value))}),
-            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true,foodTrayArtAvailable:foodTrayArtAvailable ?? true,bathArtAvailable:bathArtAvailable ?? true)
+            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true,foodTrayArtAvailable:foodTrayArtAvailable ?? true,bathArtAvailable:bathArtAvailable ?? true,leafCarryArtAvailable:leafCarryArtAvailable ?? true)
     }
 }
 public struct RecordedSimulationOptions:Codable,Equatable {
@@ -86,6 +87,11 @@ public struct RecordedCommand:Codable {
         case .socialMotion(let kind,let value):name="socialMotion";action=kind.rawValue;source=value.rawValue
         case .perchAction(let kind,let value):name="perchAction";action=kind.rawValue;source=value.rawValue
         case .fixedPerchVisit(let value):name="fixedPerchVisit";source=value.rawValue
+        case .placeCarryLeaf(let value):name="placeCarryLeaf";point=RecordedPoint(value)
+        case .placeCarryLeafAfter(let value):name="placeCarryLeafAfter";delay=max(0,min(10,value.isFinite ? value:3))
+        case .cancelCarryLeafPlacement:name="cancelCarryLeafPlacement"
+        case .removeCarryLeaf:name="removeCarryLeaf"
+        case .leafCarry(let value):name="leafCarry";source=value.rawValue
         case .placeBath(let value):name="placeBath";point=RecordedPoint(value)
         case .placeBathAfter(let value):name="placeBathAfter";delay=max(0,min(10,value.isFinite ? value:3))
         case .cancelBathPlacement:name="cancelBathPlacement"
@@ -130,6 +136,11 @@ public struct RecordedCommand:Codable {
         case "socialMotion":guard let action,let kind=SocialMotionKind(rawValue:action) else {throw bad()};return .socialMotion(kind,try origin())
         case "perchAction":guard let action,let kind=PerchActionKind(rawValue:action) else {throw bad()};return .perchAction(kind,try origin())
         case "fixedPerchVisit":return .fixedPerchVisit(try origin())
+        case "placeCarryLeaf":guard let point,point.valid else {throw bad()};return .placeCarryLeaf(at:point.value)
+        case "placeCarryLeafAfter":return .placeCarryLeafAfter(try wait())
+        case "cancelCarryLeafPlacement":return .cancelCarryLeafPlacement
+        case "removeCarryLeaf":return .removeCarryLeaf
+        case "leafCarry":return .leafCarry(try origin())
         case "placeBath":guard let point,point.valid else {throw bad()};return .placeBath(at:point.value)
         case "placeBathAfter":return .placeBathAfter(try wait())
         case "cancelBathPlacement":return .cancelBathPlacement
@@ -229,10 +240,11 @@ public struct RecordedBirdState:Codable,Equatable {
 public struct RecordedPropState:Codable,Equatable {
     public var id:String,kind:String,position:RecordedPoint,size:Double,rotation:Double,opacity:Double
     public var frame:String?
+    public var mirrored:Bool?
     public var anchor:RecordedPoint?
     init(_ prop:ScenePropRenderState) {
         id=String(prop.id.rawValue);kind=prop.kind.rawValue;position=RecordedPoint(prop.position);size=Double(prop.size)
-        rotation=Double(prop.rotation);opacity=prop.opacity;frame=prop.frameName;anchor=RecordedPoint(prop.anchor)
+        rotation=Double(prop.rotation);opacity=prop.opacity;frame=prop.frameName;anchor=RecordedPoint(prop.anchor);mirrored=prop.mirrored
     }
 }
 public struct RecordedFixedPerchState:Codable,Equatable {
@@ -248,6 +260,19 @@ public struct RecordedHabitatObjectState:Codable,Equatable {
         retiring=object.retiring;remainingLifetime=object.remainingLifetime
     }
 }
+public struct RecordedCarriedObjectState:Codable,Equatable {
+    public var id:String,kind:String,state:String,owner:String?,reservedByRun:String?
+    public var hostID:UInt32,hostPID:Int32,fraction:Double,isGround:Bool,groundScale:Double
+    public var worldScale:Double,facingRight:Bool,remainingLifetime:Double
+    init(_ object:CarriedObject) {
+        id=String(object.id.rawValue);kind=object.kind.rawValue;state=object.state.rawValue
+        owner=object.owner.map{String($0.rawValue)};reservedByRun=object.reservedByRun.map{String($0.rawValue)}
+        hostID=object.surfaceAnchor.hostID;hostPID=object.surfaceAnchor.hostPID
+        fraction=Double(object.surfaceAnchor.fraction);isGround=object.surfaceAnchor.isGround
+        groundScale=Double(object.surfaceAnchor.groundScale);worldScale=Double(object.worldScale)
+        facingRight=object.facingRight;remainingLifetime=object.remainingLifetime
+    }
+}
 public struct BehaviorReplayReport:Codable,Equatable {
     public var time:Double,paused:Bool,residents:Int,transients:Int,pending:Int,runs:Int,leases:Int,reservations:Int
     public var events:[RecordedEvent],birds:[RecordedBirdState],props:[RecordedPropState]
@@ -257,6 +282,9 @@ public struct BehaviorReplayReport:Codable,Equatable {
     public var hasFoodTrayPlacement:Bool,habitatReservations:Int
     public var hasBathPlacement:Bool?
     public var sceneFocusID:String?
+    public var sceneFocusKind:String?
+    public var hasCarryLeafPlacement:Bool?
+    public var carriedObjects:[RecordedCarriedObjectState]?
     public var schedulerRemaining:Double?
     public var sceneCooldownRemaining:Double?
     public var userInputRemaining:Double?
@@ -268,7 +296,14 @@ public struct BehaviorReplayReport:Codable,Equatable {
         fixedPerches=engine.fixedPerchSnapshot().map(RecordedFixedPerchState.init)
         habitats=engine.habitatSnapshot().map(RecordedHabitatObjectState.init)
         hasFoodTrayPlacement=engine.hasFoodTrayPlacement;habitatReservations=engine.habitatReservationCount
-        hasBathPlacement=engine.hasBathPlacement;sceneFocusID=engine.sceneFocus.map{String($0.objectID.rawValue)}
+        hasBathPlacement=engine.hasBathPlacement;hasCarryLeafPlacement=engine.hasCarryLeafPlacement
+        carriedObjects=engine.carriedObjectSnapshot().map(RecordedCarriedObjectState.init)
+        if let focus=engine.sceneFocus {
+            switch focus.target {
+            case .bath(let id):sceneFocusKind="bath";sceneFocusID=String(id.rawValue)
+            case .leaf(let id):sceneFocusKind="leaf";sceneFocusID=String(id.rawValue)
+            }
+        }
         schedulerRemaining=engine.scheduler.remaining;sceneCooldownRemaining=engine.scheduler.sceneCooldownRemaining
         userInputRemaining=engine.scheduler.userInputRemaining
         visitorMemory=engine.visitorMemoryArchive
@@ -279,7 +314,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=12,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=13,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

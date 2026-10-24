@@ -34,14 +34,16 @@ final class ObservationJournalMigrationTests:XCTestCase {
         XCTAssertFalse(try ObservationArchive.load(from:file).requiresMigration)
     }
 
-    func testVersionOneCannotClaimNewBathEntriesAndVersionTwoRetainsStrictEntryValidation() throws {
+    func testVersionOneCannotClaimNewBathOrCarryEntriesAndVersionTwoRetainsStrictEntryValidation() throws {
         var raw=try XCTUnwrap(JSONSerialization.jsonObject(with:versionOne) as? [String:Any])
         var entries=try XCTUnwrap(raw["entries"] as? [[String:Any]])
-        entries[0]["behavior"]="bathVisit";raw["entries"]=entries
-        XCTAssertThrowsError(try ObservationArchive.decode(JSONSerialization.data(withJSONObject:raw)))
-        raw["formatVersion"]=2
-        let current=try ObservationArchive.decode(JSONSerialization.data(withJSONObject:raw))
-        XCTAssertEqual(current.entries.first?.behavior,"bathVisit");XCTAssertFalse(current.requiresMigration)
+        for behavior in ["bathVisit","leafCarry"] {
+            entries[0]["behavior"]=behavior;raw["entries"]=entries;raw["formatVersion"]=1
+            XCTAssertThrowsError(try ObservationArchive.decode(JSONSerialization.data(withJSONObject:raw)))
+            raw["formatVersion"]=2
+            let current=try ObservationArchive.decode(JSONSerialization.data(withJSONObject:raw))
+            XCTAssertEqual(current.entries.first?.behavior,behavior);XCTAssertFalse(current.requiresMigration)
+        }
         for behavior in ["unknownFutureBehavior","relocate"] {
             entries[0]["behavior"]=behavior;raw["entries"]=entries
             XCTAssertThrowsError(try ObservationArchive.decode(JSONSerialization.data(withJSONObject:raw)))

@@ -15,6 +15,8 @@ extension BirdArt {
             }
             if let peek=PoseClip.edgePeek(species:species) {tracks.append(peek)}
             if let bath=PoseClip.bath(species:species) {tracks.append(bath)}
+            if let pickup=PoseClip.leafCarryPickup(species:species),let place=PoseClip.leafCarryPlace(species:species),
+               let carry=PoseClip(id:"\(species.rawValue).leafCarry.preview",frames:pickup.frames+place.frames) {tracks.append(carry)}
             for scale:CGFloat in [0.5,1,2] {for right in [true,false] {
                 let size=scale*bird.relativeScale,cell=max(140,Int(ceil(48*size))+32)
                 let width=cell*tracks.count,height=cell+42

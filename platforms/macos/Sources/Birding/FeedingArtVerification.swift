@@ -100,7 +100,7 @@ enum FeedingArtVerification {
             let bath=[SpeciesID.treeSparrow,.lightVentedBulbul].contains(id)
                 ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]
             let actual=BirdArt.names(for:id)
-            manifestOK = manifestOK && BirdArt.names.count==34 && actual==prior+bath &&
+            manifestOK = manifestOK && BirdArt.names.count==34 && actual==prior+bath+(id == .treeSparrow ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]) &&
                 Array(actual.prefix(prior.count))==prior &&
                 Array(actual.prefix(legacy.count))==legacy && Set(actual).count==actual.count
             supportedOnly = supportedOnly && Set(actual).intersection(names)==(species.contains(id) ? Set(names):Set<String>())

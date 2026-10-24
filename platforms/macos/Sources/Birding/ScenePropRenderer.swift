@@ -4,6 +4,7 @@ import BirdingCore
 /// Rendering-only adapter. Lifetime and motion are owned by BehaviorRuntime;
 /// no mouse handlers or animation timers live in this layer.
 final class ScenePropRenderer {
+    static var leafCarryArtAvailable:Bool {CarryArt.leafImage().width==16 && CarryArt.leafImage().height==16}
     private var props:[ScenePropID:CALayer]=[:]
     private lazy var leafTexture:CGImage? = ScenePropAssets.leafURL.flatMap {url in
         NSImage(contentsOf:url)?.cgImage(forProposedRect:nil,context:nil,hints:nil)
@@ -20,12 +21,14 @@ final class ScenePropRenderer {
                 container.addSublayer(texture);container.mask=CAShapeLayer()
                 root.addSublayer(container);props[prop.id]=container
             }
-            // A splash is anchored at its authored water-contact row. Leaves
-            // retain the existing rotation envelope and center anchor.
+            // Carry leaves use the engine's exact transformed AABB and raw
+            // grip anchor. The original moving leaf retains its old envelope.
             let splash=prop.kind == .waterSplash
-            let side=splash ? prop.size:prop.size*sqrt(2.0)
-            let rect=splash ? prop.rect:CGRect(x:prop.position.x-side/2,y:prop.position.y-side/2,width:side,height:side)
-            container.zPosition=splash ? 1:0
+            let carry=prop.kind == .leafToken
+            let anchored=splash || carry
+            let side=anchored ? prop.size:prop.size*sqrt(2.0)
+            let rect=anchored ? prop.rect:CGRect(x:prop.position.x-side/2,y:prop.position.y-side/2,width:side,height:side)
+            container.zPosition=splash || carry ? 1:0
             let pieces=Geometry.visiblePieces(rect,blockers:prop.blockers)
             container.isHidden = !rect.intersects(desktopRect) || pieces.isEmpty || prop.opacity<=0
             container.opacity=Float(min(1,max(0,prop.opacity)))
@@ -34,9 +37,11 @@ final class ScenePropRenderer {
             let texture=container.sublayers![0]
             texture.bounds=CGRect(x:0,y:0,width:prop.size,height:prop.size)
             texture.anchorPoint=prop.anchor
-            texture.position=splash ? CGPoint(x:prop.position.x-rect.minX,y:prop.position.y-rect.minY):CGPoint(x:side/2,y:side/2)
-            texture.setAffineTransform(CGAffineTransform(rotationAngle:prop.rotation))
-            texture.contents=splash ? BathArt.splashImage(prop.frameName):leafTexture
+            texture.position=anchored ? CGPoint(x:prop.position.x-rect.minX,y:prop.position.y-rect.minY):CGPoint(x:side/2,y:side/2)
+            // Mirror in raw artwork coordinates about anchor, then rotate.
+            let c=cos(prop.rotation),s=sin(prop.rotation),m:CGFloat=carry && prop.mirrored ? -1:1
+            texture.setAffineTransform(CGAffineTransform(a:c*m,b:s*m,c:-s,d:c,tx:0,ty:0))
+            texture.contents=carry ? CarryArt.leafImage():(splash ? BathArt.splashImage(prop.frameName):leafTexture)
             container.isHidden = container.isHidden || texture.contents==nil
             let path=CGMutablePath()
             for piece in pieces {path.addRect(piece.offsetBy(dx:-rect.minX,dy:-rect.minY))}

@@ -12,7 +12,7 @@ public struct BehaviorRunID: Hashable, Codable, Comparable {
 }
 public enum BirdRole: String {case resident, transient}
 public enum BehaviorKind: String, Codable {
-    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase, travelTogether, allopreening, fixedPerchVisit, foodTrayVisit, bathVisit
+    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase, travelTogether, allopreening, fixedPerchVisit, foodTrayVisit, bathVisit, leafCarry
     var isPerchActivity:Bool {[Self.rest,.preen,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek].contains(self)}
     var isSocial:Bool {[Self.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase,.travelTogether,.allopreening].contains(self)}
 }
@@ -45,6 +45,11 @@ public enum EngineCommand {
     case socialMotion(SocialMotionKind,BehaviorSource)
     case perchAction(PerchActionKind,BehaviorSource)
     case attention(AttentionKind,BehaviorSource)
+    case placeCarryLeaf(at:CGPoint)
+    case placeCarryLeafAfter(Double)
+    case cancelCarryLeafPlacement
+    case removeCarryLeaf
+    case leafCarry(BehaviorSource)
     case placeBath(at:CGPoint)
     case placeBathAfter(Double)
     case cancelBathPlacement
@@ -84,6 +89,7 @@ public struct BehaviorWorld {
     public var displayIDs:[String]
     /// Platforms opt out when the real perch sprite cannot be loaded.
     public var fixedPerchArtAvailable:Bool
+    public var leafCarryArtAvailable:Bool
     public var bathArtAvailable:Bool
     public var foodTrayArtAvailable:Bool
     public var surfaces: [Surface]
@@ -95,8 +101,8 @@ public struct BehaviorWorld {
     /// Optional poses require real renderer frames; an empty manifest opts out.
     public var availableFrames: [SpeciesID:Set<String>]
     public init(screens:[CGRect]=[],displays:[CGRect]=[],surfaces:[Surface]=[],scale:CGFloat=1,
-                pointer:CGPoint = .zero,buttonsDown:Bool=false,availableFrames:[SpeciesID:Set<String>]=[:],localMinuteOfDay:Int?=nil,displayIDs:[String]=[],fixedPerchArtAvailable:Bool=true,foodTrayArtAvailable:Bool=true,bathArtAvailable:Bool=true) {
-        self.screens=screens;self.displays=displays;self.surfaces=surfaces;self.displayIDs=displayIDs;self.fixedPerchArtAvailable=fixedPerchArtAvailable;self.foodTrayArtAvailable=foodTrayArtAvailable;self.bathArtAvailable=bathArtAvailable
+                pointer:CGPoint = .zero,buttonsDown:Bool=false,availableFrames:[SpeciesID:Set<String>]=[:],localMinuteOfDay:Int?=nil,displayIDs:[String]=[],fixedPerchArtAvailable:Bool=true,foodTrayArtAvailable:Bool=true,bathArtAvailable:Bool=true,leafCarryArtAvailable:Bool=true) {
+        self.screens=screens;self.displays=displays;self.surfaces=surfaces;self.displayIDs=displayIDs;self.fixedPerchArtAvailable=fixedPerchArtAvailable;self.foodTrayArtAvailable=foodTrayArtAvailable;self.bathArtAvailable=bathArtAvailable;self.leafCarryArtAvailable=leafCarryArtAvailable
         self.scale=scale;self.pointer=pointer;self.buttonsDown=buttonsDown;self.availableFrames=availableFrames
         self.localMinuteOfDay=localMinuteOfDay.flatMap{(0..<1440).contains($0) ? $0:nil}
     }

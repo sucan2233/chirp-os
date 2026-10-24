@@ -99,7 +99,9 @@ enum DetailedBirdArt {
         case .yellowBilledGrosbeak: return Shape(width: 20, height: 14, headWidth: 10, headHeight: 9, headY: 12, tailX: 11, tailY: 39)
         case .redFlankedBluetail: return Shape(width: 16, height: 12, headWidth: 8, headHeight: 7, headY: 16, tailX: 10, tailY: 40)
         case .redWhiskeredBulbul: return Shape(width: 17, height: 13, headWidth: 7.5, headHeight: 7, headY: 14, tailX: 6, tailY: 42)
-        case .treeSparrow: return Shape(width: 17, height: 13, headWidth: 9, headHeight: 8, headY: 16, tailX: 12, tailY: 39)
+        case .treeSparrow: return Shape(width: 17, height: 13,
+            headWidth: CarryArtGeometry.sparrowHeadWidth, headHeight: CarryArtGeometry.sparrowHeadHeight,
+            headY: CarryArtGeometry.sparrowHeadY, tailX: 12, tailY: 39)
         case .lightVentedBulbul: return Shape(width: 19, height: 12, headWidth: 8, headHeight: 7, headY: 14, tailX: 7, tailY: 41)
         case .spottedDove: return Shape(width: 23, height: 13, headWidth: 7, headHeight: 6, headY: 14, tailX: 6, tailY: 42)
         case .chineseBlackbird: return Shape(width: 21, height: 13, headWidth: 8, headHeight: 7, headY: 14, tailX: 7, tailY: 41)
@@ -108,6 +110,7 @@ enum DetailedBirdArt {
         }
     }
     static func make(_ frame:String,species id:SpeciesID)->CGImage {
+        if let image=carryImage(frame,species:id) {return image}
         if let image=bathImage(frame,species:id) {return image}
         // M6b has its own anatomy; no existing stand/idle raster is reused.
         if let image=poseImage(frame,species:id) {return image}
@@ -119,9 +122,7 @@ enum DetailedBirdArt {
         if let image=allopreeningImage(frame,species:id) {return image}
         let density=SpeciesCatalog.standard.profile(id).relativeScale
         let c=BirdPainter(size:max(48,Int((48*density).rounded())))
-        let phase = frame.hasPrefix("glide") ? 8 + (Int(String(frame.last!)) ?? 1) :
-            (frame.hasPrefix("bank") ? 11 + (Int(String(frame.last!)) ?? 1) :
-                (frame == "bound" ? 14 : (Int(String(frame.last!)) ?? 0)))
+        let phase=TransportArtGeometry.phase(frame)
         let flying=frame.hasPrefix("fly") || phase >= 8,landing=frame.hasPrefix("land")
         let bob=frame == "breathe" ? -0.4:0.0
         if owls.contains(id) || herons.contains(id) {
@@ -139,13 +140,14 @@ enum DetailedBirdArt {
         let waterBird=water.contains(id),wader=waders.contains(id),raptor=raptors.contains(id)
         if flying {
             c.ctx.saveGState();c.ctx.translateBy(x:27,y:24)
-            c.ctx.rotate(by:CGFloat(phase >= 8 && phase < 14 ? (phase == 11 ? -0.16 : (phase == 13 ? -0.02 : -0.09)) : [0.03,0,-0.04,-0.06,-0.03,0.01,0.04,0.06][phase%8]))
-            c.ctx.translateBy(x:-27,y:-24+CGFloat(phase >= 8 ? 0 : [0,-0.3,-0.5,0,0.3,0.5,0,-0.2][phase%8]))
+            c.ctx.rotate(by:CGFloat(TransportArtGeometry.pitch(phase:phase)))
+            c.ctx.translateBy(x:-27,y:-24+CGFloat(TransportArtGeometry.bob(phase:phase)))
             wing(c,species:id,phase:phase,fill:style.1,light:style.0,pointed:id == .barnSwallow || id == .peregrineFalcon || id == .commonKestrel,far:true,bar:wingBar(id))
             // Keep the flight torso compact inside the spread wings. Applying
             // this to every flight frame avoids a size jump when flapping ends.
             c.ctx.saveGState();c.ctx.translateBy(x:27,y:24)
-            c.ctx.scaleBy(x:raptor ? 0.74:0.9,y:raptor ? 0.80:0.94);c.ctx.translateBy(x:-27,y:-24)
+            let torsoScale=TransportArtGeometry.bodyScale(raptor:raptor)
+            c.ctx.scaleBy(x:torsoScale.width,y:torsoScale.height);c.ctx.translateBy(x:-27,y:-24)
         }
         let tailTip=flying ? (max(3, anatomy.tailX-2),27.0):(anatomy.tailX,anatomy.tailY)
         let tailFill=id == .plumbeousWaterRedstart ? "rust":(id == .azureWingedMagpie ? "cyan":style.1)
@@ -178,8 +180,8 @@ enum DetailedBirdArt {
         let bodyW=anatomy.width, bodyX=34-anatomy.width
         c.oval(bodyX,bodyY,bodyW,bodyH,style.0,outline:true)
         c.oval(bodyX+bodyW*0.48,bodyY+2,bodyW*0.52-1,bodyH-2,style.3)
-        var hx=flying ? 33.0 : 37-anatomy.headWidth
-        var hy=flying ? 18.0 : anatomy.headY+bob
+        let headOrigin=TransportArtGeometry.headOrigin(flying:flying,headWidth:anatomy.headWidth,headY:anatomy.headY,bob:bob)
+        var hx=headOrigin.x,hy=headOrigin.y
         let headW=anatomy.headWidth, headH=anatomy.headHeight
         if active {
             switch action {
@@ -212,7 +214,8 @@ enum DetailedBirdArt {
         }
         c.oval(hx,hy,headW,headH,style.2,outline:true)
         marks(c,id,hx,hy,headW,bodyY,flying)
-        let billX=hx+headW-0.5,billY=hy+headH*0.5
+        let billOrigin=TransportArtGeometry.billOrigin(headX:hx,headY:hy,headWidth:headW,headHeight:headH)
+        let billX=billOrigin.x,billY=billOrigin.y
         let billFill:[SpeciesID:String]=[.mallard:"yellow",.blackHeadedGull:"red",.commonMoorhen:"red",.eurasianCoot:"white",.redBilledLeiothrix:"red",.yellowBilledGrosbeak:"yellow",.chineseBlackbird:"yellow",.asianKoel:"cream"]
         if id == .whimbrel || id == .hoopoe {
             c.curve([(billX,billY),(43,billY+0.4),(46,billY+3),(45,billY+7)],"dark",width:0.9)
@@ -225,7 +228,7 @@ enum DetailedBirdArt {
         } else if id == .yellowBilledGrosbeak || id == .vinousThroatedParrotbill {
             c.poly([(billX,billY-1.4),(billX+4,billY+0.3),(billX+0.4,billY+2)],id == .vinousThroatedParrotbill ? "cream":"yellow",outline:true)
         } else {
-            let length=id == .largeBilledCrow ? 7.0 : (id == .barnSwallow || id == .swinhoesWhiteEye ? 2.2 : 4.0)
+            let length=TransportArtGeometry.ordinaryBillLength(species:id)
             c.poly([(billX,billY-0.7),(billX+length,billY+0.5),(billX+length-1,billY+1.2),(billX,billY+1.3)],billFill[id] ?? "dark")
         }
         if active && (action == .call || action == .crack) {
@@ -961,6 +964,8 @@ extension DetailedBirdArt {
     /// coordinates. Reflect with x -> 48-x, just like BirdRenderState. A tucked
     /// bill still has an anchor even though scapular feathers cover its tip.
     static func poseBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        if let anchor=carryBillAnchor(frame,species:id) {return anchor}
+        if let anchor=transportBillAnchor(frame,species:id) {return anchor}
         if let anchor=bathBillAnchor(frame,species:id) {return anchor}
         if let a=M6cPoseGeometry.anatomy(id),let pose=M6cPoseGeometry.pose(species:id,frame:frame) {
             return pose.billTip(species:id,anatomy:a)
@@ -982,6 +987,7 @@ extension DetailedBirdArt {
 
     static func poseImage(_ frame:String,species id:SpeciesID,
                           part:FoundationPosePart?=nil)->CGImage? {
+        if let image=carryImage(frame,species:id,part:part) {return image}
         if let image=bathImage(frame,species:id,part:part) {return image}
         if let image=m6cPoseImage(frame,species:id,part:part) {return image}
         guard let pose=foundationPose(frame,species:id) else {return nil}
@@ -1717,5 +1723,107 @@ extension DetailedBirdArt {
         if id == .treeSparrow {
             c.line([(root.0-0.5,root.1+0.7),((root.0+wrist.0)*0.5,(root.1+wrist.1)*0.5)],"cream",width:0.9)
         }
+    }
+}
+
+// M6e: authored pickup/release anatomy. The token is always a separate image;
+// only its grip follows the bill. No carrier-relative scale enters prop art.
+extension DetailedBirdArt {
+    static func carryBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        CarryArtGeometry.pose(species:id,frame:frame)?.billTip
+    }
+
+    /// Exact tip of the existing transport drawing, including the compressed
+    /// flight torso, outer pitch and bob. This batch only enables the sparrow;
+    /// later carriers supply their own anatomy to the same transport geometry.
+    static func transportBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        guard id == .treeSparrow else {return nil}
+        let a=shape(id)
+        return TransportArtGeometry.billAnchor(frame:frame,species:id,
+            headWidth:a.headWidth,headHeight:a.headHeight,headY:a.headY)
+    }
+
+    static func carryImage(_ frame:String,species id:SpeciesID,
+                           part:FoundationPosePart?=nil)->CGImage? {
+        guard let p=CarryArtGeometry.pose(species:id,frame:frame) else {return nil}
+        let density=SpeciesCatalog.standard.profile(id).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let b=p.body,x=Double(b.minX),y=Double(b.minY),w=Double(b.width),h=Double(b.height)
+        let lower=frame == "carryLower",grip=frame == "carryGrip",release=p.release
+        if part == nil || part == .feet {
+            // No head/body transform touches these lower legs or toe vertices.
+            for xx in [27.0,31.0] {
+                c.line([(xx-1,33),(xx,35),(xx-0.5,38.5)],"brown",width:1)
+                c.line([(xx-2,39),(xx,38.5),(xx+2,39)],"brown")
+            }
+        }
+        if part == nil || part == .body {
+            let tx=Double(p.tail.x),ty=Double(p.tail.y)
+            c.poly([(x+5,y+h*0.42),(x+10,y+h*0.64),(tx+4,ty+1),(tx,ty)],"brown",outline:true)
+            c.line([(x+6,y+h*0.48),(tx+1,ty)],"tan",width:0.8)
+            c.line([(x+7,y+h*0.57),(tx+2.8,ty+0.7)],"umber",width:0.7)
+            c.oval(x,y,w,h,"tan",outline:true)
+            c.oval(x+w*0.49,y+1.8,w*0.51-0.6,h-2,"cream")
+            // Each new pose rolls its shoulder independently of its head. The
+            // short rounded sparrow primaries retain two pale covert bars.
+            let roll=grip ? 1.2:(release ? 0.7:(lower ? 0.45:0))
+            c.poly([(x+3+roll,y+1),(x+8+roll,y+0.5),(x+12,y+3),
+                    (x+9,y+h*0.70),(x+1,y+h-1),(x,y+h-2),(x+1,y+5)],"brown",outline:true)
+            c.poly([(x+4+roll,y+1.5),(x+8,y+1),(x+10,y+3),
+                    (x+5,y+h*0.62),(x+2,y+h*0.67)],"tan")
+            for n in 0..<5 {
+                let xx=x+2+Double(n)*1.5
+                c.line([(xx+4+roll*0.3,y+3.5),(xx,y+h-2)],n%2 == 0 ? "tan":"umber")
+            }
+            c.line([(x+3+roll,y+3.5),(x+9,y+4.2)],"cream",width:1)
+            c.line([(x+2,y+5.5),(x+7,y+6.2)],"buff",width:0.8)
+        }
+        if part == nil || part == .headNeck {
+            let nape=p.headPoint(-CarryArtGeometry.sparrowHeadWidth*0.32,1)
+            let chin=p.headPoint(CarryArtGeometry.sparrowHeadWidth*0.28,
+                                 CarryArtGeometry.sparrowHeadHeight*0.38)
+            // The neck is rebuilt between shoulder and pitched head; every
+            // endpoint stays above the fixed y39 foot/contact plane.
+            c.poly([(x+w*0.5,y+2),(nape.x,nape.y),(chin.x,chin.y),
+                    (x+w-1,y+h*0.72)],"cream")
+            c.poly([(x+w*0.5,y+2),(nape.x,nape.y),(nape.x+1,nape.y+1),
+                    (x+w*0.65,y+5)],"tan")
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.pitch))
+            carrySparrowHead(c,release:release)
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .bill {
+            let root=CarryArtGeometry.sparrowHeadWidth/2-0.5,length=TransportArtGeometry.ordinaryBillLength(species:id)
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.pitch))
+            // The upper tip is the attachment anchor, including during release.
+            // Place opens only the lower mandible, keeping its tip above y39.
+            if release {
+                c.poly([(root,-0.7),(root+length,0.5),(root+2.7,1.0),(root,0.9)],"dark")
+                c.poly([(root,1.5),(root+2.5,1.65),(root+2.1,2.05),(root,1.9)],"dark")
+                c.poly([(root+0.2,1.1),(root+1.8,1.35),(root+0.2,1.55)],"cream")
+            } else {
+                c.poly([(root,-0.7),(root+length,0.5),(root+length-1,1.2),(root,1.3)],"dark")
+                if grip {c.line([(root+0.3,0.7),(root+2.7,0.7)],"umber",width:0.4)}
+            }
+            c.ctx.restoreGState()
+        }
+        return c.image
+    }
+
+    private static func carrySparrowHead(_ c:BirdPainter,release:Bool) {
+        let w=CarryArtGeometry.sparrowHeadWidth,h=CarryArtGeometry.sparrowHeadHeight
+        let x = -w/2,y = -h/2
+        c.oval(x,y,w,h,"rust",outline:true)
+        // Cheek/bib field marks are clipped to the new tilted crown; a steep
+        // pickup must not leave rectangular plumage below the head contour.
+        c.ctx.saveGState();c.ctx.addEllipse(in:CGRect(x:x,y:y,width:w,height:h));c.ctx.clip()
+        c.poly([(x,y+4),(x+4,y+3),(x+w,y+4),(x+w-1,y+7),(x+2,y+7)],"cream")
+        c.oval(x+2,y+4,2,2,"black")
+        c.poly([(x+5,y+6),(x+w,y+5),(x+w,y+8),(x+5,y+8)],"black")
+        c.line([(x+1,y+1.5),(x+4,y+0.8)],"orange",width:0.6)
+        let ex=x+w*0.72,ey=y+h*0.38
+        c.oval(ex,ey,1,1.1,"eye");c.oval(ex+0.35,ey,0.4,0.4,"white")
+        if release {c.line([(x+4,y+6.8),(x+6,y+6.8)],"buff",width:0.55)}
+        c.ctx.restoreGState()
     }
 }

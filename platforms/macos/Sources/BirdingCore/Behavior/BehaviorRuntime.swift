@@ -144,7 +144,7 @@ final class BehaviorRuntime {
         for bird in run.execution.participants {engine.perchPlanner.didFinish(bird,kind:run.execution.kind)}
         return run
     }
-    private func finish(_ id:BehaviorRunID,result:BehaviorCompletion,in engine:BehaviorEngine) {
+    func finish(_ id:BehaviorRunID,result:BehaviorCompletion,in engine:BehaviorEngine) {
         guard let run=detach(id,in:engine) else {return}
         switch result {
         case .completed:

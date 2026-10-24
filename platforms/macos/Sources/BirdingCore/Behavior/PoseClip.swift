@@ -96,11 +96,29 @@ public struct PoseClip:Codable,Equatable {
             Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
         })
     }
+    public static func leafCarryPickup(species:SpeciesID) -> Self? {
+        guard SpeciesBehaviorProfile.profile(for:species).allows(.leafCarry) else {return nil}
+        return Self(id:"\(species.rawValue).leafCarry.pickup",
+            frames:zip(["carryLook","carryLower","carryGrip","carryLook"],[0.4,0.3,0.2,0.3]).map {
+                Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
+            })
+    }
+    public static func leafCarryPlace(species:SpeciesID) -> Self? {
+        guard SpeciesBehaviorProfile.profile(for:species).allows(.leafCarry) else {return nil}
+        return Self(id:"\(species.rawValue).leafCarry.place",
+            frames:zip(["carryPlace","carryLook"],[0.4,0.3]).map {
+                Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
+            })
+    }
+    public static func carryBeakAnchor(species:SpeciesID,frame:String) -> Anchor? {
+        CarryPoseAnchors.anchor(species:species,frame:frame)
+    }
     public static func bathWaterContacts(species:SpeciesID,frame:String)->[Anchor] {
         BathPoseAnchors.waterContacts(species:species,frame:frame)
     }
     /// Logical canvas anchors track the editable species drawing, never bitmap size.
     public static func beakAnchor(species:SpeciesID,frame:String) -> Anchor {
+        if let anchor=CarryPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=BathPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=M6cPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         let anchors:[Anchor]

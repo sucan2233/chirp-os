@@ -272,7 +272,10 @@ public enum BehaviorStress {
                     (!object.retiring || habitatIDs.contains(object.id) || (engine.habitatObjects.objects[object.id]?.retirementAge ?? .infinity)<=2)
                 })
             let propIDs=runs.values.flatMap{$0.execution.propIDs}
-            check("propOwnership",Set(propIDs).count==propIDs.count && Set(props.map(\.id)).count==props.count && Set(props.map(\.id)).isSubset(of:Set(propIDs)))
+            check("propOwnership",Set(propIDs).count==propIDs.count && Set(props.map(\.id)).count==props.count && Set(props.map(\.id)).isSubset(of:Set(propIDs).union(engine.carriedObjects.objects.keys)) && engine.carriedObjects.objects.values.allSatisfy { object in
+                if object.state == .attached {return object.owner.flatMap{owners[$0]} == object.reservedByRun && object.reservedByRun != nil}
+                return object.owner==nil
+            })
             check("finitePresentation",birds.allSatisfy {b in
                 b.position.x.isFinite && b.position.y.isFinite && b.scale.isFinite && b.scale>0 && b.hopOffset.isFinite &&
                     engine.world.availableFrames[b.species]?.contains(b.frameName)==true
@@ -294,13 +297,13 @@ public enum BehaviorStress {
             let reservationCounts=Dictionary(grouping:slots,by: \.bird).mapValues(\.count)
             let perBirdSlotsBounded=reservationCounts.allSatisfy {bird,count in
                 guard let owner=owners[bird],let run=runs[owner] else {return false}
-                return count <= ([BehaviorKind.edgePeek,.foodTrayVisit,.bathVisit].contains(run.execution.kind) ? 2:1)
+                return count <= ([BehaviorKind.edgePeek,.foodTrayVisit,.bathVisit,.leafCarry].contains(run.execution.kind) ? 2:1)
             }
             check("boundedResources",total<=birdLimit+5 && runs.count<=birdLimit+1 && owners.count<=birdLimit+5 &&
-                slots.count<=2*birdLimit+5 && perBirdSlotsBounded && propIDs.count<=6 && props.filter{$0.kind == .leaf}.count<=1 && props.filter{$0.kind == .waterSplash}.count<=6 && engine.events.count<=256)
+                slots.count<=2*birdLimit+5 && perBirdSlotsBounded && propIDs.count<=6 && engine.carriedObjects.objects.count<=1 && props.filter{$0.kind == .leafToken}.count<=1 && props.filter{$0.kind == .leaf}.count<=1 && props.filter{$0.kind == .waterSplash}.count<=6 && engine.events.count<=256)
             peaks.activeRuns=max(peaks.activeRuns,runs.count); peaks.birds=max(peaks.birds,total)
             peaks.leases=max(peaks.leases,owners.count); peaks.reservations=max(peaks.reservations,slots.count)
-            peaks.props=max(peaks.props,propIDs.count); peaks.events=max(peaks.events,engine.events.count)
+            peaks.props=max(peaks.props,engine.scenePropCount); peaks.events=max(peaks.events,engine.events.count)
             peaks.ecologyMemories=max(peaks.ecologyMemories,engine.perchPlanner.rhythms.count); peaks.pendingBirds=max(peaks.pendingBirds,engine.pendingCount)
             peaks.visitorProfiles=max(peaks.visitorProfiles,engine.rememberedVisitorCount)
             peaks.visitorLeases=max(peaks.visitorLeases,engine.activeVisitorCount)
@@ -309,6 +312,10 @@ public enum BehaviorStress {
             for object in habitats {
                 hash(object.id.rawValue,into:&stateHash);hash(UInt64(object.remainingUses),into:&stateHash)
                 hash(object.remainingLifetime.bitPattern,into:&stateHash)
+            }
+            for object in engine.carriedObjectSnapshot() {
+                hash(object.id.rawValue,into:&stateHash);hash(object.state.rawValue,into:&stateHash)
+                hash(object.remainingLifetime.bitPattern,into:&stateHash);hash(object.owner?.rawValue ?? 0,into:&stateHash)
             }
             for b in birds {
                 hash(b.id.rawValue,into:&stateHash); hash(b.species.rawValue,into:&stateHash)
@@ -319,6 +326,7 @@ public enum BehaviorStress {
                 hash(p.id.rawValue,into:&stateHash); hash(Double(p.position.x).bitPattern,into:&stateHash)
                 hash(Double(p.position.y).bitPattern,into:&stateHash); hash(p.opacity.bitPattern,into:&stateHash)
                 if p.kind == .waterSplash {hash(p.frameName,into:&stateHash)}
+                if p.kind == .leafToken {hash(p.mirrored ? UInt64(1):0,into:&stateHash);hash(p.frameName,into:&stateHash)}
             }
         }
         func finish(requiredCompletedKinds:[String]=[],requireAutonomy:Bool=false) {
@@ -565,7 +573,7 @@ public enum BehaviorStress {
             value.pointerVisits=enabled; value.flockPasses=enabled; value.socialInteractions=enabled
             value.perchActions=enabled; value.leafPlayEnabled=enabled; value.ambientLeafPlayEnabled=enabled
             value.sideHopEnabled=enabled; value.takeoffPreparationEnabled=enabled; value.passiveAttentionEnabled=enabled
-            value.pointerFollowEnabled=enabled;value.edgePeekEnabled=enabled;value.chaseEnabled=enabled;value.travelTogetherEnabled=enabled;value.allopreeningEnabled=enabled;value.fixedPerchesEnabled=enabled;value.foodTrayEnabled=enabled;value.bathEnabled=enabled
+            value.pointerFollowEnabled=enabled;value.edgePeekEnabled=enabled;value.chaseEnabled=enabled;value.travelTogetherEnabled=enabled;value.allopreeningEnabled=enabled;value.fixedPerchesEnabled=enabled;value.foodTrayEnabled=enabled;value.bathEnabled=enabled;value.leafCarryEnabled=enabled
             measured("settings"){engine.applySettings(value)}; auditor.metrics.settingsChanges+=1; inspect()
         }
         func pause(_ value:Bool) {
@@ -690,7 +698,7 @@ public enum BehaviorStress {
                 pendingBirds:engine.pendingCount,leases:engine.leasedBirdCount,reservations:engine.reservedLandingCount,props:engine.scenePropCount,
                 habitatObjects:engine.habitatSnapshot().count,habitatReservations:engine.habitatReservationCount,
                 ecologyMemories:engine.perchPlanner.rhythms.count,visitorLeases:engine.activeVisitorCount,
-                retainedVisitorProfiles:engine.rememberedVisitorCount,pendingPreviews:(engine.hasLeafPreview ? 1:0)+(engine.hasPointerPreview ? 1:0)+(engine.hasFoodTrayPlacement ? 1:0))
+                retainedVisitorProfiles:engine.rememberedVisitorCount,pendingPreviews:(engine.hasLeafPreview ? 1:0)+(engine.hasPointerPreview ? 1:0)+(engine.hasFoodTrayPlacement ? 1:0)+(engine.hasBathPlacement ? 1:0)+(engine.hasCarryLeafPlacement ? 1:0)+(engine.sceneFocus != nil ? 1:0))
             return Report(configuration:config,workload:Workload(version:7,fixedStepSeconds:BehaviorEngine.step,activeSteps:activeSteps,
                 warmupSteps:warmupSteps,drainSteps:drainSteps,drainLimitSteps:drainLimit,worldSampleEverySteps:6,timingSampleLimit:WallSamples.limit,
                 frameManifest:"Existing BirdArt atlas vocabulary, keyed by SpeciesCatalog.standard entries; no renderer assets loaded",

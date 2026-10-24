@@ -76,9 +76,16 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var clearCurrentSceneButton:NSButton!
     var previewBathButton:NSButton!
     var bathStatus:NSTextField!
+    var leafCarryButton:NSButton!
+    var placeCarryLeafButton:NSButton!
+    var cancelCarryLeafPlacementButton:NSButton!
+    var removeCarryLeafButton:NSButton!
+    var previewLeafCarryButton:NSButton!
+    var leafCarryStatus:NSTextField!
     private weak var foodTrayEngine:BehaviorEngine?
     private var ownsFoodTrayPlacement=false
     private var ownsBathPlacement=false
+    private var ownsCarryLeafPlacement=false
     private(set) var selectedFixedPerchSlot=1
     private(set) var fixedPerchCaptureTimer:Timer?
     private(set) var fixedPerchCaptureRequest:UUID?
@@ -101,6 +108,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         fixedPerchCaptureTimer?.invalidate()
         if ownsFoodTrayPlacement,foodTrayEngine?.hasFoodTrayPlacement == true {foodTrayEngine?.handle(.cancelFoodTrayPlacement)}
         if ownsBathPlacement,foodTrayEngine?.hasBathPlacement == true {foodTrayEngine?.handle(.cancelBathPlacement)}
+        if ownsCarryLeafPlacement,foodTrayEngine?.hasCarryLeafPlacement == true {foodTrayEngine?.handle(.cancelCarryLeafPlacement)}
         NotificationCenter.default.removeObserver(self)
     }
     @discardableResult func label(_ text:String,_ rect:NSRect,in view:NSView,size:CGFloat = 13) -> NSTextField {
@@ -118,6 +126,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         cancelFixedPerchCapture()
         cancelFoodTrayPlacement()
         cancelBathPlacement()
+        cancelCarryLeafPlacement()
         let selected = tabs?.indexOfTabViewItem(tabs!.selectedTabViewItem!) ?? 0
         sliders=[]; fields=[]; locks=[]; detailFields=[]
         let root = SettingsContentView(frame:NSRect(x:0,y:0,width:840,height:690)); root.wantsLayer=true; window!.contentView = root
@@ -168,7 +177,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:5820))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:6410))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -297,6 +306,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         buildFixedPerches(in:interactionView)
         buildFoodTray(in:interactionView)
         buildBath(in:interactionView)
+        buildLeafCarry(in:interactionView)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -426,7 +436,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         refreshFixedPerchPlacementButton()
     }
     @objc private func fixedPerchWindowWillClose(_ notification:Notification) {
-        cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement()
+        cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement()
     }
     @objc func previewFixedPerch() {
         desktop.syncWorld()
@@ -595,7 +605,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         placeBathButton.isEnabled = !pending
         cancelBathPlacementButton.isEnabled=pending
         removeBathButton.isEnabled=pending || bath != nil
-        clearCurrentSceneButton.isEnabled=pending || desktop.engine.hasFoodTrayPlacement || !objects.isEmpty || desktop.engine.scenePropCount>0
+        clearCurrentSceneButton.isEnabled=pending || desktop.engine.hasFoodTrayPlacement || desktop.engine.hasCarryLeafPlacement || !objects.isEmpty || desktop.engine.scenePropCount>0
         previewBathButton.isEnabled=true
         if pending {bathStatus.stringValue=t("等待 3 秒采样鼠标位置；暂停冻结倒计时。","Waiting to sample the pointer after 3 seconds; pausing freezes the countdown.")}
         else if let bath {
@@ -634,8 +644,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     }
     @objc func clearCurrentScene() {
         desktop.engine.handle(.clearCurrentScene);desktop.consumeBehaviorEvents()
-        ownsBathPlacement=false;ownsFoodTrayPlacement=false
-        refreshBathControls();refreshFoodTrayControls()
+        ownsBathPlacement=false;ownsFoodTrayPlacement=false;ownsCarryLeafPlacement=false
+        refreshBathControls();refreshFoodTrayControls();refreshLeafCarryControls()
         message.stringValue=t("已清除当前临时场景并取消待放置操作；固定栖木保留。","Current temporary scene cleared and pending placement cancelled; fixed perches remain.")
     }
     @objc func previewBath() {
@@ -661,6 +671,91 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             return placing ? t("浴盆与小鸟需要完整空间，请把鼠标移到更开阔的位置后重试。","The bath and bird need clear space. Move the pointer to a more open area and retry."):
                 t("浴盆、飞入与离开的空间不足，或原停靠处不可用；请调整场景后重试。","Not enough room at the bath or along the arrival and departure routes, or the original perch is unavailable. Adjust the scene and retry.")
         case .pointerNearby,.pointerMoved:return t("请把鼠标移离浴盆、小鸟与访问路线后再试。","Move the pointer away from the bath, bird and visit route, then retry.")
+        default:return desktop.behaviorMessage(reason)
+        }
+    }
+    private func buildLeafCarry(in view:NSView) {
+        label(t("静止叶片与携带","Static leaf carrying"),NSRect(x:20,y:5840,width:710,height:30),in:view,size:20).identifier=NSUserInterfaceItemIdentifier("leafCarrySectionTitle")
+        leafCarryButton=NSButton(checkboxWithTitle:t("开启静止叶片携带","Enable static leaf carrying"),target:self,action:#selector(leafCarrySettingsChanged))
+        leafCarryButton.frame=NSRect(x:20,y:5882,width:710,height:26);leafCarryButton.state=draft.leafCarryEnabled ? .on:.off
+        leafCarryButton.identifier=NSUserInterfaceItemIdentifier("leafCarryEnabled");leafCarryButton.setAccessibilityLabel(leafCarryButton.title);view.addSubview(leafCarryButton)
+        placeCarryLeafButton=button(t("3 秒后放置静止叶片","Place static leaf in 3 seconds"),#selector(placeCarryLeaf),NSRect(x:20,y:5928,width:350,height:32),in:view)
+        removeCarryLeafButton=button(t("清除携带叶片","Clear carrying leaf"),#selector(removeCarryLeaf),NSRect(x:390,y:5928,width:340,height:32),in:view)
+        cancelCarryLeafPlacementButton=button(t("取消等待中的叶片放置","Cancel pending leaf placement"),#selector(cancelCarryLeafPlacementClicked),NSRect(x:20,y:5974,width:350,height:32),in:view)
+        previewLeafCarryButton=button(t("预览携带叶片","Preview leaf carrying"),#selector(previewLeafCarry),NSRect(x:390,y:5974,width:340,height:32),in:view)
+        for (control,id) in [(placeCarryLeafButton!,"placeCarryLeaf"),(removeCarryLeafButton!,"removeCarryLeaf"),
+                             (cancelCarryLeafPlacementButton!,"cancelCarryLeafPlacement"),(previewLeafCarryButton!,"previewLeafCarry")] {
+            control.identifier=NSUserInterfaceItemIdentifier(id);control.setAccessibilityLabel(control.title)
+        }
+        label(language.leafCarrySupport+t("\n这是风格化的物件互动，独立于上方动态落叶追随。麻雀观察、低头叼起静止叶片，短途飞行后放下并恢复；不会生成鸟或改变鸟种概率。\n\n默认开启，保存后生效；放置与预览读取已保存开关。点击放置后，把鼠标移到普通窗口顶部或地面边缘，3 秒后采样；任意空中坐标不能承载叶片。请移开鼠标并留出拾取、携带与放下的空间。\n\n全局仅一枚可拾取叶片，拾取前保留 180 秒；成功放下后展示 8 秒，再淡出。暂停冻结倒计时、飞行与附着。清除会取消等待或当前携带，并收回叶片；点击鸟仍立即换位。\n\n关闭、取消、保存、重置或重建设置会取消等待中的放置，不改其他草稿。叶片和位置不跨重启保存。",
+            "\nA stylized object interaction, separate from moving Leaf play above. A sparrow looks, lowers its head, grips a static leaf, flies a short distance, places it and recovers. No birds are spawned and species probabilities stay unchanged.\n\nOn by default; save to apply. Placement and preview use the saved switch. After Place, move the pointer to a normal window's top edge or a ground edge; it is sampled after 3 seconds. A point in open air cannot support a leaf. Move away and leave safe room to pick up, carry and place it.\n\nOne pickable leaf at a time, lasting 180 seconds before pickup. A placed leaf stays for 8 seconds, then fades. Pausing freezes countdowns, flight and attachment. Clear cancels pending or active carrying and removes the leaf; bird clicks still relocate immediately.\n\nClosing, cancelling, saving, resetting or rebuilding Settings cancels pending placement without editing other drafts. Leaves and positions are not saved across restarts."),NSRect(x:20,y:6022,width:710,height:268),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("leafCarryHelp")
+        leafCarryStatus=label("",NSRect(x:20,y:6306,width:710,height:76),in:view,size:12)
+        leafCarryStatus.identifier=NSUserInterfaceItemIdentifier("leafCarryStatus");leafCarryStatus.setAccessibilityLabel(t("携带叶片状态","Carrying leaf status"))
+        refreshLeafCarryControls()
+    }
+    func refreshLeafCarryControls() {
+        guard leafCarryStatus != nil else {return}
+        let pending=desktop.engine.hasCarryLeafPlacement
+        if !pending {ownsCarryLeafPlacement=false}
+        let leaves=desktop.engine.propSnapshot().filter{$0.kind == .leafToken}
+        placeCarryLeafButton.isEnabled = !pending
+        cancelCarryLeafPlacementButton.isEnabled=pending
+        removeCarryLeafButton.isEnabled=pending || !leaves.isEmpty
+        previewLeafCarryButton.isEnabled=true
+        if pending {leafCarryStatus.stringValue=t("等待 3 秒采样承载边缘；暂停冻结倒计时。","Waiting to sample a supporting edge after 3 seconds; pausing freezes the countdown.")}
+        else if !leaves.isEmpty {leafCarryStatus.stringValue=t("场景中有一枚携带叶片；可清除收回。位置不保存。","A carrying leaf is in the scene; Clear removes it. Its position is not saved.")}
+        else {leafCarryStatus.stringValue=ScenePropRenderer.leafCarryArtAvailable ?
+            t("尚未放置静止叶片。","No static leaf placed. ")+language.leafCarrySupport:
+            t("携带叶片素材未能载入，暂不能放置或预览。","Carrying leaf artwork could not load; placement and previews are unavailable.")}
+    }
+    @objc func leafCarrySettingsChanged() {
+        draft.leafCarryEnabled=leafCarryButton.state == .on
+        if !draft.leafCarryEnabled {cancelCarryLeafPlacement()}
+        message.stringValue=t("尚未保存 · 静止叶片携带保存后生效。","Unsaved · Save to apply static leaf carrying.")
+    }
+    @objc func placeCarryLeaf() {
+        guard window?.isVisible == true else {return}
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.placeCarryLeafAfter(3))
+        if case .rejected(let reason)=result {message.stringValue=leafCarryMessage(reason,placing:true)}
+        else {ownsCarryLeafPlacement=true;message.stringValue=t("3 秒后放置静止叶片，请把鼠标移到普通窗口顶部或地面边缘。","Placing a static leaf in 3 seconds; move the pointer to a window top or ground edge.")}
+        refreshLeafCarryControls();refreshBathControls()
+    }
+    func cancelCarryLeafPlacement() {
+        if desktop.engine.hasCarryLeafPlacement {desktop.engine.handle(.cancelCarryLeafPlacement)}
+        ownsCarryLeafPlacement=false;refreshLeafCarryControls()
+    }
+    @objc func cancelCarryLeafPlacementClicked() {
+        cancelCarryLeafPlacement();desktop.consumeBehaviorEvents()
+        message.stringValue=t("已取消等待中的静止叶片放置；现有叶片保留。","Pending static leaf placement cancelled; an existing leaf stays in place.")
+    }
+    @objc func removeCarryLeaf() {
+        desktop.engine.handle(.removeCarryLeaf);desktop.consumeBehaviorEvents()
+        refreshLeafCarryControls();refreshBathControls()
+        message.stringValue=t("已清除携带叶片并取消等待中的放置。","Carrying leaf cleared and pending placement cancelled.")
+    }
+    @objc func previewLeafCarry() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.leafCarry(.preview))
+        if case .rejected(let reason)=result {message.stringValue=leafCarryMessage(reason)}
+        else {message.stringValue=t("正在预览携带叶片：观察、拾取、短途携带、放下并恢复。","Previewing leaf carrying: look, pick up, fly a short distance, place and recover.")}
+        refreshLeafCarryControls()
+    }
+    func leafCarryMessage(_ reason:BehaviorReason,placing:Bool=false)->String {
+        if !ScenePropRenderer.leafCarryArtAvailable {return t("携带叶片素材未能载入，请安装完整版本后重试。","Carrying leaf artwork could not load. Install the complete app and retry.")}
+        switch reason {
+        case .disabled,.settingsChanged:return t("请先保存并开启静止叶片携带。","Save and enable static leaf carrying first.")
+        case .noSpecies,.noCompanion,.missingBird,.unavailableBird:
+            return t("请等待现有支持鸟种空闲并停稳。","Wait for an existing supported bird to settle and become available. ")+language.leafCarrySupport
+        case .missingFrames:return t("携带专用姿态或飞行喙锚不完整，无法预览。","Carrying poses or flight bill anchors are incomplete. ")+language.leafCarrySupport
+        case .targetInvalid,.removed:return t("请先在普通窗口顶部或地面边缘放置静止叶片，再移开鼠标。","Place a static leaf on a window top or ground edge first, then move the pointer away.")
+        case .noSpace:return placing ?
+            t("这里没有可用承载边缘或完整叶片空间，请选择普通窗口顶部或地面边缘。","No usable supporting edge or leaf clearance here. Choose a normal window top or ground edge."):
+            t("拾取、携带或放下空间不足，请在更开阔的同屏边缘重新放置叶片。","Not enough room to pick up, carry or place. Put the leaf on a clearer edge on the same display.")
+        case .busy:return placing ?
+            t("已有叶片、场景互动或放置操作正在占用位置。请等待结束，或取消等待中的放置；如需替换叶片，请先清除叶片。","A leaf, scene interaction or placement is already active. Wait or cancel pending placement; clear the existing leaf only to replace it."):
+            t("请等待当前场景互动或放置操作结束，再预览携带。","Wait for the current scene interaction or placement to finish before previewing carrying.")
+        case .pointerNearby,.pointerMoved:return t("请把鼠标移离小鸟、叶片和携带路线后再试。","Move the pointer away from the bird, leaf and carrying route, then retry.")
         default:return desktop.behaviorMessage(reason)
         }
     }
@@ -963,6 +1058,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.fixedPerchesEnabled=fixedPerchesButton.state == .on
         draft.foodTrayEnabled=foodTrayButton.state == .on
         draft.bathEnabled=bathButton.state == .on
+        draft.leafCarryEnabled=leafCarryButton.state == .on
         refreshFixedPerchControls()
         return true
     }
@@ -970,6 +1066,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         cancelFixedPerchCapture()
         cancelFoodTrayPlacement()
         cancelBathPlacement()
+        cancelCarryLeafPlacement()
         window?.makeFirstResponder(nil)
         guard readInteraction() else {tabs.selectTabViewItem(at:2);message.stringValue=t("请输入 0–10 秒之间的有效等待时间。","Enter a valid hover delay between 0 and 10 seconds.");return}
         guard readDetails() else { tabs.selectTabViewItem(at:1); message.stringValue=t("请检查体型与动作数值：最长停留不能小于最短停留。","Check size and behavior ranges; maximum perch time must not be below minimum."); return }
@@ -977,7 +1074,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         catch { message.stringValue=t("保存失败，请重试。当前设置未改变。","Could not save. Try again; active settings are unchanged.") }
     }
     @objc func resetDefaults() { cancelFixedPerchCapture();window?.makeFirstResponder(nil); draft=BirdSettings();selectedFixedPerchSlot=1; build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
-    @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();window?.close() }
+    @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement();window?.close() }
     func relocalize() {
         cancelFixedPerchCapture()
         window?.makeFirstResponder(nil)

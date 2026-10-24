@@ -12,10 +12,13 @@ struct LandingReservation {
     /// participants. Internal contact does not relax conflicts with other runs.
     let span:ClosedRange<CGFloat>?
     let headroom:CGFloat
+    /// Optional carrier/object union relative to the live foot, in world units.
+    /// Defaults preserve all existing reservations and their conflict geometry.
+    let localFootprint:CGRect?
 
-    init(bird:BirdID,host:Surface,fraction:CGFloat,span:ClosedRange<CGFloat>?=nil,headroom:CGFloat=0) {
+    init(bird:BirdID,host:Surface,fraction:CGFloat,span:ClosedRange<CGFloat>?=nil,headroom:CGFloat=0,localFootprint:CGRect?=nil) {
         self.bird=bird;hostID=host.id;hostPID=host.pid;self.fraction=fraction
-        self.span=span;self.headroom=headroom
+        self.span=span;self.headroom=headroom;self.localFootprint=localFootprint
     }
     func host(in engine:BehaviorEngine) -> Surface? {
         engine.world.surfaces.first{$0.id==hostID && $0.pid==hostPID}
@@ -29,12 +32,17 @@ struct LandingReservation {
         guard headroom.isFinite,headroom>=0 else {return nil}
         let scale=engine.spriteScale(for:model)
         var area=Geometry.landingFootprint(at:point,scale:scale)
+        if let localFootprint {
+            guard SurfaceAnchor.finite(localFootprint),localFootprint.width>0,localFootprint.height>0 else {return nil}
+            area=area.union(localFootprint.offsetBy(dx:point.x,dy:point.y))
+        }
         if let span {
             guard span.lowerBound.isFinite,span.upperBound.isFinite,
                   span.lowerBound>=0,span.upperBound<=1,span.contains(fraction),let host=host(in:engine) else {return nil}
             for end in [span.lowerBound,span.upperBound] {
                 let foot=Geometry.foot(on:host,fraction:end,edge:.top,scale:scale)
                 area=area.union(Geometry.landingFootprint(at:foot,scale:scale))
+                if let localFootprint {area=area.union(localFootprint.offsetBy(dx:foot.x,dy:foot.y))}
             }
         }
         return area.union(area.offsetBy(dx:0,dy:-headroom))

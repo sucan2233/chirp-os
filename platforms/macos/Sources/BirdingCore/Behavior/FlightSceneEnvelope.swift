@@ -10,8 +10,9 @@ struct FlightSceneEnvelope {
     private let duration:Double
     private let pointerRadius:CGFloat
 
-    init?(routes:[CoordinatedFlightRoute],offsets:[Double],scales:[CGFloat],maximumDuration:Double=20) {
+    init?(routes:[CoordinatedFlightRoute],offsets:[Double],scales:[CGFloat],maximumDuration:Double=20,localFootprints:[CGRect]?=nil) {
         guard (1...2).contains(routes.count),offsets.count==routes.count,scales.count==routes.count,
+              localFootprints.map({$0.count==routes.count && $0.allSatisfy{SurfaceAnchor.finite($0) && $0.width>0 && $0.height>0}}) ?? true,
               offsets.allSatisfy({$0.isFinite && $0>=0}),scales.allSatisfy({$0.isFinite && $0>0}),
               maximumDuration.isFinite,maximumDuration>0,maximumDuration<=30 else {return nil}
         let duration=zip(offsets,routes).map{$0.0+$0.1.duration}.max() ?? 0
@@ -24,7 +25,9 @@ struct FlightSceneEnvelope {
             let areas=routes.indices.map {actor -> CGRect in
                 let foot=routes[actor].position(at:max(0,mid-offsets[actor]))
                 let margin=CGFloat(speeds[actor]*dt/2)+4
-                return Geometry.landingFootprint(at:foot,scale:scales[actor]).insetBy(dx:-margin,dy:-margin)
+                var area=Geometry.landingFootprint(at:foot,scale:scales[actor])
+                if let localFootprints {area=area.union(localFootprints[actor].offsetBy(dx:foot.x,dy:foot.y))}
+                return area.insetBy(dx:-margin,dy:-margin)
             }
             if areas.count==2,Self.intersects(areas[0],areas[1]) {return nil}
             result.append(Sweep(end:Double(index+1)*dt,areas:areas))

@@ -1,0 +1,298 @@
+{
+  "version": 1,
+  "simulationVersion": 13,
+  "seed": "971",
+  "settings": {
+    "schemaVersion": 1,
+    "catalog": {
+      "species": [
+        {
+          "id": "treeSparrow",
+          "name": "麻雀",
+          "englishName": "Eurasian Tree Sparrow",
+          "adultLengthCM": 14.5,
+          "weight": 18647,
+          "weightBasis": "上海2017–2023观鸟研究表2：18647只次",
+          "speed": 1.12,
+          "flapFPS": 48,
+          "perchMin": 16,
+          "perchMax": 36
+        },
+        {
+          "id": "spottedDove",
+          "name": "珠颈斑鸠",
+          "englishName": "Spotted Dove",
+          "adultLengthCM": 30,
+          "weight": 100,
+          "weightBasis": "B14 deterministic fixture",
+          "speed": 1,
+          "flapFPS": 24,
+          "perchMin": 16,
+          "perchMax": 36
+        }
+      ]
+    },
+    "probabilities": {
+      "entries": [
+        {
+          "id": "treeSparrow",
+          "points": 10000,
+          "locked": false
+        },
+        {
+          "id": "spottedDove",
+          "points": 0,
+          "locked": false
+        }
+      ]
+    },
+    "perchDefaultsVersion": 1,
+    "foodTrayEnabled": true,
+    "perchActions": false,
+    "passiveAttentionEnabled": false,
+    "pointerVisits": false,
+    "flockPasses": false,
+    "socialInteractions": false,
+    "ambientLeafPlayEnabled": false,
+    "bathEnabled": true,
+    "leafCarryEnabled": true
+  },
+  "initialWorld": {
+    "screens": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 2400,
+        "height": 1500
+      }
+    ],
+    "displays": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 2400,
+        "height": 1500
+      }
+    ],
+    "surfaces": [
+      {
+        "id": 971,
+        "pid": 42,
+        "layer": 0,
+        "isGround": false,
+        "rect": {
+          "x": 200,
+          "y": 1100,
+          "width": 2000,
+          "height": 180
+        }
+      }
+    ],
+    "scale": 1,
+    "pointer": {
+      "x": 20,
+      "y": 20
+    },
+    "buttonsDown": false,
+    "foodTrayArtAvailable": true,
+    "availableFrames": {
+      "treeSparrow": [
+        "stand",
+        "blink",
+        "shake",
+        "fly0",
+        "fly1",
+        "fly2",
+        "fly3",
+        "fly4",
+        "fly5",
+        "fly6",
+        "fly7",
+        "land0",
+        "land1",
+        "land2",
+        "glide0",
+        "glide1",
+        "glide2",
+        "bank0",
+        "bank1",
+        "bank2",
+        "bound",
+        "carryLook",
+        "carryLower",
+        "carryGrip",
+        "carryPlace"
+      ]
+    },
+    "bathArtAvailable": true,
+    "leafCarryArtAvailable": true
+  },
+  "fixtureBirds": [
+    {
+      "species": "treeSparrow",
+      "host": 971,
+      "fraction": 0.15,
+      "perchDuration": 600,
+      "facingRight": true
+    }
+  ],
+  "inputs": [
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 270,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "placeCarryLeaf",
+        "point": {
+          "x": 1200,
+          "y": 1100
+        }
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "leafCarry",
+        "source": "preview"
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 15,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": true
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 60,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": false
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 900,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "placeCarryLeaf",
+        "point": {
+          "x": 700,
+          "y": 1100
+        }
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "leafCarry",
+        "source": "preview"
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": true
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 90,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "removeCarryLeaf"
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": false
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 600,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "placeCarryLeafAfter",
+        "delay": 3
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "cancelCarryLeafPlacement"
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 120,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "clearCurrentScene"
+      }
+    }
+  ]
+}

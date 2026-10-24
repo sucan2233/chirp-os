@@ -34,11 +34,14 @@
 - macOS 小鸟停稳后会偶尔闭眼休息，着陆后可能整理羽毛，每只鸟的节奏有所不同；鼠标靠近或点击即可打断。在“鸟种设置 → 交互 → 停栖小动作”中开关和预览。
 - macOS 开发版可在“鸟种设置 → 交互 → 固定小栖木”中放置最多 3 根栖木：点击放置后把鼠标移到目标位置，3 秒后记录，再保存并应用。支持的现有小鸟会偶尔飞来停留，也可手动预览；关闭开关保留位置。
 - macOS 开发版可放置浅水浴盆，供麻雀与白头鹎偶尔试水、拍翼洗澡并甩水离开。浴盆保留最多 5 分钟或 3 次完整访问，与食盘共用一个场景位置；暂停会冻结寿命与动作，完成返程落稳后才记入观察手册。
+- macOS 开发版支持独立的“放置叶片 / 清除 / 预览携带”：已有麻雀可飞来拾起静止叶片，短途携带后放下；叶片待拾取最多 180 秒，放下后显示 8 秒。暂停冻结动作与寿命，放下并恢复结束才记入观察手册；与原有动态落叶追随分别开关。
 - 夜鹭会长时间守望、伸颈、抖毛，偶尔“挤洗手液”；大斑啄木鸟会沿窗口侧边停靠、啄击。
 - 菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
 - macOS 开发版新增“观察手册”：行为完成后按鸟种记录首次／最近时间和次数，分别标明自动、手动与预览。支持搜索和来源筛选，数据保存在本地；发现新行为不会弹窗。
 - 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
 - 支持中英文切换、暂停动画和随系统启动。
+
+开发进度（2026-10-24）：M6e 已验证交付，随本阶段记录本地提交、未安装；用户当前安装版仍为 M6a/b。核心 826、原生鸟类 2990、设置 1695 项通过，48 份完整回放及三轮 18 次性能检查通过；累计新增 144 张鸟体姿态、6 张道具，剩余 23/10 张。下一阶段为 M6f.1 家燕捕虫，M6/M7 整体尚未完成；2h/8h、物理多屏及睡眠唤醒仍未验收。见 [M6e 验收记录](docs/M6E-ACCEPTANCE.md)。
 
 ### 鸟种 / Bird species
 
@@ -125,6 +128,7 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - On macOS, click a bird to move it to another spot away from its previous perch. Clicks still pass through to the window beneath without taking focus.
 - macOS development builds support up to three fixed perches in Bird settings → Interaction → Fixed perches. Click Place, move the pointer to the desired position, then Save & Apply after the three-second capture. Existing supported birds occasionally visit; manual preview is also available. Turning the feature off keeps saved positions.
 - macOS development builds offer a shallow bath for Eurasian Tree Sparrows and Light-vented Bulbuls. Birds may test the water, splash, shake, and return safely. The bath lasts up to five minutes or three completed visits and shares one scene slot with the food tray. Pausing freezes its lifetime and animation; visits count only after the bird returns and lands.
+- macOS development builds add separate Place leaf, Clear, and Preview carrying controls. An existing Eurasian Tree Sparrow can pick up a stationary leaf, carry it a short distance, and put it down. Leaves wait up to 180 seconds and remain visible for eight seconds after placement. Pause freezes both motion and lifetime; the journal counts a visit only after placement and recovery finish. This has its own switch, separate from following a falling leaf.
 - macOS encounters: a small bird may circle a stationary pointer at a safe distance when there is room; moving or clicking ends the visit. Loose flocks of 3–5 birds of one species can also pass across the upper screen without affecting resident counts.
 - Bird Settings → Interaction has separate encounter switches, Low/Medium/High frequency, and previews. Low (default) attempts one of the encounters every 3–6 minutes, skipping unsuitable opportunities. Pause and sleep do not accumulate events.
 - Night herons watch, stretch, shake and occasionally leave a fleeting dropping; woodpeckers cling to and peck window sides.
@@ -132,6 +136,8 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - macOS development builds include an Observation journal: completed behaviors are grouped by species with first/last recorded dates and separate natural, manual, and preview counts. Search and filter by source; records stay local and discoveries do not trigger pop-ups.
 - Hourly update checks download and verify new releases in the background. A notification opens release notes and installation confirmation; a red dot and menu entry remain if you postpone.
 - Chinese and English menus, animation pause, and launch at login.
+
+Development status (2026-10-24): M6e is verified and delivered in the workspace, included in this local stage commit and awaiting installation; the installed development app remains M6a/b. All 826 core tests, 2,990 native bird checks, 1,695 settings checks, 48 full replays, and 18 performance runs across three rounds passed. Added assets total 144 bird poses and six props, with 23 poses and ten props remaining. Next is M6f.1 Barn Swallow insect catching; the overall M6/M7 goal remains open. Two-hour observation, eight-hour soak, physical multi-monitor, and sleep/wake acceptance remain pending. See the [M6e acceptance record](docs/M6E-ACCEPTANCE.md).
 
 ### Get started
 

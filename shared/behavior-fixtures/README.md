@@ -3,7 +3,7 @@
 这些 JSON 是引擎输入，采用 Quartz 桌面坐标（向右为 x 正方向，向下为 y 正方向）。它们不依赖 AppKit、窗口标题、桌面截图或用户配置，供 macOS 与后续 Windows 核心运行同一场景。
 
 - `version`：文件格式版本；未知版本拒绝，不能忽略无法理解的事件。
-- `simulationVersion`：M6d 当前为12，单scheduler场景模式、日常13%预留区间及共享租约改变模拟语义。旧生产录制版本1–11明确拒绝；请在相应旧提交重放或重新录制，不能直接改版本标签。14份仓库手写夹具保留原输入与独立断言，仅迁移版本；新增第15份浴盆夹具。v11曾完成42次与M6a/b完整报告对照；v12不承诺旧摘要不变，不从当前实现反向生成expected。
+- `simulationVersion`：M6e 当前为13，增加独立附着物、携带命令与场景焦点种类。旧生产录制版本1–12明确拒绝；请在相应旧提交重放或重新录制，不能直接改版本标签。旧15份仓库手写夹具保留原输入和独立断言，仅迁移版本；新增第16份 `leaf-carry.json`。16夹具在30/60/120Hz的48份完整报告一致。另有旧15夹具60Hz报告去除本批新增字段后与M6d一致的回归证据，不代表新附着语义已由旧报告验证，也不从当前实现反向生成expected。
 - `seed`、鸟/运行/道具/栖息地对象 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
 - `settings`：完整配置或合法的旧格式配置；按 BirdSettings schema 迁移。
 - `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟；可选 `flightOrigin` 让鸟从该坐标开始普通直达飞行，仍需 `advance` 输入才能移动和产生速度。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。
@@ -30,7 +30,7 @@
 | `removeFoodTray` | 无 | 取消待放置和访客，删除盘；飞行恢复从实际脚坐标开始。 |
 | `foodTrayVisit` | `source: user / preview / automatic` | 仅复用已有麻雀或珠颈斑鸠，不能新增鸟。 |
 
-`clearLeaf` 无 payload，仅清除落叶及待释放落叶，保留已放置食盘和食盘待放置；`clearProps` 同时清除食盘、食盘待放置并取消访客；两者均完整录制和重放。`cancelAmbient` 取消待放置。`pause(true)` 冻结待放置倒计时、对象寿命及访问阶段；继续后从剩余时间推进。`settings.foodTrayEnabled` 默认 true，关闭后取消待放置并移除食盘。quiet 不新增自动访问，允许已启动访问完成及手动预览。
+`clearLeaf` 无 payload，仅清除原动态落叶及待释放动态落叶，保留静止携带叶片、已放置食盘和食盘待放置；`clearProps` 清除全部道具、食盘/浴盆/携带叶片及相应待放置并取消访客。静止携带叶片使用下文 `removeCarryLeaf`；这些命令均完整录制和重放。`cancelAmbient` 取消待放置。`pause(true)` 冻结待放置倒计时、对象寿命及访问阶段；继续后从剩余时间推进。`settings.foodTrayEnabled` 默认 true，关闭后取消待放置并移除食盘。quiet 不新增自动访问，允许已启动访问完成及手动预览。
 
 访问需要真实 `stand`、`fly0...fly7`、`land0...land2` 和四帧 `feedLook / feedDown0 / feedDown1 / feedLift`，缺帧不得降级为通用姿态。先观察 0.8 秒，再真实接近及着陆，进食 3.6 秒后真实返回原脚锚并落稳。全程持有食盘对象槽和两个落点预约，每次完整进食只消费一份。食盘初始三份、180 秒模拟寿命；耗尽或到期先 retiring，等待已有访问结束后删除。明确移除则立即取消访问和释放预约。
 
@@ -54,8 +54,11 @@ dist/ChirpOS.app/Contents/MacOS/Birding --record-behavior .build/live-behavior.j
 # 不打开原生窗口即可重放。expected 存在时，不一致会退出 1。
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior .build/live-behavior.json --replay-hz 120 --replay-output .build/replay-report.json
 
-# 手写场景：观察/警觉、完整落叶返程、双鸟招呼、暂停中点击迁移、侧跳、起飞准备、熟客再次到访、安静节奏与手动群飞、边缘探头来回与暂停、双鸟追逐与暂停
+# 旧动态落叶追随场景
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/leaf.json
+
+# 第16份场景：静止叶片携带；使用已统一验证的构建，无需为文档另行构建
+dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/leaf-carry.json --replay-hz 120 --replay-output .build/leaf-carry-report.json
 ```
 
 当前 macOS 测试把同一输入序列分别拆成至多 1/30、1/60、1/120 秒的回调，比较完整报告；保留输入发生边界，不跨 world/command 合并时间。这验证回调分段稳定性，不宣称恢复录制时没有采到的鼠标轨迹。不同采样率的真实移动轨迹另由 PassiveEcologyTests 验证。Windows 解析器与原生验收尚待迁移，当前文件通过不代表跨端已经对齐。
@@ -77,3 +80,25 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 唯一sceneFocus控制同一AmbientScheduler：首机会min(remaining,10)，用户输入60秒抑制优先；场景机会70%尝试浴盆，30%旧选择器；低/中/高间隔30–45/20–35/15–25秒。日常8%捕虫/4%求偶/1%礼物区间本批仍为空机会。新随机流使用固定盐，暂停不消费。
 
 报告增加`hasBathPlacement`、`sceneFocusID`、`schedulerRemaining`、`sceneCooldownRemaining`、`userInputRemaining`；道具记录frame与anchor，使水花相位也参与回放比较。`bath.json`覆盖已有居民试水/洗澡/暂停/真实返回，独立断言不依赖生成的expected。统一验证结果在M6d验收文档记录。
+
+
+## M6e 静止叶片携带（模拟版本13）
+
+命令沿用上表的 `command` payload；本批已实现并通过统一验证。
+
+| command.name | 必填 payload | 行为 |
+| --- | --- | --- |
+| `placeCarryLeaf` | `point: {x, y}` | 在合法普通窗口顶沿或地面支撑点放一枚静止叶片；不创建鸟、不启动携带。 |
+| `placeCarryLeafAfter` | `delay: 0...10` | 到期读取当时world.pointer放置；暂停冻结，非法磁盘值拒绝。 |
+| `cancelCarryLeafPlacement` | 无 | 只取消待放置倒计时。 |
+| `removeCarryLeaf` | 无 | 清除携带叶片各状态和待放置，取消所属run；保留原动态落叶追随。 |
+| `leafCarry` | `source: user / preview / automatic` | 招募已有麻雀，真实接近、拾取、短途携带及放下；缺物种/帧/空间明确拒绝。 |
+| `clearCurrentScene` | 无 | 清除当前食盘/浴盆/携带叶片及相应待放置；与仅清动态叶片的clearLeaf区分。 |
+
+`settings.leafCarryEnabled`缺省true，仅持久化开关，独立于动态落叶；关闭后取消待放置并清理携带实体。`world.leafCarryArtAvailable`每次world输入为完整快照，省略true，不继承前次false。叶片16×16，独立worldScale，柄(3,12)/支撑(10,12)，接触帧喙(40,39)，鸟脚(29,39)；左右按同源变换。一次仅一枚实体，同一ID贯穿available/attached/placed/retired。拾取前180s、附着受25s run上限约束、放下后8s且最后0.2s淡出；只有放下并恢复结束才completed和入册。
+
+普通食盘可以与叶片共存；浴盆与可拾取叶片争用唯一sceneFocus。放下即退出叶片场景提频，恢复期间仍持有原run资源。场景机会70%尝试当前焦点，沿用独立随机流与60s用户输入抑制；忙碌不补发，不新增timer。
+
+版本13报告增加 `carriedObjects`（状态、owner/reservedByRun、宿主身份与比例、worldScale、朝向、剩余寿命）、`hasCarryLeafPlacement`、`sceneFocusKind`，以及 `props[].mirrored`；完整报告连同已有位置/锚/旋转共同对照。`leaf-carry.json`覆盖完整携带、暂停、放下后自然到期、第二次运行暂停删除、延时放置取消与场景清理；XCTest独立断言同一实体、唯一终态及零残留。
+
+最终证据：826核心测试通过；第二轮48完整回放见 `.build/m6e-replays-second.log` 与 `.build/m6e-replays/`。旧15报告回归见 `.build/m6e-delivery/legacy-replay-comparison.json`，比较时仅去除 `carriedObjects/hasCarryLeafPlacement/sceneFocusKind/prop.mirrored`。阶段已验证交付、随本阶段记录本地提交、未安装，详见 [M6e验收](../../docs/M6E-ACCEPTANCE.md)；不代表Windows迁移、物理多屏或真实长期桌面验收。

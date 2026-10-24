@@ -51,7 +51,7 @@ final class SceneSchedulingIntegrationTests:XCTestCase {
             let events=e.events.count
             advance(e,59)
             XCTAssertEqual(e.events.count,events,"Neither scene nor daily opportunities may bypass user-input silence")
-            XCTAssertFalse(e.scheduler.canAttemptScene(e.sceneFocus!.objectID))
+            XCTAssertFalse(e.scheduler.canAttemptScene(e.sceneFocus!))
             XCTAssertEqual(e.activeRunCount,0)
         }
     }

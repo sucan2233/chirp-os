@@ -116,6 +116,7 @@ public struct BirdSettings: Codable {
     public var visitorMemoryEnabled = true
     public var fixedPerchesEnabled = true
     public var fixedPerches: [FixedPerchAnchor] = []
+    public var leafCarryEnabled = true
     public var bathEnabled = true
     public var foodTrayEnabled = true
     public var ambientFrequency: AmbientFrequency = .low
@@ -133,7 +134,7 @@ public struct BirdSettings: Codable {
         case passiveAttentionEnabled,ambientLeafPlayEnabled,sideHopEnabled,takeoffPreparationEnabled
         case visitorMemoryEnabled,activityRhythm,edgePeekEnabled,chaseEnabled,travelTogetherEnabled,allopreeningEnabled
         case fixedPerchesEnabled,fixedPerches
-        case foodTrayEnabled,bathEnabled
+        case foodTrayEnabled,bathEnabled,leafCarryEnabled
     }
     private static func validateSchemaVersion(in values:KeyedDecodingContainer<CodingKeys>) throws {
         // Absence alone denotes version 0; null and malformed values are not legacy versions.
@@ -174,6 +175,7 @@ public struct BirdSettings: Codable {
         ambientLeafPlayEnabled=try values.decodeIfPresent(Bool.self,forKey:.ambientLeafPlayEnabled) ?? true
         visitorMemoryEnabled=try values.decodeIfPresent(Bool.self,forKey:.visitorMemoryEnabled) ?? true
         fixedPerchesEnabled=try values.decodeIfPresent(Bool.self,forKey:.fixedPerchesEnabled) ?? true
+        leafCarryEnabled=try values.decodeIfPresent(Bool.self,forKey:.leafCarryEnabled) ?? true
         bathEnabled=try values.decodeIfPresent(Bool.self,forKey:.bathEnabled) ?? true
         foodTrayEnabled=try values.decodeIfPresent(Bool.self,forKey:.foodTrayEnabled) ?? true
         // Missing keys are legacy defaults; explicit null is malformed anchor data.

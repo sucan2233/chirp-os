@@ -12,7 +12,7 @@ public enum AmbientFrequency: String, Codable, CaseIterable {
     }
 }
 
-public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID) }
+public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID), leafCarry(ScenePropID) }
 
 /// One simulation clock for encounters. Missed opportunities are discarded,
 /// so busy periods, sleep and pause never build up a queue of animations.
@@ -50,9 +50,15 @@ public struct AmbientScheduler {
         remaining=max(userInputRemaining,frequency.interval.lowerBound)
         stationaryTime=0;pointerAnchor=nil
     }
-    public func canAttemptScene(_ objectID:HabitatObjectID) -> Bool {
-        sceneFocus?.objectID==objectID && sceneCooldownRemaining<=0 && userInputRemaining<=0
+    /// A terminal from an old run may never clear a newly placed scene.
+    @discardableResult public mutating func endFocus(matching focus:SceneFocus,frequency:AmbientFrequency) -> Bool {
+        guard sceneFocus==focus else {return false}
+        endFocus(frequency:frequency);return true
     }
+    public func canAttemptScene(_ focus:SceneFocus) -> Bool {
+        sceneFocus==focus && sceneCooldownRemaining<=0 && userInputRemaining<=0
+    }
+    public func canAttemptScene(_ objectID:HabitatObjectID) -> Bool {canAttemptScene(SceneFocus(objectID:objectID))}
     public mutating func didFinishScene() {sceneCooldownRemaining=max(sceneCooldownRemaining,20)}
     public mutating func suppress(reason:AmbientSuppressionReason = .interaction) {
         switch reason {
@@ -87,7 +93,11 @@ public struct AmbientScheduler {
             if sceneUnit()<0.7 {
                 // A failed/closed/cooling focus opportunity is discarded. It
                 // never falls through and never creates a second opportunity.
-                return canAttemptScene(focus.objectID) ? .bathVisit(focus.objectID):nil
+                guard canAttemptScene(focus) else {return nil}
+                switch focus.target {
+                case .bath(let id):return .bathVisit(id)
+                case .leaf(let id):return .leafCarry(id)
+                }
             }
         } else if sceneUnit()<0.13 {
             // Frozen daily ranges: insect [0,.08), courtship [.08,.12), gift

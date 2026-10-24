@@ -18,7 +18,26 @@
     ],
     "waterlineY" : 20
   },
-  "clock" : "owningBehaviorSimulationAge",
+  "clock" : "singleEngineSimulationClock",
+  "leafToken" : {
+    "availableLifetime" : 180,
+    "fadeDuration" : 0.20000000000000001,
+    "file" : "leafToken.png",
+    "gripAnchor" : [
+      3,
+      12
+    ],
+    "logicalSize" : [
+      16,
+      16
+    ],
+    "placedLifetime" : 8,
+    "scale" : "worldScale",
+    "surfaceAnchor" : [
+      10,
+      12
+    ]
+  },
   "schemaVersion" : 1,
   "waterSplash" : {
     "anchor" : [

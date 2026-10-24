@@ -86,17 +86,17 @@ final class BehaviorRecordingTests:XCTestCase {
             XCTAssertThrowsError(try BehaviorInputLog.decode(JSONSerialization.data(withJSONObject:object)))
         }
     }
-    func testM6dRecordsVersionTwelveAndRejectsPriorSimulationSemantics() throws {
+    func testM6eRecordsVersionThirteenAndRejectsPriorSimulationSemantics() throws {
         let e=fixture();e.bringInBird();advance(e,1)
         let current=try e.recordedInputs()
         XCTAssertEqual(BehaviorInputLog.currentVersion,1)
-        XCTAssertEqual(BehaviorInputLog.engineVersion,12)
-        XCTAssertEqual(current.simulationVersion,12)
-        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,12)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,13)
+        XCTAssertEqual(current.simulationVersion,13)
+        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,13)
 
         // Exercise the compatibility boundary with a well-formed old envelope.
         // Never promote its version and replay it under the newly expanded lists.
-        for version in [10,11] {
+        for version in [10,11,12] {
         var old=current;old.simulationVersion=version
         let data=try BehaviorInputLog.encoder().encode(old)
         XCTAssertEqual(old.expected,current.expected)
@@ -242,10 +242,10 @@ final class BehaviorRecordingTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let folder=root.appendingPathComponent("shared/behavior-fixtures/v1")
         let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="json"}.sorted{$0.path<$1.path}
-        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json","food-tray.json","bath.json"])
+        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json","food-tray.json","bath.json","leaf-carry.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
-            XCTAssertEqual(log.simulationVersion,12,file.lastPathComponent)
+            XCTAssertEqual(log.simulationVersion,13,file.lastPathComponent)
             if let expected=log.expected {XCTAssertEqual(reference,expected,file.lastPathComponent)}
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
             XCTAssertEqual(try log.replay(callbackHz:120),reference,file.lastPathComponent)
@@ -341,6 +341,18 @@ final class BehaviorRecordingTests:XCTestCase {
                 XCTAssertTrue(reference.events.contains{$0.type=="birdRemoved" && $0.participants==["1"]})
             }
             if file.lastPathComponent=="leaf.json" {XCTAssertTrue(finished.contains("leafPlay"))}
+            if file.lastPathComponent=="leaf-carry.json" {
+                XCTAssertNil(log.expected,"Handwritten inputs use independent assertions")
+                XCTAssertEqual(finished.filter{$0=="leafCarry"}.count,1)
+                let cancelled=reference.events.filter{$0.kind=="leafCarry" && $0.type=="cancelled"}
+                XCTAssertEqual(cancelled.count,1);XCTAssertEqual(cancelled.first?.reason,"removed")
+                XCTAssertEqual(reference.events.filter{$0.kind=="leafCarry" && $0.type=="started"}.count,2)
+                XCTAssertFalse(reference.events.contains{$0.type=="failed" || $0.type=="rejected"})
+                XCTAssertEqual(reference.birds.map(\.id),["1"]);XCTAssertEqual(reference.residents,1)
+                XCTAssertEqual(reference.birds.first?.state,"perched")
+                XCTAssertEqual(reference.carriedObjects,[]);XCTAssertEqual(reference.hasCarryLeafPlacement,false)
+                XCTAssertNil(reference.sceneFocusID);XCTAssertNil(reference.sceneFocusKind)
+            }
             if file.lastPathComponent=="social.json" {XCTAssertTrue(finished.contains("socialGreeting"))}
             if file.lastPathComponent=="interruptions.json" {
                 XCTAssertTrue(reference.events.contains{$0.kind=="watch" && $0.type=="cancelled" && $0.reason=="userInput"})

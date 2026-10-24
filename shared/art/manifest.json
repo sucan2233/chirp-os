@@ -266,7 +266,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
 
       }
@@ -448,7 +451,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
 
       }
@@ -630,7 +636,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
 
       }
@@ -1002,7 +1011,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
         "bath0" : [
           [
@@ -1267,7 +1279,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
 
       }
@@ -1496,7 +1511,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
 
       }
@@ -1678,7 +1696,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
 
       }
@@ -1860,7 +1881,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
 
       }
@@ -2042,7 +2066,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
 
       }
@@ -2224,7 +2251,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
 
       }
@@ -2406,7 +2436,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+
+      },
       "waterContactAnchors" : {
 
       }
@@ -2450,6 +2483,22 @@
           20.878763080952002
         ],
         "bathTouch" : [
+          40,
+          39
+        ],
+        "carryGrip" : [
+          40,
+          39
+        ],
+        "carryLook" : [
+          39.882612983186476,
+          20.454101976238288
+        ],
+        "carryLower" : [
+          39.5,
+          32.5
+        ],
+        "carryPlace" : [
           40,
           39
         ],
@@ -2633,6 +2682,76 @@
           "maximumLoops" : 1,
           "recovery" : "currentEngineState"
         },
+        "leafCarryPickup" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 39.882612983186476,
+                "y" : 20.454101976238288
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "carryLook"
+            },
+            {
+              "beak" : {
+                "x" : 39.5,
+                "y" : 32.5
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "carryLower"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 39
+              },
+              "duration" : 0.20000000000000001,
+              "name" : "carryGrip"
+            },
+            {
+              "beak" : {
+                "x" : 39.882612983186476,
+                "y" : 20.454101976238288
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "carryLook"
+            }
+          ],
+          "id" : "treeSparrow.leafCarry.pickup",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "leafCarryPlace" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 39
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "carryPlace"
+            },
+            {
+              "beak" : {
+                "x" : 39.882612983186476,
+                "y" : 20.454101976238288
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "carryLook"
+            }
+          ],
+          "id" : "treeSparrow.leafCarry.place",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
         "rest" : {
           "foot" : {
             "x" : 29,
@@ -2731,7 +2850,101 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "transportBeakAnchors" : {
+        "bank0" : [
+          43.212695596878106,
+          19.955361390313172
+        ],
+        "bank1" : [
+          43.455884250280512,
+          21.099228802306204
+        ],
+        "bank2" : [
+          43.61847199096092,
+          22.257304190156127
+        ],
+        "bound" : [
+          43.693066737108438,
+          23.256950263815479
+        ],
+        "carryGrip" : [
+          40,
+          39
+        ],
+        "carryLook" : [
+          39.882612983186476,
+          20.454101976238288
+        ],
+        "carryLower" : [
+          39.5,
+          32.5
+        ],
+        "carryPlace" : [
+          40,
+          39
+        ],
+        "fly0" : [
+          43.684801717206163,
+          23.090059530785481
+        ],
+        "fly1" : [
+          43.650000000000006,
+          22.289999999999999
+        ],
+        "fly2" : [
+          43.560302147608816,
+          21.425705382070074
+        ],
+        "fly3" : [
+          43.535489740785131,
+          21.594136530808608
+        ],
+        "fly4" : [
+          43.609213056695879,
+          22.391074384167066
+        ],
+        "fly5" : [
+          43.658267355271576,
+          23.256542724634709
+        ],
+        "fly6" : [
+          43.693066737108438,
+          23.256950263815479
+        ],
+        "fly7" : [
+          43.716581040353049,
+          23.391297838587072
+        ],
+        "glide0" : [
+          43.455884250280512,
+          21.099228802306204
+        ],
+        "glide1" : [
+          43.455884250280512,
+          21.099228802306204
+        ],
+        "glide2" : [
+          43.455884250280512,
+          21.099228802306204
+        ],
+        "land0" : [
+          40.5,
+          20.5
+        ],
+        "land1" : [
+          40.5,
+          20.5
+        ],
+        "land2" : [
+          40.5,
+          20.5
+        ],
+        "stand" : [
+          40.5,
+          20.5
+        ]
+      },
       "waterContactAnchors" : {
         "bath0" : [
           [
@@ -2822,7 +3035,7 @@
   },
   "poseClock" : "owningBehaviorSimulationAge",
   "schemaVersion" : 2,
-  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt}.swift",
+  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt}.swift",
   "speciesFrames" : {
     "azureWingedMagpie" : [
       "stand",
@@ -3414,7 +3627,11 @@
       "bath0",
       "bath1",
       "bath2",
-      "bathRise"
+      "bathRise",
+      "carryLook",
+      "carryLower",
+      "carryGrip",
+      "carryPlace"
     ]
   }
 }

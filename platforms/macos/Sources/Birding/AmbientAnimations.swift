@@ -13,6 +13,7 @@ extension DesktopController {
             scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? pointerButtonsDown(),availableFrames:frameCapabilities,localMinuteOfDay:activityMinuteOfDay(),displayIDs:fixedPerchDisplayIDs,fixedPerchArtAvailable:FixedPerchArt.shared != nil)
         world.foodTrayArtAvailable=HabitatObjectRenderer.foodTrayArtAvailable
         world.bathArtAvailable=HabitatObjectRenderer.bathArtAvailable
+        world.leafCarryArtAvailable=ScenePropRenderer.leafCarryArtAvailable
         engine.updateWorld(world,sampleDT:sampleDT)
     }
     func renderSnapshot() -> [BirdRenderState] {syncWorld();return engine.renderSnapshot()}
@@ -38,6 +39,11 @@ extension DesktopController {
                         settingsWindow?.bathMessage(reason,placing:true) ?? behaviorMessage(reason)
                     } ?? t("临时浴盆已放置，请移开鼠标并让支持鸟种安静停稳后预览。","Temporary bath placed. Move the pointer away and let a supported bird settle calmly before previewing.")
                     settingsWindow?.refreshBathControls();settingsWindow?.refreshFoodTrayControls()
+                } else if event.kind == .leafCarry {
+                    settingsWindow?.message.stringValue=event.reason.map {reason in
+                        settingsWindow?.leafCarryMessage(reason,placing:true) ?? behaviorMessage(reason)
+                    } ?? t("静止叶片已放置，请移开鼠标，让麻雀停稳后预览携带。","Static leaf placed. Move the pointer away and let a sparrow settle before previewing carrying.")
+                    settingsWindow?.refreshLeafCarryControls();settingsWindow?.refreshBathControls()
                 } else {
                     settingsWindow?.message.stringValue=event.reason.map(behaviorMessage) ??
                         (event.kind == .leafPlay ? leafPlayMessage:pointerVisitPreviewMessage)

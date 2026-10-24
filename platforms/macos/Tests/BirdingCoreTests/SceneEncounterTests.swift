@@ -47,7 +47,7 @@ final class SceneEncounterTests:XCTestCase {
         XCTAssertTrue(e.handle(.placeBath(at:bathPoint)).accepted)
         let run=try started(e.handle(.bathVisit(.preview)))
         XCTAssertEqual(bird.position,before)
-        let commands:[EngineCommand]=[.foodTrayVisit(.preview),.fixedPerchVisit(.preview),.bathVisit(.preview),
+        let commands:[EngineCommand]=[.foodTrayVisit(.preview),.fixedPerchVisit(.preview),.bathVisit(.preview),.leafCarry(.preview),
             .flockPass(.preview),.pointerVisit(.preview),.chase(.preview),.travelTogether(.preview),
             .socialGreeting(.preview),.allopreening(.preview),.leafPlay(at:CGPoint(x:1400,y:500),source:.preview)]
         for command in commands {
@@ -55,8 +55,8 @@ final class SceneEncounterTests:XCTestCase {
             XCTAssertEqual(e.activeRunCount,1);XCTAssertEqual(e.leasedBirdCount,1)
             XCTAssertEqual(e.habitatReservationCount,1);XCTAssertEqual(e.reservedLandingCount,2)
         }
-        for kind:BehaviorKind in [.foodTrayVisit,.fixedPerchVisit,.bathVisit,.flockPass] {
-            let probe=LeaseProbe(kind,encounter:kind == .bathVisit || kind == .flockPass)
+        for kind:BehaviorKind in [.foodTrayVisit,.fixedPerchVisit,.bathVisit,.flockPass,.leafCarry] {
+            let probe=LeaseProbe(kind,encounter:kind == .bathVisit || kind == .flockPass || kind == .leafCarry)
             XCTAssertEqual(e.runtime.start(probe,source:.preview,in:e),.rejected(.busy))
         }
         e.runtime.cancel(run,reason:.sleep,in:e)
@@ -71,9 +71,10 @@ final class SceneEncounterTests:XCTestCase {
             let run=try started(e.handle(food ? .foodTrayVisit(.preview):.fixedPerchVisit(.preview)))
             XCTAssertEqual(bird.position,origin);XCTAssertFalse(e.ambientBusy)
             XCTAssertEqual(e.handle(.bathVisit(.preview)),.rejected(.busy))
+            XCTAssertEqual(e.handle(.leafCarry(.preview)),.rejected(.busy))
             // This bypasses public eligibility deliberately to prove runtime
             // ownership protects the old entry even from an independent actor.
-            for kind:BehaviorKind in [.bathVisit,.flockPass,.leafPlay] {
+            for kind:BehaviorKind in [.bathVisit,.flockPass,.leafPlay,.leafCarry] {
                 XCTAssertEqual(e.runtime.start(LeaseProbe(kind,encounter:true),source:.preview,in:e),.rejected(.busy))
             }
             XCTAssertEqual(e.activeRunCount,1)

@@ -11,6 +11,9 @@ public final class BehaviorEngine {
     private var nextBirdID:UInt64=1
     let runtime=BehaviorRuntime()
     let habitatObjects=HabitatObjectStore()
+    let carriedObjects=CarriedObjectStore()
+    private var pendingCarryLeafPlacement:Double?
+    private let leafCarryRandom:EngineRandom
     private var foodDepartureAttempts:[BirdID:UInt64]=[:]
     private var pendingBathPlacement:Double?
     private let bathRandom:EngineRandom
@@ -65,6 +68,7 @@ public final class BehaviorEngine {
         self.perchPlanner=PerchActivityPlanner(seed:seed)
         self.visitorMemory=VisitorMemory(seed:seed)
         self.bathRandom=EngineRandom(seed:seed ^ SceneRandomSalt.bath)
+        self.leafCarryRandom=EngineRandom(seed:seed ^ SceneRandomSalt.leafCarry)
         self.foodRandom=EngineRandom(seed:seed ^ 0x464F4F4454524159)
         self.habitatRandom=EngineRandom(seed:seed ^ 0x5045524348524E47)
         self.socialRandom=EngineRandom(seed:seed ^ 0x534F4349414C524E)
@@ -106,12 +110,16 @@ public final class BehaviorEngine {
     public var hasPointerPreview:Bool {scheduledEncounter?.kind == .pointerVisit}
     public var hasLeafPreview:Bool {scheduledEncounter?.kind == .leafPlay}
     public var sceneFocus:SceneFocus? {scheduler.sceneFocus}
+    public var hasCarryLeafPlacement:Bool {pendingCarryLeafPlacement != nil}
+    public func carriedObjectSnapshot()->[CarriedObject] {carriedObjects.objects.keys.sorted().compactMap{carriedObjects.objects[$0]}}
     public var hasBathPlacement:Bool {pendingBathPlacement != nil}
     public var hasFoodTrayPlacement:Bool {pendingFoodTrayPlacement != nil}
     public var habitatReservationCount:Int {runtime.habitatReservations.count}
     public func habitatSnapshot()->[HabitatObjectRenderState] {habitatObjects.snapshot(in:self)}
-    public var scenePropCount:Int {runtime.propIDs.count}
-    public func propSnapshot() -> [ScenePropRenderState] {runtime.propSnapshots(in:self)}
+    public var scenePropCount:Int {runtime.propIDs.union(carriedObjects.objects.keys).count}
+    public func propSnapshot() -> [ScenePropRenderState] {
+        (runtime.propSnapshots(in:self)+carriedObjects.snapshot(in:self)).sorted{$0.id<$1.id}
+    }
     public func bathImmersionSnapshot() -> [BirdID:BathImmersionState] {
         var result:[BirdID:BathImmersionState]=[:]
         for run in runtime.runs.values {
@@ -189,7 +197,7 @@ public final class BehaviorEngine {
     @discardableResult func emit(_ type:BehaviorEventType,run:BehaviorRunID?=nil,kind:BehaviorKind?=nil,
               source:BehaviorSource = .automatic,participants:[BirdID]=[],reason:BehaviorReason?=nil) -> BehaviorEvent {
         let event=BehaviorEvent(sequence:nextEvent,time:time,runID:run,kind:kind,source:source,type:type,participants:participants,reason:reason)
-        if kind == .bathVisit,[BehaviorEventType.completed,.cancelled,.failed].contains(type) {scheduler.didFinishScene()}
+        if (kind == .bathVisit || kind == .leafCarry),[BehaviorEventType.completed,.cancelled,.failed].contains(type) {scheduler.didFinishScene()}
         events.append(event)
         inputRecorder?.event(event);eventObserver?(event)
         nextEvent+=1
@@ -198,11 +206,13 @@ public final class BehaviorEngine {
     }
     public func updateWorld(_ value:BehaviorWorld,sampleDT:Double?=nil) {
         beginRecordingInput(.world(value,sampleDT:sampleDT));defer {endRecordingInput()}
-        if world.screens != value.screens || world.displays != value.displays {resetPerception()}
+        if world.screens != value.screens || world.displays != value.displays {resetPerception();pendingCarryLeafPlacement=nil}
         let previousPerches=world.surfaces.filter(\.isFixedPerch)
         world=value
         refreshFixedPerches(previous:previousPerches)
         refreshHabitatObjects()
+        refreshCarriedObjects(sampleDT:sampleDT)
+        if !value.leafCarryArtAvailable {pendingCarryLeafPlacement=nil}
         if !value.buttonsDown {clickHandled=false}
         // Contact scenes use fixed anchors. Release them against the new world
         // before host tracking can translate a perched partner or an active hop.
@@ -218,6 +228,7 @@ public final class BehaviorEngine {
         settings=value;scheduler.reset(value.ambientFrequency)
         if !value.foodTrayEnabled {pendingFoodTrayPlacement=nil;removeHabitatObjects(reason:.settingsChanged,ids:habitatIDs(.foodTray))}
         if !value.bathEnabled {pendingBathPlacement=nil;removeHabitatObjects(reason:.settingsChanged,ids:habitatIDs(.bath))}
+        if !value.leafCarryEnabled {pendingCarryLeafPlacement=nil;removeCarriedObjects(reason:.settingsChanged)}
         if !value.fixedPerchesEnabled {runtime.cancel(where:{$0.kind == .fixedPerchVisit},reason:.settingsChanged,in:self)}
         refreshFixedPerches(previous:world.surfaces.filter(\.isFixedPerch))
         refreshHabitatObjects()
@@ -268,20 +279,32 @@ public final class BehaviorEngine {
         beginRecordingInput(.command(command));defer {endRecordingInput()}
         switch command {
         case .relocate(let id): return relocate(id)
+        case .placeCarryLeaf(let point):return placeCarryLeaf(at:point)
+        case .leafCarry(let source):return requestLeafCarry(source:source)
+        case .placeCarryLeafAfter(let delay):
+            guard !paused else {return reject(.leafCarry,.user,.paused)}
+            guard settings.leafCarryEnabled else {return reject(.leafCarry,.user,.disabled)}
+            guard world.leafCarryArtAvailable else {return reject(.leafCarry,.user,.missingFrames)}
+            guard carriedObjects.objects.isEmpty,scheduler.sceneFocus==nil,
+                  !hasCarryLeafPlacement,!hasBathPlacement else {return reject(.leafCarry,.user,.busy)}
+            pendingCarryLeafPlacement=max(0,min(10,delay.isFinite ? delay:3));return .scheduled
+        case .cancelCarryLeafPlacement:pendingCarryLeafPlacement=nil;return .accepted
+        case .removeCarryLeaf:
+            pendingCarryLeafPlacement=nil;removeCarriedObjects(reason:.removed);return .accepted
         case .placeBath(let point):return placeBath(at:point)
         case .bathVisit(let source):return requestBathVisit(source:source)
         case .placeBathAfter(let delay):
             guard !paused else {return reject(.bathVisit,.user,.paused)}
             guard settings.bathEnabled else {return reject(.bathVisit,.user,.disabled)}
             guard world.bathArtAvailable else {return reject(.bathVisit,.user,.missingFrames)}
-            guard habitatObjects.objects.isEmpty,scheduler.sceneFocus==nil,!hasBathPlacement,!hasFoodTrayPlacement else {return reject(.bathVisit,.user,.busy)}
+            guard habitatObjects.objects.isEmpty,scheduler.sceneFocus==nil,!hasBathPlacement,!hasFoodTrayPlacement,!hasCarryLeafPlacement else {return reject(.bathVisit,.user,.busy)}
             pendingBathPlacement=max(0,min(10,delay.isFinite ? delay:3));return .scheduled
         case .cancelBathPlacement:pendingBathPlacement=nil;return .accepted
         case .removeBath:
             pendingBathPlacement=nil;removeHabitatObjects(reason:.removed,ids:habitatIDs(.bath));return .accepted
         case .clearCurrentScene:
-            pendingBathPlacement=nil;pendingFoodTrayPlacement=nil
-            removeHabitatObjects(reason:.removed);return .accepted
+            pendingBathPlacement=nil;pendingFoodTrayPlacement=nil;pendingCarryLeafPlacement=nil
+            removeHabitatObjects(reason:.removed);removeCarriedObjects(reason:.removed);return .accepted
         case .placeFoodTray(let point):return placeFoodTray(at:point)
         case .foodTrayVisit(let source):return requestFoodTrayVisit(source:source)
         case .placeFoodTrayAfter(let delay):
@@ -318,17 +341,18 @@ public final class BehaviorEngine {
             scheduledEncounter=ScheduledEncounter(kind:.leafPlay,remaining:max(0,min(10,delay.isFinite ? delay:3)))
             return .scheduled
         case .clearProps,.clearLeaf:
-            if case .clearProps=command {pendingBathPlacement=nil;pendingFoodTrayPlacement=nil;removeHabitatObjects(reason:.userInput)}
+            if case .clearProps=command {pendingBathPlacement=nil;pendingFoodTrayPlacement=nil;pendingCarryLeafPlacement=nil;removeHabitatObjects(reason:.userInput);removeCarriedObjects(reason:.userInput)}
             if hasLeafPreview {cancelPreview(.userInput)}
             runtime.cancel(where:{$0.kind == .leafPlay},reason:.userInput,in:self)
             scheduler.suppress();return .accepted
         case .removeProp(let id):
             runtime.cancel(where:{$0.propIDs.contains(id)},reason:.removed,in:self)
+            removeCarriedObjects(reason:.removed,ids:[id])
             return .accepted
         case .pointerClick:
             recordPointerClick(explicit:true)
             scheduler.suppress(reason:.userInput)
-            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind.isPerchActivity || $0.kind.isSocial || $0.kind == .leafPlay || $0.kind == .fixedPerchVisit || $0.kind == .foodTrayVisit || $0.kind == .bathVisit},reason:.userInput,in:self)
+            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind.isPerchActivity || $0.kind.isSocial || $0.kind == .leafPlay || $0.kind == .fixedPerchVisit || $0.kind == .foodTrayVisit || $0.kind == .bathVisit || $0.kind == .leafCarry},reason:.userInput,in:self)
             perchPlanner.suppressAll()
         case .pause(let value):
             guard paused != value else {return .accepted}
@@ -338,8 +362,8 @@ public final class BehaviorEngine {
                 runtime.cancel(where:{$0.kind == .pointerVisit},reason:.paused,in:self)
             }
         case .cancelAmbient(let reason):
-            pendingBathPlacement=nil;pendingFoodTrayPlacement=nil
-            if [.sleep,.screensChanged,.spaceChanged,.shutdown].contains(reason) {removeHabitatObjects(reason:reason)}
+            pendingBathPlacement=nil;pendingFoodTrayPlacement=nil;pendingCarryLeafPlacement=nil
+            if [.sleep,.screensChanged,.spaceChanged,.shutdown].contains(reason) {removeHabitatObjects(reason:reason);removeCarriedObjects(reason:reason)}
             cancelPreview(reason);accumulator=0;scheduler.suppress();perchPlanner.suppressAll();resetPerception()
             let all:[BehaviorReason]=[.sleep,.screensChanged,.spaceChanged,.shutdown]
             runtime.cancel(where:{all.contains(reason) || $0.occupiesEncounter},reason:reason,in:self)
@@ -618,12 +642,78 @@ public final class BehaviorEngine {
             if bird.hostID==old.id,bird.hostPID==old.pid,!bird.isDeparting {bird.requestFlightRecovery()}
         }
     }
+    private func placeCarryLeaf(at point:CGPoint)->BehaviorResult {
+        guard !paused else {return reject(.leafCarry,.user,.paused)}
+        guard settings.leafCarryEnabled else {return reject(.leafCarry,.user,.disabled)}
+        guard world.leafCarryArtAvailable else {return reject(.leafCarry,.user,.missingFrames)}
+        guard !world.buttonsDown else {return reject(.leafCarry,.user,.userInput)}
+        guard carriedObjects.objects.isEmpty,scheduler.sceneFocus==nil,
+              !hasBathPlacement else {return reject(.leafCarry,.user,.busy)}
+        let id=ScenePropID(nextPropID)
+        let nearest=birds.filter{role(of:$0) == .resident && SpeciesBehaviorProfile.profile(for:$0.profile.id).allows(.leafCarry)}.sorted {
+            let a=Geometry.distance($0.position,point),b=Geometry.distance($1.position,point)
+            return a==b ? self.id(of:$0)!<self.id(of:$1)!:a<b
+        }.first
+        let facingRight=nearest.map{$0.position.x<=point.x} ?? true
+        let result=carriedObjects.placeLeaf(id:id,at:point,facingRight:facingRight,in:self)
+        if case .rejected(let reason)=result {return reject(.leafCarry,.user,reason)}
+        guard scheduler.acquireFocus(SceneFocus(leafID:id),frequency:settings.ambientFrequency) else {
+            carriedObjects.retire(id,in:self,immediate:true);return reject(.leafCarry,.user,.busy)
+        }
+        nextPropID+=1;pendingCarryLeafPlacement=nil;return .accepted
+    }
+    private func requestLeafCarry(source:BehaviorSource)->BehaviorResult {
+        guard !paused else {return reject(.leafCarry,source,.paused)}
+        guard BehaviorDefinitions.definition(for:.leafCarry).isEnabled(settings:settings,source:source),
+              source != .automatic || ambientEnabled else {return reject(.leafCarry,source,.disabled)}
+        guard !world.buttonsDown else {return reject(.leafCarry,source,.userInput)}
+        guard !encounterUnavailable,scheduledEncounter==nil,!hasCarryLeafPlacement,!hasBathPlacement,!hasFoodTrayPlacement
+        else {return reject(.leafCarry,source,.busy)}
+        guard world.leafCarryArtAvailable else {return reject(.leafCarry,source,.missingFrames)}
+        guard let object=carriedObjects.objects.values.filter({$0.state == .available && $0.reservedByRun==nil}).sorted(by:{$0.id<$1.id}).first
+        else {return reject(.leafCarry,source,.noSpace)}
+        if source == .automatic,!scheduler.canAttemptScene(SceneFocus(leafID:object.id)) {return reject(.leafCarry,source,.busy)}
+        let candidates=LeafCarryPlan.candidates(in:self,source:source)
+        guard let plan=leafCarryRandom.element(candidates) else {
+            let supported=birds.filter{role(of:$0) == .resident && SpeciesBehaviorProfile.profile(for:$0.profile.id).allows(.leafCarry)}
+            let frames=BehaviorDefinitions.definition(for:.leafCarry).requiredFrames
+            let reason:BehaviorReason = supported.isEmpty ? .noSpecies:
+                supported.allSatisfy({!frames.isSubset(of:world.availableFrames[$0.profile.id] ?? [])}) ? .missingFrames:
+                supported.allSatisfy({id(of:$0).map{runtime.owners[$0] != nil} ?? true}) ? .busy:
+                supported.contains(where:{pointerNear($0)}) ? .pointerNearby:.noSpace
+            return reject(.leafCarry,source,reason)
+        }
+        let result=runtime.start(LeafCarryExecution(plan:plan),source:source,in:self)
+        if result.accepted {perchPlanner.suppress(plan.id);scheduler.suppress()}
+        else if case .rejected(let reason)=result {return reject(.leafCarry,source,reason)}
+        return result
+    }
+    private func refreshCarriedObjects(sampleDT:Double?=nil) {
+        for runID in runtime.runs.keys.sorted() {
+            guard let execution=runtime.runs[runID]?.execution as? LeafCarryExecution else {continue}
+            if let result=execution.reconcileWorld(in:self,sampleDT:sampleDT) {runtime.finish(runID,result:result,in:self)}
+        }
+        let invalid=carriedObjects.synchronize(in:self)
+        if !invalid.isEmpty {removeCarriedObjects(reason:.targetInvalid,ids:invalid)}
+    }
+    private func removeCarriedObjects(reason:BehaviorReason,ids:[ScenePropID]?=nil) {
+        let targets=Set(ids ?? Array(carriedObjects.objects.keys))
+        runtime.cancel(where:{!targets.isDisjoint(with:$0.propIDs)},reason:reason,in:self)
+        let immediate=paused || [.sleep,.shutdown,.screensChanged,.spaceChanged].contains(reason)
+        for id in targets.sorted() {carriedObjects.retire(id,in:self,immediate:immediate)}
+    }
+    /// Shared ordinary-surface recovery; caller has already released ownership.
+    func recoverFromCarriedObject(_ id:BirdID) {
+        guard let bird=bird(id),!bird.isDeparting else {return}
+        bird.requestFlightRecovery();recoveringHabitatBirds.insert(id)
+        if !paused {resumeHabitatRecovery(id)}
+    }
     private func placeBath(at point:CGPoint)->BehaviorResult {
         guard !paused else {return reject(.bathVisit,.user,.paused)}
         guard settings.bathEnabled else {return reject(.bathVisit,.user,.disabled)}
         guard world.bathArtAvailable else {return reject(.bathVisit,.user,.missingFrames)}
         guard !world.buttonsDown else {return reject(.bathVisit,.user,.userInput)}
-        guard habitatObjects.objects.isEmpty,scheduler.sceneFocus==nil,!hasFoodTrayPlacement else {return reject(.bathVisit,.user,.busy)}
+        guard habitatObjects.objects.isEmpty,scheduler.sceneFocus==nil,!hasFoodTrayPlacement,!hasCarryLeafPlacement else {return reject(.bathVisit,.user,.busy)}
         let placement=habitatObjects.placeBath(at:point,in:self)
         if case .rejected(let reason)=placement {return reject(.bathVisit,.user,reason)}
         guard let id=habitatIDs(.bath).first else {return reject(.bathVisit,.user,.noSpace)}
@@ -724,7 +814,7 @@ public final class BehaviorEngine {
         let targets=Set(ids ?? Array(habitatObjects.objects.keys))
         guard !targets.isEmpty else {return}
         for id in targets {habitatObjects.beginRetirement(id,reason:reason)}
-        if let focus=scheduler.sceneFocus,targets.contains(focus.objectID) {scheduler.endFocus(frequency:settings.ambientFrequency)}
+        if let focus=scheduler.sceneFocus,let id=focus.objectID,targets.contains(id) {scheduler.endFocus(matching:focus,frequency:settings.ambientFrequency)}
         // Detach owners before recovery. The retirement surface remains available
         // until every former resident has released it, for at most two live seconds.
         runtime.cancel(where:{!targets.isDisjoint(with:$0.habitatReservations)},reason:reason,in:self)
@@ -974,6 +1064,18 @@ public final class BehaviorEngine {
         if !paused {
             for id in recoveringHabitatBirds.sorted() {resumeHabitatRecovery(id)}
             habitatObjects.advance(dt)
+            if !carriedObjects.objects.isEmpty {refreshCarriedObjects()}
+            let expired=carriedObjects.advance(dt,in:self)
+            if !expired.isEmpty {runtime.cancel(where:{!Set(expired).isDisjoint(with:$0.propIDs)},reason:.targetInvalid,in:self)}
+            if let pending=pendingCarryLeafPlacement {
+                let remaining=pending-dt;pendingCarryLeafPlacement=remaining
+                if remaining<=1e-10 {
+                    pendingCarryLeafPlacement=nil
+                    let result=placeCarryLeaf(at:world.pointer)
+                    let reason:BehaviorReason?;if case .rejected(let why)=result {reason=why}else{reason=nil}
+                    emit(.previewResult,kind:.leafCarry,source:.user,reason:reason)
+                }
+            }
             if let pending=pendingBathPlacement {
                 let remaining=pending-dt;pendingBathPlacement=remaining
                 if remaining<=1e-10 {
@@ -1018,6 +1120,7 @@ public final class BehaviorEngine {
             guard let record=records[id],record.visible,runtime.canAdvance(id,paused:paused) else {continue}
             record.bird.tick(dt)
         }
+        if !paused {carriedObjects.captureAttachedSnapshots(in:self)}
         for id in order {
             guard let record=records[id],record.visible else {continue}
             let bird=record.bird
@@ -1038,6 +1141,8 @@ public final class BehaviorEngine {
             case .flockPass:_=requestFlock(.automatic)
             case .socialGreeting:requestSocialEncounter()
             case .leafPlay:requestAutomaticLeaf()
+            case .leafCarry(let object):
+                if scheduler.sceneFocus?.leafID==object {_=requestLeafCarry(source:.automatic)}
             case .bathVisit(let object):
                 if scheduler.sceneFocus?.objectID==object {_=requestBathVisit(source:.automatic)}
             }
@@ -1056,7 +1161,12 @@ public final class BehaviorEngine {
         let pose=id(of:bird).flatMap{runtime.presentation(for:$0,in:self)}
         let hop=pose?.hopOffset ?? id(of:bird).map{baseHop(for:$0,bird:bird)} ?? bird.hopOffset
         let facing=pose?.facingRight ?? bird.facingRight
-        return CGRect(x:bird.position.x-(facing ? 29:19)*scale,y:bird.position.y+(hop-39)*scale,width:48*scale,height:48*scale).insetBy(dx:-2,dy:-2)
+        var area=CGRect(x:bird.position.x-(facing ? 29:19)*scale,y:bird.position.y+(hop-39)*scale,width:48*scale,height:48*scale).insetBy(dx:-2,dy:-2)
+        if let id=id(of:bird),carriedObjects.objects.values.contains(where:{$0.owner==id}) {
+            let owned=Set(carriedObjects.objects.values.filter{$0.owner==id}.map(\.id))
+            for prop in carriedObjects.snapshot(in:self) where owned.contains(prop.id) {area=area.union(prop.rect)}
+        }
+        return area
     }
     public func renderSnapshot() -> [BirdRenderState] {
         birds.compactMap {bird in
