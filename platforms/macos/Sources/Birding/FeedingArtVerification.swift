@@ -93,7 +93,7 @@ enum FeedingArtVerification {
         var manifestOK=true,supportedOnly=true
         for id in SpeciesID.allCases {
             let legacy=BirdArt.names+([SpeciesID.barnSwallow,.swinhoesWhiteEye].contains(id) ? BirdArt.allopreeningNames:[])
-            let expected=legacy+(species.contains(id) ? names:[])
+            let expected=legacy+(species.contains(id) ? names:[])+SpeciesBehaviorProfile.profile(for:id).poseFrameNames
             let actual=BirdArt.names(for:id)
             manifestOK = manifestOK && BirdArt.names.count==34 && actual==expected &&
                 Array(actual.prefix(legacy.count))==legacy && Set(actual).count==actual.count

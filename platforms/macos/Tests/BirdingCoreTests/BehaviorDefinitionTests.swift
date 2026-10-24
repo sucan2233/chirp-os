@@ -57,7 +57,11 @@ final class BehaviorDefinitionTests:XCTestCase {
             (.flight,"flight",["fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7"]),
             (.landing,"landing",["land0","land1","land2"]),
             (.allopreening,"allopreening",["allopreenGive0","allopreenGive1","allopreenGive2","allopreenReceive0","allopreenReceive1","allopreenReceive2"]),
-            (.feeding,"feeding",["feedLook","feedDown0","feedDown1","feedLift"])
+            (.feeding,"feeding",["feedLook","feedDown0","feedDown1","feedLift"]),
+            (.observationPose,"observationPose",["lookNear","lookFar"]),
+            (.alertPose,"alertPose",["alertRise","alertHold","alertRelax"]),
+            (.restPose,"restPose",["restLower","restTuck","restWake"]),
+            (.takeoffPose,"takeoffPose",["takeoffCrouch","takeoffPush"])
         ]
         XCTAssertEqual(BirdCapability.allCases,fixtures.map {$0.0})
         for (capability,name,frames) in fixtures {
@@ -135,6 +139,7 @@ final class BehaviorDefinitionTests:XCTestCase {
                 switch capability {
                 case .allopreening:available=supported.contains(species)
                 case .feeding:available=seedVisitors.contains(species)
+                case .observationPose,.alertPose,.restPose,.takeoffPose:available=false
                 default:available=true
                 }
                 XCTAssertEqual(capability.requiredFrames.isSubset(of:frames),available,"\(species): \(capability)")

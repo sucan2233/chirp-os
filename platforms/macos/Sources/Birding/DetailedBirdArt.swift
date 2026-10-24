@@ -108,6 +108,8 @@ enum DetailedBirdArt {
         }
     }
     static func make(_ frame:String,species id:SpeciesID)->CGImage {
+        // M6b has its own anatomy; no existing stand/idle raster is reused.
+        if let image=poseImage(frame,species:id) {return image}
         // B14 is an independent native drawing; old peck/common poses do not
         // enter this path and retain their original raster operations.
         if let image=feedingImage(frame,species:id) {return image}
@@ -866,5 +868,316 @@ enum DetailedBirdArt {
         c.oval(25+reach,12,1,1,"eye");c.oval(25.4+reach,12,0.4,0.4,"white")
         c.line([(23,29),(25,33),(29,33),(28,34)],"brown",width:0.8)
         c.line([(23,34),(26,38),(29,38),(29,39)],"brown",width:0.8)
+    }
+}
+
+// M6b: independent perched key poses. All geometry is in top-down 48-unit
+// coordinates; native density and the (29,39) foot anchor match the old art.
+extension DetailedBirdArt {
+    private struct FoundationPose {
+        let body:(y:Double,height:Double,lean:Double,fluff:Double)
+        let head:(x:Double,y:Double,pitch:Double)
+        let tail:(x:Double,y:Double)
+        let wing:Double
+
+        init(_ body:(Double,Double,Double,Double),_ head:(Double,Double,Double),
+             _ tail:(Double,Double),_ wing:Double = 0) {
+            self.body=body;self.head=head;self.tail=tail;self.wing=wing
+        }
+
+        func headPoint(_ x:Double,_ y:Double)->CGPoint {
+            CGPoint(x:head.x+x*cos(head.pitch)-y*sin(head.pitch),
+                    y:head.y+x*sin(head.pitch)+y*cos(head.pitch))
+        }
+    }
+
+    // Each row is deliberately authored for its species, not a stand-frame
+    // transform. Body height/width, neck reach, tail carriage and wing opening
+    // vary independently. Head triples are centre X/Y and clockwise radians.
+    private static func foundationPose(_ frame:String,species id:SpeciesID)->FoundationPose? {
+        switch id {
+        case .treeSparrow:
+            switch frame {
+            case "lookNear":return FoundationPose((22.5,12.5,0.5,0),(33,22,0.32),(12,38))
+            case "lookFar":return FoundationPose((21.5,13,0,0),(32,18.5,-0.18),(11,39))
+            case "alertRise":return FoundationPose((20.5,14,0,0),(32.5,17,-0.24),(12,40),0.12)
+            case "alertHold":return FoundationPose((19.5,15,0.5,-0.5),(33,15.5,-0.12),(13,41),0.18)
+            case "alertRelax":return FoundationPose((22,13,-0.5,0.6),(31.5,20,-0.04),(11,38.5))
+            case "restLower":return FoundationPose((24,12,-0.5,1.5),(31,23,0.18),(11,38))
+            case "restTuck":return FoundationPose((24.5,12,-1,2),(26,25,2.48),(12,37))
+            case "restWake":return FoundationPose((22.5,13,0,1),(31,19.5,-0.32),(10.5,39),0.10)
+            case "takeoffCrouch":return FoundationPose((26,10.5,1.5,0.5),(34,25,0.16),(10,35),0.24)
+            case "takeoffPush":return FoundationPose((19.5,12,2,0),(35,17.5,-0.24),(10,34),1)
+            default:return nil
+            }
+        case .spottedDove:
+            switch frame {
+            case "lookNear":return FoundationPose((22.5,12.5,0.8,0),(35,21,0.28),(6,41))
+            case "lookFar":return FoundationPose((21.5,13,0,0),(33.5,15,-0.16),(5.5,42))
+            case "alertRise":return FoundationPose((20.5,14,0.3,0),(34,13.5,-0.20),(7,43),0.08)
+            case "alertHold":return FoundationPose((19.5,15,0.6,-0.3),(34.5,11.5,-0.10),(8,43.5),0.12)
+            case "alertRelax":return FoundationPose((22,13,-0.3,0.5),(32.5,17.5,0.06),(5,41))
+            case "restLower":return FoundationPose((24,11.5,-0.8,1),(31.5,22,0.20),(5,40.5))
+            case "restTuck":return FoundationPose((25,11.5,-1.5,1.8),(25,24.5,2.68),(6,40))
+            case "restWake":return FoundationPose((22,13,-0.2,0.8),(32,16,-0.27),(4.5,42),0.08)
+            case "takeoffCrouch":return FoundationPose((25.5,10.5,1.2,0.3),(35,22.5,0.12),(4,37),0.18)
+            case "takeoffPush":return FoundationPose((18.5,12.5,2,0),(35.5,14,-0.24),(4,35),1)
+            default:return nil
+            }
+        case .barnSwallow:
+            switch frame {
+            case "lookNear":return FoundationPose((23,9,0.5,0),(34,22,0.30),(2.5,42))
+            case "lookFar":return FoundationPose((21.5,10,0,0),(33,18,-0.22),(2,42.5))
+            case "alertRise":return FoundationPose((20.5,11,0.4,0),(33.5,16.5,-0.26),(3,43),0.14)
+            case "alertHold":return FoundationPose((19.5,12,0.8,-0.3),(34,15,-0.14),(4,43),0.20)
+            case "alertRelax":return FoundationPose((22,9.5,-0.2,0.3),(32.5,20,0.04),(2,41.5))
+            case "restLower":return FoundationPose((25,9,-0.5,0.7),(31.5,24,0.16),(2,41))
+            case "restTuck":return FoundationPose((25.5,9,-0.8,1),(27,26,2.58),(3,40.5))
+            case "restWake":return FoundationPose((22.5,10,0,0.5),(32,19,-0.30),(2,42),0.12)
+            case "takeoffCrouch":return FoundationPose((27,8,1.8,0),(34.5,25.5,0.10),(2,37),0.30)
+            case "takeoffPush":return FoundationPose((19,9.5,2.2,0),(35.5,17,-0.22),(2,35),1)
+            default:return nil
+            }
+        case .nightHeron:
+            switch frame {
+            case "lookNear":return FoundationPose((21.5,11.5,0.5,0),(35,21,0.30),(14,32))
+            case "lookFar":return FoundationPose((20,12,0,0),(34,15,-0.12),(13,31.5))
+            case "alertRise":return FoundationPose((18.5,13,0.5,0),(34,11.5,-0.18),(14,32),0.06)
+            case "alertHold":return FoundationPose((17.5,14,1,-0.4),(34,8.5,-0.08),(14.5,33),0.10)
+            case "alertRelax":return FoundationPose((20.5,12,-0.5,0.6),(33,17,0.08),(12.5,31.5))
+            case "restLower":return FoundationPose((23,11.5,-0.7,1),(32,23,0.18),(13,33))
+            case "restTuck":return FoundationPose((24,11,-1,1.8),(27,25,2.72),(13.5,33.5))
+            case "restWake":return FoundationPose((21,12.5,0,0.7),(32.5,15,-0.24),(12.5,32),0.06)
+            case "takeoffCrouch":return FoundationPose((25,10.5,1,0.5),(35,24,0.12),(12,31),0.20)
+            case "takeoffPush":return FoundationPose((17,11.5,2,0),(35,15,-0.22),(11.5,29.5),1)
+            default:return nil
+            }
+        default:return nil
+        }
+    }
+
+    /// Exact authored bill tip, before raster rounding, in right-facing logical
+    /// coordinates. Reflect with x -> 48-x, just like BirdRenderState. A tucked
+    /// bill still has an anchor even though scapular feathers cover its tip.
+    static func poseBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        guard let pose=foundationPose(frame,species:id) else {return nil}
+        let bill=foundationBill(id)
+        return pose.headPoint(bill.root+bill.length,bill.tipY)
+    }
+
+    private static func foundationBill(_ id:SpeciesID)->(root:Double,length:Double,tipY:Double) {
+        if id == .nightHeron {return (3.25,8,0.2)}
+        return (shape(id).headWidth/2-0.5,id == .barnSwallow ? 2.2:4,0.5)
+    }
+
+    // Semantic layers support the main session's later geometry acceptance.
+    // Keeping feet separate permits a raster comparison without belly/wing
+    // pixels obscuring the fixed toes in a resting or crouching silhouette.
+    enum FoundationPosePart:CaseIterable {case body,feet,headNeck,bill}
+
+    static func poseImage(_ frame:String,species id:SpeciesID,
+                          part:FoundationPosePart?=nil)->CGImage? {
+        guard let pose=foundationPose(frame,species:id) else {return nil}
+        let density=SpeciesCatalog.standard.profile(id).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let tucked=frame == "restTuck",drowsy=frame == "restLower"
+        let a=shape(id),s=colours(id),night=id == .nightHeron
+        let bx=(night ? 17:34-a.width)+pose.body.lean-pose.body.fluff/2
+        let bw=a.width+pose.body.fluff,by=pose.body.y,bh=pose.body.height
+        let back=night ? "navy":s.0,feather=night ? "gray":s.1
+        let breast=night ? "white":s.3
+
+        if part == nil || part == .feet {
+            // No context/body transform ever touches the feet. Lower legs and
+            // toes retain the original species operations, even in Push.
+            for x in [27.0,31.0] {
+                let top=by+bh-2
+                let kneeX=x+(frame == "takeoffCrouch" ? 1.5:0)
+                if night {
+                    c.line([(x-1+pose.body.lean,top),(kneeX,max(top+1,36)),
+                            (x-0.5,38.7)],"tan",width:0.7)
+                    c.line([(x-2,39),(x,38.6),(x+2,39)],"tan",width:0.7)
+                } else {
+                    c.line([(x-1+pose.body.lean,top),(kneeX,35),(x-0.5,38.5)],"brown",width:1)
+                    c.line([(x-2,39),(x,38.5),(x+2,39)],"brown")
+                }
+            }
+        }
+        if part == nil || part == .body {
+            foundationTail(c,id,pose,bx:bx,by:by,bh:bh,fill:feather)
+            // Far wing opens behind the torso; the near wing opens above it.
+            if pose.wing > 0 {foundationWing(c,id,pose,bx:bx,by:by,bh:bh,far:true)}
+            c.oval(bx,by,bw,bh,back,outline:true)
+            c.oval(bx+bw*0.48,by+2,bw*0.52-0.7,bh-2,breast)
+            if pose.body.fluff > 0.6 {
+                for n in 0..<4 {
+                    let x=bx+5+Double(n)*2.2,y=by+bh-1
+                    c.poly([(x-1,y-2),(x+1,y-1),(x+0.2,y+0.6)],n > 1 ? breast:back)
+                }
+            }
+            foundationFoldedWing(c,id,pose,bx:bx,by:by,bh:bh)
+        }
+        if part == nil || part == .headNeck {
+            // Neck joins world-space shoulder to the rotated head's nape and
+            // chin; changing head pitch cannot leave an old vertical neck.
+            let nape=pose.headPoint(-a.headWidth*0.32,1)
+            let chin=pose.headPoint(a.headWidth*0.28,a.headHeight*0.38)
+            if night {
+                let fold=tucked ? 1.5:(frame.hasPrefix("alert") ? 0:3)
+                c.curve([(bx+11,by+bh-2),(bx+20,by+bh-3),
+                         (chin.x+fold,chin.y+4),(chin.x,chin.y)],"silver",width:5)
+                c.curve([(bx+11.5,by+bh-2),(bx+19,by+bh-3),
+                         (chin.x+fold-0.5,chin.y+4),(chin.x,chin.y)],"white",width:3.5)
+                c.poly([(bx+7,by+3),(nape.x,nape.y),(chin.x,chin.y),
+                        (bx+15,by+bh-2)],"white")
+                c.line([(bx+10,by+5),(nape.x,nape.y)],"silver",width:0.7)
+            } else {
+                c.poly([(bx+bw*0.52,by+2),(nape.x,nape.y),
+                        (chin.x,chin.y),(bx+bw-1,by+bh*0.65)],breast)
+                c.poly([(bx+bw*0.52,by+2),(nape.x,nape.y),
+                        (nape.x+1,nape.y+2),(bx+bw*0.62,by+6)],back)
+            }
+            c.ctx.saveGState()
+            c.ctx.translateBy(x:pose.head.x,y:pose.head.y);c.ctx.rotate(by:CGFloat(pose.head.pitch))
+            foundationHead(c,id,tucked:tucked,drowsy:drowsy)
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .bill {
+            let bill=foundationBill(id)
+            c.ctx.saveGState()
+            c.ctx.translateBy(x:pose.head.x,y:pose.head.y);c.ctx.rotate(by:CGFloat(pose.head.pitch))
+            c.poly([(bill.root,-0.7),(bill.root+bill.length,bill.tipY),
+                    (bill.root+bill.length-1,1.0),(bill.root,1.2)],"dark")
+            if night {c.line([(bill.root+0.4,-0.35),(bill.root+6,0)],"slate",width:0.5)}
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .body {
+            if tucked {
+                // A real backwards head turn with the closed bill hidden in
+                // raised scapulars. The crown remains visible above the wing.
+                let tx=pose.head.x,ty=pose.head.y,left=tx-(night ? 12:8)
+                c.poly([(left+1,ty+1),(tx-2,ty+1),(tx+2,ty+3),
+                        (tx+2,ty+7),(left+1,ty+7),(left,ty+4)],feather,outline:true)
+                for n in 0..<3 {
+                    let x=tx-5+Double(n)*2
+                    c.line([(x,ty+2),(x-1,ty+5)],night ? "silver":s.0)
+                }
+            }
+            if pose.wing > 0 {foundationWing(c,id,pose,bx:bx,by:by,bh:bh,far:false)}
+        }
+        return c.image
+    }
+
+    private static func foundationTail(_ c:BirdPainter,_ id:SpeciesID,_ p:FoundationPose,
+                                       bx:Double,by:Double,bh:Double,fill:String) {
+        let x=p.tail.x,y=p.tail.y,rootX=bx+5,rootY=by+bh*0.5
+        if id == .barnSwallow {
+            // Two slender streamers and a deep, open fork; crouch fans them
+            // horizontally to keep both tips clear of the perch plane.
+            c.poly([(rootX,rootY),(x,y-5),(x+8,y),(x,y+4),(rootX+5,rootY+4)],"navy",outline:true)
+            c.line([(rootX+1,rootY+1),(x+1,y-4)],"blue")
+            c.line([(rootX+4,rootY+3),(x+1,y+3)],"slate")
+        } else if id == .nightHeron {
+            c.poly([(bx+3,by+5),(x,y-1),(x+4,y),(bx+8,by+bh-2)],fill,outline:true)
+            c.line([(x+1,y-1),(bx+5,by+bh-3)],"silver")
+        } else {
+            let fan=id == .spottedDove ? 5.0:4.0
+            c.poly([(rootX,rootY),(rootX+5,rootY+4),(x+fan,y+1),(x,y)],fill,outline:true)
+            c.line([(rootX+2,rootY+2),(x+1,y)],id == .spottedDove ? "tan":"buff")
+            if id == .spottedDove {c.line([(x,y),(x+fan,y+1)],"silver",width:1.1)}
+        }
+    }
+
+    private static func foundationFoldedWing(_ c:BirdPainter,_ id:SpeciesID,_ p:FoundationPose,
+                                             bx:Double,by:Double,bh:Double) {
+        let night=id == .nightHeron,swallow=id == .barnSwallow,dove=id == .spottedDove
+        let s=colours(id),fill=night ? "gray":s.1,light=night ? "silver":s.0
+        // Swallow primaries taper well behind the belly; the sparrow's wing
+        // rounds off before its short tail. Dove coverts retain scalloped edges.
+        let tipX=bx+(swallow ? -2:0),tipY=by+bh+(swallow ? 3:-1)
+        c.poly([(bx+3,by+1),(bx+8,by+0.5),(bx+13,by+4),
+                (bx+10,by+bh*0.7),(tipX+2,tipY),(tipX,tipY-0.3),
+                (bx+1,by+bh*0.5)],fill,outline:true)
+        c.poly([(bx+4,by+1.5),(bx+8,by+1),(bx+11,by+4),
+                (bx+6,by+bh*0.65),(bx+2,by+bh*0.7)],light)
+        for n in 0..<5 {
+            let x=bx+3+Double(n)*1.5
+            c.line([(x+4,by+4),(max(tipX+1,x-1),tipY-1)],n%2 == 0 ? light:(night ? "slate":"dark"))
+        }
+        if dove {
+            for n in 0..<9 {
+                let x=bx+3+Double(n%3)*2.2,y=by+2+Double(n/3)*1.9
+                c.line([(x,y),(x+0.9,y-0.4),(x+1.7,y+0.6)],"buff",width:0.65)
+            }
+        } else if id == .treeSparrow {
+            c.line([(bx+3,by+4),(bx+9,by+5)],"cream",width:1)
+            c.line([(bx+2,by+6),(bx+7,by+7)],"buff",width:0.8)
+        } else if swallow {c.line([(bx+4,by+2),(bx+9,by+3)],"blue",width:0.65)}
+    }
+
+    private static func foundationWing(_ c:BirdPainter,_ id:SpeciesID,_ p:FoundationPose,
+                                       bx:Double,by:Double,bh:Double,far:Bool) {
+        let night=id == .nightHeron,swallow=id == .barnSwallow
+        let s=colours(id),lift=p.wing,shoulderX=bx+10,shoulderY=by+3
+        let span=swallow ? 21.0:(night ? 19:(id == .treeSparrow ? 14:18))
+        let tipX=shoulderX-span*(far ? 0.42:0.72)*lift
+        let tipY=shoulderY-span*(far ? 0.76:1)*lift
+        let chord=(swallow ? 3.0:(night ? 7:5))*lift
+        let fill=far ? (night ? "slate":s.1):(night ? "gray":s.1)
+        let light=night ? "silver":s.0
+        if swallow {
+            c.poly([(shoulderX,shoulderY),(shoulderX-4*lift,shoulderY-9*lift),
+                    (tipX,tipY),(tipX+chord,tipY+9*lift),
+                    (shoulderX+2,shoulderY+3)],fill,outline:true)
+        } else {
+            c.poly([(shoulderX,shoulderY),(shoulderX-3*lift,shoulderY-8*lift),
+                    (tipX+2*lift,tipY),(tipX,tipY+1.5*lift),
+                    (tipX+chord*0.2,tipY+4*lift),(tipX+chord*0.5,tipY+3*lift),
+                    (tipX+chord*0.7,tipY+7*lift),(tipX+chord,tipY+6*lift),
+                    (shoulderX+2,shoulderY+4)],fill,outline:true)
+        }
+        c.poly([(shoulderX,shoulderY),(shoulderX-3*lift,shoulderY-7*lift),
+                (tipX+chord*0.7,tipY+8*lift),(shoulderX+1,shoulderY+2)],light)
+        for n in 0..<4 {
+            let f=Double(n)/4
+            c.line([(shoulderX-1,shoulderY-2*lift),
+                    (tipX+chord*f,tipY+(2+f*6)*lift)],night ? "slate":s.1)
+        }
+        if id == .treeSparrow {c.line([(shoulderX-2,shoulderY-3*lift),(tipX+chord*0.7,tipY+7*lift)],"cream",width:0.8)}
+    }
+
+    private static func foundationHead(_ c:BirdPainter,_ id:SpeciesID,tucked:Bool,drowsy:Bool) {
+        let night=id == .nightHeron,a=shape(id),s=colours(id)
+        let w=night ? 7.5:a.headWidth,h=night ? 5.5:a.headHeight,x = -w/2,y = -h/2
+        c.oval(x,y,w,h,night ? "white":s.2,outline:true)
+        switch id {
+        case .treeSparrow:
+            c.poly([(x,y+4),(x+4,y+3),(x+w,y+4),(x+w-1,y+7),(x+2,y+7)],"cream")
+            c.oval(x+2,y+4,2,2,"black")
+            c.poly([(x+5,y+6),(x+w,y+5),(x+w,y+8),(x+5,y+8)],"black")
+        case .spottedDove:
+            c.poly([(x,y+4),(x+3,y+4.8),(x+3.5,y+7),(x,y+6.5)],"black")
+            for point in [(x+0.6,y+4.8),(x+2,y+5.5),(x+0.9,y+6)] {
+                c.oval(point.0,point.1,0.65,0.65,"white")
+            }
+        case .barnSwallow:
+            c.poly([(x+3,y+3.6),(x+w,y+3.8),(x+w-1,y+6),(x+3,y+5.7)],"rust")
+            c.line([(x+3,y+0.5),(x+6,y+1)],"rust",width:0.65)
+            c.line([(x+2,y+6),(x+5.5,y+6.7)],"navy",width:1)
+        case .nightHeron:
+            c.poly([(x,y+2),(x+1,y),(x+5,y-0.3),(x+w,y+1.3),
+                    (x+w,y+2.3),(x+2,y+2.2)],"navy")
+            c.curve([(x+0.5,y+1),(x-2,y+1),(x-2,y+4),(x-6,y+5)],"white",width:0.55)
+            c.curve([(x,y+1),(x-3,y+1),(x-3,y+3),(x-7,y+3.5)],"silver",width:0.5)
+        default:break
+        }
+        let ex=night ? x+w-2.2:x+w*0.72,ey=night ? y+1.6:y+h*0.38
+        if night {c.oval(ex-0.5,ey-0.4,1.8,1.8,"red")}
+        if tucked || drowsy {
+            c.line([(ex-0.3,ey+0.5),(ex+0.3,ey+0.75),(ex+1,ey+0.45)],"eye",width:0.7)
+        } else {
+            c.oval(ex,ey,night ? 0.8:1,night ? 0.9:1.1,"eye")
+            c.oval(ex+0.35,ey,0.4,0.4,"white")
+        }
     }
 }

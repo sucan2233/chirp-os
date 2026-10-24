@@ -160,19 +160,32 @@ enum FixedPerchVerification {
             d.hoverTracker=HoverTracker<BirdID>();d.hoveredBird=nil;d.frameCapabilities=d.arts.mapValues{Set($0.frames.keys)}
             let starts:[CGFloat]=multiple ? [0.15,0.38,0.62,0.85]:[0.25]
             let targets:[CGFloat]=multiple ? [0.2,0.5,0.8]:[0.75]
-            struct Layout {let y:CGFloat;let mirror:Bool;let area:CGRect}
+            struct Layout {let baseline:CGFloat;let mirror:Bool;let area:CGRect}
             var layouts:[Layout]=[]
-            for y in [CGFloat(0.50),CGFloat(0.78)] {for mirror in [false,true] {
+            let rise=0.12*work.height
+            // Include the upper/lower limits of the existing conservative
+            // corridor, rather than assuming 50% or 78% clears a live pointer.
+            // Round before measuring so selection uses the actual host baseline.
+            let baselines=[(work.minY+rise+120).rounded(.up),
+                (work.minY+0.50*work.height).rounded(),(work.minY+0.78*work.height).rounded(),
+                (work.maxY-100).rounded(.down)]
+            for baseline in baselines {for mirror in [false,true] {
                 let xs=(starts+targets).map{work.minX+(mirror ? 1-$0:$0)*work.width}
-                let bottom=work.minY+y*work.height,top=bottom-0.12*work.height
-                let area=CGRect(x:(xs.min() ?? 0)-40,y:top-120,width:(xs.max() ?? 0)-(xs.min() ?? 0)+80,height:bottom-top+160)
-                layouts.append(Layout(y:y,mirror:mirror,area:area))
+                let top=baseline-rise
+                let area=CGRect(x:(xs.min() ?? 0)-40,y:top-120,width:(xs.max() ?? 0)-(xs.min() ?? 0)+80,height:rise+160)
+                if work.contains(area),display.contains(area),baseline+100<=work.maxY {
+                    layouts.append(Layout(baseline:baseline,mirror:mirror,area:area))
+                }
             }}
             let pointer=d.pointerPosition
             func clearance(_ r:CGRect)->CGFloat {hypot(max(0,max(r.minX-pointer.x,pointer.x-r.maxX)),max(0,max(r.minY-pointer.y,pointer.y-r.maxY)))}
-            guard let layout=layouts.max(by:{clearance($0.area)<clearance($1.area)}) else {throw FixedPerchVerification.failure("No fixture layout.")}
+            guard let layout=layouts.filter({pointerIsClear(pointer,of:$0.area)}).max(by:{clearance($0.area)<clearance($1.area)}) else {
+                cases.append(["case":name,"pointer":Self.point(pointer),"workArea":NSStringFromRect(work),
+                    "candidateCorridors":layouts.map{NSStringFromRect($0.area)}])
+                throw FixedPerchVerification.failure("\(name): no fixture corridor clears the live pointer by 100 points; move the pointer toward a screen edge.")
+            }
             corridor=layout.area
-            place(hostWindow,view:hostView,rect:CGRect(x:work.minX+24,y:work.minY+layout.y*work.height,width:work.width-48,height:100))
+            place(hostWindow,view:hostView,rect:CGRect(x:work.minX+24,y:layout.baseline,width:work.width-48,height:100))
             hostWindow.level = .normal;hostWindow.orderFrontRegardless();overlay.orderFrontRegardless();host=windowSurface(hostWindow)
             let lo=Geometry.perchX(0,rect:host.rect),hi=Geometry.perchX(1,rect:host.rect)
             birds=starts.map {x in
@@ -190,10 +203,13 @@ enum FixedPerchVerification {
             populationOK=true;layersOK=true;anchorsOK=true;pointerOK=true;exclusiveOK=true;continuous=true
             view.updateSprites()
         }
+        func pointerIsClear(_ point:CGPoint,of area:CGRect)->Bool {
+            point.x.isFinite && point.y.isFinite && !area.insetBy(dx:-100,dy:-100).contains(point)
+        }
         var fixtureOK:Bool {
             hostWindow.isVisible && overlay.isVisible && host.rect==Geometry.quartz(hostWindow.frame,primaryHeight:d.primaryHeight) &&
                 host.rect.width>=180 && host.rect.height>=100 && samePopulation && !d.engine.world.buttonsDown &&
-                !corridor.insetBy(dx:-100,dy:-100).contains(d.pointerPosition) &&
+                pointerIsClear(d.pointerPosition,of:corridor) &&
                 d.engine.fixedPerchSnapshot().count==d.settings.fixedPerches.count &&
                 birds.allSatisfy{$0.state == .perched && $0.stateTime>=0.5 && $0.hostID==host.id && !$0.needsDestination} &&
                 d.engine.fixedPerchSnapshot().allSatisfy{$0.surface.isFixedPerch && $0.surface.id==UInt32(0xFF000000)+UInt32($0.slot)}
@@ -233,7 +249,7 @@ enum FixedPerchVerification {
             view.updateSprites();events()
             let states=d.engine.renderSnapshot(),layers=spriteLayers,perches=d.engine.fixedPerchSnapshot()
             populationOK = populationOK && samePopulation
-            pointerOK = pointerOK && !corridor.insetBy(dx:-100,dy:-100).contains(d.engine.world.pointer) && !d.engine.world.buttonsDown
+            pointerOK = pointerOK && pointerIsClear(d.engine.world.pointer,of:corridor) && !d.engine.world.buttonsDown
             layersOK = layersOK && layers.count==states.count && states.count==birds.count && perchLayers.count==perches.count
             exclusiveOK = exclusiveOK && perches.allSatisfy {p in birds.filter{$0.hostID==p.surface.id}.count<=1}
             var members:[[String:Any]]=[]
@@ -292,6 +308,7 @@ enum FixedPerchVerification {
         func summarize(_ extra:[String:Any]=[:]) {
             var value:[String:Any]=["case":caseName,"run":run?.rawValue ?? 0,"birds":ids.map(\.rawValue),
                 "host":host.id,"actualHostFrame":NSStringFromRect(host.rect),"corridor":NSStringFromRect(corridor),
+                "pointer":Self.point(d.engine.world.pointer),"pointerExclusion":NSStringFromRect(corridor.insetBy(dx:-100,dy:-100)),
                 "maximumStep":maximumStep,"invariants":["population":populationOK,"layers":layersOK,"anchors":anchorsOK,
                     "pointer":pointerOK,"exclusiveSlots":exclusiveOK,"visitContinuity":continuous],
                 "terminals":terminals(run).map{["type":$0.type.rawValue,"reason":$0.reason?.rawValue ?? "","time":$0.time]}]

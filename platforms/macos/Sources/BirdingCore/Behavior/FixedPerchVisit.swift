@@ -2,9 +2,7 @@ import Foundation
 import CoreGraphics
 
 public enum FixedPerchVisitBehavior {
-    public static let supportedSpecies:Set<SpeciesID> = [
-        .treeSparrow,.barnSwallow,.swinhoesWhiteEye,.redWhiskeredBulbul,.magpieRobin,.redBilledLeiothrix
-    ]
+    public static let supportedSpecies:Set<SpeciesID> = Set(SpeciesBehaviorProfile.species(for:.fixedPerchVisit))
 }
 
 /// A frozen, single-bird journey. Only Bird.tick changes the foot anchor.

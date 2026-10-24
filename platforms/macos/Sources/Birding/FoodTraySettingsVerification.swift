@@ -196,8 +196,8 @@ enum FoodTraySettingsVerification {
             checks["foodTrayHelpPresent-"+suffix]=false;return
         }
         let text=help.stringValue
-        let expected=suffix=="zh" ? ["3 份","180 秒","暂停","树麻雀","珠颈斑鸠","鼠标靠近","安全恢复","不会删除栖木","不生成鸟","没有惩罚"]:
-            ["3 portions","180 seconds","Pausing","Tree Sparrows","Spotted Doves","nearby pointer","safely restores","perches","without spawning","penalty"]
+        let expected=suffix=="zh" ? ["3 份","180 秒","暂停","麻雀","珠颈斑鸠","鼠标靠近","安全恢复","不会删除栖木","不生成鸟","没有惩罚"]:
+            ["3 portions","180 seconds","Pausing","Tree Sparrow","Spotted Dove","nearby pointer","safely restores","perches","without spawning","penalty"]
         checks["foodTrayCompleteBilingualHelp-"+suffix]=expected.allSatisfy{text.contains($0)}
         let fitted=help.cell?.cellSize(forBounds:CGRect(x:0,y:0,width:help.frame.width,height:10000)).height ?? .infinity
         checks["foodTrayHelpFitsWithoutClipping-"+suffix]=fitted<=help.frame.height && view.bounds.contains(help.frame)

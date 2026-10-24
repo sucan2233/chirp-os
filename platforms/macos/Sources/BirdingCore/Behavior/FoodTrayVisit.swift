@@ -3,7 +3,7 @@ import CoreGraphics
 
 public enum FoodTrayBehavior {
     /// A deliberately narrow virtual seed-food policy, separate from motion/art.
-    public static let supportedSpecies:Set<SpeciesID> = [.treeSparrow,.spottedDove]
+    public static let supportedSpecies:Set<SpeciesID> = Set(SpeciesBehaviorProfile.species(for:.foodTrayVisit))
 }
 struct FoodTrayVisitPlan {
     static var requiredFrames:Set<String> {BehaviorDefinitions.definition(for:.foodTrayVisit).requiredFrames}

@@ -28,9 +28,18 @@ specific = manifest.get('speciesFrames', {})
 feeding_frames = ['feedLook', 'feedDown0', 'feedDown1', 'feedLift']
 expected_extras = {'barnSwallow': contact_frames, 'swinhoesWhiteEye': contact_frames,
                    'treeSparrow': feeding_frames, 'spottedDove': feeding_frames}
+pose_frames = ['lookNear', 'lookFar', 'alertRise', 'alertHold', 'alertRelax', 'restLower', 'restTuck', 'restWake', 'takeoffCrouch', 'takeoffPush']
+for bird in ('treeSparrow', 'spottedDove', 'barnSwallow', 'nightHeron'):
+    expected_extras[bird] = expected_extras.get(bird, []) + pose_frames
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
     assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'
+
+support = json.loads((ROOT / 'shared/species-support.json').read_text())
+assert {row['species'] for row in support} == ids, 'Missing species support audit'
+for row in support:
+    assert not row['missingPoseFrames'], f"Incomplete enhanced pose pack: {row['species']}"
+    assert set(row['poseFrames']).issubset(specific.get(row['species'], frames)), 'Support audit differs from atlas'
 
 assert all((ROOT / 'shared/art' / f'{id}.png').is_file() for id in ids)
 print(f'PASS: {len(ids)} matching species schedules and {len(frames)} shared frame names')

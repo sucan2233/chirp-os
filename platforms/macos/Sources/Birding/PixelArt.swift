@@ -49,9 +49,11 @@ final class BirdArt {
     static let allopreeningNames = ["allopreenGive0","allopreenGive1","allopreenGive2",
                                    "allopreenReceive0","allopreenReceive1","allopreenReceive2"]
     static let feedingNames = ["feedLook","feedDown0","feedDown1","feedLift"]
+    static let poseNames = PoseClip.frameNames
     static func names(for species:SpeciesID) -> [String] {
-        names + ([SpeciesID.barnSwallow,.swinhoesWhiteEye].contains(species) ? allopreeningNames : []) +
-            ([SpeciesID.treeSparrow,.spottedDove].contains(species) ? feedingNames : [])
+        names + (SpeciesBehaviorProfile.profile(for:species).allows(.allopreening) ? allopreeningNames : []) +
+            (SpeciesBehaviorProfile.profile(for:species).allows(.foodTrayVisit) ? feedingNames : []) +
+            SpeciesBehaviorProfile.profile(for:species).poseFrameNames
     }
     let frames: [String: CGImage]
     let species: SpeciesID

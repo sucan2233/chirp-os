@@ -1,0 +1,8644 @@
+[
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "redWhiskeredBulbul"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing",
+      "feeding",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
+    ],
+    "species" : "treeSparrow"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "lightVentedBulbul"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing",
+      "feeding",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
+    ],
+    "species" : "spottedDove"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "chineseBlackbird"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "magpieRobin"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "longTailedShrike"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
+    ],
+    "species" : "nightHeron"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "plumbeousWaterRedstart"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "littleEgret"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "greyHeron"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "commonKestrel"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "peregrineFalcon"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "blackKite"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "commonBuzzard"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "orientalMagpie"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "azureWingedMagpie"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "largeBilledCrow"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "hoopoe"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "allopreening",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing",
+      "allopreening",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
+    ],
+    "species" : "barnSwallow"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "mallard"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "asianKoel"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "allopreening",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing",
+      "allopreening"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "swinhoesWhiteEye"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "blackHeadedGull"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "whimbrel"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "piedKingfisher"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "eurasianWoodcock"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "blackDrongo"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "chinesePondHeron"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "yellowRumpedFlycatcher"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "yellowBrowedWarbler"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "greatTit"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "commonMoorhen"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "greatSpottedWoodpecker"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "vinousThroatedParrotbill"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "blackWingedStilt"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "eurasianCoot"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "redBilledLeiothrix"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "blackCollaredStarling"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "commonKingfisher"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "littleRingedPlover"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "yellowBilledGrosbeak"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "redFlankedBluetail"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "collaredScopsOwl"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "asianBarredOwlet"
+  },
+  {
+    "behaviors" : [
+      {
+        "contentSupported" : true,
+        "kind" : "relocate",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pointerVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "flockPass",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "rest",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "preen",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "socialGreeting",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideBySide",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "giveWay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "pairedTakeoff",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "leafPlay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "watch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "alert",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "sideHop",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "takeoffPreparation",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "edgePeek",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "chase",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "travelTogether",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "allopreening",
+        "missingFrames" : [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "fixedPerchVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "foodTrayVisit",
+        "missingFrames" : [
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "feedLook"
+        ],
+        "productAllowed" : false
+      }
+    ],
+    "capabilities" : [
+      "standing",
+      "blinking",
+      "preening",
+      "greeting",
+      "flight",
+      "landing"
+    ],
+    "missingPoseFrames" : [
+
+    ],
+    "poseFrames" : [
+
+    ],
+    "species" : "littleOwl"
+  }
+]

@@ -154,25 +154,46 @@ final class FlightBehaviorTests: XCTestCase {
         XCTAssertFalse(FlightBehavior.shouldGlide(.treeSparrow,age:4,fps:40,speed:400,cruise:300,braking:false))
     }
     func testAccelerationGlidingAndFlappingBeforeBrakingHaveNoSpeedJump() {
+        // Exercise all axis boundaries and the midpoint, then a fixed interior
+        // sample. Do not replace an intermittent failure with one passing orbit.
+        var orbitSamples:[[Double]]=[[0,0],[0,1],[0.5,0.5],[1,0],[1,1]]
+        let random=EngineRandom(seed:0x464C494748545350)
+        for _ in 0..<8 {orbitSamples.append([random.unit(),random.unit()])}
         for id:SpeciesID in [.blackKite,.commonBuzzard,.largeBilledCrow] {
-            let b=bird(id);b.fly(to:CGPoint(x:1600,y:500),host:host,airspace:CGRect(x:80,y:120,width:1800,height:650))
-            var glides=0,brakes=0,wasGliding=false,oldSpeed=0.0,brakeSpeeds=[Double]()
-            for _ in 0..<Int(b.flightDuration*120) {
-                b.tick(1/120)
-                if b.isGliding {
-                    glides+=1;XCTAssertGreaterThanOrEqual(b.flightSpeed,100)
-                    XCTAssertFalse(b.isBraking)
+            let hasOrbit=FlightBehavior.motion(id).orbit>0
+            for samples in hasOrbit ? orbitSamples:[[]] {
+                let label="\(id) / axes=\(samples)"
+                let b=Bird(position:CGPoint(x:200,y:420),fraction:0.5,
+                    profile:SpeciesCatalog.standard.profile(id),random:{0.5})
+                var cursor=0
+                b.fly(to:CGPoint(x:1600,y:500),host:host,airspace:CGRect(x:80,y:120,width:1800,height:650),random:{
+                    defer {cursor+=1}
+                    guard samples.indices.contains(cursor) else {
+                        XCTFail("Unexpected flight random draw \(cursor): \(label)");return 0.5
+                    }
+                    return samples[cursor]
+                })
+                XCTAssertEqual(cursor,hasOrbit ? 2:0,label)
+                var glides=0,brakes=0,wasGliding=false,oldSpeed=0.0,brakeSpeeds=[Double]()
+                for step in 0..<Int(b.flightDuration*120) {
+                    b.tick(1/120)
+                    let context="\(label) / step=\(step) / age=\(b.stateTime) / circling=\(b.isCircling) / braking=\(b.isBraking) / speed=\(oldSpeed)->\(b.flightSpeed)"
+                    if b.isGliding {
+                        glides+=1;XCTAssertGreaterThanOrEqual(b.flightSpeed,100,context)
+                        XCTAssertFalse(b.isBraking,context)
+                    }
+                    if wasGliding != b.isGliding {XCTAssertLessThan(abs(b.flightSpeed-oldSpeed),8,context)}
+                    if b.isBraking {brakes+=1;XCTAssertTrue(b.frameName.hasPrefix("fly"),context);brakeSpeeds.append(b.flightSpeed)}
+                    wasGliding=b.isGliding;oldSpeed=b.flightSpeed
                 }
-                if wasGliding != b.isGliding { XCTAssertLessThan(abs(b.flightSpeed-oldSpeed),8,id.rawValue) }
-                if b.isBraking { brakes+=1;XCTAssertTrue(b.frameName.hasPrefix("fly"));brakeSpeeds.append(b.flightSpeed) }
-                wasGliding=b.isGliding;oldSpeed=b.flightSpeed
+                XCTAssertGreaterThan(glides,0,label);XCTAssertGreaterThan(brakes,0,label)
+                if let first=brakeSpeeds.first,let last=brakeSpeeds.last {XCTAssertLessThan(last,first*0.1,label)}
+                XCTAssertEqual(cursor,hasOrbit ? 2:0,"Flight ticks must not resample axes: \(label)")
             }
-            XCTAssertGreaterThan(glides,0,id.rawValue);XCTAssertGreaterThan(brakes,0,id.rawValue)
-            XCTAssertLessThan(brakeSpeeds.last!,brakeSpeeds.first!*0.1)
         }
         var slow=SpeciesCatalog.standard.profile(.blackKite);slow.speed=0.3
-        let b=Bird(position:CGPoint(x:200,y:420),fraction:0.5,profile:slow)
-        b.fly(to:CGPoint(x:700,y:500),host:host,airspace:airspace)
+        let b=Bird(position:CGPoint(x:200,y:420),fraction:0.5,profile:slow,random:{0.5})
+        b.fly(to:CGPoint(x:700,y:500),host:host,airspace:airspace,random:{0.5})
         for _ in 0..<Int(b.flightDuration*60) { b.tick(1/60);XCTAssertFalse(b.isGliding) }
     }
     func testSpeedEnvelopeMatchesDistanceAndDoesNotBoostShortFlights() {

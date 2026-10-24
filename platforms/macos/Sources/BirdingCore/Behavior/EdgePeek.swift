@@ -47,7 +47,7 @@ struct EdgePeekPlan {
 public final class EdgePeekExecution:LedgeTraversalExecution {
     /// These species have downward head displacement in the renderer's idle
     /// peck/probe sequence. A matching frame name alone is insufficient evidence.
-    public static let supportedSpecies:Set<SpeciesID> = [.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel]
+    public static let supportedSpecies:Set<SpeciesID> = Set(SpeciesBehaviorProfile.species(for:.edgePeek))
     static let observationDuration=1.6
     enum Phase:String {case approach,observe,returning="return"}
     let plan:EdgePeekPlan

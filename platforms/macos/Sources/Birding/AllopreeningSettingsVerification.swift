@@ -199,8 +199,8 @@ enum AllopreeningSettingsVerification {
             checks["allopreeningQuietAllowsManualPreviewThroughSavedGates-"+suffix] =
                 d.settings.activityRhythm == .quiet && d.engine.events.last?.reason != .disabled
             checks["allopreeningSameSpeciesWindowCandidateMessage-"+suffix] = w.allopreeningPreviewMessage(.noCompanion)==w.t(
-                "请等待两只家燕或两只暗绿绣眼鸟在同一窗口相邻停稳，并把鼠标移远。",
-                "Let two Barn Swallows or two Swinhoe’s White-eyes settle together on one window; move the pointer away.")
+                "请让两只支持理羽的同种鸟在同一窗口相邻停稳，并把鼠标移远。支持鸟种：",
+                "Let two supported birds of the same species settle together on one window; move the pointer away. Supported species: ")+w.language.supportedSpeciesNames(for:.allopreening)+w.t("。",".")
             checks["allopreeningAllMessagesFit-"+suffix] =
                 [BehaviorReason.noSpecies,.noCompanion,.missingBird,.unavailableBird,.noSpace,.disabled,.settingsChanged,.paused,.busy,.missingFrames,.pointerNearby,.userInput].allSatisfy {reason in
                     w.message.stringValue=w.allopreeningPreviewMessage(reason)

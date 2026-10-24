@@ -42,6 +42,7 @@ enum FoodTrayVerification {
         var name="",run:BehaviorRunID?,previous=CGPoint.zero
         var identityOK=true,geometryOK=true,continuous=true,contactOK=true,leasesOK=true
         var log:[UInt64:BehaviorEvent]=[:],trace:[[String:Any]]=[],cases:[[String:Any]]=[],images:[[String:Any]]=[]
+        var layouts:[[String:Any]]=[]
         init(folder:URL) throws {
             let d=DesktopController()
             guard let screen=NSScreen.screens.first,let display=d.displayRects.first,let work=d.screenRects.first,
@@ -107,13 +108,42 @@ enum FoodTrayVerification {
             settings.perchActions=false;settings.passiveAttentionEnabled=false;settings.sideHopEnabled=false
             settings.takeoffPreparationEnabled=false;settings.edgePeekEnabled=false;settings.activityRhythm = .steady
             d.settings=settings;d.frameCapabilities=d.arts.mapValues{Set($0.frames.keys)}
-            // Keep the live pointer away from the entire outbound/return corridor.
-            // No cursor warping or synthetic global input is used.
-            let ys:[CGFloat]=[0.42,0.78]
-            let y=ys.max {abs(work.minY+$0*work.height-d.pointerPosition.y)<abs(work.minY+$1*work.height-d.pointerPosition.y)}!
+            // The old 42%/78% baseline heuristic ignored the arc, body height
+            // and scale-dependent pointer protection used by FlightSceneEnvelope.
+            // Bound the whole outbound/return corridor, including its sweep
+            // padding, and place the fixture above or below the live pointer.
+            // This only arranges our windows; production admission is unchanged.
+            let profile=d.catalog.profile(species),effective=scale*profile.relativeScale
+            let base=CGRect(x:work.minX+20,y:0,width:work.width-40,height:100).integral
+            let startX=Geometry.foot(on:Surface(id:0,rect:base),fraction:0.2,edge:.top,scale:effective).x
+            let targetX=work.minX+work.width*0.73,distance=abs(targetX-startX)
+            let arc=min(90*effective,distance*0.2)
+            // A 30 Hz sweep grows by peakSpeed * halfInterval + 4. Cruise
+            // speed bounds peakSpeed; BehaviorEngine.step is that halfInterval.
+            let padding=CGFloat(FlightBehavior.cruiseSpeed(species,multiplier:profile.speed)*dt)+4+8
+            let pointer=d.pointerPosition,radius=max(100,72*effective)
+            let protected=CGRect(x:pointer.x-radius,y:pointer.y-radius,width:2*radius,height:2*radius)
+            let low=ceil(work.minY+arc+39*effective+padding+8)
+            let high=floor(work.maxY-max(100,max(24*scale+8,9*effective+padding)))
+            func corridor(at y:CGFloat)->CGRect {
+                CGRect(x:min(startX,targetX)-29*effective-padding,y:y-arc-39*effective-padding,
+                       width:distance+58*effective+2*padding,height:arc+48*effective+2*padding)
+            }
+            let heights=low<=high ? [low,high]:[]
+            guard let y=heights.first(where:{
+                work.contains(corridor(at:$0)) && display.contains(corridor(at:$0)) && !corridor(at:$0).intersects(protected)
+            }) else {
+                layouts.append(["case":name,"display":NSStringFromRect(display),"workArea":NSStringFromRect(work),
+                    "pointer":point(pointer),"effectiveScale":effective,"pointerRadius":radius,
+                    "candidateCorridors":heights.map{NSStringFromRect(corridor(at:$0))}])
+                throw FoodTrayVerification.failure("\(name): no fixture corridor fits this display clear of the live pointer; move the pointer toward a screen edge. Production admission was not bypassed.")
+            }
+            layouts.append(["case":name,"display":NSStringFromRect(display),"workArea":NSStringFromRect(work),
+                "pointer":point(pointer),"effectiveScale":effective,"pointerRadius":radius,
+                "corridor":NSStringFromRect(corridor(at:y)),"baseline":y])
             // Ordinary recovery/relocation only considers windows at least 100
             // points tall. A shorter fixture forces hostless fallback flights.
-            place(hostWindow,content:hostView,rect:CGRect(x:work.minX+20,y:work.minY+y*work.height,width:work.width-40,height:100))
+            place(hostWindow,content:hostView,rect:CGRect(x:base.minX,y:y,width:base.width,height:100))
             hostWindow.orderFrontRegardless();overlay.orderFrontRegardless();host=surface(hostWindow)
             let b=Bird(position:.zero,fraction:0.2,profile:d.catalog.profile(species),random:{0.5})
             b.perch(on:host,spriteScale:d.spriteScale(for:b));b.perchDuration=600;b.tick(0.6)
@@ -125,7 +155,10 @@ enum FoodTrayVerification {
             try record("placed")
         }
         @discardableResult func start() throws -> Bool {
-            d.syncWorld();let result=d.engine.handle(.foodTrayVisit(.preview));events()
+            d.syncWorld()
+            cases.append(["case":name,"stage":"admission","pointer":point(d.engine.world.pointer),
+                          "hostRect":NSStringFromRect(host.rect),"origin":point(origin),"target":point(target)])
+            let result=d.engine.handle(.foodTrayVisit(.preview));events()
             guard case .started(let id)=result else {throw FoodTrayVerification.failure("\(name): visit rejected: \(result)")}
             run=id;try record("observe");return true
         }
@@ -158,6 +191,7 @@ enum FoodTrayVerification {
             var row:[String:Any]=["case":name,"label":label,"time":d.engine.time,"phase":phase(),"id":state.id.rawValue,
                 "species":state.species.rawValue,"frame":state.frameName,"state":bird.state.rawValue,"foot":point(bird.position),
                 "scale":state.scale,"host":bird.hostID.map{Int($0)} ?? -1,"fraction":bird.fraction,"stepDistance":delta,
+                "pointer":point(d.engine.world.pointer),
                 "leases":d.engine.leasedBirdCount,"landingSlots":d.engine.reservedLandingCount,"habitatSlots":d.engine.habitatReservationCount]
             if let object=d.engine.habitatSnapshot().first,let art=FoodTrayArt.shared {
                 let rect=art.rect(for:object.rect),layerRect=rect.offsetBy(dx:-display.minX,dy:-display.minY)
@@ -328,7 +362,7 @@ enum FoodTrayVerification {
         func report(_ checks:[String:Bool],error:String?=nil) throws {
             events();let own=checks.filter{$0.key.hasPrefix("foodTrayNative")}
             let evidence:[String:Any]=["behavior":"B14","seed":String(d.engine.seed),"passed":error==nil && own.values.allSatisfy{$0},
-                "checks":own,"error":error ?? "","cases":cases,"images":images,"dt":dt,
+                "checks":own,"error":error ?? "","cases":cases,"images":images,"dt":dt,"fixtureLayouts":layouts,
                 "execution":"Explicit fixed steps, isolated preferences and file paths; no DesktopController.start or global input injection.",
                 "input":"Production BirdArt alpha hit testing and DesktopController.relocateBird; no global NSEvent delivery is claimed.",
                 "contact":"Right-facing feet (29,39), down-bill (40,39). World bill = foot + (11*birdScale,0); seed line uses approved FoodTrayArt contactY below rear rim.",

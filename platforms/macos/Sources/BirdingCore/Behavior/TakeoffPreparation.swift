@@ -188,7 +188,9 @@ final class TakeoffPreparationExecution:BehaviorExecution {
     func presentation(for birdID:BirdID,in engine:BehaviorEngine) -> BirdPose? {
         guard birdID==id,let anchor,let bird=engine.bird(id),bird.motionRevision==anchor.revision,
               bird.state == .perched,!bird.isDeparting else {return nil}
-        return BirdPose(frameName:age+1e-9>=Self.wingsOpenAt ? "fly0":"stand",hopOffset:hopOffset,facingRight:facingRight)
+        let clip=SpeciesBehaviorProfile.profile(for:bird.profile.id).poseClip(for:kind,duration:Self.duration)
+        let frame=clip.flatMap { $0.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) ? $0.sample(at:age)?.name:nil }
+        return BirdPose(frameName:frame ?? (age+1e-9>=Self.wingsOpenAt ? "fly0":"stand"),hopOffset:hopOffset,facingRight:facingRight)
     }
 
     private var hopOffset:CGFloat {

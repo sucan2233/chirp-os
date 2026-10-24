@@ -202,12 +202,12 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         passiveAttentionButton=NSButton(checkboxWithTitle:t("留意鼠标与短暂警觉","Watch the pointer and briefly become alert"),target:self,action:#selector(perchSettingsChanged))
         passiveAttentionButton.frame=NSRect(x:40,y:952,width:690,height:26);passiveAttentionButton.state=draft.passiveAttentionEnabled ? .on:.off
         passiveAttentionButton.isEnabled=draft.perchActions;interactionView.addSubview(passiveAttentionButton)
-        label(t("停稳后偶尔闭眼休息，着陆后可能整理羽毛；鼠标靠近或点击会结束这些动作。\n留意鼠标时只使用朝向、站立和眨眼；鼠标在附近快速移动会引起短暂警觉，安静后恢复，不会新增移动。\n两项默认开启，保存后生效；停栖总开关也控制留意与警觉。","Settled birds may rest with eyes closed or preen after landing; a nearby pointer or click ends these activities.\nObservation uses facing, standing and blinking. Fast nearby pointer movement causes brief alertness; quiet restores calm, without added movement.\nBoth default on and apply after saving. The perch master switch also controls observation and alertness."),NSRect(x:20,y:990,width:710,height:100),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("perchActivitiesHelp")
+        label(t("停稳后偶尔闭眼休息，着陆后可能整理羽毛；鼠标靠近或点击会结束休息与理羽。\n专用观察、警觉与缩身休息：\(language.poseSpeciesNames)；其余鸟种保留站立、眨眼等原有表现。警觉安静后恢复，不新增移动。\n默认开启，保存后生效；停栖总开关也控制留意与警觉。","Settled birds may rest or preen after landing; a nearby pointer or click ends rest and preening.\nDedicated watch, alert and tucked-rest poses: \(language.poseSpeciesNames). Other species keep their existing poses. Alertness settles without moving.\nOn by default; save to apply. Perch activities also controls observation and alertness."),NSRect(x:20,y:990,width:710,height:100),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("perchActivitiesHelp")
         previewRestButton=button(t("预览闭眼休息","Preview eyes-closed rest"),#selector(previewRest),NSRect(x:20,y:1104,width:230,height:32),in:interactionView)
         previewPreenButton=button(t("预览整理羽毛","Preview preening"),#selector(previewPreen),NSRect(x:270,y:1104,width:210,height:32),in:interactionView)
         previewWatchButton=button(t("预览留意鼠标","Preview observation"),#selector(previewWatch),NSRect(x:20,y:1150,width:230,height:32),in:interactionView)
         previewAlertButton=button(t("预览短暂警觉","Preview brief alert"),#selector(previewAlert),NSRect(x:270,y:1150,width:210,height:32),in:interactionView)
-        label(t("预览使用已保存的设置。请先让小鸟停稳；休息和理羽需把鼠标移开。\n留意和警觉可选中远离鼠标的可用小鸟，只展示朝向、站立和眨眼。条件不合适时在下方提示。","Previews use saved settings. Let a bird settle; move the pointer away for rest and preening.\nObservation and alert previews can use an available bird far from the pointer, showing facing, standing and blinking. If unavailable, the reason appears below."),NSRect(x:20,y:1196,width:710,height:60),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("perchPreviewHelp")
+        label(t("预览读取已保存设置，使用现有停稳小鸟；休息和理羽需移开鼠标。\n专用姿态：\(language.poseSpeciesNames)；其余鸟种保留原表现。留意与警觉允许鼠标远离；不可用时说明原因。","Previews use saved settings and settled birds; move the pointer away for rest/preening.\nDedicated poses: \(language.poseSpeciesNames). Other species retain existing poses. Watch/alert previews allow a distant pointer; rejections explain why."),NSRect(x:20,y:1196,width:710,height:60),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("perchPreviewHelp")
         label(t("让路与起飞","Making room and taking off"),NSRect(x:20,y:1280,width:710,height:30),in:interactionView,size:20)
         sideHopButton=NSButton(checkboxWithTitle:t("鼠标靠近时小跳让路","Hop aside when the pointer approaches"),target:self,action:#selector(perchSettingsChanged))
         sideHopButton.frame=NSRect(x:20,y:1322,width:710,height:26);sideHopButton.state=draft.sideHopEnabled ? .on:.off
@@ -215,7 +215,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         takeoffPreparationButton=NSButton(checkboxWithTitle:t("自主起飞前稍作准备","Prepare before autonomous takeoff"),target:self,action:#selector(perchSettingsChanged))
         takeoffPreparationButton.frame=NSRect(x:20,y:1358,width:710,height:26);takeoffPreparationButton.state=draft.takeoffPreparationEnabled ? .on:.off
         takeoffPreparationButton.isEnabled=draft.perchActions;interactionView.addSubview(takeoffPreparationButton)
-        label(t("鼠标靠近时，小鸟可能沿当前边缘向旁边跳一步；空间不足时保持原位，连续靠近不会不断跳开。\n自然停留结束后，小鸟会先朝向目标、展开翅膀再起飞。点击换位仍立即响应。\n两项默认开启，受停栖小动作总开关控制，保存后生效。","A bird may hop aside along its current ledge when the pointer approaches. It stays put if space is tight and will not keep hopping while the pointer remains nearby.\nBefore leaving a perch naturally, it faces the destination and opens its wings. Clicks still move birds immediately. Both options use the perch master switch; save to apply."),NSRect(x:20,y:1396,width:710,height:70),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("passiveMotionHelp")
+        label(t("鼠标靠近时可能沿边缘侧跳；空间不足或持续靠近时不反复跳开。\n起飞前下蹲、蹬伸：\(language.poseSpeciesNames)；其余鸟种保留原有起飞准备。点击换位仍立即响应，不等待下蹲。\n默认开启，受停栖总开关控制；保存后生效。","Birds may hop aside; tight space or continued proximity prevents repeat hops.\nCrouch/push before takeoff: \(language.poseSpeciesNames). Other species keep their existing preparation. Clicks move birds immediately, without waiting for a crouch.\nOn by default; controlled by Perch activities. Save to apply."),NSRect(x:20,y:1396,width:710,height:70),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("passiveMotionHelp")
         previewSideHopButton=button(t("预览小跳让路","Preview hopping aside"),#selector(previewSideHop),NSRect(x:20,y:1480,width:260,height:32),in:interactionView)
         previewTakeoffPreparationButton=button(t("预览起飞准备","Preview takeoff preparation"),#selector(previewTakeoffPreparation),NSRect(x:300,y:1480,width:290,height:32),in:interactionView)
         label(t("预览使用已保存的设置和现有小鸟。请先让鸟停稳，并留出一段可见边缘。\n预览小跳无需把鼠标移近；起飞准备还需要一个安全的停靠目标。","Previews use saved settings and existing birds. Let a bird settle on a clear ledge.\nHop previews work with a distant pointer; takeoff preparation also needs a safe destination."),NSRect(x:20,y:1528,width:710,height:54),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("passiveMotionPreviewHelp")
@@ -250,7 +250,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         edgePeekButton.frame=NSRect(x:20,y:2582,width:710,height:26);edgePeekButton.state=draft.edgePeekEnabled ? .on:.off
         edgePeekButton.isEnabled=draft.perchActions;edgePeekButton.identifier=NSUserInterfaceItemIdentifier("edgePeekEnabled")
         edgePeekButton.setAccessibilityLabel(t("窗口边缘探头观察","Peek over window edges"));interactionView.addSubview(edgePeekButton)
-        label(t("仅麻雀、乌鸫、戴胜和中杓鹬参加。\n小鸟在窗口上沿端点附近的安全空间内靠近边缘、低头观察，再退回原位。地面或远离端点的窗口中央不会被强制拉来参加；空间不足时跳过。\n默认开启，受停栖小动作总开关控制。关闭总开关会保留此项偏好；保存后生效。","Only Tree Sparrows, Chinese Blackbirds, Hoopoes and Whimbrels participate.\nNear a window’s top-edge endpoint, a bird approaches within safe space, looks down, then retreats to its starting spot. Ground birds and birds far from endpoints stay where they are. Insufficient space skips the activity.\nOn by default, controlled by Perch activities. Turning off the master preserves this preference. Save to apply."),NSRect(x:20,y:2620,width:710,height:116),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("edgePeekHelp")
+        label(t("支持鸟种：","Supported species: ")+language.supportedSpeciesNames(for:.edgePeek)+t("。\n小鸟在窗口上沿端点附近的安全空间内靠近边缘、低头观察，再退回原位。地面或远离端点的窗口中央不会被强制拉来参加；空间不足时跳过。\n默认开启，受停栖小动作总开关控制。关闭总开关会保留此项偏好；保存后生效。",".\nNear a window’s top-edge endpoint, a bird approaches within safe space, looks down, then retreats to its starting spot. Ground birds and birds far from endpoints stay where they are. Insufficient space skips the activity.\nOn by default, controlled by Perch activities. Turning off the master preserves this preference. Save to apply."),NSRect(x:20,y:2620,width:710,height:116),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("edgePeekHelp")
         previewEdgePeekButton=button(t("预览探头观察","Preview edge peeking"),#selector(previewEdgePeek),NSRect(x:20,y:2750,width:260,height:32),in:interactionView)
         previewEdgePeekButton.identifier=NSUserInterfaceItemIdentifier("previewEdgePeek")
         label(t("预览读取已保存的设置，使用现有小鸟，不改变鸟的数量。请让上述鸟种在窗口上沿端点附近停稳，并留出安全的靠近和退回空间。\n暂停、没有合适小鸟、空间不足、缺少对应帧或尚未保存开启时，会在下方提示原因。","Previews use saved settings and existing birds; the bird count stays unchanged. Let a supported bird settle near a window’s top-edge endpoint with safe room to approach and retreat.\nPausing, no suitable bird, insufficient space, missing frames or a saved switch being off are explained below."),NSRect(x:20,y:2796,width:710,height:116),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("edgePeekPreviewHelp")
@@ -259,8 +259,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         chaseButton.frame=NSRect(x:20,y:2992,width:710,height:26);chaseButton.state=draft.chaseEnabled ? .on:.off
         chaseButton.isEnabled=draft.socialInteractions;chaseButton.identifier=NSUserInterfaceItemIdentifier("chaseEnabled")
         chaseButton.setAccessibilityLabel(chaseButton.title);interactionView.addSubview(chaseButton)
-        let chaseSpecies:[SpeciesID]=[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling]
-        let chaseNames=chaseSpecies.map { language.name($0) }.joined(separator:t("、",", "))
+        let chaseNames=language.supportedSpeciesNames(for:.chase)
         label(t("附近两只同种小鸟先后起飞，追逐几秒，再各自落回停靠处。\n支持鸟种：","Two nearby birds of the same species take off in sequence, chase for a few seconds, then each returns to its perch.\nSupported species: ")+chaseNames+t("。\n默认开启，受双鸟互动总开关控制；关闭总开关保留此项偏好，保存后生效。安静陪伴模式不自动触发。",".\nOn by default, controlled by Two-bird interactions. Turning off the master preserves this preference; save to apply. Quiet companionship prevents automatic chases."),NSRect(x:20,y:3030,width:710,height:136),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("chaseHelp")
         previewChaseButton=button(t("预览短暂追逐","Preview brief chase"),#selector(previewChase),NSRect(x:20,y:3180,width:260,height:32),in:interactionView)
         previewChaseButton.identifier=NSUserInterfaceItemIdentifier("previewChase")
@@ -270,8 +269,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         travelTogetherButton.frame=NSRect(x:20,y:3422,width:710,height:26);travelTogetherButton.state=draft.travelTogetherEnabled ? .on:.off
         travelTogetherButton.isEnabled=draft.socialInteractions;travelTogetherButton.identifier=NSUserInterfaceItemIdentifier("travelTogetherEnabled")
         travelTogetherButton.setAccessibilityLabel(travelTogetherButton.title);interactionView.addSubview(travelTogetherButton)
-        let travelSpecies=SpeciesID.allCases.filter { TravelTogetherBehavior.supportedSpecies.contains($0) }
-        let travelNames=travelSpecies.map { language.name($0) }.joined(separator:t("、",", "))
+        let travelNames=language.supportedSpeciesNames(for:.travelTogether)
         label(t("两只原本独立飞行的同种居民鸟逐渐靠拢，同行约 2 秒，再分开飞向各自原目标。不会让停栖的小鸟起飞。\n支持鸟种：","Two resident birds of the same species, already flying independently, gradually draw closer, travel together for about 2 seconds, then separate toward their original destinations. Perched birds stay perched.\nSupported species: ")+travelNames+t("。\n默认开启，受双鸟互动总开关控制；关闭总开关保留此项偏好，保存后生效。安静陪伴不触发新的自动结队，当前结队可自然完成。",".\nOn by default, controlled by Two-bird interactions; turning off the master preserves this preference. Save to apply. Quiet companionship prevents new automatic pairs; current pairs finish naturally."),NSRect(x:20,y:3460,width:710,height:136),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("travelTogetherHelp")
         previewTravelTogetherButton=button(t("预览飞行中结队","Preview travel together"),#selector(previewTravelTogether),NSRect(x:20,y:3610,width:280,height:32),in:interactionView)
         previewTravelTogetherButton.identifier=NSUserInterfaceItemIdentifier("previewTravelTogether")
@@ -281,8 +279,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         allopreeningButton.frame=NSRect(x:20,y:3852,width:710,height:26);allopreeningButton.state=draft.allopreeningEnabled ? .on:.off
         allopreeningButton.isEnabled=draft.socialInteractions;allopreeningButton.identifier=NSUserInterfaceItemIdentifier("allopreeningEnabled")
         allopreeningButton.setAccessibilityLabel(allopreeningButton.title);interactionView.addSubview(allopreeningButton)
-        let allopreeningNames:[SpeciesID]=[.barnSwallow,.swinhoesWhiteEye]
-        let companionNames=allopreeningNames.map { language.name($0) }.joined(separator:t("、",", "))
+        let companionNames=language.supportedSpeciesNames(for:.allopreening)
         label(t("相邻的两只同种小鸟在同一窗口边缘停稳后，轻轻靠近、梳理头颈，再退回原位，全程约 6 秒。\n支持鸟种：","Two calm birds of the same species, perched beside each other on one window, draw closer, gently preen the head and neck, then return to their starting spots in about 6 seconds.\nSupported species: ")+companionNames+t("。\n默认开启，受双鸟互动总开关控制；关闭总开关保留此项偏好。保存后生效，安静陪伴仅停止自动理羽。",".\nOn by default, controlled by Two-bird interactions; turning off the master preserves this preference. Save to apply. Quiet companionship stops automatic preening."),NSRect(x:20,y:3890,width:710,height:112),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("allopreeningHelp")
         previewAllopreeningButton=button(t("预览同伴理羽","Preview companion preening"),#selector(previewAllopreening),NSRect(x:20,y:4016,width:290,height:32),in:interactionView)
         previewAllopreeningButton.identifier=NSUserInterfaceItemIdentifier("previewAllopreening")
@@ -322,8 +319,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         previewFixedPerchButton=button(t("预览访问","Preview visit"),#selector(previewFixedPerch),NSRect(x:20,y:4430,width:240,height:32),in:view)
         previewFixedPerchButton.identifier=NSUserInterfaceItemIdentifier("previewFixedPerch")
         previewFixedPerchButton.setAccessibilityLabel(previewFixedPerchButton.title)
-        let names=SpeciesID.allCases.filter{FixedPerchVisitBehavior.supportedSpecies.contains($0)}
-            .map{language.name($0)}.joined(separator:t("、",", "))
+        let names=language.supportedSpeciesNames(for:.fixedPerchVisit)
         label(t("最多 3 个栖木。点击放置后移动鼠标，3 秒后记录所在屏幕与相对坐标；放置、移动和移除仅改草稿，保存并应用后生效。关闭开关保留位置。\n支持鸟种：",
                 "Up to 3 perches. Click Place, then move the pointer; after 3 seconds capture its display and relative coordinates. Place, move and remove edit the draft. Save & Apply to activate; turning off keeps positions.\nSupported species: ")+names+t("。\n安静陪伴停止新自动访问；屏幕断开时暂映射到可用屏幕，重连后恢复原位置。\n预览只使用已保存栖木和现有小鸟，不增加小鸟；缺少已保存栖木、合适小鸟或空间时，下方说明原因。",
                 ".\nQuiet companionship stops new automatic visits. Disconnected displays map temporarily to an available display; reconnect to restore.\nPreview uses saved perches and existing birds, without adding birds. Missing perches, suitable birds or space are explained below."),NSRect(x:20,y:4476,width:710,height:150),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("fixedPerchHelp")
@@ -435,7 +431,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         }
         switch reason {
         case .noSpecies,.noCompanion,.missingBird,.unavailableBird:
-            return t("没有适合访问栖木的现有小鸟，请等待支持鸟种空闲。","No suitable existing bird. Wait for a supported species to become available.")
+            return t("请等待现有支持鸟种空闲并停稳：","Wait for an existing supported bird to settle and become available: ")+language.supportedSpeciesNames(for:.fixedPerchVisit)+t("。",".")
         case .noSpace,.targetInvalid:
             if desktop.engine.fixedPerchSnapshot().isEmpty {
                 return t("已保存栖木暂无可用屏幕空间，请调整位置并保存。","Saved perches have no usable display space. Adjust their positions and save.")
@@ -459,8 +455,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
                              (cancelFoodTrayPlacementButton!,"cancelFoodTrayPlacement"),(previewFoodTrayButton!,"previewFoodTray")] {
             control.identifier=NSUserInterfaceItemIdentifier(id);control.setAccessibilityLabel(control.title)
         }
-        label(t("每次放置含 3 份食物，最多保留 180 秒；暂停动画会冻结食盘寿命和放置倒计时。仅树麻雀（麻雀）和珠颈斑鸠参加，鼠标靠近会取消取食。\n\n开关默认开启，保存后生效。同时只保留一个食盘，请先移除再放置。放置和移除立即生效，不修改栖木位置草稿，不保存食盘位置；下次启动需重新放置。移除会取消等待中的放置，让访问中的小鸟安全恢复；不会删除栖木。\n\n点击放置后把鼠标移到目标处，3 秒后由引擎采样光标。关闭、取消或重建设置窗口会取消等待中的放置。预览使用已保存开关、已放置食盘与现有小鸟，不生成鸟。无需定时喂养，不喂没有惩罚。",
-                "Each tray holds 3 portions and lasts up to 180 seconds. Pausing animation freezes its lifetime and placement countdown. Only Tree Sparrows and Spotted Doves participate; a nearby pointer cancels feeding.\n\nOn by default; save to apply the switch. Only one tray at a time: remove it before placing another. Place and Remove apply immediately, without editing perch position drafts or saving tray positions. Place again after restarting. Removal cancels pending placement and safely restores visiting birds; perches stay in place.\n\nAfter clicking Place, move the pointer to the target; the engine samples it after 3 seconds. Closing, cancelling or rebuilding Settings cancels pending placement. Preview uses the saved switch, a placed tray and existing birds, without spawning birds. No feeding schedule or penalty for not feeding."),NSRect(x:20,y:4852,width:710,height:274),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("foodTrayHelp")
+        label(t("每次放置含 3 份食物，最多保留 180 秒；暂停动画会冻结食盘寿命和放置倒计时。支持鸟种：\(language.supportedSpeciesNames(for:.foodTrayVisit))。鼠标靠近会取消取食。\n\n开关默认开启，保存后生效。同时只保留一个食盘，请先移除再放置。放置和移除立即生效，不修改栖木位置草稿，不保存食盘位置；下次启动需重新放置。移除会取消等待中的放置，让访问中的小鸟安全恢复；不会删除栖木。\n\n点击放置后把鼠标移到目标处，3 秒后由引擎采样光标。关闭、取消或重建设置窗口会取消等待中的放置。预览使用已保存开关、已放置食盘与现有小鸟，不生成鸟。无需定时喂养，不喂没有惩罚。",
+                "Each tray holds 3 portions and lasts up to 180 seconds. Pausing animation freezes its lifetime and placement countdown. Supported species: \(language.supportedSpeciesNames(for:.foodTrayVisit)). A nearby pointer cancels feeding.\n\nOn by default; save to apply the switch. Only one tray at a time: remove it before placing another. Place and Remove apply immediately, without editing perch position drafts or saving tray positions. Place again after restarting. Removal cancels pending placement and safely restores visiting birds; perches stay in place.\n\nAfter clicking Place, move the pointer to the target; the engine samples it after 3 seconds. Closing, cancelling or rebuilding Settings cancels pending placement. Preview uses the saved switch, a placed tray and existing birds, without spawning birds. No feeding schedule or penalty for not feeding."),NSRect(x:20,y:4852,width:710,height:274),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("foodTrayHelp")
         foodTrayStatus=label("",NSRect(x:20,y:5142,width:710,height:62),in:view,size:12)
         foodTrayStatus.identifier=NSUserInterfaceItemIdentifier("foodTrayStatus")
         foodTrayStatus.setAccessibilityLabel(t("临时食盘状态","Temporary food tray status"))
@@ -541,7 +537,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             return desktop.behaviorMessage(reason)
         case .disabled,.settingsChanged:return t("请先保存并启用临时食盘。","Save and enable the temporary food tray first.")
         case .noSpecies,.noCompanion,.missingBird,.unavailableBird:
-            return t("请等待现有树麻雀或珠颈斑鸠空闲并停稳；预览不会生成鸟。","Wait for an existing Tree Sparrow or Spotted Dove to settle and become available; preview never spawns birds.")
+            return t("请等待现有支持鸟种空闲并停稳：","Wait for an existing supported bird to settle and become available: ")+language.supportedSpeciesNames(for:.foodTrayVisit)+t("；预览不会生成鸟。","; preview never spawns birds.")
         case .targetInvalid,.removed:
             return t("请先放置可用食盘，再把鼠标移远后预览。","Place an available tray first, then move the pointer away before previewing.")
         case .noSpace:
@@ -655,14 +651,14 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         desktop.syncWorld()
         let result=desktop.engine.handle(.prepareTakeoff(.preview))
         if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
-        else {message.stringValue=t("正在预览起飞准备，小鸟会朝向目标、展翅后出发。","Previewing takeoff preparation: face the target, open wings, then depart.")}
+        else {message.stringValue=t("正在预览起飞准备：专用鸟会下蹲、蹬伸，其余保留原表现；点击可立即换位。","Previewing takeoff preparation: dedicated crouch/push poses, existing poses for other species; clicks relocate immediately.")}
     }
     @objc func previewEdgePeek() {
         desktop.syncWorld()
         let result=desktop.engine.handle(.edgePeek(.preview))
         if case .rejected(let reason)=result {
             message.stringValue=reason == .noSpecies
-                ? t("请等待麻雀、乌鸫、戴胜或中杓鹬在窗口上沿端点附近停稳。","Wait for a Tree Sparrow, Chinese Blackbird, Hoopoe or Whimbrel to settle near a window’s top-edge endpoint.")
+                ? t("请等待支持鸟种在窗口上沿端点附近停稳：","Wait for a supported bird to settle near a window’s top-edge endpoint: ")+language.supportedSpeciesNames(for:.edgePeek)+t("。",".")
                 : desktop.behaviorMessage(reason)
         }
         else {message.stringValue=t("正在预览探头观察：小鸟会安全靠近边缘、低头，再退回原位。","Previewing edge peeking: the bird approaches safely, looks down, then retreats.")}
@@ -714,9 +710,9 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     func allopreeningPreviewMessage(_ reason:BehaviorReason) -> String {
         switch reason {
         case .noSpecies:
-            return t("同伴理羽支持家燕和暗绿绣眼鸟，请等待其中一种停稳。","Companion preening supports Barn Swallows and Swinhoe’s White-eyes. Wait for them to settle.")
+            return t("请等待支持同伴理羽的鸟种停稳：","Wait for a supported companion-preening species to settle: ")+language.supportedSpeciesNames(for:.allopreening)+t("。",".")
         case .noCompanion,.missingBird,.unavailableBird:
-            return t("请等待两只家燕或两只暗绿绣眼鸟在同一窗口相邻停稳，并把鼠标移远。","Let two Barn Swallows or two Swinhoe’s White-eyes settle together on one window; move the pointer away.")
+            return t("请让两只支持理羽的同种鸟在同一窗口相邻停稳，并把鼠标移远。支持鸟种：","Let two supported birds of the same species settle together on one window; move the pointer away. Supported species: ")+language.supportedSpeciesNames(for:.allopreening)+t("。",".")
         case .noSpace:
             return t("同伴理羽的靠近和退回空间不足，请等待更开阔的窗口边缘。","Not enough room to approach and return. Wait for a clearer window edge.")
         case .disabled,.settingsChanged:
@@ -728,7 +724,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         desktop.syncWorld()
         let result=desktop.engine.handle(.attention(.watch,.preview))
         if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
-        else {message.stringValue=t("正在预览留意鼠标：观察朝向、站立和眨眼；小鸟停稳即可，鼠标可以远离。","Previewing observation: watch facing, standing and blinking on a settled bird, even far from the pointer.")}
+        else {message.stringValue=t("正在预览留意鼠标：四种专用鸟显示观察姿态，其余保留原表现；小鸟停稳即可，鼠标可以远离。","Previewing observation: dedicated poses for the four supported species, existing poses for others. A settled bird can be far from the pointer.")}
     }
     @objc func previewAlert() {
         desktop.syncWorld()

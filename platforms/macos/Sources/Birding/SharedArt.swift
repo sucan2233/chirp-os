@@ -17,9 +17,10 @@ extension BirdArt {
             let rep = NSBitmapImageRep(cgImage:ctx.makeImage()!)
             try rep.representation(using:.png,properties:[:])!.write(to:folder.appendingPathComponent("art/\(profile.id.rawValue).png"))
         }
+        try exportSupport(to:folder.appendingPathComponent("species-support.json"))
         let metadata:[String:Any] = ["schemaVersion":2,"logicalFrameSize":48,"frameSizes":Dictionary(uniqueKeysWithValues:catalog.species.map{($0.id.rawValue,BirdArt(species:$0.id).frames["stand"]!.width)}),"footAnchor":[29,39],"frames":names,
                                     "speciesFrames":Dictionary(uniqueKeysWithValues:catalog.species.filter{Self.names(for:$0.id) != names}.map{($0.id.rawValue,Self.names(for:$0.id))}),
-                                    "source":"platforms/macos/Sources/Birding/{PixelArt,SpeciesArt,DetailedBirdArt}.swift"]
+                                    "poseClips":Self.poseMetadata,"poseClock":"owningBehaviorSimulationAge","source":"platforms/macos/Sources/Birding/{PixelArt,SpeciesArt,DetailedBirdArt}.swift"]
         try JSONSerialization.data(withJSONObject:metadata,options:[.prettyPrinted,.sortedKeys]).write(to:folder.appendingPathComponent("art/manifest.json"))
     }
 }

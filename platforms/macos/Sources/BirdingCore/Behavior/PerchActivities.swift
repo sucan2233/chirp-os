@@ -256,10 +256,14 @@ final class PerchActivityExecution:BehaviorExecution {
     private var age=0.0
     private var revision:UInt64=0
     private var initialHop:CGFloat=0
+    private var clip:PoseClip?
+    private var ownsEnhancedMotion=false
     init(id:BirdID,plan:PerchActionPlan) {self.id=id;self.plan=plan}
     func start(in engine:BehaviorEngine) {
         guard let bird=engine.bird(id) else {return}
         revision=bird.motionRevision;initialHop=engine.baseHop(for:id,bird:bird)
+        clip=SpeciesBehaviorProfile.profile(for:bird.profile.id).poseClip(for:kind,duration:plan.duration)
+        ownsEnhancedMotion=clip.map{$0.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? [])} ?? false
     }
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {
         guard let bird=engine.bird(id) else {return .failed(.missingBird)}
@@ -285,7 +289,16 @@ final class PerchActivityExecution:BehaviorExecution {
         func ease(_ value:Double) -> CGFloat {let t=min(1,max(0,value));return t*t*(3-2*t)}
         // Blend out an existing hop and blend back to the live idle motion. The
         // anchor, orientation, occlusion and sprite geometry stay authoritative.
-        let hop=age<0.35 ? initialHop*(1-ease(age/0.35)) : bird.hopOffset*ease((age-(plan.duration-0.35))/0.35)
+        // Motion ownership is frozen at start. An optional frame disappearing
+        // or reappearing changes artwork only, including while paused; it must
+        // not reintroduce a live idle hop halfway through an owned rest pose.
+        let hop=ownsEnhancedMotion ? initialHop*(1-ease(age/0.25)) :
+            (age<0.35 ? initialHop*(1-ease(age/0.35)) : bird.hopOffset*ease((age-(plan.duration-0.35))/0.35))
+        if ownsEnhancedMotion,let clip,clip.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
+           let frame=clip.sample(at:min(age,clip.duration.nextDown)) {
+            // SpeciesBehavior yields both frame and hop while the clip owns pose.
+            return BirdPose(frameName:frame.name,hopOffset:hop)
+        }
         return BirdPose(frameName:plan.frame(at:age),hopOffset:hop)
     }
 }

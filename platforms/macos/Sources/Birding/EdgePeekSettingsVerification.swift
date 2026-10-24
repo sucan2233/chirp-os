@@ -206,7 +206,7 @@ enum EdgePeekSettingsVerification {
             event?.type == .rejected && event?.source == .preview &&
             event?.reason.map {reason in
                 let expected=reason == .noSpecies
-                    ? w.t("请等待麻雀、乌鸫、戴胜或中杓鹬在窗口上沿端点附近停稳。","Wait for a Tree Sparrow, Chinese Blackbird, Hoopoe or Whimbrel to settle near a window’s top-edge endpoint.")
+                    ? (w.t("请等待支持鸟种在窗口上沿端点附近停稳：","Wait for a supported bird to settle near a window’s top-edge endpoint: ")+d.language.supportedSpeciesNames(for:.edgePeek)+w.t("。","."))
                     : d.behaviorMessage(reason)
                 return reasons.contains(reason) && w.message.stringValue==expected
             } == true
@@ -272,7 +272,7 @@ enum EdgePeekSettingsVerification {
             checkRejection(w,reasons:[.noSpecies],suffix:"unsupported-species-"+suffix,checks:&checks)
             checks["edgePeekUnsupportedSpeciesMessageIsSpecific-"+suffix] =
                 d.engine.events.last?.reason == .noSpecies &&
-                w.message.stringValue==w.t("请等待麻雀、乌鸫、戴胜或中杓鹬在窗口上沿端点附近停稳。","Wait for a Tree Sparrow, Chinese Blackbird, Hoopoe or Whimbrel to settle near a window’s top-edge endpoint.") &&
+                w.message.stringValue==(w.t("请等待支持鸟种在窗口上沿端点附近停稳：","Wait for a supported bird to settle near a window’s top-edge endpoint: ")+d.language.supportedSpeciesNames(for:.edgePeek)+w.t("。",".")) &&
                 w.message.stringValue != d.behaviorMessage(.noSpecies)
         }
     }

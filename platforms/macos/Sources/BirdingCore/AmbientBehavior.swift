@@ -92,8 +92,7 @@ public struct FlockMemberPlan {
 
 public enum AmbientFlock {
     // Respect enabled species. Avoid turning solitary raptors into arbitrary flocks.
-    public static let species: Set<SpeciesID> = [.treeSparrow, .barnSwallow, .swinhoesWhiteEye,
-        .lightVentedBulbul, .azureWingedMagpie, .mallard, .blackHeadedGull, .blackCollaredStarling]
+    public static let species: Set<SpeciesID> = Set(SpeciesBehaviorProfile.ambientFlockSpecies)
 
     /// Use one display, including its actual offscreen edges. Staggered entry and
     /// shallow curves make a loose formation without a per-frame random jitter.

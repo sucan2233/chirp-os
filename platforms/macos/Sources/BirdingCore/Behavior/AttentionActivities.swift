@@ -39,6 +39,7 @@ public final class AttentionExecution:BehaviorExecution {
     private var anchor:Anchor?
     private var age=0.0
     private var facingRight=true
+    private var clip:PoseClip?
 
     public init(id:BirdID,kind:AttentionKind,duration:Double,requiresNearbyPointer:Bool=true) {
         self.id=id;self.plan=AttentionPlan(kind:kind,duration:duration)
@@ -53,6 +54,8 @@ public final class AttentionExecution:BehaviorExecution {
         anchor=Anchor(revision:bird.motionRevision,hostID:host.id,hostPID:host.pid,
             scale:scale,screen:screen,initialHop:hop)
         facingRight=bird.facingRight
+        clip=SpeciesBehaviorProfile.profile(for:bird.profile.id).poseClip(for:kind,duration:plan.duration,
+            lookingFar:Geometry.distance(engine.world.pointer,bird.position)>96*scale)
     }
 
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {
@@ -115,7 +118,8 @@ public final class AttentionExecution:BehaviorExecution {
         guard birdID==id,let bird=engine.bird(id),let anchor,
               bird.motionRevision==anchor.revision,bird.state == .perched,!bird.isDeparting else {return nil}
         let hasBlink=engine.world.availableFrames[bird.profile.id]?.contains("blink") == true
-        return BirdPose(frameName:plan.frame(at:age,hasBlink:hasBlink),hopOffset:hopOffset,facingRight:facingRight)
+        let frame=clip.flatMap { $0.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) ? $0.sample(at:age)?.name:nil }
+        return BirdPose(frameName:frame ?? plan.frame(at:age,hasBlink:hasBlink),hopOffset:hopOffset,facingRight:facingRight)
     }
 
     private var hopOffset:CGFloat {

@@ -22,7 +22,7 @@ enum PerchActivityVerification {
             d.engine.handle(.cancelAmbient(.screensChanged));bird.perch(on:host);bird.facingRight=false
             d.syncWorld(at:far,buttonsDown:false)
             let started=d.engine.handle(.perchAction(action,.preview)).accepted
-            let desired:Set<String>=action == .rest ? ["blink"]:["preen0","preen1"]
+            let desired:Set<String>=action == .rest ? ["restLower","restTuck"]:["preen0","preen1"]
             var observed=Set<String>(),rendered=true,hit=true,hover=true
             for step in 0..<90 {
                 d.advanceBirds(1.0/60,at:far,buttonsDown:false)

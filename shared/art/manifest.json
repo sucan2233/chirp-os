@@ -88,6 +88,725 @@
     "yellowRumpedFlycatcher" : 48
   },
   "logicalFrameSize" : 48,
+  "poseClips" : {
+    "barnSwallow" : {
+      "beakAnchors" : {
+        "alertHold" : [
+          39.218895000000003,
+          14.769484
+        ],
+        "alertRelax" : [
+          37.675846,
+          20.707545
+        ],
+        "alertRise" : [
+          38.653767999999999,
+          15.646376
+        ],
+        "lookFar" : [
+          38.183782000000001,
+          17.353155000000001
+        ],
+        "lookNear" : [
+          38.819989999999997,
+          24.014372999999999
+        ],
+        "restLower" : [
+          36.553922999999998,
+          25.322068000000002
+        ],
+        "restTuck" : [
+          22.332411,
+          28.345977000000001
+        ],
+        "restWake" : [
+          37.11551,
+          17.940963
+        ],
+        "takeoffCrouch" : [
+          39.624105,
+          26.516635999999998
+        ],
+        "takeoffPush" : [
+          40.683782000000001,
+          16.353155000000001
+        ]
+      },
+      "clips" : {
+        "alert" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 38.653767999999999,
+                "y" : 15.646376
+              },
+              "duration" : 0.12,
+              "name" : "alertRise"
+            },
+            {
+              "beak" : {
+                "x" : 39.218895000000003,
+                "y" : 14.769484
+              },
+              "duration" : 1.1299999999999999,
+              "name" : "alertHold"
+            },
+            {
+              "beak" : {
+                "x" : 37.675846,
+                "y" : 20.707545
+              },
+              "duration" : 0.25,
+              "name" : "alertRelax"
+            }
+          ],
+          "id" : "barnSwallow.alert",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "rest" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 36.553922999999998,
+                "y" : 25.322068000000002
+              },
+              "duration" : 0.25,
+              "name" : "restLower"
+            },
+            {
+              "beak" : {
+                "x" : 22.332411,
+                "y" : 28.345977000000001
+              },
+              "duration" : 3.5,
+              "name" : "restTuck"
+            },
+            {
+              "beak" : {
+                "x" : 37.11551,
+                "y" : 17.940963
+              },
+              "duration" : 0.25,
+              "name" : "restWake"
+            }
+          ],
+          "id" : "barnSwallow.rest",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "takeoffPreparation" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 39.624105,
+                "y" : 26.516635999999998
+              },
+              "duration" : 0.25,
+              "name" : "takeoffCrouch"
+            },
+            {
+              "beak" : {
+                "x" : 40.683782000000001,
+                "y" : 16.353155000000001
+              },
+              "duration" : 0.20000000000000001,
+              "name" : "takeoffPush"
+            }
+          ],
+          "id" : "barnSwallow.takeoffPreparation",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "watch" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 38.819989999999997,
+                "y" : 24.014372999999999
+              },
+              "duration" : 0.14999999999999999,
+              "name" : "lookNear"
+            },
+            {
+              "beak" : {
+                "x" : 38.183782000000001,
+                "y" : 17.353155000000001
+              },
+              "duration" : 1.7,
+              "name" : "lookFar"
+            },
+            {
+              "beak" : {
+                "x" : 38.819989999999997,
+                "y" : 24.014372999999999
+              },
+              "duration" : 0.14999999999999999,
+              "name" : "lookNear"
+            }
+          ],
+          "id" : "barnSwallow.watch.far",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        }
+      },
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally"
+    },
+    "nightHeron" : {
+      "beakAnchors" : {
+        "alertHold" : [
+          45.230001999999999,
+          7.8003200000000001
+        ],
+        "alertRelax" : [
+          44.198036000000002,
+          18.098400999999999
+        ],
+        "alertRise" : [
+          45.104047000000001,
+          9.6826860000000003
+        ],
+        "lookFar" : [
+          45.193040000000003,
+          13.851799
+        ],
+        "lookNear" : [
+          45.688431000000001,
+          24.51567
+        ],
+        "restLower" : [
+          43.032435999999997,
+          25.210851000000002
+        ],
+        "restTuck" : [
+          16.653226,
+          29.421171999999999
+        ],
+        "restWake" : [
+          43.475093000000001,
+          12.520113
+        ],
+        "takeoffCrouch" : [
+          46.145155000000003,
+          25.545324000000001
+        ],
+        "takeoffPush" : [
+          46.022492,
+          12.740095999999999
+        ]
+      },
+      "clips" : {
+        "alert" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 45.104047000000001,
+                "y" : 9.6826860000000003
+              },
+              "duration" : 0.12,
+              "name" : "alertRise"
+            },
+            {
+              "beak" : {
+                "x" : 45.230001999999999,
+                "y" : 7.8003200000000001
+              },
+              "duration" : 1.1299999999999999,
+              "name" : "alertHold"
+            },
+            {
+              "beak" : {
+                "x" : 44.198036000000002,
+                "y" : 18.098400999999999
+              },
+              "duration" : 0.25,
+              "name" : "alertRelax"
+            }
+          ],
+          "id" : "nightHeron.alert",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "rest" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 43.032435999999997,
+                "y" : 25.210851000000002
+              },
+              "duration" : 0.25,
+              "name" : "restLower"
+            },
+            {
+              "beak" : {
+                "x" : 16.653226,
+                "y" : 29.421171999999999
+              },
+              "duration" : 3.5,
+              "name" : "restTuck"
+            },
+            {
+              "beak" : {
+                "x" : 43.475093000000001,
+                "y" : 12.520113
+              },
+              "duration" : 0.25,
+              "name" : "restWake"
+            }
+          ],
+          "id" : "nightHeron.rest",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "takeoffPreparation" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 46.145155000000003,
+                "y" : 25.545324000000001
+              },
+              "duration" : 0.25,
+              "name" : "takeoffCrouch"
+            },
+            {
+              "beak" : {
+                "x" : 46.022492,
+                "y" : 12.740095999999999
+              },
+              "duration" : 0.20000000000000001,
+              "name" : "takeoffPush"
+            }
+          ],
+          "id" : "nightHeron.takeoffPreparation",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "watch" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 45.688431000000001,
+                "y" : 24.51567
+              },
+              "duration" : 0.14999999999999999,
+              "name" : "lookNear"
+            },
+            {
+              "beak" : {
+                "x" : 45.193040000000003,
+                "y" : 13.851799
+              },
+              "duration" : 1.7,
+              "name" : "lookFar"
+            },
+            {
+              "beak" : {
+                "x" : 45.688431000000001,
+                "y" : 24.51567
+              },
+              "duration" : 0.14999999999999999,
+              "name" : "lookNear"
+            }
+          ],
+          "id" : "nightHeron.watch.far",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        }
+      },
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally"
+    },
+    "spottedDove" : {
+      "beakAnchors" : {
+        "alertHold" : [
+          41.514946000000002,
+          11.298667999999999
+        ],
+        "alertRelax" : [
+          39.457422000000001,
+          18.418848000000001
+        ],
+        "alertRise" : [
+          40.959800999999999,
+          12.599348000000001
+        ],
+        "lookFar" : [
+          40.490250000000003,
+          14.378386000000001
+        ],
+        "lookNear" : [
+          41.589210000000001,
+          23.415016999999999
+        ],
+        "restLower" : [
+          38.261130999999999,
+          23.880718999999999
+        ],
+        "restTuck" : [
+          18.509903000000001,
+          27.16995
+        ],
+        "restWake" : [
+          38.879761999999999,
+          14.614765
+        ],
+        "takeoffCrouch" : [
+          41.889803999999998,
+          23.834389999999999
+        ],
+        "takeoffPush" : [
+          42.418216999999999,
+          12.821751000000001
+        ]
+      },
+      "clips" : {
+        "alert" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 40.959800999999999,
+                "y" : 12.599348000000001
+              },
+              "duration" : 0.12,
+              "name" : "alertRise"
+            },
+            {
+              "beak" : {
+                "x" : 41.514946000000002,
+                "y" : 11.298667999999999
+              },
+              "duration" : 1.1299999999999999,
+              "name" : "alertHold"
+            },
+            {
+              "beak" : {
+                "x" : 39.457422000000001,
+                "y" : 18.418848000000001
+              },
+              "duration" : 0.25,
+              "name" : "alertRelax"
+            }
+          ],
+          "id" : "spottedDove.alert",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "rest" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 38.261130999999999,
+                "y" : 23.880718999999999
+              },
+              "duration" : 0.25,
+              "name" : "restLower"
+            },
+            {
+              "beak" : {
+                "x" : 18.509903000000001,
+                "y" : 27.16995
+              },
+              "duration" : 3.5,
+              "name" : "restTuck"
+            },
+            {
+              "beak" : {
+                "x" : 38.879761999999999,
+                "y" : 14.614765
+              },
+              "duration" : 0.25,
+              "name" : "restWake"
+            }
+          ],
+          "id" : "spottedDove.rest",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "takeoffPreparation" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 41.889803999999998,
+                "y" : 23.834389999999999
+              },
+              "duration" : 0.25,
+              "name" : "takeoffCrouch"
+            },
+            {
+              "beak" : {
+                "x" : 42.418216999999999,
+                "y" : 12.821751000000001
+              },
+              "duration" : 0.20000000000000001,
+              "name" : "takeoffPush"
+            }
+          ],
+          "id" : "spottedDove.takeoffPreparation",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "watch" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 41.589210000000001,
+                "y" : 23.415016999999999
+              },
+              "duration" : 0.14999999999999999,
+              "name" : "lookNear"
+            },
+            {
+              "beak" : {
+                "x" : 40.490250000000003,
+                "y" : 14.378386000000001
+              },
+              "duration" : 1.7,
+              "name" : "lookFar"
+            },
+            {
+              "beak" : {
+                "x" : 41.589210000000001,
+                "y" : 23.415016999999999
+              },
+              "duration" : 0.14999999999999999,
+              "name" : "lookNear"
+            }
+          ],
+          "id" : "spottedDove.watch.far",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        }
+      },
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally"
+    },
+    "treeSparrow" : {
+      "beakAnchors" : {
+        "alertHold" : [
+          41.002324999999999,
+          15.038707
+        ],
+        "alertRelax" : [
+          39.513596,
+          20.179684999999999
+        ],
+        "alertRise" : [
+          40.389555000000001,
+          15.584047999999999
+        ],
+        "lookFar" : [
+          39.960264000000002,
+          17.559685000000002
+        ],
+        "lookNear" : [
+          40.436599999999999,
+          24.991150000000001
+        ],
+        "restLower" : [
+          38.781235000000002,
+          24.924157999999998
+        ],
+        "restTuck" : [
+          19.380694999999999,
+          29.520486999999999
+        ],
+        "restWake" : [
+          38.751167000000002,
+          17.458085000000001
+        ],
+        "takeoffCrouch" : [
+          41.818159000000001,
+          26.768159000000001
+        ],
+        "takeoffPush" : [
+          42.889555000000001,
+          16.084047999999999
+        ]
+      },
+      "clips" : {
+        "alert" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 40.389555000000001,
+                "y" : 15.584047999999999
+              },
+              "duration" : 0.12,
+              "name" : "alertRise"
+            },
+            {
+              "beak" : {
+                "x" : 41.002324999999999,
+                "y" : 15.038707
+              },
+              "duration" : 1.1299999999999999,
+              "name" : "alertHold"
+            },
+            {
+              "beak" : {
+                "x" : 39.513596,
+                "y" : 20.179684999999999
+              },
+              "duration" : 0.25,
+              "name" : "alertRelax"
+            }
+          ],
+          "id" : "treeSparrow.alert",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "rest" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 38.781235000000002,
+                "y" : 24.924157999999998
+              },
+              "duration" : 0.25,
+              "name" : "restLower"
+            },
+            {
+              "beak" : {
+                "x" : 19.380694999999999,
+                "y" : 29.520486999999999
+              },
+              "duration" : 3.5,
+              "name" : "restTuck"
+            },
+            {
+              "beak" : {
+                "x" : 38.751167000000002,
+                "y" : 17.458085000000001
+              },
+              "duration" : 0.25,
+              "name" : "restWake"
+            }
+          ],
+          "id" : "treeSparrow.rest",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "takeoffPreparation" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 41.818159000000001,
+                "y" : 26.768159000000001
+              },
+              "duration" : 0.25,
+              "name" : "takeoffCrouch"
+            },
+            {
+              "beak" : {
+                "x" : 42.889555000000001,
+                "y" : 16.084047999999999
+              },
+              "duration" : 0.20000000000000001,
+              "name" : "takeoffPush"
+            }
+          ],
+          "id" : "treeSparrow.takeoffPreparation",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "watch" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 40.436599999999999,
+                "y" : 24.991150000000001
+              },
+              "duration" : 0.14999999999999999,
+              "name" : "lookNear"
+            },
+            {
+              "beak" : {
+                "x" : 39.960264000000002,
+                "y" : 17.559685000000002
+              },
+              "duration" : 1.7,
+              "name" : "lookFar"
+            },
+            {
+              "beak" : {
+                "x" : 40.436599999999999,
+                "y" : 24.991150000000001
+              },
+              "duration" : 0.14999999999999999,
+              "name" : "lookNear"
+            }
+          ],
+          "id" : "treeSparrow.watch.far",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        }
+      },
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally"
+    }
+  },
+  "poseClock" : "owningBehaviorSimulationAge",
   "schemaVersion" : 2,
   "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt}.swift",
   "speciesFrames" : {
@@ -131,7 +850,63 @@
       "allopreenGive2",
       "allopreenReceive0",
       "allopreenReceive1",
-      "allopreenReceive2"
+      "allopreenReceive2",
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
+    ],
+    "nightHeron" : [
+      "stand",
+      "breathe",
+      "blink",
+      "preen0",
+      "preen1",
+      "land0",
+      "land1",
+      "land2",
+      "fly0",
+      "fly1",
+      "fly2",
+      "fly3",
+      "fly4",
+      "fly5",
+      "fly6",
+      "fly7",
+      "idle0",
+      "idle1",
+      "idle2",
+      "stretch",
+      "shake",
+      "poop0",
+      "poop1",
+      "cling0",
+      "cling1",
+      "peck0",
+      "peck1",
+      "glide0",
+      "glide1",
+      "glide2",
+      "bank0",
+      "bank1",
+      "bank2",
+      "bound",
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "spottedDove" : [
       "stand",
@@ -171,7 +946,17 @@
       "feedLook",
       "feedDown0",
       "feedDown1",
-      "feedLift"
+      "feedLift",
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "swinhoesWhiteEye" : [
       "stand",
@@ -253,7 +1038,17 @@
       "feedLook",
       "feedDown0",
       "feedDown1",
-      "feedLift"
+      "feedLift",
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ]
   }
 }

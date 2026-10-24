@@ -2,10 +2,7 @@ import Foundation
 import CoreGraphics
 
 public enum TravelTogetherBehavior {
-    public static let supportedSpecies:Set<SpeciesID> = [
-        .treeSparrow,.barnSwallow,.spottedDove,.lightVentedBulbul,
-        .azureWingedMagpie,.blackCollaredStarling
-    ]
+    public static let supportedSpecies:Set<SpeciesID> = Set(SpeciesBehaviorProfile.species(for:.travelTogether))
 }
 
 /// An encounter between two ordinary flights, preserving both original landings.

@@ -126,6 +126,12 @@ public enum BehaviorStress {
             public let source:String
             public let reason:String
             public let participants:[UInt64]
+            /// Optional for compatibility with M5n reports; not part of hashes.
+            public let sideHop:SideHopDiagnostic?
+            public var matchesM5nSideHopFailure:Bool {
+                sequence==396 && runID==183 && behavior=="sideHop" && source=="automatic" &&
+                    reason=="targetInvalid" && participants==[27] && abs(simulationTime-734.1)<0.000001
+            }
         }
         public internal(set) var byBehavior:[String:Int]=[:]
         public internal(set) var samples:[Sample]=[]
@@ -176,6 +182,13 @@ public enum BehaviorStress {
         return Runner(configuration).run()
     }
 
+    /// Fixed 160 s warmup plus 575 s active covers the historical 734.1 s
+    /// failure without running the remaining 3025 active seconds. Preserve the
+    /// same commands, seed, residents, displays, sampling, and finite drain.
+    public static var m5nSideHopConfiguration:Configuration {
+        Configuration(seconds:575,birds:12,displays:2,seed:73,autonomous:true)
+    }
+
     /// Incremental accounting deliberately retains only currently open runs.
     /// Run IDs increase strictly, so a terminal absent from open is invalid
     /// without retaining the entire terminal history.
@@ -193,7 +206,8 @@ public enum BehaviorStress {
         func check(_ name:String,_ condition:Bool) {if !condition {violations[name,default:0]+=1}}
         private func hash(_ value:UInt64,into digest:inout UInt64) {digest=(digest ^ value) &* 1099511628211}
         private func hash(_ value:String,into digest:inout UInt64) {for byte in value.utf8 {hash(UInt64(byte),into:&digest)}; hash(255,into:&digest)}
-        func observe(_ event:BehaviorEvent) {
+        func observe(_ event:BehaviorEvent) {observe(event,sideHop:nil)}
+        func observe(_ event:BehaviorEvent,sideHop:SideHopDiagnostic?) {
             check("eventSequence",event.sequence==sequence+1 && event.time.isFinite); sequence=event.sequence
             metrics.events+=1
             hash(event.sequence,into:&eventHash); hash(event.time.bitPattern,into:&eventHash)
@@ -225,7 +239,7 @@ public enum BehaviorStress {
                     if failures.samples.count<32 {
                         failures.samples.append(FailureDiagnostics.Sample(sequence:event.sequence,simulationTime:event.time,
                             runID:event.runID?.rawValue,behavior:event.kind?.rawValue ?? "unknown",source:event.source.rawValue,
-                            reason:event.reason?.rawValue ?? "unspecified",participants:event.participants.map(\.rawValue)))
+                            reason:event.reason?.rawValue ?? "unspecified",participants:event.participants.map(\.rawValue),sideHop:sideHop))
                     } else {failures.omittedSamples+=1}
                 }
                 check("noTimeouts",event.reason != .timedOut)
@@ -352,6 +366,9 @@ public enum BehaviorStress {
         var settingsBeforeFood:BirdSettings?
         var moving=false, removed=false, sweep=false
         var sampleTick=0
+        // Runtime detaches before its terminal callback. Keep only live hop
+        // executions so their latched, pre-cancel evidence is still available.
+        var sideHops:[BehaviorRunID:SideHopExecution]=[:]
 
         init(_ configuration:Configuration) {
             config=configuration
@@ -390,7 +407,14 @@ public enum BehaviorStress {
             // remaining residents cover the catalog in its stable content order.
             species=[.treeSparrow,.treeSparrow]+settings.catalog.species.map(\.id)
             engine.populationEnabled=false; engine.ambientEnabled=false
-            engine.eventObserver={ [weak auditor] event in auditor?.observe(event) }
+            engine.eventObserver={ [weak self] event in self?.observe(event) }
+        }
+        func observe(_ event:BehaviorEvent) {
+            if event.type == .started,let id=event.runID,
+               let hop=engine.runtime.runs[id]?.execution as? SideHopExecution {sideHops[id]=hop}
+            let hop=event.runID.flatMap{sideHops[$0]}
+            auditor.observe(event,sideHop:event.type == .failed ? hop?.diagnostic:nil)
+            if [.completed,.cancelled,.failed].contains(event.type),let id=event.runID {sideHops.removeValue(forKey:id)}
         }
         func measured<T>(_ name:String,_ body:()->T) -> T {
             let begin=DispatchTime.now().uptimeNanoseconds

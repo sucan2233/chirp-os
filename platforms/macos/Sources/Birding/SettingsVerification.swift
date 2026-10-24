@@ -394,7 +394,7 @@ enum SettingsVerification {
                 d.language=language;w.relocalize();w.tabs.selectTabViewItem(at:2)
                 let suffix=language == .chinese ? "zh":"en"
                 let previews:[(kind:BehaviorKind,button:NSButton,message:String)] = [
-                    (.watch,w.previewWatchButton,w.t("正在预览留意鼠标：观察朝向、站立和眨眼；小鸟停稳即可，鼠标可以远离。","Previewing observation: watch facing, standing and blinking on a settled bird, even far from the pointer.")),
+                    (.watch,w.previewWatchButton,w.t("正在预览留意鼠标：四种专用鸟显示观察姿态，其余保留原表现；小鸟停稳即可，鼠标可以远离。","Previewing observation: dedicated poses for the four supported species, existing poses for others. A settled bird can be far from the pointer.")),
                     (.alert,w.previewAlertButton,w.t("正在预览短暂警觉：小鸟保持停栖，安静后恢复；无需把鼠标移近。","Previewing brief alertness: the bird stays perched and settles when quiet; no need to move the pointer closer."))]
                 for preview in previews {
                     let origin=bird.position,revision=bird.motionRevision,sequence=d.engine.events.last?.sequence

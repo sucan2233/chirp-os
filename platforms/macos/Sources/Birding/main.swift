@@ -24,6 +24,14 @@ if let path=argument("--replay-behavior") {
 }
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
+if let path = argument("--export-pose-previews") {
+    do {try BirdArt.exportPosePreviews(to:URL(fileURLWithPath:path));exit(0)}
+    catch {fputs("Pose preview export failed: \(error)\n",stderr);exit(1)}
+}
+if let path = argument("--export-species-support") {
+    do {try BirdArt.exportSupport(to:URL(fileURLWithPath:path));exit(0)}
+    catch {fputs("Support export failed: \(error)\n",stderr);exit(1)}
+}
 if let path = argument("--export-shared") {
     do { try BirdArt.exportShared(to:URL(fileURLWithPath:path)); exit(0) }
     catch { fputs("Shared export failed: \(error)\n",stderr); exit(1) }
@@ -49,6 +57,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification:Notification) {
         if let path = argument("--verify-updates") { UpdateVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-ground") { GroundVerification.run(to:URL(fileURLWithPath:path)); return }
+        if let path = argument("--verify-m6-content") {
+            do {
+                let folder=URL(fileURLWithPath:path)
+                try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+                var checks:[String:Bool]=[:]
+                try M6ContentVerification.run(into:&checks,folder:folder)
+                let passed=checks.values.allSatisfy{$0}
+                saveJSON(["passed":passed,"checks":checks],to:folder.appendingPathComponent("report.json"))
+                print("M6 content: \(passed ? "PASS":"FAIL") — \(checks.count) checks")
+                exit(passed ? 0:1)
+            } catch {print(error);exit(1)}
+        }
         if let path = argument("--verify-birds") { ExpandedVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-settings") { SettingsVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--fixture") {

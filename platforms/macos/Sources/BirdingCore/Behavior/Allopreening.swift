@@ -2,7 +2,7 @@ import Foundation
 import CoreGraphics
 
 public enum AllopreeningBehavior {
-    public static let supportedSpecies:Set<SpeciesID> = [.barnSwallow,.swinhoesWhiteEye]
+    public static let supportedSpecies:Set<SpeciesID> = Set(SpeciesBehaviorProfile.species(for:.allopreening))
     public static let contactSeparation:CGFloat = 24
 }
 

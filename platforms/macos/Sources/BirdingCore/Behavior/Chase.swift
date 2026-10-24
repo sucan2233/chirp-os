@@ -2,10 +2,7 @@ import Foundation
 import CoreGraphics
 
 public enum ChaseBehavior {
-    public static let supportedSpecies:Set<SpeciesID> = [
-        .treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,
-        .azureWingedMagpie,.blackCollaredStarling
-    ]
+    public static let supportedSpecies:Set<SpeciesID> = Set(SpeciesBehaviorProfile.species(for:.chase))
 }
 
 /// Two existing residents use the SAME closed path and speed. Their different

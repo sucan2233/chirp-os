@@ -34,7 +34,8 @@ enum AttentionVerification {
                 d.updateHover(now:Double(step),at:point);hit = hit && d.hoveredBird === bird
                 try SettingsVerification.snapshot(window,to:folder.appendingPathComponent("attention-\(action.rawValue)-\(state.frameName).png"))
             }
-            checks["\(action.rawValue)ActualStandAndBlinkLayers"]=started && seen==["stand","blink"] && layerMatches
+            let expected:Set<String>=action == .watch ? ["lookNear","lookFar"]:["alertRise","alertHold","alertRelax"]
+            checks["\(action.rawValue)ActualEnhancedPoseLayers"]=started && seen==expected && layerMatches
             checks["\(action.rawValue)TurnsAndPreservesFootAndModelFacing"]=started && turned && !bird.facingRight && bird.position==origin
             checks["\(action.rawValue)VisiblePixelsHitAndHover"]=started && hit
             checks["\(action.rawValue)ReleasesLeaseAfterCompletion"]=started && d.engine.activeRunCount==0 && d.engine.leasedBirdCount==0

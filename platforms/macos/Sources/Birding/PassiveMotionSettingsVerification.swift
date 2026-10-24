@@ -168,7 +168,7 @@ enum PassiveMotionSettingsVerification {
     }
     private static func previews(_ w:SpeciesSettingsWindow) -> [(kind:BehaviorKind,button:NSButton,message:String)] {
         [(.sideHop,w.previewSideHopButton,w.t("正在预览小跳让路，小鸟会沿当前边缘挪开一步。","Previewing a short hop along the current ledge.")),
-         (.takeoffPreparation,w.previewTakeoffPreparationButton,w.t("正在预览起飞准备，小鸟会朝向目标、展翅后出发。","Previewing takeoff preparation: face the target, open wings, then depart."))]
+         (.takeoffPreparation,w.previewTakeoffPreparationButton,w.t("正在预览起飞准备：专用鸟会下蹲、蹬伸，其余保留原表现；点击可立即换位。","Previewing takeoff preparation: dedicated crouch/push poses, existing poses for other species; clicks relocate immediately."))]
     }
     private static func checkRejections(_ w:SpeciesSettingsWindow,reason:BehaviorReason?,suffix:String,checks:inout [String:Bool]) {
         let d=w.desktop

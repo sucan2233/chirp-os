@@ -143,7 +143,7 @@ enum PassiveMotionVerification {
             try record("completed")
             checks[prefix+"PreviewNeverChangesPopulation"]=started.accepted && populationStable && samePopulation()
             checks[prefix+"RealFramesAndLayers"]=started.accepted && rendered &&
-                (kind == .sideHop ? Set(["stand","land0","land1","land2"]).isSubset(of:observed):Set(["stand","fly0"]).isSubset(of:observed))
+                (kind == .sideHop ? Set(["stand","land0","land1","land2"]).isSubset(of:observed):Set(["takeoffCrouch","takeoffPush"]).isSubset(of:observed))
             checks[prefix+"VisiblePixelsHitAndHover"]=started.accepted && !trajectory.isEmpty && hit
             checks[prefix+"FootAnchorMotion"]=started.accepted && geometry && sawAir &&
                 (kind == .sideHop ? sawTranslation && sawRise && sawLanding && bird.state == .perched &&

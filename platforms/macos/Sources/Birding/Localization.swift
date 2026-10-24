@@ -5,6 +5,14 @@ enum AppLanguage: String {
     case chinese = "zh", english = "en"
     func text(_ zh:String,_ en:String) -> String { self == .chinese ? zh : en }
     var switchTitle: String { self == .chinese ? "English" : "中文" }
+    /// Keep settings help and preview requirements in the product permission order.
+    func supportedSpeciesNames(for kind:BehaviorKind) -> String {
+        SpeciesBehaviorProfile.species(for:kind).map { name($0) }
+            .joined(separator:text("、",", "))
+    }
+    var poseSpeciesNames:String {
+        SpeciesBehaviorProfile.poseSpecies.map { name($0) }.joined(separator:text("、",", "))
+    }
     func name(_ id:SpeciesID) -> String {
         if let p = SpeciesCatalog.standard.species.first(where: { $0.id == id }), let en = p.englishName { return text(p.name,en) }
         switch id {
