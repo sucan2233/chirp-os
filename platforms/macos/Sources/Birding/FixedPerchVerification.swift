@@ -14,7 +14,7 @@ enum FixedPerchVerification {
         do {
             checks["fixedPerchNativeDefaultEnabledWithNoAnchors"]=h.d.settings.fixedPerchesEnabled && h.d.settings.fixedPerches.isEmpty
             try h.verifyArt(into:&checks)
-            for species in [SpeciesID.barnSwallow,.swinhoesWhiteEye] {try h.complete(species,into:&checks)}
+            for species in [SpeciesID.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul] {try h.complete(species,into:&checks)}
             for resting in [false,true] {
                 try h.click(resting:resting,into:&checks)
                 for cause in ["remove","move","disable","window-change","screen-change","parents"] {
@@ -385,6 +385,7 @@ enum FixedPerchVerification {
             checks[prefix+"RenderingDoesNotIntegrateMotion"]=accepted && birds.map(\.position)==feet && birds.map(\.stateTime)==ages && birds.map(\.motionRevision)==revisions
             var flew=false,landingFrames=Set<String>(),firstRest:Double?,paused=false,pausedSeconds=0.0
             var footFixed=true,woodContact=true,leaseHeld=true,restTicks=0,captured=Set<String>(),inputOK=false
+            var bodyClear=true,landingArea:CGRect?
             for _ in 0..<20*60 {
                 if !accepted {break}
                 advance();try record("tick")
@@ -393,6 +394,16 @@ enum FixedPerchVerification {
                 if bird.state == .landing {landingFrames.insert(bird.frameName)}
                 if bird.state == .perched,let perch=activePerch {
                     if firstRest==nil {firstRest=d.engine.time}
+                    if species == .lightVentedBulbul {
+                        let scale=d.spriteScale(for:bird)
+                        let area=Geometry.landingFootprint(at:perch.foot,scale:scale)
+                            .insetBy(dx:-8*scale,dy:-8*scale).union(perch.rect)
+                        landingArea=area
+                        bodyClear = bodyClear && display.contains(area) && work.contains(area) &&
+                            abs(scale-d.scale*bird.profile.relativeScale)<1e-8 &&
+                            d.engine.renderSnapshot().first?.scale==scale &&
+                            abs(perch.rect.width-128*d.scale)<0.001 && abs(perch.rect.height-24*d.scale)<0.001
+                    }
                     footFixed = footFixed && Geometry.distance(bird.position,perch.foot)<0.001 && bird.fraction==0.5
                     woodContact = woodContact && centerFootTouchesWood(perch,bird:bird)
                     if d.engine.behavior(of:bird) == .fixedPerchVisit {
@@ -413,6 +424,9 @@ enum FixedPerchVerification {
             checks[prefix+"FliesLandsAndHoldsActualCenterFootForThreeSeconds"]=accepted && flew && landingFrames==Set(["land0","land1","land2"]) &&
                 restTicks>=180 && heldSeconds+1e-9>=3 && heldSeconds<=3+2*dt && footFixed && leaseHeld
             checks[prefix+"ActualRenderedFootTouchesOpaqueWoodAtAlphaUpperEdge"]=accepted && firstRest != nil && woodContact
+            if species == .lightVentedBulbul {
+                checks[prefix+"M6cBodyClearanceUsesActualSpeciesScaleAndUnchangedBranch"]=accepted && firstRest != nil && bodyClear && landingArea != nil
+            }
             checks[prefix+"CompletesOnceAndStaysPerchedWithoutLease"]=accepted && ends.count==1 && ends.first?.type == .completed &&
                 resourcesClear && activeBird?.state == .perched && activeBird.map{d.engine.behavior(of:$0)==nil && !$0.needsDestination} == true
             checks[prefix+"ActualBirdArtLayersAnchorsAndContinuousVisit"]=accepted && layersOK && anchorsOK && continuous && populationOK && pointerOK
@@ -427,7 +441,9 @@ enum FixedPerchVerification {
                 roots.count==perchLayers.count && zip(roots,perchLayers).allSatisfy{$0 === $1} && resourcesClear && birds.map(\.position)==finalFeet
             try record("ordinary-idle",crop:true)
             summarize(["accepted":accepted,"flightObserved":flew,"landingFrames":landingFrames.sorted(),"holdSecondsExcludingPause":heldSeconds,
-                "activeRestSamples":restTicks,"pauseSeconds":pausedSeconds])
+                "activeRestSamples":restTicks,"pauseSeconds":pausedSeconds,
+                "scope":species == .lightVentedBulbul ? "M6c":"legacy",
+                "landingBodyClearance":landingArea.map{NSStringFromRect($0)} ?? "legacy policy"])
         }
         func pauseEvidence() throws -> Bool {
             d.paused=true;view.updateSprites()

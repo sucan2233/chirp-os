@@ -1,11 +1,16 @@
 import AppKit
 import BirdingCore
 
-/// M6a/b only. The caller owns CLI registration and runs this after implementation.
+/// M6a/b historical coverage plus M6c. The caller owns CLI registration/execution.
 /// Uses installed fixture birds, isolated defaults and production commands/layers;
 /// never starts DesktopController, loads preferences, schedules timers or saves settings.
 enum M6ContentVerification {
-    private static let species:[SpeciesID]=[.treeSparrow,.spottedDove,.barnSwallow,.nightHeron]
+    private static let m6bSpecies:[SpeciesID]=[.treeSparrow,.spottedDove,.barnSwallow,.nightHeron]
+    private static let m6cSpecies:[SpeciesID]=[.lightVentedBulbul,.redWhiskeredBulbul,.chineseBlackbird,
+        .magpieRobin,.swinhoesWhiteEye,.azureWingedMagpie,.redBilledLeiothrix,.littleOwl]
+    private static let species:[SpeciesID]=m6bSpecies+m6cSpecies
+    private static let peekSpecies:[SpeciesID]=[.lightVentedBulbul,.magpieRobin]
+    private static let peekNames=["peekLower","peekLook","peekRecover"]
     private static let names=["lookNear","lookFar","alertRise","alertHold","alertRelax",
                               "restLower","restTuck","restWake","takeoffCrouch","takeoffPush"]
     private static let kinds:[BehaviorKind]=[.watch,.alert,.rest,.takeoffPreparation]
@@ -15,12 +20,18 @@ enum M6ContentVerification {
         let output=folder.appendingPathComponent("m6-content-"+UUID().uuidString,isDirectory:true)
         try FileManager.default.createDirectory(at:output,withIntermediateDirectories:true)
         checks["m6ContentCompleted"]=false
-        var evidence=[[String:Any]](),allPosePixels=Set<Data>()
+        var evidence=[[String:Any]](),allPosePixels=Set<Data>(),historicalPixels=Set<Data>(),peekPixels=Set<Data>()
         defer {
             let own=checks.filter{$0.key.hasPrefix("m6")}
-            saveJSON(["scope":"M6a/M6b; no M6c/M7 support expansion",
+            saveJSON(["scope":"M6a/M6b historical checks retained; M6c twelve-species poses and two-species edge peeking",
+                      "historicalScope":["poseSpecies":m6bSpecies.map(\.rawValue),"independentPoseFrames":40,"commonFrames":34],
+                      "currentScope":["poseSpecies":species.map(\.rawValue),"independentPoseFrames":120,
+                                      "peekSpecies":peekSpecies.map(\.rawValue),"peekFrames":6],
+                      "wingBoundaryScope":["enforcedPoseSpecies":m6cSpecies.map(\.rawValue),"poseFrames":80,
+                                           "enforcedPeekSpecies":peekSpecies.map(\.rawValue),"peekFrames":6,
+                                           "diagnosticOnlySpecies":m6bSpecies.map(\.rawValue),"diagnosticOnlyFrames":40],
                       "passed":!own.isEmpty && own.values.allSatisfy{$0},"checks":own,"frames":evidence,
-                      "limits":"Synthetic window geometry and native CALayer rendering. Physical display changes, sleep/wake and long-running desktop use require separate acceptance."],
+                      "limits":"Synthetic window geometry and native CALayer rendering. Historical M6b boundary counts are diagnostic only; historical frames are not certified clear of boundary contact. Physical display changes, sleep/wake and long-running desktop use require separate acceptance."],
                      to:output.appendingPathComponent("report.json"))
         }
         checkPermissions(into:&checks)
@@ -30,6 +41,9 @@ enum M6ContentVerification {
         for id in species {
             let art=fixture.desktop.arts[id]!
             try checkArt(art,into:&checks,evidence:&evidence,allPosePixels:&allPosePixels,folder:output)
+            if m6bSpecies.contains(id) {
+                for name in names {historicalPixels.insert(try Raster(art.frames[name]!).pixels)}
+            }
             for scale in scales {for right in [true,false] {
                 try preview(art,scale:scale,right:right,folder:output)
                 for kind in kinds {
@@ -43,7 +57,16 @@ enum M6ContentVerification {
                 checkClick(fixture,species:id,frame:name,into:&checks)
             }
         }
-        checks["m6FortyIndependentNativePoseImages"]=allPosePixels.count==40
+        checks["m6FortyIndependentNativePoseImages"]=historicalPixels.count==40
+        checks["m6cOneHundredTwentyIndependentNativePoseImages"]=allPosePixels.count==120
+        for id in peekSpecies {
+            let art=fixture.desktop.arts[id]!
+            try checkArt(art,frameNames:peekNames,into:&checks,evidence:&evidence,allPosePixels:&peekPixels,folder:output)
+            for scale in scales {for right in [true,false] {
+                try preview(art,frameNames:peekNames,scale:scale,right:right,folder:output)
+            }}
+        }
+        checks["m6cSixIndependentPeekImagesDistinctFromPoses"]=peekPixels.count==6 && peekPixels.isDisjoint(with:allPosePixels)
         for kind in kinds {checkLifecycle(fixture,kind:kind,into:&checks)}
         fixture.desktop.engine.handle(.cancelAmbient(.shutdown))
         checks["m6FixtureNoTimersMonitorsOrPersistence"]=fixture.desktop.timer==nil &&
@@ -64,21 +87,40 @@ enum M6ContentVerification {
             (.allopreening,[.barnSwallow,.swinhoesWhiteEye]),
             (.fixedPerchVisit,[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.redWhiskeredBulbul,.magpieRobin,.redBilledLeiothrix]),
             (.foodTrayVisit,[.treeSparrow,.spottedDove])]
+        let additions:[BehaviorKind:[SpeciesID]]=[.edgePeek:peekSpecies,.fixedPerchVisit:[.lightVentedBulbul],
+            .chase:[.redWhiskeredBulbul],.travelTogether:[.redWhiskeredBulbul]]
         for (kind,expected) in legacy {
-            checks["m6LegacyPermissionOrder-"+kind.rawValue]=SpeciesBehaviorProfile.species(for:kind)==expected &&
-                SpeciesID.allCases.allSatisfy {SpeciesBehaviorProfile.profile(for:$0).allows(kind)==expected.contains($0)}
+            let actual=SpeciesBehaviorProfile.species(for:kind),current=expected+(additions[kind] ?? [])
+            // Historical membership/order remains a prefix; only the explicit
+            // M6c additions may follow it. No M6b acceptance is discarded.
+            checks["m6LegacyPermissionOrder-"+kind.rawValue]=Array(actual.prefix(expected.count))==expected &&
+                expected.allSatisfy{SpeciesBehaviorProfile.profile(for:$0).allows(kind)}
+            checks["m6cExactPermissionExpansion-"+kind.rawValue]=actual==current &&
+                SpeciesID.allCases.allSatisfy {SpeciesBehaviorProfile.profile(for:$0).allows(kind)==current.contains($0)}
         }
         checks["m6LegacyAmbientFlockOrder"]=SpeciesBehaviorProfile.ambientFlockSpecies ==
             [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]
-        checks["m6ExactlyFourSpeciesTenOrderedPoseNames"]=SpeciesBehaviorProfile.poseSpecies==species &&
+        checks["m6ExactlyFourSpeciesTenOrderedPoseNames"]=Array(SpeciesBehaviorProfile.poseSpecies.prefix(4))==m6bSpecies &&
             PoseClip.frameNames==names && BirdArt.poseNames==names && Set(names).count==10
+        checks["m6cExactlyTwelvePoseSpeciesAndThreePeekNames"]=SpeciesBehaviorProfile.poseSpecies==species &&
+            species.count==12 && SpeciesBehaviorProfile.peekSpecies==peekSpecies && BirdArt.peekNames==peekNames
+        checks["m6LegacyCommonThirtyFourFramesRetained"]=BirdArt.names.count==34
+        for id in peekSpecies {
+            let clip=PoseClip.edgePeek(species:id)
+            checks["m6cPeekClipFramesTimingAndFoot-"+id.rawValue]=clip?.frames.map(\.name)==peekNames &&
+                clip?.frames.map(\.duration)==[0.32,0.96,0.32] && clip?.foot==PoseClip.footAnchor && clip?.maximumLoops==1
+        }
         for id in SpeciesID.allCases {
             let old = BirdArt.names +
                 ([SpeciesID.barnSwallow,.swinhoesWhiteEye].contains(id) ? BirdArt.allopreeningNames:[]) +
                 ([SpeciesID.treeSparrow,.spottedDove].contains(id) ? BirdArt.feedingNames:[])
             let extra=species.contains(id) ? names:[]
-            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=BirdArt.names(for:id)==old+extra &&
+            let peek=peekSpecies.contains(id) ? peekNames:[]
+            let profile=SpeciesBehaviorProfile.profile(for:id)
+            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=BirdArt.names(for:id)==old+extra+peek &&
                 SpeciesBehaviorProfile.profile(for:id).poseFrameNames==extra
+            checks["m6cPeekRequiredFrames-"+id.rawValue]=Set(profile.requiredFrames(for:.edgePeek)) ==
+                BehaviorDefinitions.definition(for:.edgePeek).requiredFrames.union(peek)
         }
     }
 
@@ -100,6 +142,19 @@ enum M6ContentVerification {
         }
         func alpha(_ x:Int,_ y:Int) -> Bool {bytes[y*image.bytesPerRow+x*4+3]>0}
         func logicalAlpha(_ x:Int,_ y:Int) -> Bool {alpha(x*image.width/48,y*image.height/48)}
+        /// Count contact in the semantic body, including both raised wings.
+        /// Contact can reveal clipping but does not prove source paths exceed
+        /// the canvas. M6c requires a transparent margin; historical M6b frames
+        /// retain diagnostic counts. Lower tail carriage is excluded.
+        var wingBoundaryAlphaCount:Int {
+            let rows=min(image.height,Int(ceil(CGFloat(image.height)*32/48)))
+            var count=(0..<image.width).filter{alpha($0,0)}.count
+            for y in 1..<rows {
+                if alpha(0,y) {count+=1}
+                if alpha(image.width-1,y) {count+=1}
+            }
+            return count
+        }
         var toes:Data {
             var data=Data()
             for y in 0..<image.height where CGFloat(y)*48/CGFloat(image.height)>=38 {
@@ -111,15 +166,16 @@ enum M6ContentVerification {
         }
     }
 
-    private static func checkArt(_ art:BirdArt,into checks:inout [String:Bool],evidence:inout [[String:Any]],allPosePixels:inout Set<Data>,folder:URL) throws {
-        let prefix="m6Art-"+art.species.rawValue+"-"
-        let old=try BirdArt.names(for:art.species).filter{!names.contains($0)}.map {name -> Data in
+    private static func checkArt(_ art:BirdArt,frameNames:[String]=M6ContentVerification.names,into checks:inout [String:Bool],evidence:inout [[String:Any]],allPosePixels:inout Set<Data>,folder:URL) throws {
+        let peeking=frameNames==peekNames,prefix=(peeking ? "m6cPeekArt-":"m6Art-")+art.species.rawValue+"-"
+        let wingBoundaryEnforced=peeking ? peekSpecies.contains(art.species):m6cSpecies.contains(art.species)
+        let old=try BirdArt.names(for:art.species).filter{!frameNames.contains($0)}.map {name -> Data in
             guard let image=art.frames[name] else {throw failure("Missing legacy frame \(name)")}
             return try Raster(image).pixels
         }
         var unique=Set<Data>(),toes:Data?,parts=[[CGImage]]()
-        var independent=true,hit=true,density=true,anchors=true,feet=true,semantic=true
-        for name in names {
+        var independent=true,hit=true,density=true,anchors=true,feet=true,semantic=true,wings=true
+        for name in frameNames {
             guard let image=art.frames[name],let authored=DetailedBirdArt.poseImage(name,species:art.species),
                   let sourceAnchor=DetailedBirdArt.poseBillAnchor(name,species:art.species),
                   let stand=art.frames["stand"] else {throw failure("Missing M6 artwork: \(art.species.rawValue)/\(name)")}
@@ -139,6 +195,8 @@ enum M6ContentVerification {
                 layers.append(layer)
             }
             let foot=try Raster(layers[1])
+            let boundaryAlpha=try Raster(layers[0]).wingBoundaryAlphaCount
+            wings = wings && boundaryAlpha==0
             if let toes {feet = feet && toes==foot.toes} else {toes=foot.toes}
             feet = feet && foot.bytes.contains(where:{$0>0})
             for y in 0..<48 {for x in 0..<48 {
@@ -148,15 +206,22 @@ enum M6ContentVerification {
             parts.append([image]+layers)
             evidence.append(["species":art.species.rawValue,"frame":name,"nativeSize":[image.width,image.height],
                              "sourceBillAnchor":[sourceAnchor.x,sourceAnchor.y],"clipBillAnchor":[anchor.x,anchor.y],
-                             "anchorDistance":error,"billMayBeHidden":name=="restTuck"])
+                             "anchorDistance":error,"billMayBeHidden":name=="restTuck",
+                             "bodyWingBoundaryAlphaCount":boundaryAlpha,
+                             "wingBoundaryEnforced":wingBoundaryEnforced,
+                             "wingBoundaryRegion":"Native top row and left/right columns above logical y=32; lower tail excluded."])
         }
-        checks[prefix+"TenIndependentFramesNotLegacyAliases"]=independent && unique.count==10
+        checks[prefix+(peeking ? "ThreeIndependentFramesNotLegacyAliases":"TenIndependentFramesNotLegacyAliases")]=independent && unique.count==frameNames.count
         checks[prefix+"ProductionSpriteMatchesAuthoredArtAndSemanticLayersExist"]=semantic
         checks[prefix+"NativeDensityMatchesExistingSpecies"]=density
-        checks[prefix+"FixedToesAcrossAllTenPoses"]=feet
+        checks[prefix+(peeking ? "FixedToesAcrossAllThreePoses":"FixedToesAcrossAllTenPoses")]=feet
         checks[prefix+"BillAnchorsMatchSourceWithin1eMinus5"]=anchors
         checks[prefix+"HitMasksMatchActualProductionAlpha"]=hit
-        try contactSheet(art,parts:parts,to:folder.appendingPathComponent(art.species.rawValue+"-contact-sheet.png"))
+        // This new margin requirement applies to the 80 M6c poses and six
+        // peek frames. Keep all 40 historical counts without relabelling a
+        // contacting frame as a pass or changing its frozen source pixels.
+        if wingBoundaryEnforced {checks[prefix+"WingsAndUpperBodyDoNotTouchCanvasBoundary"]=wings}
+        try contactSheet(art,frameNames:frameNames,parts:parts,to:folder.appendingPathComponent(art.species.rawValue+(peeking ? "-peek":"")+"-contact-sheet.png"))
     }
 
     private final class Fixture {
@@ -400,7 +465,11 @@ enum M6ContentVerification {
             }
             for identifier in ["perchActivitiesHelp","perchPreviewHelp","passiveMotionHelp"] {
                 let field=label(identifier)
-                checks["m6SettingsPoseSpeciesAndHelpFits-\(identifier)-\(suffix)"]=field?.stringValue.contains(language.poseSpeciesNames)==true &&
+                let speciesHelp=label("perchActivitiesHelp")?.stringValue ?? ""
+                let sameScope=identifier=="perchActivitiesHelp" ? field?.stringValue.contains(language.poseSpeciesNames)==true:
+                    field?.stringValue.contains(language.poseSupportReference)==true
+                checks["m6SettingsPoseSpeciesAndHelpFits-\(identifier)-\(suffix)"]=sameScope &&
+                    species.allSatisfy{speciesHelp.contains(language.name($0))} &&
                     (field.map{($0.cell?.cellSize(forBounds:$0.bounds).height ?? .infinity)<=$0.frame.height} ?? false)
             }
             let previewMessages:[(BehaviorKind,String)]=[
@@ -416,6 +485,7 @@ enum M6ContentVerification {
             _=f.install(.redWhiskeredBulbul);w.previewEdgePeek()
             checks["m6SettingsEdgePeekRejectionUsesProfile-"+suffix]=d.engine.events.last?.reason == .noSpecies &&
                 w.message.stringValue.contains(language.supportedSpeciesNames(for:.edgePeek))
+            checks["m6SettingsEdgePeekRejectionMessageFullyVisible-"+suffix]=EdgePeekSettingsVerification.messageIsFullyVisible(w.message)
             w.tabs.selectTabViewItem(at:2)
             scroll.contentView.scroll(to:CGPoint(x:0,y:870));scroll.reflectScrolledClipView(scroll.contentView)
             try SettingsVerification.snapshot(w.window!,to:folder.appendingPathComponent("pose-support-settings-"+suffix+".png"))
@@ -444,14 +514,15 @@ enum M6ContentVerification {
         context.translateBy(x:0,y:48);context.scaleBy(x:1,y:-1)
         context.draw(image,in:CGRect(x:0,y:0,width:48,height:48));context.restoreGState()
     }
-    private static func contactSheet(_ art:BirdArt,parts:[[CGImage]],to url:URL) throws {
-        let context=try bitmap(width:1320,height:1580)
+    private static func contactSheet(_ art:BirdArt,frameNames:[String],parts:[[CGImage]],to url:URL) throws {
+        let height=frameNames.count*150+80,context=try bitmap(width:1320,height:height)
         context.setFillColor(NSColor(calibratedWhite:0.12,alpha:1).cgColor)
-        context.fill(CGRect(x:0,y:0,width:1320,height:1580))
-        label(art.species.rawValue+" / M6b / actual sprite + authored semantic parts / 3x",x:20,y:22,in:context)
+        context.fill(CGRect(x:0,y:0,width:1320,height:height))
+        let stage=m6bSpecies.contains(art.species) ? "M6b historical":"M6c"
+        label(art.species.rawValue+" / "+stage+" / actual sprite + authored semantic parts / 3x",x:20,y:22,in:context)
         let headings=["production","body (incl. overlays)","feet / toes","head + neck","bill"]
         for (column,title) in headings.enumerated() {label(title,x:260+CGFloat(column)*210-70,y:45,in:context)}
-        for (row,name) in names.enumerated() {
+        for (row,name) in frameNames.enumerated() {
             let y=CGFloat(row)*150+180
             label(name,x:15,y:y-50,in:context)
             for column in 0..<5 {draw(parts[row][column],foot:CGPoint(x:260+CGFloat(column)*210,y:y),scale:3,right:true,in:context)}
@@ -460,14 +531,14 @@ enum M6ContentVerification {
         // claim that four flattened layers reconstruct the full painter order.
         try png(context,to:url)
     }
-    private static func preview(_ art:BirdArt,scale:CGFloat,right:Bool,folder:URL) throws {
+    private static func preview(_ art:BirdArt,frameNames:[String]=M6ContentVerification.names,scale:CGFloat,right:Bool,folder:URL) throws {
         let effective=scale*SpeciesCatalog.standard.profile(art.species).relativeScale
-        let rowHeight=max(120,Int(ceil(48*effective))+42),width=900,height=rowHeight*names.count+50
+        let rowHeight=max(120,Int(ceil(48*effective))+42),width=900,height=rowHeight*frameNames.count+50
         let context=try bitmap(width:width,height:height)
         context.setFillColor(NSColor(calibratedRed:0.09,green:0.13,blue:0.16,alpha:1).cgColor)
         context.fill(CGRect(x:0,y:0,width:width,height:height))
         label("\(art.species.rawValue) / \(scale)x user scale / \(right ? "right":"left") / original + occluded",x:16,y:22,in:context)
-        for (index,name) in names.enumerated() {
+        for (index,name) in frameNames.enumerated() {
             let y=CGFloat(index*rowHeight)+40+39*effective
             label(name,x:15,y:y-10,in:context)
             let foot=CGPoint(x:340,y:y),masked=CGPoint(x:680,y:y)
@@ -483,7 +554,8 @@ enum M6ContentVerification {
             context.setStrokeColor(NSColor.systemOrange.cgColor)
             context.strokeEllipse(in:CGRect(x:anchor.x-3,y:anchor.y-3,width:6,height:6))
         }
-        try png(context,to:folder.appendingPathComponent("\(art.species.rawValue)-\(scale)x-\(right ? "right":"left")-preview.png"))
+        let track=frameNames==peekNames ? "-peek":""
+        try png(context,to:folder.appendingPathComponent("\(art.species.rawValue)\(track)-\(scale)x-\(right ? "right":"left")-preview.png"))
     }
     /// Crop the real DesktopView root, retaining its sprite transform, mask and
     /// name label; this is the same CALayer rendering path as old native fixtures.

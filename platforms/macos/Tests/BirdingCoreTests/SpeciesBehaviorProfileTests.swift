@@ -2,19 +2,23 @@ import XCTest
 @testable import BirdingCore
 
 final class SpeciesBehaviorProfileTests:XCTestCase {
-    // M5n product lists are independent fixtures: M6c expansions must not leak
-    // into the M6a/b migration merely because another species has common frames.
+    // Literal M6c authorization, independent of the implementation. Existing
+    // entries retain their relative order; only the approved species are added.
     private let dedicated:[(BehaviorKind,[SpeciesID])] = [
-        (.edgePeek,[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel]),
-        (.chase,[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling]),
-        (.travelTogether,[.treeSparrow,.barnSwallow,.spottedDove,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling]),
+        (.edgePeek,[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel,.lightVentedBulbul,.magpieRobin]),
+        (.chase,[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling,.redWhiskeredBulbul]),
+        (.travelTogether,[.treeSparrow,.barnSwallow,.spottedDove,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling,.redWhiskeredBulbul]),
         (.allopreening,[.barnSwallow,.swinhoesWhiteEye]),
-        (.fixedPerchVisit,[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.redWhiskeredBulbul,.magpieRobin,.redBilledLeiothrix]),
+        (.fixedPerchVisit,[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.redWhiskeredBulbul,.magpieRobin,.redBilledLeiothrix,.lightVentedBulbul]),
         (.foodTrayVisit,[.treeSparrow,.spottedDove])
     ]
     private let flock:[SpeciesID] = [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,
         .lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]
-    private let poseSpecies:[SpeciesID] = [.treeSparrow,.spottedDove,.barnSwallow,.nightHeron]
+    private let poseSpecies:[SpeciesID] = [.treeSparrow,.spottedDove,.barnSwallow,.nightHeron,
+        .lightVentedBulbul,.redWhiskeredBulbul,.chineseBlackbird,.magpieRobin,
+        .swinhoesWhiteEye,.azureWingedMagpie,.redBilledLeiothrix,.littleOwl]
+    private let peekSpecies:[SpeciesID] = [.lightVentedBulbul,.magpieRobin]
+    private let peekFrames:[String] = ["peekLower","peekLook","peekRecover"]
     private let poseFrames = ["lookNear","lookFar","alertRise","alertHold","alertRelax",
         "restLower","restTuck","restWake","takeoffCrouch","takeoffPush"]
     private let generic:[BehaviorKind] = [.relocate,.pointerVisit,.rest,.preen,.socialGreeting,
@@ -71,8 +75,10 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         }
     }
 
-    func testPosePackageIsExactlyTenFramesForOnlyTheFourM6bSpecies() {
+    func testPosePackageIsExactlyTenFramesForOnlyTheTwelveAuthorizedSpecies() {
         XCTAssertEqual(SpeciesBehaviorProfile.poseSpecies,poseSpecies)
+        XCTAssertEqual(poseSpecies.count,12)
+        XCTAssertEqual(SpeciesID.allCases.filter{!poseSpecies.contains($0)}.count,34)
         XCTAssertEqual(PoseClip.frameNames,poseFrames)
         XCTAssertEqual(Set(poseFrames).count,10)
         for species in SpeciesID.allCases {
@@ -117,7 +123,7 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         let contactFrames:Set<String> = ["feedLook","feedDown0","feedDown1","feedLift",
             "allopreenGive0","allopreenGive1","allopreenGive2",
             "allopreenReceive0","allopreenReceive1","allopreenReceive2"]
-        let allFrames=commonFrames.union(contactFrames).union(poseFrames)
+        let allFrames=commonFrames.union(contactFrames).union(poseFrames).union(peekFrames)
         for species in SpeciesID.allCases {
             let audit=SpeciesSupportAudit(species:species,availableFrames:allFrames)
             XCTAssertEqual(audit.species,species)
@@ -137,6 +143,39 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
                 XCTAssertFalse(row.contentSupported)
                 XCTAssertFalse(row.missingFrames.isEmpty)
             }
+        }
+    }
+
+    func testDedicatedPeekRequirementsAndAuditRequireAllThreeFramesOnlyForTheTwoNewSpecies() throws {
+        let legacy:Set<String> = ["stand","idle0","idle1","idle2","land0","land1","land2"]
+        XCTAssertEqual(SpeciesBehaviorProfile.peekSpecies,peekSpecies)
+        XCTAssertEqual(SpeciesBehaviorProfile.peekFrameNames,peekFrames)
+        XCTAssertEqual(BehaviorDefinitions.definition(for:.edgePeek).requiredFrames,legacy)
+        for species in SpeciesID.allCases {
+            let profile=SpeciesBehaviorProfile.profile(for:species),enhanced=peekSpecies.contains(species)
+            XCTAssertEqual(profile.requiredFrames(for:.edgePeek),enhanced ? legacy.union(peekFrames):legacy)
+            for kind in BehaviorDefinitions.all.map(\.kind) where kind != .edgePeek {
+                XCTAssertEqual(profile.requiredFrames(for:kind),BehaviorDefinitions.definition(for:kind).requiredFrames,
+                    "Optional pose art must not become a new admission requirement: \(species), \(kind)")
+            }
+            let allowed=dedicated[0].1.contains(species)
+            for missing in peekFrames {
+                let available=legacy.union(peekFrames).subtracting([missing])
+                let audit=SpeciesSupportAudit(species:species,availableFrames:available)
+                let row=try XCTUnwrap(audit.behaviors.first{$0.kind == .edgePeek})
+                XCTAssertEqual(row.productAllowed,allowed)
+                XCTAssertEqual(row.missingFrames,enhanced ? [missing]:[])
+                XCTAssertEqual(row.contentSupported,allowed && !enhanced)
+                let decoded=try JSONDecoder().decode(SpeciesSupportAudit.self,from:JSONEncoder().encode(audit))
+                XCTAssertEqual(decoded.behaviors.first{$0.kind == .edgePeek}?.missingFrames,row.missingFrames)
+            }
+            let old=try XCTUnwrap(SpeciesSupportAudit(species:species,availableFrames:legacy).behaviors.first{$0.kind == .edgePeek})
+            XCTAssertEqual(old.missingFrames,enhanced ? peekFrames.sorted():[])
+            XCTAssertEqual(old.contentSupported,allowed && !enhanced)
+            let complete=try XCTUnwrap(SpeciesSupportAudit(species:species,
+                availableFrames:legacy.union(peekFrames)).behaviors.first{$0.kind == .edgePeek})
+            XCTAssertTrue(complete.missingFrames.isEmpty)
+            XCTAssertEqual(complete.contentSupported,allowed)
         }
     }
 

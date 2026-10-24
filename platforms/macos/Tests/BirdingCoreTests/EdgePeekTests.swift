@@ -5,6 +5,9 @@ final class EdgePeekTests:XCTestCase {
     private let display=CGRect(x:-1800,y:-600,width:3600,height:1800)
     private let host=Surface(id:171,pid:23,rect:CGRect(x:-900,y:500,width:1800,height:300))
     private let phases:[EdgePeekExecution.Phase]=[.approach,.observe,.returning]
+    private let legacySpecies:[SpeciesID] = [.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel]
+    private let newSpecies:[SpeciesID] = [.lightVentedBulbul,.magpieRobin]
+    private let peekFrames:Set<String> = ["peekLower","peekLook","peekRecover"]
 
     private func fraction(at x:CGFloat,on surface:Surface) -> CGFloat {
         (x-Geometry.perchX(0,rect:surface.rect))/(Geometry.perchX(1,rect:surface.rect)-Geometry.perchX(0,rect:surface.rect))
@@ -16,8 +19,9 @@ final class EdgePeekTests:XCTestCase {
         let e=BehaviorEngine(seed:739,settings:settings)
         e.populationEnabled=false;e.ambientEnabled=false;e.autonomousRouting=false
         let surface=custom ?? host
-        let frames=EdgePeekPlan.requiredFrames.union(["blink","breathe"])
-            .union((0...7).map{"fly\($0)"})
+        var frames:Set<String> = ["stand","idle0","idle1","idle2","land0","land1","land2","blink","breathe"]
+        frames.formUnion((0...7).map{"fly\($0)"})
+        if newSpecies.contains(species) {frames.formUnion(peekFrames)}
         e.updateWorld(BehaviorWorld(screens:[display],displays:[display],surfaces:[surface],scale:scale,
             pointer:CGPoint(x:-1700,y:-500),availableFrames:[species:frames]))
         let bird=Bird(position:.zero,fraction:0,profile:settings.catalog.profile(species),random:{0.5})
@@ -72,9 +76,9 @@ final class EdgePeekTests:XCTestCase {
         e.register(other);return other
     }
 
-    func testRoundTripForEverySupportedSpeciesBothEndpointsAndScales() throws {
-        XCTAssertEqual(EdgePeekExecution.supportedSpecies,[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel])
-        for species in EdgePeekExecution.supportedSpecies.sorted(by:{$0.rawValue<$1.rawValue}) {
+    func testLegacyFourSpeciesKeepTheirOriginalRoundTripAndIdleSequenceAtBothEndpointsAndScales() throws {
+        XCTAssertEqual(EdgePeekExecution.supportedSpecies,Set(legacySpecies+newSpecies))
+        for species in legacySpecies {
             let action=SpeciesBehavior.motion(species).action
             XCTAssertTrue(action == .peck || action == .probe)
             for right in [false,true] {
@@ -127,6 +131,185 @@ final class EdgePeekTests:XCTestCase {
                     terminal(e,run,.completed)
                     XCTAssertEqual(e.ecology(of:bird)?.cooldowns[.edgePeek],45)
                     advance(e,seconds:1);terminal(e,run,.completed)
+                }
+            }
+        }
+    }
+
+    func testTwoNewSpeciesUseDedicatedFramesAndRealRoundTripsAtBothEdgesAndThreeScales() throws {
+        for species in newSpecies {
+            for right in [false,true] {
+                for scale:CGFloat in [0.5,1,2] {
+                    for source:BehaviorSource in [.preview,.automatic] {
+                        let e=fixture(right:right,scale:scale,species:species),bird=e.birds[0]
+                        let id=try XCTUnwrap(e.id(of:bird)),origin=bird.position,fraction=bird.fraction
+                        let identity=ObjectIdentifier(bird),size=e.spriteScale(for:bird)
+                        e.perchPlanner.rhythms[id]?.quietTime=8
+                        var observations:[BehaviorObservation]=[]
+                        e.observationObserver={observations.append($0)}
+                        let run=try started(e.handle(.edgePeek(source))),peek=try execution(e,run)
+                        XCTAssertEqual(bird.position,origin)
+                        XCTAssertEqual(peek.plan.approach.scale,scale*bird.profile.relativeScale)
+                        let endpoint=try XCTUnwrap(peek.plan.approach.destination.point(in:e))
+                        var sequence:[String]=[],observeStart:Double?,returnStart:Double?
+                        for _ in 0..<300 {
+                            guard e.runtime.runs[run] != nil else {break}
+                            let pose=try XCTUnwrap(e.renderSnapshot().first)
+                            XCTAssertEqual(pose.position,bird.position);XCTAssertEqual(pose.hopOffset,0)
+                            XCTAssertEqual(pose.scale,size)
+                            XCTAssertEqual(pose.rect.minY+39*size,bird.position.y,accuracy:1e-8)
+                            XCTAssertTrue(display.contains(pose.rect))
+                            XCTAssertEqual(e.leasedBirdCount,1);XCTAssertEqual(e.reservedLandingCount,2)
+                            if peek.phase == .observe {
+                                if observeStart==nil {observeStart=e.time}
+                                XCTAssertTrue(peekFrames.contains(pose.frameName))
+                                if sequence.last != pose.frameName {sequence.append(pose.frameName)}
+                                XCTAssertEqual(bird.position,endpoint);XCTAssertEqual(pose.facingRight,right)
+                            } else if peek.phase == .returning,returnStart==nil {returnStart=e.time}
+                            let previous=bird.position
+                            e.advance(BehaviorEngine.step)
+                            XCTAssertLessThan(Geometry.distance(previous,bird.position),20*size)
+                        }
+                        XCTAssertEqual(sequence,["peekLower","peekLook","peekRecover"])
+                        XCTAssertEqual(try XCTUnwrap(returnStart)-XCTUnwrap(observeStart),1.6,accuracy:BehaviorEngine.step/2)
+                        terminal(e,run,.completed)
+                        XCTAssertEqual(bird.position,origin);XCTAssertEqual(bird.fraction,fraction)
+                        XCTAssertEqual(bird.state,.perched);XCTAssertFalse(bird.isSideHopping)
+                        XCTAssertEqual(ObjectIdentifier(e.birds[0]),identity)
+                        XCTAssertEqual(observations.count,1);XCTAssertEqual(observations.first?.source,source)
+                        XCTAssertEqual(e.residentCount,1);XCTAssertEqual(e.arrivalCount,0);XCTAssertEqual(e.departureCount,0)
+                    }
+                }
+            }
+        }
+    }
+
+    func testDedicatedPeekRenderingUsesTheObservationClockAndOriginalReturnDeadline() throws {
+        for species in newSpecies {
+            let e=fixture(species:species),bird=e.birds[0]
+            let run=try started(e.handle(.edgePeek(.preview))),peek=try execution(e,run)
+            for _ in 0..<120 {
+                if peek.phase == .observe {break}
+                e.advance(BehaviorEngine.step)
+            }
+            XCTAssertEqual(peek.phase,.observe);XCTAssertEqual(peek.observationAge,0)
+            let began=e.time,endpoint=bird.position
+            var elapsed=0
+            // Adjacent fixed steps straddle 0.32 and 1.28 without relying on
+            // a second presentation clock or sampling the production clip.
+            for (ticks,frame) in [(0,"peekLower"),(19,"peekLower"),(20,"peekLook"),
+                                  (76,"peekLook"),(77,"peekRecover"),(95,"peekRecover")] {
+                advance(e,seconds:Double(ticks-elapsed)*BehaviorEngine.step);elapsed=ticks
+                XCTAssertEqual(peek.observationAge,Double(ticks)*BehaviorEngine.step,accuracy:1e-9)
+                XCTAssertEqual(e.renderSnapshot().first?.frameName,frame)
+                XCTAssertEqual(bird.position,endpoint);XCTAssertEqual(peek.phase,.observe)
+            }
+            e.advance(BehaviorEngine.step)
+            XCTAssertEqual(peek.phase,.returning)
+            XCTAssertEqual(e.time-began,1.6,accuracy:1e-9)
+            advance(e,seconds:2);terminal(e,run,.completed)
+        }
+    }
+
+    func testNewPeekSpeciesRejectEveryIncompleteRequiredSetBeforePreviewOrAutomaticStart() throws {
+        let required:Set<String> = ["stand","idle0","idle1","idle2","land0","land1","land2",
+            "peekLower","peekLook","peekRecover"]
+        for species in newSpecies {
+            XCTAssertEqual(SpeciesBehaviorProfile.profile(for:species).requiredFrames(for:.edgePeek),required)
+            for source:BehaviorSource in [.preview,.automatic] {
+                for missing in required.sorted()+["manifest"] {
+                    let e=fixture(species:species),bird=e.birds[0],id=try XCTUnwrap(e.id(of:bird))
+                    e.perchPlanner.rhythms[id]?.quietTime=8
+                    let origin=bird.position,revision=bird.motionRevision
+                    var world=e.world
+                    if missing == "manifest" {world.availableFrames=[:]}
+                    else {world.availableFrames[species]?.remove(missing)}
+                    e.updateWorld(world)
+                    XCTAssertFalse(e.edgePeekCandidate(id,source:source),missing)
+                    XCTAssertEqual(e.handle(.edgePeek(source)),.rejected(.missingFrames),missing)
+                    XCTAssertEqual(bird.position,origin);XCTAssertEqual(bird.motionRevision,revision)
+                    XCTAssertFalse(bird.isSideHopping);XCTAssertEqual(e.activeRunCount,0)
+                    XCTAssertEqual(e.leasedBirdCount,0);XCTAssertEqual(e.reservedLandingCount,0)
+                    XCTAssertFalse(e.events.contains{$0.type == .started})
+                }
+            }
+        }
+    }
+
+    func testNewPeekExecutionRechecksTheFullRequiredSetBeforeInstallingAnAlreadyPlannedHop() throws {
+        let required:Set<String> = ["stand","idle0","idle1","idle2","land0","land1","land2",
+            "peekLower","peekLook","peekRecover"]
+        for species in newSpecies {
+            for missing in required.sorted() {
+                let e=fixture(species:species),bird=e.birds[0],id=try XCTUnwrap(e.id(of:bird))
+                let plan=try XCTUnwrap(EdgePeekPlan.make(id:id,in:e)),origin=bird.position,revision=bird.motionRevision
+                var world=e.world;world.availableFrames[species]?.remove(missing);e.updateWorld(world)
+                let run=try started(e.runtime.start(EdgePeekExecution(plan:plan,source:.preview),source:.preview,in:e))
+                XCTAssertEqual(bird.position,origin);XCTAssertEqual(bird.motionRevision,revision)
+                XCTAssertEqual(bird.state,.perched);XCTAssertFalse(bird.isSideHopping)
+                e.runtime.validate(in:e)
+                terminal(e,run,.failed,.missingFrames)
+                XCTAssertEqual(bird.position,origin);XCTAssertEqual(bird.motionRevision,revision)
+            }
+        }
+    }
+
+    func testNewPeekSpeciesPauseEveryPhaseThenCompleteWithoutChangingFeetOrFrame() throws {
+        for species in newSpecies {
+            for phase in phases {
+                let e=fixture(species:species),bird=e.birds[0],origin=bird.position
+                let run=try started(e.handle(.edgePeek(.preview))),peek=try execution(e,run)
+                try reach(phase,in:e,run:run)
+                let pose=try XCTUnwrap(e.renderSnapshot().first),age=e.runtime.runs[run]?.age
+                let stateTime=bird.stateTime,observationAge=peek.observationAge
+                e.handle(.pause(true));advance(e,seconds:2)
+                for _ in 0..<3 {e.updateWorld(e.world);_=e.bounds(of:bird)}
+                let frozen=try XCTUnwrap(e.renderSnapshot().first)
+                XCTAssertEqual(frozen.frameName,pose.frameName);XCTAssertEqual(frozen.rect,pose.rect)
+                XCTAssertEqual(bird.position,pose.position);XCTAssertEqual(bird.stateTime,stateTime)
+                XCTAssertEqual(e.runtime.runs[run]?.age,age);XCTAssertEqual(peek.observationAge,observationAge)
+                XCTAssertTrue(terminals(e,run).isEmpty)
+                e.handle(.pause(false));advance(e,seconds:4)
+                terminal(e,run,.completed);XCTAssertEqual(bird.position,origin)
+            }
+        }
+    }
+
+    func testNewPeekSpeciesEachPhaseReleasesOnClickReplacementAndPausedInvalidation() throws {
+        for species in newSpecies {
+            for phase in phases {
+                for paused in [false,true] {
+                    for cause in ["click","relocate","disabled","removed","sleep","host","peekLower","peekLook","peekRecover"] {
+                        let e=fixture(species:species),bird=e.birds[0],id=try XCTUnwrap(e.id(of:bird))
+                        let run=try started(e.handle(.edgePeek(.preview)))
+                        try reach(phase,in:e,run:run)
+                        if paused {e.handle(.pause(true))}
+                        let actual=bird.position,clock=e.time
+                        var observations:[BehaviorObservation]=[]
+                        e.observationObserver={observations.append($0)}
+                        var replacement:BehaviorRunID?
+                        switch cause {
+                        case "click":e.handle(.pointerClick)
+                        case "relocate":replacement=try started(e.handle(.relocate(id)))
+                        case "disabled":var settings=e.settings;settings.edgePeekEnabled=false;e.applySettings(settings)
+                        case "removed":e.handle(.remove(id))
+                        case "sleep":e.handle(.cancelAmbient(.sleep))
+                        case "host":var world=e.world;world.surfaces=[];e.updateWorld(world)
+                        default:var world=e.world;world.availableFrames[species]?.remove(cause);e.updateWorld(world)
+                        }
+                        let failed=cause == "host" || peekFrames.contains(cause)
+                        let reason:BehaviorReason=cause == "host" ? .targetInvalid:(peekFrames.contains(cause) ? .missingFrames:
+                            (cause == "disabled" ? .settingsChanged:(cause == "relocate" ? .replaced:
+                                (cause == "removed" ? .removed:(cause == "sleep" ? .sleep:.userInput)))))
+                        terminal(e,run,failed ? .failed:.cancelled,reason)
+                        XCTAssertEqual(bird.position,actual);XCTAssertEqual(e.time,clock)
+                        XCTAssertFalse(bird.isSideHopping);XCTAssertTrue(observations.isEmpty)
+                        if let replacement {XCTAssertEqual(e.runtime.owners[id],replacement)}
+                        else {XCTAssertEqual(e.leasedBirdCount,0)}
+                        e.updateWorld(e.world);advance(e,seconds:0.1)
+                        terminal(e,run,failed ? .failed:.cancelled,reason)
+                        XCTAssertTrue(observations.isEmpty)
+                    }
                 }
             }
         }

@@ -202,12 +202,12 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         passiveAttentionButton=NSButton(checkboxWithTitle:t("留意鼠标与短暂警觉","Watch the pointer and briefly become alert"),target:self,action:#selector(perchSettingsChanged))
         passiveAttentionButton.frame=NSRect(x:40,y:952,width:690,height:26);passiveAttentionButton.state=draft.passiveAttentionEnabled ? .on:.off
         passiveAttentionButton.isEnabled=draft.perchActions;interactionView.addSubview(passiveAttentionButton)
-        label(t("停稳后偶尔闭眼休息，着陆后可能整理羽毛；鼠标靠近或点击会结束休息与理羽。\n专用观察、警觉与缩身休息：\(language.poseSpeciesNames)；其余鸟种保留站立、眨眼等原有表现。警觉安静后恢复，不新增移动。\n默认开启，保存后生效；停栖总开关也控制留意与警觉。","Settled birds may rest or preen after landing; a nearby pointer or click ends rest and preening.\nDedicated watch, alert and tucked-rest poses: \(language.poseSpeciesNames). Other species keep their existing poses. Alertness settles without moving.\nOn by default; save to apply. Perch activities also controls observation and alertness."),NSRect(x:20,y:990,width:710,height:100),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("perchActivitiesHelp")
+        label(t("观察、警觉、缩身休息与起飞准备的专用鸟种：\n\(language.poseSpeciesNames)。\n其余鸟种保留原表现。停稳后可休息或理羽；鼠标靠近或点击会结束。警觉安静后恢复，不移动。\n默认开启，保存后生效；总开关也控制留意与警觉。","Dedicated watch, alert, rest and takeoff poses:\n\(language.poseSpeciesNames).\nOther birds keep existing poses. Rest/preening ends on approach or click; alertness settles without moving.\nOn by default; save to apply. The master also controls watch/alert."),NSRect(x:20,y:990,width:710,height:100),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("perchActivitiesHelp")
         previewRestButton=button(t("预览闭眼休息","Preview eyes-closed rest"),#selector(previewRest),NSRect(x:20,y:1104,width:230,height:32),in:interactionView)
         previewPreenButton=button(t("预览整理羽毛","Preview preening"),#selector(previewPreen),NSRect(x:270,y:1104,width:210,height:32),in:interactionView)
         previewWatchButton=button(t("预览留意鼠标","Preview observation"),#selector(previewWatch),NSRect(x:20,y:1150,width:230,height:32),in:interactionView)
         previewAlertButton=button(t("预览短暂警觉","Preview brief alert"),#selector(previewAlert),NSRect(x:270,y:1150,width:210,height:32),in:interactionView)
-        label(t("预览读取已保存设置，使用现有停稳小鸟；休息和理羽需移开鼠标。\n专用姿态：\(language.poseSpeciesNames)；其余鸟种保留原表现。留意与警觉允许鼠标远离；不可用时说明原因。","Previews use saved settings and settled birds; move the pointer away for rest/preening.\nDedicated poses: \(language.poseSpeciesNames). Other species retain existing poses. Watch/alert previews allow a distant pointer; rejections explain why."),NSRect(x:20,y:1196,width:710,height:60),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("perchPreviewHelp")
+        label(t("预览读取已保存设置，使用现有停稳小鸟；休息和理羽需移开鼠标。\n专用姿态使用\(language.poseSupportReference)，其余保留原表现；留意与警觉允许鼠标远离，不可用时说明原因。","Previews use saved settings and settled birds; move away for rest/preening.\nDedicated poses use \(language.poseSupportReference); others keep existing poses. Watch/alert allows a distant pointer; rejections explain why."),NSRect(x:20,y:1196,width:710,height:60),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("perchPreviewHelp")
         label(t("让路与起飞","Making room and taking off"),NSRect(x:20,y:1280,width:710,height:30),in:interactionView,size:20)
         sideHopButton=NSButton(checkboxWithTitle:t("鼠标靠近时小跳让路","Hop aside when the pointer approaches"),target:self,action:#selector(perchSettingsChanged))
         sideHopButton.frame=NSRect(x:20,y:1322,width:710,height:26);sideHopButton.state=draft.sideHopEnabled ? .on:.off
@@ -215,7 +215,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         takeoffPreparationButton=NSButton(checkboxWithTitle:t("自主起飞前稍作准备","Prepare before autonomous takeoff"),target:self,action:#selector(perchSettingsChanged))
         takeoffPreparationButton.frame=NSRect(x:20,y:1358,width:710,height:26);takeoffPreparationButton.state=draft.takeoffPreparationEnabled ? .on:.off
         takeoffPreparationButton.isEnabled=draft.perchActions;interactionView.addSubview(takeoffPreparationButton)
-        label(t("鼠标靠近时可能沿边缘侧跳；空间不足或持续靠近时不反复跳开。\n起飞前下蹲、蹬伸：\(language.poseSpeciesNames)；其余鸟种保留原有起飞准备。点击换位仍立即响应，不等待下蹲。\n默认开启，受停栖总开关控制；保存后生效。","Birds may hop aside; tight space or continued proximity prevents repeat hops.\nCrouch/push before takeoff: \(language.poseSpeciesNames). Other species keep their existing preparation. Clicks move birds immediately, without waiting for a crouch.\nOn by default; controlled by Perch activities. Save to apply."),NSRect(x:20,y:1396,width:710,height:70),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("passiveMotionHelp")
+        label(t("鼠标靠近时可能沿边缘侧跳；空间不足或持续靠近时不反复跳开。\n起飞前下蹲、蹬伸使用\(language.poseSupportReference)，其余保留原有准备。点击换位立即响应，不等待下蹲。\n默认开启，受停栖总开关控制；保存后生效。","Birds may hop aside; tight space or continued proximity prevents repeat hops.\nCrouch/push uses \(language.poseSupportReference); others keep existing preparation. Clicks relocate immediately, without waiting for a crouch.\nOn by default; controlled by Perch activities. Save to apply."),NSRect(x:20,y:1396,width:710,height:70),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("passiveMotionHelp")
         previewSideHopButton=button(t("预览小跳让路","Preview hopping aside"),#selector(previewSideHop),NSRect(x:20,y:1480,width:260,height:32),in:interactionView)
         previewTakeoffPreparationButton=button(t("预览起飞准备","Preview takeoff preparation"),#selector(previewTakeoffPreparation),NSRect(x:300,y:1480,width:290,height:32),in:interactionView)
         label(t("预览使用已保存的设置和现有小鸟。请先让鸟停稳，并留出一段可见边缘。\n预览小跳无需把鼠标移近；起飞准备还需要一个安全的停靠目标。","Previews use saved settings and existing birds. Let a bird settle on a clear ledge.\nHop previews work with a distant pointer; takeoff preparation also needs a safe destination."),NSRect(x:20,y:1528,width:710,height:54),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("passiveMotionPreviewHelp")
@@ -292,7 +292,12 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         label(t("模拟更新会显示通知和图标红点。点击通知或菜单中的安装更新可查看确认框；选择安装后结束模拟，选择晚点再说则保留提示。不会下载、安装或重启。","Simulate a ready update with a notification and icon badge. Click the notification or install menu item to review it. Confirm to end the simulation, or choose Later to keep the prompt. No download, installation or restart occurs."),NSRect(x:20,y:64,width:710,height:95),in:debugView)
         _=button(t("模拟有更新","Simulate update"),#selector(simulateUpdate),NSRect(x:20,y:172,width:180,height:32),in:debugView)
         tabs.selectTabViewItem(at:min(selected,debugEnabled ? 3:2))
-        message=label("",NSRect(x:26,y:603,width:784,height:28),in:root,size:12)
+        message=label("",NSRect(x:26,y:603,width:784,height:34),in:root,size:12)
+        // This initially empty label later receives bilingual support lists.
+        // Keep word wrapping explicit and reserve two full text lines above
+        // the existing footer buttons, including the cell's drawing insets.
+        message.maximumNumberOfLines=0;message.lineBreakMode = .byWordWrapping
+        message.cell?.usesSingleLineMode=false;message.cell?.isScrollable=false;message.cell?.wraps=true
         _=button(t("恢复默认","Restore Defaults"),#selector(resetDefaults),NSRect(x:22,y:642,width:148,height:30),in:root)
         _=button(t("取消","Cancel"),#selector(cancel),NSRect(x:562,y:642,width:100,height:30),in:root)
         let save=button(t("保存并应用","Save & Apply"),#selector(save),NSRect(x:672,y:642,width:144,height:30),in:root); save.keyEquivalent="\r"
@@ -724,7 +729,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         desktop.syncWorld()
         let result=desktop.engine.handle(.attention(.watch,.preview))
         if case .rejected(let reason)=result {message.stringValue=desktop.behaviorMessage(reason)}
-        else {message.stringValue=t("正在预览留意鼠标：四种专用鸟显示观察姿态，其余保留原表现；小鸟停稳即可，鼠标可以远离。","Previewing observation: dedicated poses for the four supported species, existing poses for others. A settled bird can be far from the pointer.")}
+        else {message.stringValue=t("正在预览留意鼠标：专用鸟种显示观察姿态，其余保留原表现；小鸟停稳即可，鼠标可以远离。","Previewing observation: pose species use dedicated poses; others keep existing poses. Settled birds can be far from the pointer.")}
     }
     @objc func previewAlert() {
         desktop.syncWorld()

@@ -213,8 +213,29 @@ enum EdgePeekSettingsVerification {
         checks["edgePeekRejectedPreviewKeepsPopulationMotionAndLeases-"+suffix] = population(d)==counts &&
             d.engine.activeRunCount==runs && d.engine.leasedBirdCount==leases && d.engine.reservedLandingCount==slots &&
             d.birds.map(\.position)==positions && d.birds.map(\.motionRevision)==revisions
-        checks["edgePeekRejectionMessageFits-"+suffix] =
-            (w.message.cell?.cellSize(forBounds:w.message.bounds).height ?? .infinity)<=w.message.frame.height
+        checks["edgePeekRejectionMessageFits-"+suffix] = messageIsFullyVisible(w.message)
+    }
+
+    /// Verify the real cell's mode, then lay out every character inside its
+    /// drawing rectangle. cellSize alone can report a fitting single line
+    /// while the native control clips the rest of a support list.
+    static func messageIsFullyVisible(_ field:NSTextField) -> Bool {
+        guard let cell=field.cell as? NSTextFieldCell,cell.wraps,!cell.usesSingleLineMode,!cell.isScrollable,
+              cell.lineBreakMode == .byWordWrapping,field.maximumNumberOfLines==0,
+              !field.isHidden,!field.stringValue.isEmpty,let font=field.font else {return false}
+        let rect=cell.drawingRect(forBounds:field.bounds)
+        guard rect.width>0,rect.height>0 else {return false}
+        let style=NSMutableParagraphStyle();style.lineBreakMode=cell.lineBreakMode;style.alignment=field.alignment
+        let storage=NSTextStorage(string:field.stringValue,attributes:[.font:font,.paragraphStyle:style])
+        let layout=NSLayoutManager(),container=NSTextContainer(containerSize:rect.size)
+        container.lineFragmentPadding=0;container.lineBreakMode=cell.lineBreakMode
+        container.maximumNumberOfLines=field.maximumNumberOfLines
+        storage.addLayoutManager(layout);layout.addTextContainer(container)
+        let glyphs=layout.glyphRange(for:container)
+        let characters=layout.characterRange(forGlyphRange:glyphs,actualGlyphRange:nil)
+        let used=layout.usedRect(for:container)
+        return characters.location==0 && NSMaxRange(characters)==storage.length &&
+            used.maxX<=rect.width+0.001 && used.maxY<=rect.height+0.001
     }
 
     private static func checkPreviews(_ w:SpeciesSettingsWindow,folder:URL,checks:inout [String:Bool]) throws {
@@ -224,6 +245,8 @@ enum EdgePeekSettingsVerification {
                           userInfo:[NSLocalizedDescriptionKey:"Native edge-peek verification requires a display of at least 640 × 480."])
         }
         let manifest=d.frameCapabilities
+        var previewEvidence=[[String:Any]]()
+        defer {saveJSON(["previews":previewEvidence],to:folder.appendingPathComponent("edge-peek-preview-evidence.json"))}
         defer {d.engine.handle(.cancelAmbient(.screensChanged));d.birds=[];d.surfaces=[];d.frameCapabilities=manifest}
         // Pick the endpoint and vertical location away from the real pointer;
         // native preview intentionally resamples it through syncWorld().
@@ -236,7 +259,11 @@ enum EdgePeekSettingsVerification {
             let span=Geometry.perchX(1,rect:host.rect)-Geometry.perchX(0,rect:host.rect)
             let inset=95*d.spriteScale(for:bird)/span
             bird.fraction=center ? 0.5:(d.pointerPosition.x<screen.midX ? 1-inset:inset)
-            bird.perch(on:surface,spriteScale:d.spriteScale(for:bird));bird.perchDuration=600;bird.tick(2)
+            bird.perch(on:surface,spriteScale:d.spriteScale(for:bird));bird.perchDuration=600
+            // Production requires >=0.45 s settled and no base hop. At 2 s
+            // magpie-robin is inside its 1...3.6 s tail/hop window. Advance
+            // normally to 0.6 s, before every supported species' idle hop.
+            bird.tick(0.6)
             d.surfaces=[surface];d.birds=[bird];d.syncWorld(buttonsDown:false)
             return bird
         }
@@ -244,19 +271,29 @@ enum EdgePeekSettingsVerification {
         for language:AppLanguage in [.chinese,.english] {
             d.language=language;w.relocalize();w.tabs.selectTabViewItem(at:2)
             let suffix=language == .chinese ? "zh":"en"
-            for species:SpeciesID in [.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel] {
+            for species in SpeciesBehaviorProfile.species(for:.edgePeek) {
                 let bird=install(species),id=d.engine.id(of:bird),counts=population(d),sequence=d.engine.events.last?.sequence
+                let settledAge=bird.stateTime,settledHop=bird.hopOffset
+                let footError=Geometry.distance(bird.position,Geometry.foot(on:host,fraction:bird.fraction,
+                    edge:.top,scale:d.spriteScale(for:bird)))
                 w.previewEdgePeekButton.performClick(nil)
                 let event=d.engine.events.last,key="edgePeekSavedEnabledPreview-"+suffix+"-"+species.rawValue
-                checks[key] = !w.draft.edgePeekEnabled && !w.draft.perchActions && d.settings.edgePeekEnabled &&
+                checks[key] = settledAge>=0.45 && abs(settledHop)<0.001 && footError<0.001 &&
+                    !w.draft.edgePeekEnabled && !w.draft.perchActions && d.settings.edgePeekEnabled &&
                     d.settings.perchActions && event?.sequence != sequence && event?.type == .started &&
                     event?.kind == .edgePeek && event?.source == .preview && event?.participants == id.map{[$0]} &&
                     d.engine.behavior(of:bird) == .edgePeek && d.birds.count==1 && d.birds.first === bird &&
                     population(d)==counts && w.message.stringValue==w.t("正在预览探头观察：小鸟会安全靠近边缘、低头，再退回原位。","Previewing edge peeking: the bird approaches safely, looks down, then retreats.")
-                checks[key+"MessageFits"] = (w.message.cell?.cellSize(forBounds:w.message.bounds).height ?? .infinity)<=w.message.frame.height
+                checks[key+"MessageFits"] = messageIsFullyVisible(w.message)
                 scrollToSection(w)
                 try SettingsVerification.snapshot(w.window!,to:folder.appendingPathComponent("edge-peek-preview-"+suffix+"-"+species.rawValue+".png"))
                 checkRejection(w,reasons:[.busy],suffix:"busy-"+suffix+"-"+species.rawValue,checks:&checks)
+                let repeated=d.engine.events.last
+                previewEvidence.append(["species":species.rawValue,"language":suffix,
+                    "settledAge":settledAge,"settledHop":settledHop,"footError":footError,
+                    "firstEventType":event?.type.rawValue ?? "none","firstEventReason":event?.reason?.rawValue ?? "none",
+                    "repeatedEventType":repeated?.type.rawValue ?? "none","repeatedEventReason":repeated?.reason?.rawValue ?? "none",
+                    "screenshot":"edge-peek-preview-"+suffix+"-"+species.rawValue+".png"])
             }
             d.engine.handle(.cancelAmbient(.screensChanged));d.birds=[]
             checkRejection(w,reasons:[.missingBird,.unavailableBird],suffix:"no-bird-"+suffix,checks:&checks)
@@ -274,6 +311,18 @@ enum EdgePeekSettingsVerification {
                 d.engine.events.last?.reason == .noSpecies &&
                 w.message.stringValue==(w.t("请等待支持鸟种在窗口上沿端点附近停稳：","Wait for a supported bird to settle near a window’s top-edge endpoint: ")+d.language.supportedSpeciesNames(for:.edgePeek)+w.t("。",".")) &&
                 w.message.stringValue != d.behaviorMessage(.noSpecies)
+            scrollToSection(w)
+            let screenshot="edge-peek-unsupported-species-"+suffix+".png"
+            try SettingsVerification.snapshot(w.window!,to:folder.appendingPathComponent(screenshot))
+            previewEvidence.append(["case":"unsupported-species","language":suffix,
+                "eventType":d.engine.events.last?.type.rawValue ?? "none",
+                "eventReason":d.engine.events.last?.reason?.rawValue ?? "none",
+                "message":w.message.stringValue,"cellWraps":w.message.cell?.wraps ?? false,
+                "cellUsesSingleLineMode":w.message.cell?.usesSingleLineMode ?? true,
+                "cellScrollable":w.message.cell?.isScrollable ?? true,
+                "maximumNumberOfLines":w.message.maximumNumberOfLines,
+                "messageBounds":NSStringFromRect(w.message.bounds),
+                "messageFullyVisible":messageIsFullyVisible(w.message),"screenshot":screenshot])
         }
     }
 
@@ -304,6 +353,8 @@ enum EdgePeekSettingsVerification {
             w.edgePeekButton.title==w.t("窗口边缘探头观察","Peek over window edges") &&
             w.edgePeekButton.accessibilityLabel()==w.edgePeekButton.title &&
             w.previewEdgePeekButton.title==w.t("预览探头观察","Preview edge peeking")
+        checks[prefix+"SpeciesNames"] = help.stringValue.contains(w.language.supportedSpeciesNames(for:.edgePeek)) &&
+            SpeciesBehaviorProfile.species(for:.edgePeek).allSatisfy{help.stringValue.contains(w.language.name($0))}
         checks[prefix+"ExistingPositions"] = w.hoverDelaySlider.frame.minY==122 && w.pointerVisitsButton.frame.minY==310 &&
             w.perchActionsButton.frame.minY==916 && w.sideHopButton.frame.minY==1322 && w.previewSideHopButton.frame.minY==1480 &&
             label("leafSectionTitle")?.frame.minY==1600 && w.visitorMemoryButton.frame.minY==2002 &&

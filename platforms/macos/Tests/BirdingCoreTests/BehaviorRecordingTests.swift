@@ -86,6 +86,38 @@ final class BehaviorRecordingTests:XCTestCase {
             XCTAssertThrowsError(try BehaviorInputLog.decode(JSONSerialization.data(withJSONObject:object)))
         }
     }
+    func testM6cRecordsVersionElevenAndRejectsVersionTenRatherThanReinterpretingItsEvents() throws {
+        let e=fixture();e.bringInBird();advance(e,1)
+        let current=try e.recordedInputs()
+        XCTAssertEqual(BehaviorInputLog.currentVersion,1)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,11)
+        XCTAssertEqual(current.simulationVersion,11)
+        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,11)
+
+        // Exercise the compatibility boundary with a well-formed old envelope.
+        // Never promote its version and replay it under the newly expanded lists.
+        var old=current;old.simulationVersion=10
+        let data=try BehaviorInputLog.encoder().encode(old)
+        XCTAssertEqual(old.expected,current.expected)
+        XCTAssertThrowsError(try BehaviorInputLog.decode(data)) {error in
+            XCTAssertTrue(error.localizedDescription.contains("unsupported recording or simulation version"))
+        }
+        let directlyDecoded=try JSONDecoder().decode(BehaviorInputLog.self,from:data)
+        for hz in [30,60,120] {XCTAssertThrowsError(try directlyDecoded.replay(callbackHz:hz))}
+        let folder=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+        defer {try? FileManager.default.removeItem(at:folder)}
+        let file=folder.appendingPathComponent("v10.json")
+        XCTAssertThrowsError(try directlyDecoded.save(to:file))
+        XCTAssertFalse(FileManager.default.fileExists(atPath:file.path))
+
+        var incompatible=try XCTUnwrap(JSONSerialization.jsonObject(with:data) as? [String:Any])
+        incompatible["settings"]="version ten nested settings must not be decoded"
+        incompatible["inputs"]="unknown old representation"
+        XCTAssertThrowsError(try BehaviorInputLog.decode(JSONSerialization.data(withJSONObject:incompatible))) {error in
+            XCTAssertTrue(error.localizedDescription.contains("unsupported recording or simulation version"))
+        }
+    }
     func testUnknownOrInvalidInputsAreRejectedWithoutSilentSkipping() throws {
         let e=fixture();var log=try e.recordedInputs()
         for kind in ["unknown","world","settings","visitorMemory","command","advance","population","route","depart"] {
@@ -211,6 +243,8 @@ final class BehaviorRecordingTests:XCTestCase {
         XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json","food-tray.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
+            XCTAssertEqual(log.simulationVersion,11,file.lastPathComponent)
+            if let expected=log.expected {XCTAssertEqual(reference,expected,file.lastPathComponent)}
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
             XCTAssertEqual(try log.replay(callbackHz:120),reference,file.lastPathComponent)
             XCTAssertEqual(reference.runs,0,file.lastPathComponent);XCTAssertEqual(reference.leases,0,file.lastPathComponent)

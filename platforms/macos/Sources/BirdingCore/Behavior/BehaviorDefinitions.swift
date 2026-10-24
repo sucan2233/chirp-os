@@ -1,7 +1,7 @@
 /// Capabilities describe complete groups of existing renderer frames.
 public enum BirdCapability:String,CaseIterable,Codable {
     case standing, blinking, preening, greeting, flight, landing, allopreening, feeding
-    case observationPose, alertPose, restPose, takeoffPose
+    case observationPose, alertPose, restPose, takeoffPose, edgePeekPose
 
     public var requiredFrames:Set<String> {
         switch self {
@@ -9,6 +9,7 @@ public enum BirdCapability:String,CaseIterable,Codable {
         case .alertPose:return ["alertRise","alertHold","alertRelax"]
         case .restPose:return ["restLower","restTuck","restWake"]
         case .takeoffPose:return ["takeoffCrouch","takeoffPush"]
+        case .edgePeekPose:return ["peekLower","peekLook","peekRecover"]
         case .standing:return ["stand"]
         case .blinking:return ["blink"]
         case .preening:return ["preen0","preen1"]

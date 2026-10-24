@@ -96,7 +96,7 @@ final class FixedPerchVisitTests:XCTestCase {
         XCTAssertEqual(definition.cooldown,60);XCTAssertFalse(definition.occupiesEncounter)
         XCTAssertFalse(definition.runsWhilePaused)
         XCTAssertEqual(FixedPerchVisitBehavior.supportedSpecies,
-            [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.redWhiskeredBulbul,.magpieRobin,.redBilledLeiothrix])
+            [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.redWhiskeredBulbul,.magpieRobin,.redBilledLeiothrix,.lightVentedBulbul])
         for missing in frames {
             let e=fixture();var world=e.world;world.availableFrames[.treeSparrow]?.remove(missing);e.updateWorld(world)
             XCTAssertTrue(FixedPerchVisitPlan.candidates(in:e,source:.preview).isEmpty,missing)
@@ -144,6 +144,84 @@ final class FixedPerchVisitTests:XCTestCase {
                 XCTAssertEqual(s.bird.landedCount,1);XCTAssertEqual(e.arrivalCount,0);XCTAssertEqual(e.departureCount,0)
                 advance(e,seconds:0.5);XCTAssertEqual(terminals(e,s.run).count,1)
                 XCTAssertEqual(s.bird.position,s.plan.perch.foot)
+            }
+        }
+    }
+
+    func testLightVentedBulbulActuallyVisitsFromBothDirectionsAtHalfDefaultAndDoubleScale() throws {
+        for scale:CGFloat in [0.5,1,2] {
+            for rightward in [false,true] {
+                let origin=rightward ? host:Surface(id:181,pid:42,rect:CGRect(x:1600,y:1050,width:300,height:150))
+                let destination=CGPoint(x:rightward ? 1300:700,y:700)
+                let e=fixture(species:.lightVentedBulbul,scale:scale,points:[destination],origin:origin)
+                let bird=e.birds[0],initial=bird.position,identity=ObjectIdentifier(bird)
+                let size=scale*bird.profile.relativeScale
+                bird.facingRight = !rightward
+                var observations:[BehaviorObservation]=[]
+                e.observationObserver={observations.append($0)}
+                guard case .started(let run)=e.handle(.fixedPerchVisit(.preview)) else {
+                    XCTFail("The actual white-headed bulbul must fit at \(scale), rightward=\(rightward)");continue
+                }
+                let execution=try XCTUnwrap(e.runtime.runs[run]?.execution as? FixedPerchVisitExecution)
+                let s=Session(run:run,execution:execution,bird:bird),began=e.time
+                XCTAssertEqual(bird.position,initial);XCTAssertEqual(s.plan.scale,size)
+                XCTAssertEqual(s.plan.perch.rect.width,128*scale)
+                XCTAssertEqual(s.plan.perch.rect.height,24*scale)
+                var moved=false,sawLanding=false,sawRest=false
+                for _ in 0..<1800 {
+                    guard e.runtime.runs[run] != nil else {break}
+                    let before=bird.position
+                    e.advance(BehaviorEngine.step)
+                    let pose=try XCTUnwrap(e.renderSnapshot().first)
+                    XCTAssertEqual(pose.scale,size);XCTAssertEqual(pose.position,bird.position)
+                    XCTAssertTrue(display.contains(pose.rect))
+                    XCTAssertTrue(display.contains(Geometry.landingFootprint(at:bird.position,scale:size)))
+                    XCTAssertLessThanOrEqual(Geometry.distance(before,bird.position),
+                        CGFloat(s.plan.route.legs[0].timing.peakSpeed*BehaviorEngine.step)+0.001)
+                    XCTAssertLessThan(Geometry.distance(bird.position,s.plan.route.position(at:e.time-began)),0.001)
+                    if abs(bird.position.x-initial.x)>20 {
+                        moved=true;XCTAssertEqual(pose.facingRight,rightward)
+                    }
+                    sawLanding = sawLanding || bird.state == .landing
+                    sawRest = sawRest || bird.state == .perched
+                    if bird.state == .perched {
+                        XCTAssertEqual(bird.position,destination)
+                        XCTAssertEqual(pose.hopOffset,0)
+                        XCTAssertEqual(pose.rect.minY+39*size,destination.y,accuracy:1e-8)
+                    }
+                }
+                XCTAssertTrue(moved);XCTAssertTrue(sawLanding);XCTAssertTrue(sawRest)
+                released(e,s,.completed)
+                XCTAssertEqual(bird.position,destination);XCTAssertEqual(bird.hostID,s.plan.perch.surface.id)
+                XCTAssertEqual(bird.landedCount,1);XCTAssertEqual(ObjectIdentifier(e.birds[0]),identity)
+                XCTAssertEqual(e.residentCount,1);XCTAssertEqual(e.arrivalCount,0);XCTAssertEqual(e.departureCount,0)
+                XCTAssertEqual(e.leasedBirdCount,0);XCTAssertEqual(e.reservedLandingCount,0)
+                XCTAssertEqual(observations.count,1)
+            }
+        }
+    }
+
+    func testLightVentedBulbulRejectsInsufficientActualSpriteClearanceWithoutMovingOrLeasing() throws {
+        for scale:CGFloat in [0.5,1,2] {
+            for rightward in [false,true] {
+                let origin=rightward ? host:Surface(id:181,pid:42,rect:CGRect(x:1600,y:1050,width:300,height:150))
+                let e=fixture(species:.lightVentedBulbul,scale:scale,
+                    points:[CGPoint(x:rightward ? 1300:700,y:700)],origin:origin)
+                let bird=e.birds[0],perch=try XCTUnwrap(e.fixedPerchSnapshot().first)
+                XCTAssertFalse(FixedPerchVisitPlan.candidates(in:e,source:.preview).isEmpty)
+                let size=e.spriteScale(for:bird),actual=bird.position,revision=bird.motionRevision
+                // The feet and center are clear. A thin utility panel clips only
+                // the outer half-point of the real, species-scaled footprint.
+                let panel=CGRect(x:perch.foot.x+29*size-0.5,y:perch.foot.y-20*size,width:0.25,height:10*size)
+                XCTAssertFalse(panel.contains(perch.foot))
+                XCTAssertTrue(panel.intersects(Geometry.landingFootprint(at:perch.foot,scale:size)))
+                var world=e.world
+                world.surfaces.insert(Surface(id:199,pid:49,rect:panel,layer:1),at:0);e.updateWorld(world)
+                XCTAssertTrue(FixedPerchVisitPlan.candidates(in:e,source:.preview).isEmpty)
+                XCTAssertEqual(e.handle(.fixedPerchVisit(.preview)),.rejected(.noSpace))
+                XCTAssertEqual(bird.position,actual);XCTAssertEqual(bird.motionRevision,revision)
+                XCTAssertEqual(e.activeRunCount,0);XCTAssertEqual(e.leasedBirdCount,0);XCTAssertEqual(e.reservedLandingCount,0)
+                XCTAssertFalse(e.events.contains{$0.type == .started})
             }
         }
     }

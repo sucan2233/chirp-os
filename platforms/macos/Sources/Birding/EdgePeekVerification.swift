@@ -160,14 +160,24 @@ enum EdgePeekVerification {
             return frozen
         }
 
-        let species:[SpeciesID]=[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel]
+        let legacySpecies:[SpeciesID]=[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel]
+        let addedSpecies:[SpeciesID]=[.lightVentedBulbul,.magpieRobin]
+        let species=legacySpecies+addedSpecies
         var coverage:[[String:Any]]=[]
         for speciesID in species {
+            let dedicated=addedSpecies.contains(speciesID)
+            let poseNames=dedicated ? BirdArt.peekNames:["idle0","idle1","idle2"]
+            let expectedSequence=dedicated ? poseNames:["idle0","idle1","idle2","idle1","idle0"]
+            // Preserve the old four-species acceptance at 1.5x; the two M6c
+            // species additionally exercise real commands/layers at all scales.
             // The farther side is always attempted first; both sides retain
             // their own checks and cannot silently be skipped as ineligible.
             let rightFirst=d.pointerPosition.x<work.midX
-            for right in [rightFirst,!rightFirst] {
-                caseName=speciesID.rawValue+"-"+(right ? "right":"left")
+            let scales:[CGFloat]=dedicated ? [0.5,1,2]:[1.5]
+            let variants=scales.flatMap {scale in [(scale,rightFirst),(scale,!rightFirst)]}
+            for (userScale,right) in variants {
+                d.scale=userScale
+                caseName=speciesID.rawValue+"-"+(right ? "right":"left")+(dedicated ? "-\(userScale)x":"")
                 let prefix="edgePeek-"+caseName
                 for name in ["RealWindowEndpointFixture","PreviewLeasesExistingBirdAndTwoSlots",
                              "OnlyTicksMoveFeet","RealLayersAndAnchors","DistinctDownwardFrames",
@@ -201,6 +211,8 @@ enum EdgePeekVerification {
                 var movedOut=false,roseOut=false,roseBack=false,returning=false
                 var flightPaused=false,observationPaused=false,resumed=true
                 var observed:[String]=[],observationTicks=0,previous=start
+                var poseTicks:[String:Int]=[:],headBottoms:[String:CGFloat]=[:]
+                var dedicatedGeometry=true,authoredLayers=true
                 var smooth=true,allSlots=true
                 for tick in 0..<7*60 {
                     advance();view.updateSprites()
@@ -230,12 +242,28 @@ enum EdgePeekVerification {
                     } else {transparent=false}
                     movedOut = movedOut || abs(bird.position.x-start.x)>10*scale
                     let observing=active && bird.state == .perched && Geometry.distance(bird.position,goal)<0.001 &&
-                        ["idle0","idle1","idle2"].contains(state.frameName)
+                        poseNames.contains(state.frameName)
                     var milestone:String?
                     if observing {
                         observationTicks+=1
+                        poseTicks[state.frameName,default:0]+=1
+                        if dedicated {
+                            dedicatedGeometry = dedicatedGeometry && state.facingRight==right && state.hopOffset==0 &&
+                                texture.affineTransform()==CGAffineTransform(scaleX:right ? 1:-1,y:1) &&
+                                Geometry.distance(layerFoot(container,state:state,display:display),goal)<0.001
+                        }
                         if observed.last != state.frameName {
                             observed.append(state.frameName);milestone="observe-\(observed.count)-"+state.frameName
+                            if dedicated {
+                                if let authored=DetailedBirdArt.poseImage(state.frameName,species:speciesID),
+                                   let actualHash=bitmapHash(image),let sourceHash=bitmapHash(authored) {
+                                    authoredLayers = authoredLayers && actualHash==sourceHash
+                                } else {authoredLayers=false}
+                                if let bottom=headNeckBottom(state.frameName,species:speciesID,layer:container,scale:state.scale,display:display) {
+                                    headBottoms[state.frameName]=bottom
+                                    dedicatedGeometry = dedicatedGeometry && bottom<=host.rect.minY+0.00001
+                                } else {dedicatedGeometry=false}
+                            }
                         }
                     }
                     if active && bird.state == .flying {
@@ -256,8 +284,8 @@ enum EdgePeekVerification {
                         resumed = resumed && bird.position != frozen && d.engine.behavior(of:bird) == .edgePeek
                         previous=bird.position
                     }
-                    if started.accepted && observing && state.frameName=="idle2" && !observationPaused {
-                        checks[prefix+"PauseFreezesObservation"]=try pauseEvidence(bird,"paused-idle2")
+                    if started.accepted && observing && state.frameName==(dedicated ? "peekLook":"idle2") && !observationPaused {
+                        checks[prefix+"PauseFreezesObservation"]=try pauseEvidence(bird,"paused-"+state.frameName)
                         observationPaused=true
                     }
                     if let run,!terminalEvents(in:d.engine,run:run).isEmpty {break}
@@ -267,12 +295,21 @@ enum EdgePeekVerification {
                 let returned=Geometry.distance(bird.position,start)<0.001 && abs(bird.fraction-fraction)<0.000001 &&
                     bird.hostID==host.id && bird.state == .perched
                 checks[prefix+"RealLayersAndAnchors"]=started.accepted && layers && anchors
-                let images=["idle0","idle1","idle2"].compactMap{d.arts[speciesID]?.frames[$0]}
+                let images=poseNames.compactMap{d.arts[speciesID]?.frames[$0]}
                 let hashes=images.compactMap{bitmapHash($0)}
                 checks[prefix+"DistinctDownwardFrames"]=started.accepted && hashes.count==3 && Set(hashes).count==3 &&
-                    Set(["idle0","idle1","idle2"]).isSubset(of:Set(observed))
+                    Set(poseNames).isSubset(of:Set(observed))
                 checks[prefix+"ObservationSequenceAndDuration"]=started.accepted &&
-                    observed==["idle0","idle1","idle2","idle1","idle0"] && abs(Double(observationTicks)*dt-1.6)<=2*dt
+                    observed==expectedSequence && abs(Double(observationTicks)*dt-1.6)<=2*dt
+                if dedicated {
+                    checks[prefix+"ThreeAuthoredProductionLayersAtRequestedScale"]=started.accepted && authoredLayers && layers &&
+                        observed==poseNames && abs(scale-userScale*bird.profile.relativeScale)<1e-8
+                    checks[prefix+"MirroredFeetFixedAndHeadNeckAboveRealEdge"]=started.accepted && dedicatedGeometry &&
+                        anchors && headBottoms.count==3 && observationTicks>0
+                    checks[prefix+"DedicatedClipTiming"]=started.accepted && zip(poseNames,[0.32,0.96,0.32]).allSatisfy {
+                        abs(Double(poseTicks[$0.0] ?? 0)*dt-$0.1)<=2*dt
+                    }
+                }
                 checks[prefix+"OutwardHopAndExactReturn"]=started.accepted && movedOut && roseOut && roseBack && returning && smooth && returned
                 checks[prefix+"LivePointerClearsWholePath"]=started.accepted && pointerClear
                 checks[prefix+"OpaquePixelsHitAndHover"]=started.accepted && hits && observationTicks>0
@@ -287,10 +324,25 @@ enum EdgePeekVerification {
                 coverage.append(["case":caseName,"accepted":started.accepted,"sourceFraction":fraction,
                     "origin":point(start),"endpoint":point(goal),"hostRect":NSStringFromRect(host.rect),
                     "scale":scale,"pointerSafetyRect":NSStringFromRect(safe),"frames":observed,
+                    "scope":dedicated ? "M6c":"legacy four species","userScale":userScale,
+                    "headNeckWorldBottoms":headBottoms,"poseSampleCounts":poseTicks,
                     "observationSeconds":Double(observationTicks)*dt,"frameBitmapHashes":hashes,
                     "terminals":ends.map{["type":$0.type.rawValue,"reason":$0.reason?.rawValue ?? ""]}])
             }
         }
+
+        // A dedicated frame is part of admission, not an optional idle fallback.
+        for speciesID in addedSpecies {
+            d.scale=1;caseName=speciesID.rawValue+"-missing-peek-frame"
+            let bird=fixture(speciesID,right:d.pointerPosition.x<work.midX),id=d.engine.id(of:bird),foot=bird.position
+            let available=d.frameCapabilities[speciesID] ?? []
+            d.frameCapabilities[speciesID]=available.subtracting(["peekLook"]);d.syncWorld()
+            let result=d.engine.handle(.edgePeek(.preview))
+            checks["edgePeek-"+caseName]=result == .rejected(.missingFrames) && clearResources() &&
+                samePopulation(bird,id) && bird.position==foot
+            d.frameCapabilities[speciesID]=available
+        }
+        d.scale=1.5
 
         // Native click routing must preempt both an airborne hop and the pose.
         for observing in [false,true] {
@@ -417,6 +469,20 @@ enum EdgePeekVerification {
         var hash:UInt64=14695981039346656037
         for index in 0..<CFDataGetLength(data) {hash=(hash ^ UInt64(bytes[index])) &* 1099511628211}
         return String(hash,radix:16)
+    }
+    /// Project the actual authored head/neck alpha through the live sprite's
+    /// scale and layer origin. Check pixel edges, not just a bill anchor or a
+    /// whole-sprite rectangle that legitimately includes feet below the ledge.
+    private static func headNeckBottom(_ frame:String,species:SpeciesID,layer:CALayer,scale:CGFloat,display:CGRect) -> CGFloat? {
+        guard let image=DetailedBirdArt.poseImage(frame,species:species,part:.headNeck),
+              image.bitsPerPixel==32,image.bitsPerComponent==8,image.alphaInfo == .premultipliedLast,
+              let data=image.dataProvider?.data,let bytes=CFDataGetBytePtr(data) else {return nil}
+        for y in (0..<image.height).reversed() {
+            if (0..<image.width).contains(where:{bytes[y*image.bytesPerRow+$0*4+3]>0}) {
+                return layer.frame.minY+display.minY+CGFloat(y+1)*48/CGFloat(image.height)*scale
+            }
+        }
+        return nil
     }
     /// Crop actual native layer contents around the traversal. Compositing the
     /// real fixture window under DesktopView makes the top edge visible without

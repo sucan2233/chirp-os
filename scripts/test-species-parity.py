@@ -29,8 +29,12 @@ feeding_frames = ['feedLook', 'feedDown0', 'feedDown1', 'feedLift']
 expected_extras = {'barnSwallow': contact_frames, 'swinhoesWhiteEye': contact_frames,
                    'treeSparrow': feeding_frames, 'spottedDove': feeding_frames}
 pose_frames = ['lookNear', 'lookFar', 'alertRise', 'alertHold', 'alertRelax', 'restLower', 'restTuck', 'restWake', 'takeoffCrouch', 'takeoffPush']
-for bird in ('treeSparrow', 'spottedDove', 'barnSwallow', 'nightHeron'):
+for bird in ('treeSparrow', 'spottedDove', 'barnSwallow', 'nightHeron',
+             'lightVentedBulbul', 'redWhiskeredBulbul', 'chineseBlackbird', 'magpieRobin',
+             'swinhoesWhiteEye', 'azureWingedMagpie', 'redBilledLeiothrix', 'littleOwl'):
     expected_extras[bird] = expected_extras.get(bird, []) + pose_frames
+for bird in ('lightVentedBulbul', 'magpieRobin'):
+    expected_extras[bird] = expected_extras[bird] + ['peekLower', 'peekLook', 'peekRecover']
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
     assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'

@@ -75,8 +75,18 @@ public struct PoseClip:Codable,Equatable {
         return Self(id:"\(species.rawValue).\(kind.rawValue)\(kind == .watch && lookingFar ? ".far":"")",
             frames:zip(names,times).map {Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))})
     }
+    /// Dedicated observation phase; approach and return remain owned by the
+    /// existing ledge traversal. Sampling does not advance its clock.
+    public static func edgePeek(species:SpeciesID) -> Self? {
+        guard SpeciesBehaviorProfile.peekSpecies.contains(species) else {return nil}
+        return Self(id:"\(species.rawValue).edgePeek",
+            frames:zip(SpeciesBehaviorProfile.peekFrameNames,[0.32,0.96,0.32]).map {
+                Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
+            })
+    }
     /// Logical canvas anchors track the editable species drawing, never bitmap size.
     public static func beakAnchor(species:SpeciesID,frame:String) -> Anchor {
+        if let anchor=M6cPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         let anchors:[Anchor]
         switch species {
         case .treeSparrow:anchors=[Anchor(40.436600,24.991150),Anchor(39.960264,17.559685),Anchor(40.389555,15.584048),Anchor(41.002325,15.038707),Anchor(39.513596,20.179685),Anchor(38.781235,24.924158),Anchor(19.380695,29.520487),Anchor(38.751167,17.458085),Anchor(41.818159,26.768159),Anchor(42.889555,16.084048)]

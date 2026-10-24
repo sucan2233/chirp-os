@@ -122,20 +122,20 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "chase",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "travelTogether",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -176,13 +176,26 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "missingPoseFrames" : [
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "redWhiskeredBulbul"
   },
@@ -499,12 +512,12 @@
         "productAllowed" : true
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "edgePeek",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : true,
@@ -536,12 +549,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "fixedPerchVisit",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -561,13 +574,27 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose",
+      "edgePeekPose"
     ],
     "missingPoseFrames" : [
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "lightVentedBulbul"
   },
@@ -946,13 +973,26 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "missingPoseFrames" : [
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "chineseBlackbird"
   },
@@ -1071,12 +1111,12 @@
         "productAllowed" : true
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "edgePeek",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -1133,13 +1173,27 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose",
+      "edgePeekPose"
     ],
     "missingPoseFrames" : [
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "magpieRobin"
   },
@@ -3203,13 +3257,26 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "missingPoseFrames" : [
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "azureWingedMagpie"
   },
@@ -4330,13 +4397,26 @@
       "greeting",
       "flight",
       "landing",
-      "allopreening"
+      "allopreening",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "missingPoseFrames" : [
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "swinhoesWhiteEye"
   },
@@ -7135,13 +7215,26 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "missingPoseFrames" : [
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "redBilledLeiothrix"
   },
@@ -8631,13 +8724,26 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "missingPoseFrames" : [
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "littleOwl"
   }

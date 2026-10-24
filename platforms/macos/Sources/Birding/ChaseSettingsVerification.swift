@@ -284,8 +284,10 @@ enum ChaseSettingsVerification {
             label("activityRhythmSectionTitle")?.frame.minY==2180 && w.activityRhythmPopup.frame.minY==2222 &&
             label("edgePeekSectionTitle")?.frame.minY==2540 && w.edgePeekButton.frame.minY==2582 &&
             w.previewEdgePeekButton.frame.minY==2750 && edgeHelp.frame.minY==2796 && edgeHelp.frame.maxY<heading.frame.minY
-        let species:[SpeciesID]=[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling]
-        checks[prefix+"SpeciesNames"] = species.allSatisfy{help.stringValue.contains(w.language.name($0))}
+        let species=SpeciesBehaviorProfile.species(for:.chase)
+        checks[prefix+"SpeciesNames"] = ChaseBehavior.supportedSpecies==Set(species) &&
+            help.stringValue.contains(w.language.supportedSpeciesNames(for:.chase)) &&
+            species.allSatisfy{help.stringValue.contains(w.language.name($0))}
         checks[prefix+"Reachable"] = views.allSatisfy{!$0.isHidden && document.visibleRect.contains($0.frame)} &&
             w.chaseButton.isEnabled==w.draft.socialInteractions && w.previewChaseButton.isEnabled
         checks[prefix+"TitlesFit"] = controls.allSatisfy {

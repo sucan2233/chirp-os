@@ -4,15 +4,21 @@ import XCTest
 final class EdgePeekSchedulingTests:XCTestCase {
     private let screen=CGRect(x:0,y:0,width:1600,height:1200)
     private let host=Surface(id:61,pid:42,rect:CGRect(x:100,y:900,width:800,height:200))
-    private func fixture(fraction:CGFloat=0.1) -> BehaviorEngine {
+    private func fixture(fraction:CGFloat=0.1,species:SpeciesID = .treeSparrow,
+                         normalizedDistance:CGFloat?=nil,missing:String?=nil) -> BehaviorEngine {
         var settings=BirdSettings()
         settings.pointerVisits=false;settings.flockPasses=false;settings.socialInteractions=false
         settings.ambientLeafPlayEnabled=false;settings.passiveAttentionEnabled=false;settings.sideHopEnabled=false
         let e=BehaviorEngine(seed:81,settings:settings)
         e.populationEnabled=false;e.autonomousRouting=false;e.ambientEnabled=true
-        let frames:Set<String>=["stand","blink","preen0","preen1","idle0","idle1","idle2","land0","land1","land2"]
-        e.updateWorld(BehaviorWorld(screens:[screen],displays:[screen],surfaces:[host],pointer:CGPoint(x:1500,y:100),availableFrames:[.treeSparrow:frames]))
-        let bird=Bird(position:.zero,fraction:fraction,profile:settings.catalog.profile(.treeSparrow),random:{0.5})
+        var frames:Set<String>=["stand","blink","preen0","preen1","idle0","idle1","idle2","land0","land1","land2"]
+        if [.lightVentedBulbul,.magpieRobin].contains(species) {frames.formUnion(["peekLower","peekLook","peekRecover"])}
+        if let missing {frames.remove(missing)}
+        e.updateWorld(BehaviorWorld(screens:[screen],displays:[screen],surfaces:[host],pointer:CGPoint(x:1500,y:100),availableFrames:[species:frames]))
+        let bird=Bird(position:.zero,fraction:fraction,profile:settings.catalog.profile(species),random:{0.5})
+        if let normalizedDistance {
+            bird.fraction=normalizedDistance*e.spriteScale(for:bird)/(Geometry.perchX(1,rect:host.rect)-Geometry.perchX(0,rect:host.rect))
+        }
         bird.perch(on:host,spriteScale:e.spriteScale(for:bird));bird.perchDuration=600
         e.installFixtureBirds([bird]);return e
     }
@@ -41,6 +47,29 @@ final class EdgePeekSchedulingTests:XCTestCase {
         XCTAssertEqual(e.reservedLandingCount,0)
         let rhythm=try XCTUnwrap(e.perchPlanner.rhythms[e.id(of:bird)!])
         XCTAssertLessThan(rhythm.peekQuiet,rhythm.nextPeek)
+    }
+
+    func testNewPeekSpeciesNaturallyCompleteOnlyWithAllDedicatedFramesWithoutRejectedEventSpam() throws {
+        let losses:[String?]=[nil,"peekLower","peekLook","peekRecover"]
+        for species:SpeciesID in [.lightVentedBulbul,.magpieRobin] {
+            for missing in losses {
+                let e=fixture(species:species,normalizedDistance:95,missing:missing),bird=e.birds[0]
+                let origin=bird.position,identity=ObjectIdentifier(bird),id=try XCTUnwrap(e.id(of:bird))
+                advance(e,120);e.ambientEnabled=false;advance(e,8)
+                let starts=e.events.filter{$0.kind == .edgePeek && $0.type == .started}
+                let completions=e.events.filter{$0.kind == .edgePeek && $0.type == .completed}
+                if missing == nil {
+                    XCTAssertFalse(starts.isEmpty,species.rawValue)
+                    XCTAssertLessThanOrEqual(starts.count,3)
+                    XCTAssertEqual(completions.count,starts.count)
+                    XCTAssertTrue(starts.allSatisfy{$0.source == .automatic && $0.participants == [id]})
+                } else {XCTAssertTrue(starts.isEmpty);XCTAssertTrue(completions.isEmpty)}
+                XCTAssertFalse(e.events.contains{$0.kind == .edgePeek && $0.type == .rejected})
+                XCTAssertEqual(e.birds.map(ObjectIdentifier.init),[identity]);XCTAssertEqual(bird.position,origin)
+                XCTAssertEqual(e.residentCount,1);XCTAssertEqual(e.arrivalCount,0)
+                XCTAssertEqual(e.leasedBirdCount,0);XCTAssertEqual(e.reservedLandingCount,0)
+            }
+        }
     }
     func testDisabledMasterAndChildNeverQueueAndPauseFreezesOpportunityClock() throws {
         for masterOff in [true,false] {

@@ -960,6 +960,9 @@ extension DetailedBirdArt {
     /// coordinates. Reflect with x -> 48-x, just like BirdRenderState. A tucked
     /// bill still has an anchor even though scapular feathers cover its tip.
     static func poseBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        if let a=M6cPoseGeometry.anatomy(id),let pose=M6cPoseGeometry.pose(species:id,frame:frame) {
+            return pose.billTip(species:id,anatomy:a)
+        }
         guard let pose=foundationPose(frame,species:id) else {return nil}
         let bill=foundationBill(id)
         return pose.headPoint(bill.root+bill.length,bill.tipY)
@@ -977,6 +980,7 @@ extension DetailedBirdArt {
 
     static func poseImage(_ frame:String,species id:SpeciesID,
                           part:FoundationPosePart?=nil)->CGImage? {
+        if let image=m6cPoseImage(frame,species:id,part:part) {return image}
         guard let pose=foundationPose(frame,species:id) else {return nil}
         let density=SpeciesCatalog.standard.profile(id).relativeScale
         let c=BirdPainter(size:max(48,Int((48*density).rounded())))
@@ -1178,6 +1182,323 @@ extension DetailedBirdArt {
         } else {
             c.oval(ex,ey,night ? 0.8:1,night ? 0.9:1.1,"eye")
             c.oval(ex+0.35,ey,0.4,0.4,"white")
+        }
+    }
+}
+
+// M6c enters only for the eight new species and their authored names. Keeping
+// this renderer separate leaves the accepted M6b raster operations untouched.
+extension DetailedBirdArt {
+    private struct M6cDrawing {
+        let id:SpeciesID
+        let frame:String
+        let pose:M6cPoseGeometry.Pose
+        let anatomy:M6cPoseGeometry.Anatomy
+        var owl:Bool {id == .littleOwl}
+        var tucked:Bool {frame == "restTuck"}
+        var sleepy:Bool {frame == "restLower" || tucked}
+        var style:(String,String,String,String) {DetailedBirdArt.colours(id)}
+        var back:String {owl ? "brown":style.0}
+        var breast:String {owl ? "buff":style.3}
+        var feather:String {owl ? "brown":style.1}
+        var wingLight:String {owl ? "tan":style.0}
+        var bx:Double {(owl ? 17:34-anatomy.width)+pose.body.lean-pose.body.fluff/2}
+        var by:Double {pose.body.y}
+        var bw:Double {anatomy.width+pose.body.fluff}
+        var bh:Double {pose.body.height}
+    }
+
+    private static func m6cPoseImage(_ frame:String,species id:SpeciesID,
+                                    part:FoundationPosePart?)->CGImage? {
+        guard let a=M6cPoseGeometry.anatomy(id),let pose=M6cPoseGeometry.pose(species:id,frame:frame) else {return nil}
+        let density=SpeciesCatalog.standard.profile(id).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let d=M6cDrawing(id:id,frame:frame,pose:pose,anatomy:a)
+        if part == nil || part == .feet {m6cFeet(c,d)}
+        if part == nil || part == .body {
+            m6cTail(c,d)
+            if pose.wing>0 {m6cRaisedWing(c,d,far:true)}
+            m6cBody(c,d)
+            m6cFoldedWing(c,d)
+        }
+        if part == nil || part == .headNeck {
+            m6cNeck(c,d)
+            c.ctx.saveGState()
+            c.ctx.translateBy(x:pose.head.x,y:pose.head.y);c.ctx.rotate(by:CGFloat(pose.head.pitch))
+            if d.owl {m6cOwlFace(c,d)} else {m6cPasserineHead(c,d)}
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .bill {
+            c.ctx.saveGState()
+            c.ctx.translateBy(x:pose.head.x,y:pose.head.y);c.ctx.rotate(by:CGFloat(pose.head.pitch))
+            m6cBill(c,d)
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .body {
+            if d.tucked {m6cScapulars(c,d)}
+            if pose.wing>0 {m6cRaisedWing(c,d,far:false)}
+        }
+        return c.image
+    }
+
+    private static func m6cFeet(_ c:BirdPainter,_ d:M6cDrawing) {
+        let xs:[Double]=d.owl ? [26,32]:[27,31]
+        for x in xs {
+            // Only the upper attachment bends. The complete foot/toe band is
+            // identical across all 10/13 poses and matches the old species.
+            let top=min(34.5,d.by+d.bh-2),knee=d.frame == "takeoffCrouch" ? 1.5:0
+            if d.owl {
+                c.line([(x+d.pose.body.lean,top),(x+knee,35),(x,38.5)],"cream",width:2)
+                c.line([(x-2,39),(x,38.5),(x+2,39)],"tan",width:0.8)
+            } else {
+                c.line([(x-1+d.pose.body.lean,top),(x+knee,35),(x-0.5,38.5)],"brown",width:1)
+                c.line([(x-2,39),(x,38.5),(x+2,39)],"brown")
+            }
+        }
+    }
+
+    private static func m6cTail(_ c:BirdPainter,_ d:M6cDrawing) {
+        let x=d.pose.tail.x,y=d.pose.tail.y,w=d.anatomy.tailWidth
+        let rootX=d.bx+(d.owl ? 5:6),rootY=d.by+d.bh*0.48
+        let fill=d.id == .azureWingedMagpie ? "cyan":d.feather
+        c.poly([(rootX,rootY),(rootX+5,rootY+4),(x+w,y+1),(x,y)],fill,outline:true)
+        c.line([(rootX+2,rootY+2),(x+1,y)],d.owl ? "buff":d.wingLight)
+        if d.id == .magpieRobin {
+            // White outer rectrices follow the full cocked tail, not a white
+            // mark at an obsolete horizontal tail position.
+            c.line([(rootX,rootY+0.5),(x,y)],"white",width:0.9)
+            c.line([(rootX+4.5,rootY+3.5),(x+w,y+0.8)],"white",width:0.8)
+        } else if d.id == .azureWingedMagpie {
+            c.line([(x,y),(x+w,y+1)],"silver",width:1.0)
+            c.line([(rootX+3,rootY+2),(x+w*0.55,y)],"blue",width:0.8)
+        } else if d.owl {
+            for n in 0..<3 {
+                let t=0.45+Double(n)*0.18
+                let xx=rootX+(x-rootX)*t,yy=rootY+(y-rootY)*t
+                c.line([(xx,yy),(xx+w-0.8,yy+1)],"buff",width:0.7)
+            }
+        }
+    }
+
+    private static func m6cBody(_ c:BirdPainter,_ d:M6cDrawing) {
+        let x=d.bx,y=d.by,w=d.bw,h=d.bh
+        c.oval(x,y,w,h,d.back,outline:true)
+        if d.owl {
+            c.oval(x+w*0.28,y+2,w*0.57,h-2,d.breast)
+            // Longitudinal marks stay on the compressed belly in the crouch.
+            for row in 0..<4 {for col in 0..<3 {
+                let xx=x+w*0.39+Double(col)*2.6+Double(row%2)*0.4
+                let yy=y+3+Double(row)*(h-4)/4
+                c.line([(xx,yy),(xx+0.3,yy+1.1)],"umber",width:0.7)
+            }}
+        } else {
+            c.oval(x+w*0.48,y+2,w*0.52-0.8,h-2,d.breast)
+            switch d.id {
+            case .magpieRobin:
+                c.poly([(x+w*0.56,y+1),(x+w-1,y+2),(x+w-1,y+5),(x+w*0.62,y+6)],"black")
+            case .redWhiskeredBulbul:
+                c.poly([(x+3,y+h-4),(x+7,y+h-3),(x+5,y+h-0.5),(x+2,y+h-1)],"red")
+            case .swinhoesWhiteEye:
+                c.poly([(x+w*0.63,y+2),(x+w-1,y+3),(x+w-2,y+6),(x+w*0.62,y+5)],"yellow")
+            case .redBilledLeiothrix:
+                c.poly([(x+w*0.60,y+1),(x+w-1,y+2),(x+w-2,y+5),(x+w*0.63,y+5)],"orange")
+            default:break
+            }
+        }
+        if d.pose.body.fluff>0.6 {
+            for n in 0..<4 {
+                let xx=x+w*0.24+Double(n)*w*0.12,yy=y+h-1
+                c.poly([(xx-1,yy-1),(xx+1.3,yy),(xx+0.2,yy+0.6)],n>1 ? d.breast:d.back)
+            }
+        }
+    }
+
+    private static func m6cFoldedWing(_ c:BirdPainter,_ d:M6cDrawing) {
+        let x=d.bx,y=d.by,h=d.bh
+        if d.owl {
+            // Separate lateral wings frame the barred belly and preserve the
+            // broad, frontal owl silhouette even when its face turns aside.
+            for right in [false,true] {
+                let outer=right ? x+d.bw-1:x+1,inner=right ? outer-5:outer+5
+                c.poly([(outer,y+1),(inner,y+3),(inner,y+h-4),
+                        (outer,y+h-1),(outer+(right ? 1:-1),y+h*0.55)],d.feather,outline:true)
+                for n in 0..<4 {
+                    let yy=y+3+Double(n)*(h-4)/4
+                    c.oval(right ? outer-3:outer+0.5,yy,1.5,0.9,"cream")
+                }
+            }
+            return
+        }
+        let slender=d.id == .azureWingedMagpie || d.id == .magpieRobin
+        let tipX=x+(slender ? -0.5:0),tipY=y+h-0.5
+        c.poly([(x+3,y+1),(x+8,y+0.5),(x+13,y+4),(x+10,y+h*0.72),
+                (tipX+2,tipY),(tipX,tipY-0.6),(x+1,y+h*0.5)],d.feather,outline:true)
+        c.poly([(x+4,y+1.6),(x+8,y+1),(x+11,y+4),
+                (x+6,y+h*0.64),(x+2,y+h*0.7)],d.wingLight)
+        for n in 0..<5 {
+            let xx=x+3+Double(n)*1.5
+            c.line([(xx+4,y+4),(max(tipX+1,xx-1),tipY-1)],n%2 == 0 ? d.wingLight:"dark")
+        }
+        switch d.id {
+        case .magpieRobin:
+            c.poly([(x+4,y+2.5),(x+9,y+3.5),(x+10,y+5),
+                    (x+5,y+7),(x+2,y+6)],"white")
+        case .redBilledLeiothrix:
+            c.line([(x+4,y+3.5),(x+10,y+4.5)],"red",width:1.2)
+            c.line([(x+3,y+6),(x+8,y+7)],"yellow",width:0.9)
+        case .azureWingedMagpie:
+            c.line([(x+3,y+2),(x+8,y+3)],"gray",width:1)
+            c.line([(x+2,y+5),(x+6,y+6)],"blue",width:0.8)
+        case .chineseBlackbird:
+            for n in 0..<3 {c.line([(x+4+Double(n)*2,y+3),(x+3+Double(n)*2,y+6)],"dark",width:0.6)}
+        default:break
+        }
+    }
+
+    private static func m6cNeck(_ c:BirdPainter,_ d:M6cDrawing) {
+        let a=d.anatomy,p=d.pose
+        if d.owl {
+            // A feathered neck collar joins the broad face to both shoulders.
+            let left=p.headPoint(-a.headWidth*0.30,a.headHeight*0.30)
+            let right=p.headPoint(a.headWidth*0.32,a.headHeight*0.30)
+            c.poly([(d.bx+4,d.by+4),(left.x,left.y),(right.x,right.y),
+                    (d.bx+d.bw-3,d.by+6),(d.bx+d.bw*0.52,d.by+d.bh*0.65)],"buff")
+        } else {
+            let nape=p.headPoint(-a.headWidth*0.32,1)
+            let chin=p.headPoint(a.headWidth*0.28,a.headHeight*0.38)
+            c.poly([(d.bx+d.bw*0.50,d.by+2),(nape.x,nape.y),
+                    (chin.x,chin.y),(d.bx+d.bw-1,d.by+d.bh*0.65)],d.breast)
+            c.poly([(d.bx+d.bw*0.50,d.by+2),(nape.x,nape.y),
+                    (nape.x+1,nape.y+2),(d.bx+d.bw*0.63,d.by+6)],d.back)
+            if d.id == .chineseBlackbird {
+                c.line([(d.bx+d.bw*0.70,d.by+3),(chin.x-1,chin.y)],"dark",width:0.6)
+            }
+        }
+    }
+
+    private static func m6cPasserineHead(_ c:BirdPainter,_ d:M6cDrawing) {
+        let w=d.anatomy.headWidth,h=d.anatomy.headHeight,x = -w/2,y = -h/2
+        c.oval(x,y,w,h,d.style.2,outline:true)
+        switch d.id {
+        case .lightVentedBulbul:
+            c.poly([(x,y+1),(x+3,y+1),(x+4,y+4),(x+2,y+6),(x,y+4)],"white")
+            c.poly([(x+3,y+5),(x+w,y+4),(x+w,y+7),(x+4,y+7.5)],"silver")
+        case .redWhiskeredBulbul:
+            c.poly([(x,y+2),(x+2,y-6),(x+4,y-3),(x+6,y+1)],"black",outline:true)
+            c.poly([(x+1,y+4),(x+4,y+3),(x+w,y+4),(x+5,y+7),(x+2,y+6)],"white")
+            c.oval(x+2,y+3,2,2,"red")
+        case .magpieRobin:
+            c.line([(x+1,y+1.5),(x+4,y+0.7)],"slate",width:0.6)
+        case .swinhoesWhiteEye:
+            c.poly([(x+3,y+5),(x+w,y+4),(x+w-1,y+7),(x+4,y+7)],"yellow")
+        case .azureWingedMagpie:
+            c.poly([(x+1,y+4),(x+w-1,y+4),(x+w-1,y+6),(x+2,y+7)],"cream")
+        case .redBilledLeiothrix:
+            c.poly([(x+2,y+4),(x+w,y+4),(x+w-1,y+7),(x+3,y+6)],"orange")
+            c.line([(x+1,y+1.5),(x+w-1,y+1)],"yellow",width:0.8)
+        default:break
+        }
+        let ex=x+w*0.72,ey=y+h*0.38
+        if d.id == .swinhoesWhiteEye {c.oval(ex-1.1,ey-1.1,2.9,2.9,"white")}
+        if d.id == .chineseBlackbird {c.oval(ex-0.8,ey-0.8,2.3,2.3,"yellow")}
+        if d.sleepy {c.line([(ex-0.25,ey+0.5),(ex+0.3,ey+0.7),(ex+1,ey+0.45)],"eye",width:0.7)}
+        else {c.oval(ex,ey,1,1.1,"eye");c.oval(ex+0.4,ey,0.45,0.45,"white")}
+    }
+
+    private static func m6cOwlFace(_ c:BirdPainter,_ d:M6cDrawing) {
+        let w=d.anatomy.headWidth,h=d.anatomy.headHeight,x = -w/2,y = -h/2,turn=d.pose.turn
+        let mid=w*0.17*turn,eyeY=y+h*0.48
+        let leftW=w*(0.38-max(0,turn)*0.12),rightW=w*(0.38+min(0,turn)*0.12)
+        c.oval(x,y,w,h,"brown",outline:true)
+        c.oval(mid-leftW-0.5,y+h*0.25,leftW,h*0.66,"buff")
+        c.oval(mid+0.5,y+h*0.25,rightW,h*0.66,"buff")
+        for n in 0..<5 {c.oval(x+2+Double(n)*2.8,y+1.5,1.3,0.8,"cream")}
+        let eyeSize=w*0.19
+        for ex in [mid-leftW*0.55,mid+rightW*0.55] {
+            if d.sleepy {
+                c.line([(ex-eyeSize/2,eyeY+1),(ex,eyeY+1.35),(ex+eyeSize/2,eyeY+1)],"eye",width:0.9)
+            } else {
+                c.oval(ex-eyeSize/2,eyeY-eyeSize/2,eyeSize,eyeSize,"yellow",outline:true)
+                c.oval(ex-eyeSize*0.23,eyeY-eyeSize*0.3,eyeSize*0.46,eyeSize*0.65,"eye")
+                c.oval(ex,eyeY-eyeSize*0.23,0.55,0.55,"white")
+            }
+        }
+        c.line([(mid-leftW+0.5,eyeY-2),(mid-1,eyeY-1)],"cream",width:1.3)
+        c.line([(mid+1,eyeY-1),(mid+rightW-0.5,eyeY-2)],"cream",width:1.3)
+        c.line([(x+3,y+h-2),(mid,y+h-0.7),(x+w-3,y+h-2)],"white",width:1)
+    }
+
+    private static func m6cBill(_ c:BirdPainter,_ d:M6cDrawing) {
+        if d.owl {
+            let mid=d.anatomy.headWidth*0.17*d.pose.turn,eyeY=d.anatomy.headHeight*(-0.02)
+            c.poly([(mid-1,eyeY+1),(mid+1,eyeY+1),(mid+0.3,eyeY+4)],"yellow",outline:true)
+        } else {
+            let root=d.anatomy.headWidth/2-0.5,length=d.id == .swinhoesWhiteEye ? 2.2:4
+            let fill=d.id == .chineseBlackbird ? "yellow":(d.id == .redBilledLeiothrix ? "red":"dark")
+            c.poly([(root,-0.7),(root+length,0.5),(root+length-1,1.2),(root,1.3)],fill)
+        }
+    }
+
+    private static func m6cScapulars(_ c:BirdPainter,_ d:M6cDrawing) {
+        let tip=d.pose.billTip(species:d.id,anatomy:d.anatomy)
+        let x=min(d.pose.head.x-5,Double(tip.x)-1),y=d.pose.head.y+1
+        // The raised shoulder feathers cover the reversed bill, including the
+        // owl's short hook. The authored bill layer remains available to QA.
+        c.poly([(x,y),(d.pose.head.x-1,y),(d.pose.head.x+3,y+2),
+                (d.pose.head.x+2,y+6),(x,y+6),(x-1,y+3)],d.feather,outline:true)
+        for n in 0..<3 {
+            let xx=x+1+Double(n)*2
+            c.line([(xx,y+1),(xx-0.8,y+4)],d.wingLight)
+        }
+        if d.id == .magpieRobin {c.line([(x+1,y+3),(x+5,y+4)],"white",width:0.8)}
+        if d.id == .redBilledLeiothrix {c.line([(x+1,y+3),(x+5,y+4)],"red",width:0.8)}
+    }
+
+    private static func m6cRaisedWing(_ c:BirdPainter,_ d:M6cDrawing,far:Bool) {
+        let lift=d.pose.wing,span=d.anatomy.wingSpan
+        let shoulderX=d.owl ? d.bx+(far ? 3:d.bw-3):d.bx+10
+        // The owl's broad trailing edge adds chord on top of lateral reach.
+        // In Push, (u:0.73,v:0.84) must fit too, not only the primary tip:
+        // 37.5 + 0.18*19*0.73 + 0.84*8 = 46.7166, plus <=0.5 outline.
+        let shoulderY=d.by+3,direction=d.owl && !far ? 0.18:(far ? -0.42:-0.72)
+        let chord=(d.owl ? 8.0:(d.id == .chineseBlackbird ? 6.5:5.5))*lift
+        func p(_ u:Double,_ v:Double)->(Double,Double) {
+            (shoulderX+direction*span*lift*u+v*chord,
+             shoulderY-span*lift*(far ? 0.83:1)*u+v*2*lift)
+        }
+        let edge:[(Double,Double)]
+        if d.owl {
+            edge=[(0,0),(0.35,-0.12),(0.72,-0.10),(1,0),(1,0.16),
+                  (0.88,0.17),(0.96,0.36),(0.80,0.35),(0.88,0.58),
+                  (0.69,0.56),(0.73,0.84),(0.52,0.78),(0.36,0.94),(0,0.45)]
+        } else {
+            edge=[(0,0),(0.30,-0.12),(0.66,-0.10),(0.95,0),(1,0.18),
+                  (0.91,0.45),(0.72,0.70),(0.47,0.88),(0.20,0.85),(0,0.4)]
+        }
+        let base:String,light:String
+        if far {
+            func shade(_ key:String,_ output:String)->String {
+                let value=c.palette[key]!
+                let r=UInt32(Double((value>>24)&255)*0.78),g=UInt32(Double((value>>16)&255)*0.78),b=UInt32(Double((value>>8)&255)*0.78)
+                c.palette[output]=(r<<24)|(g<<16)|(b<<8)|255
+                return output
+            }
+            base=shade(d.feather,"m6cFarWing");light=shade(d.wingLight,"m6cFarCoverts")
+        } else {base=d.feather;light=d.wingLight}
+        c.poly(edge.map{p($0.0,$0.1)},base,outline:true)
+        c.poly([(0,0),(0.30,-0.07),(0.61,0.02),(0.60,0.32),(0.30,0.48),(0,0.32)].map{p($0.0,$0.1)},light)
+        for n in 0..<5 {
+            let u=0.30+Double(n)*0.12
+            c.line([p(u,0.18),p(u+0.02,0.67)],d.owl ? "umber":"dark")
+        }
+        switch d.id {
+        case .magpieRobin:c.line([p(0.22,0.42),p(0.52,0.34),p(0.68,0.22)],"white",width:1.3)
+        case .redBilledLeiothrix:
+            c.line([p(0.23,0.40),p(0.57,0.32)],"red",width:1.2)
+            c.line([p(0.35,0.64),p(0.66,0.48)],"yellow",width:0.8)
+        case .littleOwl:
+            for n in 0..<4 {let u=0.25+Double(n)*0.13;c.line([p(u,0.20),p(u+0.04,0.30)],"cream",width:0.8)}
+        default:break
         }
     }
 }

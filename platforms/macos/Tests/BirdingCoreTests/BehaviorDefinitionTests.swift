@@ -61,7 +61,8 @@ final class BehaviorDefinitionTests:XCTestCase {
             (.observationPose,"observationPose",["lookNear","lookFar"]),
             (.alertPose,"alertPose",["alertRise","alertHold","alertRelax"]),
             (.restPose,"restPose",["restLower","restTuck","restWake"]),
-            (.takeoffPose,"takeoffPose",["takeoffCrouch","takeoffPush"])
+            (.takeoffPose,"takeoffPose",["takeoffCrouch","takeoffPush"]),
+            (.edgePeekPose,"edgePeekPose",["peekLower","peekLook","peekRecover"])
         ]
         XCTAssertEqual(BirdCapability.allCases,fixtures.map {$0.0})
         for (capability,name,frames) in fixtures {
@@ -139,7 +140,7 @@ final class BehaviorDefinitionTests:XCTestCase {
                 switch capability {
                 case .allopreening:available=supported.contains(species)
                 case .feeding:available=seedVisitors.contains(species)
-                case .observationPose,.alertPose,.restPose,.takeoffPose:available=false
+                case .observationPose,.alertPose,.restPose,.takeoffPose,.edgePeekPose:available=false
                 default:available=true
                 }
                 XCTAssertEqual(capability.requiredFrames.isSubset(of:frames),available,"\(species): \(capability)")
@@ -153,6 +154,22 @@ final class BehaviorDefinitionTests:XCTestCase {
                 }
                 XCTAssertEqual(BehaviorDefinitions.definition(for:fixture.kind).missingFrames(in:frames).isEmpty,available,
                     "\(species): \(fixture.kind)")
+            }
+        }
+    }
+
+    func testEdgePeekPoseRequiresTheCompleteNewSetWithoutChangingTheLegacyDefinition() {
+        let frames:Set<String> = ["peekLower","peekLook","peekRecover"]
+        let legacy:Set<String> = ["stand","idle0","idle1","idle2","land0","land1","land2"]
+        XCTAssertEqual(BirdCapability.edgePeekPose.requiredFrames,frames)
+        XCTAssertEqual(BehaviorDefinitions.definition(for:.edgePeek).requiredCapabilities,[.standing,.greeting,.landing])
+        XCTAssertEqual(BehaviorDefinitions.definition(for:.edgePeek).requiredFrames,legacy)
+        for species in SpeciesID.allCases {
+            XCTAssertFalse(SpeciesSupportAudit(species:species,availableFrames:legacy).capabilities.contains(.edgePeekPose))
+            XCTAssertTrue(SpeciesSupportAudit(species:species,availableFrames:legacy.union(frames)).capabilities.contains(.edgePeekPose))
+            for missing in frames.sorted() {
+                XCTAssertFalse(SpeciesSupportAudit(species:species,
+                    availableFrames:legacy.union(frames).subtracting([missing])).capabilities.contains(.edgePeekPose),missing)
             }
         }
     }

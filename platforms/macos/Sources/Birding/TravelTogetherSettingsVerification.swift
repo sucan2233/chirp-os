@@ -225,8 +225,9 @@ enum TravelTogetherSettingsVerification {
             w.previewTravelTogetherButton.title==w.t("预览飞行中结队","Preview travel together") &&
             w.travelTogetherButton.identifier?.rawValue=="travelTogetherEnabled" &&
             w.previewTravelTogetherButton.identifier?.rawValue=="previewTravelTogether"
-        let expected:Set<SpeciesID>=[.treeSparrow,.barnSwallow,.spottedDove,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling]
+        let expected=Set(SpeciesBehaviorProfile.species(for:.travelTogether))
         checks[prefix+"SpeciesNames"] = TravelTogetherBehavior.supportedSpecies==expected &&
+            help.stringValue.contains(w.language.supportedSpeciesNames(for:.travelTogether)) &&
             expected.allSatisfy{help.stringValue.contains(w.language.name($0))}
         checks[prefix+"ExistingCoordinates"] = w.hoverDelaySlider.frame.minY==122 && w.pointerVisitsButton.frame.minY==310 &&
             w.socialInteractionsButton.frame.minY==418 && w.perchActionsButton.frame.minY==916 &&

@@ -5,6 +5,37 @@ public enum FixedPerchVisitBehavior {
     public static let supportedSpecies:Set<SpeciesID> = Set(SpeciesBehaviorProfile.species(for:.fixedPerchVisit))
 }
 
+/// The branch uses world scale; the visiting bird uses its live profile scale.
+/// Keep these separate so a catalog size change cannot silently shrink margins.
+enum FixedPerchVisitGeometry {
+    static func landingClearance(perch:ResolvedFixedPerch,spriteScale:CGFloat) -> CGRect? {
+        guard spriteScale.isFinite,spriteScale>0 else {return nil}
+        let bird=Geometry.landingFootprint(at:perch.foot,scale:spriteScale)
+            .insetBy(dx:-8*spriteScale,dy:-8*spriteScale)
+        let area=bird.union(perch.rect)
+        guard [area.minX,area.minY,area.maxX,area.maxY].allSatisfy(\.isFinite) else {return nil}
+        return area
+    }
+    static func isSafe(perch:ResolvedFixedPerch,bird:Bird,in engine:BehaviorEngine) -> Bool {
+        // Existing species retain their established journey policy. The new
+        // bulbul additionally proves that its full, padded body and the branch
+        // fit together in a work area using the actual relativeScale.
+        guard bird.profile.id == .lightVentedBulbul else {return true}
+        guard let area=landingClearance(perch:perch,spriteScale:engine.spriteScale(for:bird)),
+              engine.world.displays.contains(where:{display in
+                  guard display.contains(area) else {return false}
+                  return engine.world.screens.isEmpty || engine.world.screens.contains {
+                      let work=display.intersection($0)
+                      return !work.isNull && !work.isEmpty && work.contains(area)
+                  }
+              }) else {return false}
+        return !Geometry.blockers(on:perch.surface,surfaces:engine.world.surfaces).contains {
+            let overlap=area.intersection($0.rect)
+            return !overlap.isNull && !overlap.isEmpty
+        }
+    }
+}
+
 /// A frozen, single-bird journey. Only Bird.tick changes the foot anchor.
 struct FixedPerchVisitPlan {
     static var requiredFrames:Set<String> {BehaviorDefinitions.definition(for:.fixedPerchVisit).requiredFrames}
@@ -31,6 +62,7 @@ struct FixedPerchVisitPlan {
               let bird=engine.bird(id),engine.spriteScale(for:bird)==scale,
               let current=engine.fixedPerchSnapshot().first(where:{$0.slot==perch.slot}),
               current.surface==perch.surface,current.foot==perch.foot,current.rect==perch.rect,
+              FixedPerchVisitGeometry.isSafe(perch:current,bird:bird,in:engine),
               destination.host(in:engine)==perch.surface,destination.isValid(in:engine),
               destination.point(in:engine).map({Geometry.distance($0,perch.foot)<0.001}) == true
         else {return false}
@@ -83,6 +115,7 @@ struct FixedPerchVisitPlan {
             let scale=engine.spriteScale(for:bird)
             guard scale.isFinite,scale>0 else {continue}
             for perch in perches where bird.hostID != perch.surface.id {
+                guard FixedPerchVisitGeometry.isSafe(perch:perch,bird:bird,in:engine) else {continue}
                 guard let display=engine.world.displays.first(where:{
                     $0.contains(Geometry.landingFootprint(at:bird.position,scale:scale)) &&
                     $0.contains(Geometry.landingFootprint(at:perch.foot,scale:scale))

@@ -2,7 +2,9 @@ import XCTest
 @testable import BirdingCore
 
 final class PoseClipTests:XCTestCase {
-    private let species:[SpeciesID] = [.treeSparrow,.spottedDove,.barnSwallow,.nightHeron]
+    private let species:[SpeciesID] = [.treeSparrow,.spottedDove,.barnSwallow,.nightHeron,
+        .lightVentedBulbul,.redWhiskeredBulbul,.chineseBlackbird,.magpieRobin,
+        .swinhoesWhiteEye,.azureWingedMagpie,.redBilledLeiothrix,.littleOwl]
     private let kinds:[BehaviorKind] = [.watch,.alert,.rest,.takeoffPreparation]
     private let poseFrames:Set<String> = ["lookNear","lookFar","alertRise","alertHold","alertRelax",
         "restLower","restTuck","restWake","takeoffCrouch","takeoffPush"]
@@ -181,6 +183,27 @@ final class PoseClipTests:XCTestCase {
             var invalid=valid;invalid[key]=value
             let data=try JSONSerialization.data(withJSONObject:invalid)
             XCTAssertThrowsError(try JSONDecoder().decode(PoseClip.self,from:data),key)
+        }
+    }
+
+    func testDedicatedPeekClipHasOnePointSixSecondClockAndExactFrameBoundaries() throws {
+        let supported:[SpeciesID] = [.lightVentedBulbul,.magpieRobin]
+        for species in SpeciesID.allCases {
+            guard supported.contains(species) else {
+                XCTAssertNil(PoseClip.edgePeek(species:species));continue
+            }
+            let clip=try XCTUnwrap(PoseClip.edgePeek(species:species))
+            XCTAssertEqual(clip.frames.map(\.name),["peekLower","peekLook","peekRecover"])
+            for (frame,time) in zip(clip.frames,[0.32,0.96,0.32]) {XCTAssertEqual(frame.duration,time,accuracy:1e-9)}
+            XCTAssertEqual(clip.duration,1.6,accuracy:1e-9)
+            XCTAssertEqual(clip.maximumLoops,1);XCTAssertEqual(clip.foot,.init(29,39))
+            XCTAssertEqual(clip.requiredFrames,["peekLower","peekLook","peekRecover"])
+            for (age,name) in [(0.0,"peekLower"),(0.319999,"peekLower"),(0.32,"peekLook"),
+                               (1.279999,"peekLook"),(1.28,"peekRecover"),(1.599999,"peekRecover")] {
+                XCTAssertEqual(clip.sample(at:age)?.name,name,"\(species), \(age)")
+            }
+            XCTAssertNil(clip.sample(at:1.6));XCTAssertNil(clip.sample(at:3.2))
+            XCTAssertEqual(try JSONDecoder().decode(PoseClip.self,from:JSONEncoder().encode(clip)),clip)
         }
     }
 
@@ -735,6 +758,8 @@ final class PoseClipTests:XCTestCase {
     }
 
     func testUnlistedSpeciesKeepOldPresentationEvenWithInjectedEnhancementFrames() throws {
+        XCTAssertEqual(species.count,12)
+        XCTAssertEqual(SpeciesID.allCases.filter{!species.contains($0)}.count,34)
         for bird in SpeciesID.allCases where !species.contains(bird) {
             for kind in kinds {
                 // Takeoff preparation requires a top-edge destination for every

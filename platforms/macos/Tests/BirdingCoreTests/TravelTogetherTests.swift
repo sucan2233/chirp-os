@@ -4,7 +4,7 @@ import XCTest
 final class TravelTogetherTests:XCTestCase {
     // Deliberately independent of the production capability declaration.
     private let frames:Set<String> = ["stand","fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","land0","land1","land2"]
-    private let species:[SpeciesID] = [.treeSparrow,.barnSwallow,.spottedDove,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling]
+    private let species:[SpeciesID] = [.treeSparrow,.barnSwallow,.spottedDove,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling,.redWhiskeredBulbul]
 
     private func fixture(species:[SpeciesID] = [.treeSparrow,.treeSparrow],scale:CGFloat=1,
                          compact:Bool=false,origins:[CGPoint]?=nil,elapsed:Double?=nil,
@@ -118,7 +118,7 @@ final class TravelTogetherTests:XCTestCase {
         advance(e,seconds:1);XCTAssertEqual(terminals(e,s.run).count,1)
     }
 
-    func testAllSixSpeciesKeepInitialVelocityAndTangentSpeedContinuityAtEveryJoin() throws {
+    func testAllSevenSpeciesKeepInitialVelocityAndTangentSpeedContinuityAtEveryJoin() throws {
         XCTAssertEqual(TravelTogetherBehavior.supportedSpecies,Set(species))
         for species in species {
             let e=fixture(species:[species,species]),s=try start(e)
@@ -409,6 +409,147 @@ final class TravelTogetherTests:XCTestCase {
             released(e,s,type:.cancelled)
             XCTAssertEqual(s.birds.map(\.position),before)
             advance(e,seconds:1);XCTAssertEqual(terminals(e,s.run).count,1)
+        }
+    }
+
+    func testRedWhiskeredBulbulActualAirborneHandoffFormationAndJoinsPreserveBothDestinations() throws {
+        for source:BehaviorSource in [.preview,.automatic] {
+            let e=fixture(species:[.redWhiskeredBulbul,.redWhiskeredBulbul])
+            let original=try e.birds.map{try XCTUnwrap($0.airborneFlight)}
+            let frames=e.renderSnapshot().map(\.frameName),identities=e.birds.map(ObjectIdentifier.init)
+            let s=try start(e,source:source)
+            XCTAssertEqual(e.renderSnapshot().map(\.frameName),frames,"Airborne handoff must retain wing phase")
+            XCTAssertEqual(s.plan.scales,s.birds.map{e.spriteScale(for:$0)})
+            var joins=Set<String>(),previousVectors=original.map(\.velocity),pairedTicks=0
+            var observations:[BehaviorObservation]=[]
+            e.observationObserver={observations.append($0)}
+            let entry=try XCTUnwrap(s.plan.commonEntries.max()),end=entry+s.plan.commonDuration
+            let formation=delta(s.plan.formationOffsets[1],s.plan.formationOffsets[0])
+            for step in 0..<Int(ceil((s.plan.duration+1)/BehaviorEngine.step)) {
+                let before=s.birds.map(\.position),ages=s.birds.map{$0.coordinatedFlightAge ?? 0}
+                let speeds=s.birds.map(\.flightSpeed)
+                e.advance(BehaviorEngine.step)
+                let footprints=s.birds.map{Geometry.landingFootprint(at:$0.position,scale:e.spriteScale(for:$0))}
+                let overlap=footprints[0].intersection(footprints[1])
+                XCTAssertTrue(overlap.isNull || overlap.isEmpty)
+                for index in 0..<2 {
+                    let bird=s.birds[index],route=s.plan.routes[index],dt=BehaviorEngine.step
+                    let clock=bird.coordinatedFlightAge ?? route.duration
+                    let vector=CGPoint(x:(bird.position.x-before[index].x)/dt,y:(bird.position.y-before[index].y)/dt)
+                    XCTAssertTrue(s.plan.display.contains(footprints[index]))
+                    XCTAssertLessThanOrEqual(Double(Geometry.distance(before[index],bird.position)),
+                        (route.legs.map{$0.timing.peakSpeed}.max() ?? 0)*dt+0.001)
+                    if step==0 {
+                        XCTAssertLessThanOrEqual(Geometry.distance(vector,original[index].velocity),max(2,speeds[index]*0.01))
+                        XCTAssertLessThan(abs(bird.flightSpeed-speeds[index]),8)
+                    }
+                    var boundary=0.0
+                    for join in 1..<route.legs.count {
+                        boundary+=route.legs[join-1].timing.duration
+                        if ages[index]<boundary,clock>=boundary {
+                            joins.insert("\(index):\(join)")
+                            XCTAssertEqual(bird.flightSpeed,route.legs[join].timing.speed(at:0),accuracy:2)
+                            XCTAssertLessThan(abs(bird.flightSpeed-speeds[index]),8)
+                            XCTAssertGreaterThan(dot(vector,previousVectors[index]),0.99)
+                        }
+                    }
+                    previousVectors[index]=vector
+                }
+                if let age=s.birds[0].coordinatedFlightAge,age>=entry+0.02,age<=end-0.02 {
+                    pairedTicks+=1
+                    XCTAssertLessThan(Geometry.distance(delta(s.birds[1].position,s.birds[0].position),formation),0.01)
+                    XCTAssertEqual(s.birds[0].flightSpeed,s.birds[1].flightSpeed,accuracy:0.01)
+                }
+                if !terminals(e,s.run).isEmpty {break}
+            }
+            XCTAssertEqual(joins,["0:1","0:2","1:1","1:2"])
+            XCTAssertGreaterThan(pairedTicks,120)
+            released(e,s,type:.completed)
+            XCTAssertEqual(s.birds.map(\.position),original.map(\.destination))
+            XCTAssertEqual(s.birds.map(\.hostID),s.plan.hosts.map{Optional($0.id)})
+            XCTAssertTrue(s.birds.allSatisfy{$0.state == .perched && $0.landedCount == 1})
+            XCTAssertEqual(e.birds.map(ObjectIdentifier.init),identities)
+            XCTAssertEqual(observations.count,1);XCTAssertEqual(observations.first?.source,source)
+            XCTAssertEqual(e.residentCount,2);XCTAssertEqual(e.arrivalCount,0);XCTAssertEqual(e.departureCount,0)
+        }
+    }
+
+    func testRedWhiskeredBulbulEitherParticipantCanLeaveEachFormationPhaseWithoutOverwritingTheOther() throws {
+        for actor in 0..<2 {
+            for phase in 0..<5 {
+                for cause in ["relocate","external","remove"] {
+                    let e=fixture(species:[.redWhiskeredBulbul,.redWhiskeredBulbul]),s=try start(e)
+                    let entry=try XCTUnwrap(s.plan.commonEntries.max())
+                    let times=[0,0.3,entry+0.5,entry+s.plan.commonDuration+0.1,
+                        (s.plan.routes.map(\.duration).min() ?? 0)+0.1]
+                    advance(e,seconds:times[phase]);XCTAssertTrue(terminals(e,s.run).isEmpty)
+                    let bird=s.birds[actor],other=s.birds[1-actor],before=s.birds.map(\.position),otherState=other.state
+                    var observations:[BehaviorObservation]=[]
+                    e.observationObserver={observations.append($0)}
+                    var replacement:BehaviorRunID?
+                    switch cause {
+                    case "relocate":
+                        guard case .started(let run)=e.handle(.relocate(s.plan.participants[actor])) else {
+                            XCTFail("Either bulbul must accept immediate relocation in phase \(phase)");continue
+                        }
+                        replacement=run
+                    case "external":
+                        bird.fly(to:CGPoint(x:1800,y:850),host:nil,arc:0,allowsOrbit:false,random:{0.5})
+                        e.updateWorld(e.world)
+                    default:e.handle(.remove(s.plan.participants[actor]))
+                    }
+                    let revision=bird.motionRevision
+                    XCTAssertEqual(terminals(e,s.run).map(\.type),[cause == "external" ? .failed:.cancelled])
+                    XCTAssertEqual(terminals(e,s.run).first?.reason,
+                        cause == "external" ? .targetInvalid:(cause == "remove" ? .removed:.replaced))
+                    XCTAssertEqual(s.birds.map(\.position),before)
+                    XCTAssertFalse(e.runtime.owners.values.contains(s.run));XCTAssertEqual(e.reservedLandingCount,0)
+                    XCTAssertFalse(s.birds.contains(where:{$0.isCoordinatedFlying}))
+                    if let replacement {XCTAssertEqual(e.runtime.owners[s.plan.participants[actor]],replacement)}
+                    else {XCTAssertEqual(e.leasedBirdCount,0)}
+                    if otherState == .perched {XCTAssertEqual(other.state,.perched)}
+                    else {XCTAssertTrue(other.needsDestination)}
+                    advance(e,seconds:0.2)
+                    if cause != "remove" {
+                        XCTAssertNotEqual(bird.position,before[actor]);XCTAssertEqual(bird.motionRevision,revision)
+                    }
+                    XCTAssertEqual(other.position,before[1-actor])
+                    XCTAssertTrue(observations.isEmpty);XCTAssertEqual(terminals(e,s.run).count,1)
+                    e.handle(.cancelAmbient(.sleep))
+                    XCTAssertEqual(e.activeRunCount,0);XCTAssertEqual(e.leasedBirdCount,0)
+                }
+            }
+        }
+    }
+
+    func testRedWhiskeredBulbulFormationCompletionAndEitherRemovalMatchAtThirtySixtyAndOneHundredTwentyHz() throws {
+        struct Trace:Equatable {
+            let positions:[CGPoint],frames:[String],states:[BirdState]
+            let counts:[Int],events:[String]
+        }
+        func replay(_ hz:Int,removed:Int?) throws -> [Trace] {
+            let e=fixture(species:[.redWhiskeredBulbul,.redWhiskeredBulbul]),s=try start(e)
+            var observations:[BehaviorObservation]=[],trace:[Trace]=[]
+            e.observationObserver={observations.append($0)}
+            for sample in 0..<340 {
+                if sample==2 {e.handle(.pause(true))}
+                if sample==5 {e.handle(.pause(false))}
+                if sample==12,let removed {e.handle(.remove(s.plan.participants[removed]))}
+                for _ in 0..<(hz/10) {e.advance(1/Double(hz))}
+                trace.append(Trace(positions:s.birds.map(\.position),frames:e.renderSnapshot().map(\.frameName),
+                    states:s.birds.map(\.state),counts:[e.activeRunCount,e.leasedBirdCount,e.reservedLandingCount,
+                        e.residentCount,e.arrivalCount,e.departureCount,observations.count],
+                    events:e.events.map{"\($0.sequence):\($0.time):\($0.runID?.rawValue ?? 0):\($0.kind?.rawValue ?? ""):\($0.type):\($0.reason?.rawValue ?? ""):\($0.participants.map(\.rawValue))"}))
+            }
+            released(e,s,type:removed == nil ? .completed:.cancelled)
+            XCTAssertEqual(observations.count,removed == nil ? 1:0)
+            return trace
+        }
+        let actors:[Int?]=[nil,0,1]
+        for actor in actors {
+            let reference=try replay(60,removed:actor)
+            XCTAssertEqual(try replay(30,removed:actor),reference)
+            XCTAssertEqual(try replay(120,removed:actor),reference)
         }
     }
 }

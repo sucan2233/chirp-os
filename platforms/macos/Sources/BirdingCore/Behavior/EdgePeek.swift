@@ -5,6 +5,9 @@ import CoreGraphics
 /// SideHopPlan geometry; no visible-piece boundary can become a pretend edge.
 struct EdgePeekPlan {
     static var requiredFrames:Set<String> {BehaviorDefinitions.definition(for:.edgePeek).requiredFrames}
+    static func requiredFrames(for species:SpeciesID) -> Set<String> {
+        SpeciesBehaviorProfile.profile(for:species).requiredFrames(for:.edgePeek)
+    }
     let approach:SideHopPlan
     let origin:LandingReservation
     var id:BirdID {approach.id}
@@ -14,7 +17,25 @@ struct EdgePeekPlan {
             screens:approach.screens,displays:approach.displays)
     }
     func isSafe(in engine:BehaviorEngine) -> Bool {
-        approach.isSafe(in:engine) && returnPlan.isSafe(in:engine)
+        guard approach.isSafe(in:engine),returnPlan.isSafe(in:engine),
+              let bird=engine.bird(id) else {return false}
+        guard SpeciesBehaviorProfile.peekSpecies.contains(bird.profile.id) else {return true}
+        guard let current=origin.host(in:engine) else {return false}
+        // The dedicated frames keep the same 48-unit canvas and (29,39)
+        // feet. Check its actual outward-facing extent, not a species-size
+        // assumption or an unscaled 42-point endpoint margin. This also keeps
+        // the entire head/neck canvas inside the real window's side edges.
+        return [approach.host,current].allSatisfy {host in
+            guard let area=observationFootprint(on:host) else {return false}
+            return area.minX>=host.rect.minX && area.maxX<=host.rect.maxX
+        }
+    }
+    func observationFootprint(on host:Surface) -> CGRect? {
+        let scale=approach.scale,fraction=approach.destination.fraction
+        guard scale.isFinite,scale>0,fraction==0 || fraction==1 else {return nil}
+        let foot=Geometry.foot(on:host,fraction:fraction,edge:.top,scale:scale)
+        return CGRect(x:foot.x-(fraction==1 ? 29:19)*scale,y:foot.y-39*scale,
+            width:48*scale,height:48*scale)
     }
     func pointerIsClear(in engine:BehaviorEngine) -> Bool {
         let pointer=engine.world.pointer
@@ -23,6 +44,7 @@ struct EdgePeekPlan {
     }
     static func make(id:BirdID,in engine:BehaviorEngine) -> EdgePeekPlan? {
         guard let bird=engine.bird(id),
+              requiredFrames(for:bird.profile.id).isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
               let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isGround,!host.isHabitat else {return nil}
         let scale=engine.spriteScale(for:bird)
         guard scale.isFinite,scale>0,bird.fraction.isFinite,(0...1).contains(bird.fraction),
@@ -45,8 +67,8 @@ struct EdgePeekPlan {
 }
 
 public final class EdgePeekExecution:LedgeTraversalExecution {
-    /// These species have downward head displacement in the renderer's idle
-    /// peck/probe sequence. A matching frame name alone is insufficient evidence.
+    /// Legacy species use their verified idle peck/probe; the two dedicated
+    /// species require all three peek frames for the entire run.
     public static let supportedSpecies:Set<SpeciesID> = Set(SpeciesBehaviorProfile.species(for:.edgePeek))
     static let observationDuration=1.6
     enum Phase:String {case approach,observe,returning="return"}
@@ -63,7 +85,9 @@ public final class EdgePeekExecution:LedgeTraversalExecution {
     init(plan:EdgePeekPlan,source:BehaviorSource) {self.plan=plan;self.source=source}
     func sweptFootprint(in engine:BehaviorEngine) -> CGRect? {plan.approach.sweptFootprint(in:engine)}
     func start(in engine:BehaviorEngine) {
-        guard let bird=engine.bird(plan.id),plan.isSafe(in:engine),plan.pointerIsClear(in:engine),
+        guard let bird=engine.bird(plan.id),
+              EdgePeekPlan.requiredFrames(for:bird.profile.id).isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
+              plan.isSafe(in:engine),plan.pointerIsClear(in:engine),
               bird.beginSideHop(on:plan.approach.host,to:plan.approach.destination.fraction,spriteScale:plan.approach.scale) else {return}
         revision=bird.motionRevision
     }
@@ -71,7 +95,7 @@ public final class EdgePeekExecution:LedgeTraversalExecution {
         guard let bird=engine.bird(plan.id) else {return .failed(.missingBird)}
         guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:source) else {return .cancelled(.settingsChanged)}
         guard Self.supportedSpecies.contains(bird.profile.id),
-              EdgePeekPlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}
+              EdgePeekPlan.requiredFrames(for:bird.profile.id).isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}
         guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
         guard let revision,bird.motionRevision==revision,!bird.isDeparting,bird.edge == .top,
               bird.hostID==plan.approach.host.id,!bird.needsDestination,bird.isSideHopping,
@@ -111,16 +135,25 @@ public final class EdgePeekExecution:LedgeTraversalExecution {
         return nil
     }
     func presentation(for id:BirdID,in engine:BehaviorEngine) -> BirdPose? {
-        guard id==plan.id,phase == .observe else {return nil}
+        guard id==plan.id,phase == .observe,let bird=engine.bird(id) else {return nil}
         // One deliberate, brief bow: no looping peck animation and no invented
         // frame semantics for species outside supportedSpecies.
         let frame:String
-        switch observationAge/Self.observationDuration {
-        case ..<0.2:frame="idle0"
-        case ..<0.4:frame="idle1"
-        case ..<0.6:frame="idle2"
-        case ..<0.8:frame="idle1"
-        default:frame="idle0"
+        let progress=observationAge/Self.observationDuration
+        if SpeciesBehaviorProfile.peekSpecies.contains(bird.profile.id) {
+            // Runtime and export sample the same clip. If a moving host has
+            // not settled at 1.6s, hold recovery until tick permits the return.
+            guard let clip=PoseClip.edgePeek(species:bird.profile.id),
+                  let sampled=clip.sample(at:observationAge) ?? clip.frames.last else {return nil}
+            frame=sampled.name
+        } else {
+            switch progress {
+            case ..<0.2:frame="idle0"
+            case ..<0.4:frame="idle1"
+            case ..<0.6:frame="idle2"
+            case ..<0.8:frame="idle1"
+            default:frame="idle0"
+            }
         }
         return BirdPose(frameName:frame,hopOffset:0,facingRight:plan.approach.destination.fraction==1)
     }
@@ -147,7 +180,7 @@ extension BehaviorEngine {
         guard bird.state == .perched,bird.edge == .top,!bird.needsDestination,
               bird.stateTime>=0.45,bird.perchDuration-bird.stateTime>6,
               abs(baseHop(for:id,bird:bird))<0.001 else {return .unavailableBird}
-        guard EdgePeekPlan.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? []) else {return .missingFrames}
+        guard EdgePeekPlan.requiredFrames(for:bird.profile.id).isSubset(of:world.availableFrames[bird.profile.id] ?? []) else {return .missingFrames}
         guard !world.buttonsDown else {return .userInput}
         guard hasUsablePerch(bird) else {return .noSpace}
         if source == .automatic {

@@ -20,8 +20,13 @@ extension BirdArt {
                       let data=try? JSONEncoder().encode(clip),let object=try? JSONSerialization.jsonObject(with:data) else {continue}
                 clips[kind.rawValue]=object
             }
-            result[species.rawValue]=["clips":clips,"durationPolicy":"watch/alert/rest use owning run duration; transitions compress proportionally",
-                "beakAnchors":Dictionary(uniqueKeysWithValues:profile.poseFrameNames.map {name in
+            if let clip=PoseClip.edgePeek(species:species),
+               let data=try? JSONEncoder().encode(clip),let object=try? JSONSerialization.jsonObject(with:data) {
+                clips[BehaviorKind.edgePeek.rawValue]=object
+            }
+            let anchorNames=profile.poseFrameNames + (SpeciesBehaviorProfile.peekSpecies.contains(species) ? Self.peekNames:[])
+            result[species.rawValue]=["clips":clips,"durationPolicy":"watch/alert/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase",
+                "beakAnchors":Dictionary(uniqueKeysWithValues:anchorNames.map {name in
                     let anchor=PoseClip.beakAnchor(species:species,frame:name)
                     return (name,[anchor.x,anchor.y])
                 })]

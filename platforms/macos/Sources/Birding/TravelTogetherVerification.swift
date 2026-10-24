@@ -9,7 +9,7 @@ enum TravelTogetherVerification {
         try FileManager.default.createDirectory(at:evidence,withIntermediateDirectories:true)
         let h=try Harness(folder:evidence)
         defer {h.close()}
-        for species:SpeciesID in [.spottedDove,.blackCollaredStarling] {try h.complete(species,into:&checks)}
+        for species:SpeciesID in [.spottedDove,.blackCollaredStarling,.redWhiskeredBulbul] {try h.complete(species,into:&checks)}
         for index in 0..<2 {try h.click(index,into:&checks)}
         for cause in ["host-removed","setting-disabled"] {try h.interrupt(cause,into:&checks)}
         for gate in ["stationary","opposite-directions","setting-disabled","social-disabled"] {try h.reject(gate,into:&checks)}
@@ -477,9 +477,9 @@ enum TravelTogetherVerification {
                 "input":"Live NSEvent pointer/buttons; no mouse warp. Pixel probes call production hit/hover/click routing.",
                 "execution":"Isolated controller; fixed steps; no start/timers, user settings reads/writes, or preview spawning.",
                 "sharedCriterion":"After convergence by 18 sprite points: both airborne, speed >60, heading dot >0.98, relative velocity <max(8,4% speed), continuously >=1.8s. Then both still airborne, parallel criterion ends and relative position vector changes by >18 sprite points before landing at distinct original targets.",
-                "representativeSpecies":[SpeciesID.spottedDove.rawValue,SpeciesID.blackCollaredStarling.rawValue],
-                "requestedSupportedSpecies":[SpeciesID.treeSparrow,.barnSwallow,.spottedDove,.lightVentedBulbul,
-                    .azureWingedMagpie,.blackCollaredStarling].map(\.rawValue),
+                "representativeSpecies":[SpeciesID.spottedDove.rawValue,SpeciesID.blackCollaredStarling.rawValue,SpeciesID.redWhiskeredBulbul.rawValue],
+                "requestedSupportedSpecies":SpeciesBehaviorProfile.species(for:.travelTogether).map(\.rawValue),
+                "m6cScope":"Red-whiskered Bulbul: existing airborne pair, actual layers/feet, continuous entry, separation and distinct original landings; legacy cases retained.",
                 "events":eventLog.values.sorted{$0.sequence<$1.sequence}.map {event -> [String:Any] in
                     ["sequence":event.sequence,"time":event.time,"runID":event.runID?.rawValue ?? 0,
                         "kind":event.kind?.rawValue ?? "none","source":event.source.rawValue,"type":event.type.rawValue,

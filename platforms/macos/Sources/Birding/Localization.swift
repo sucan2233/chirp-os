@@ -13,6 +13,9 @@ enum AppLanguage: String {
     var poseSpeciesNames:String {
         SpeciesBehaviorProfile.poseSpecies.map { name($0) }.joined(separator:text("、",", "))
     }
+    /// One shared species list keeps the twelve English names readable without
+    /// repeating them inside the shorter preview and takeoff help controls.
+    var poseSupportReference:String {text("以上专用鸟种","the pose species listed above")}
     func name(_ id:SpeciesID) -> String {
         if let p = SpeciesCatalog.standard.species.first(where: { $0.id == id }), let en = p.englishName { return text(p.name,en) }
         switch id {

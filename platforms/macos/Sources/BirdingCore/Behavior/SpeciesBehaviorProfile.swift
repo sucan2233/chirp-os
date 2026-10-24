@@ -7,22 +7,33 @@ public struct SpeciesBehaviorProfile {
     public let species:SpeciesID
     public static let dedicatedKinds:[BehaviorKind] = [.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit]
     private static let permissions:[BehaviorKind:[SpeciesID]] = [
-        .edgePeek:[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel],
-        .chase:[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling],
-        .travelTogether:[.treeSparrow,.barnSwallow,.spottedDove,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling],
+        .edgePeek:[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel,.lightVentedBulbul,.magpieRobin],
+        .chase:[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling,.redWhiskeredBulbul],
+        .travelTogether:[.treeSparrow,.barnSwallow,.spottedDove,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling,.redWhiskeredBulbul],
         .allopreening:[.barnSwallow,.swinhoesWhiteEye],
-        .fixedPerchVisit:[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.redWhiskeredBulbul,.magpieRobin,.redBilledLeiothrix],
+        .fixedPerchVisit:[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.redWhiskeredBulbul,.magpieRobin,.redBilledLeiothrix,.lightVentedBulbul],
         .foodTrayVisit:[.treeSparrow,.spottedDove]
     ]
     public static let ambientFlockSpecies:[SpeciesID] = [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,
         .lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]
-    public static let poseSpecies:[SpeciesID] = [.treeSparrow,.spottedDove,.barnSwallow,.nightHeron]
+    public static let poseSpecies:[SpeciesID] = [.treeSparrow,.spottedDove,.barnSwallow,.nightHeron,
+        .lightVentedBulbul,.redWhiskeredBulbul,.chineseBlackbird,.magpieRobin,.swinhoesWhiteEye,
+        .azureWingedMagpie,.redBilledLeiothrix,.littleOwl]
+    public static let peekSpecies:[SpeciesID] = [.lightVentedBulbul,.magpieRobin]
+    public static let peekFrameNames:[String] = ["peekLower","peekLook","peekRecover"]
     public static func profile(for species:SpeciesID) -> Self {Self(species:species)}
     public static func species(for kind:BehaviorKind) -> [SpeciesID] {
         if kind == .flockPass {return ambientFlockSpecies}
         return permissions[kind] ?? SpeciesCatalog.standard.species.map(\.id)
     }
     public func allows(_ kind:BehaviorKind) -> Bool {Self.species(for:kind).contains(species)}
+    /// Dedicated artwork augments the existing behavior contract; admission,
+    /// live validation and support export must all use this species-level set.
+    public func requiredFrames(for kind:BehaviorKind) -> Set<String> {
+        let base=BehaviorDefinitions.definition(for:kind).requiredFrames
+        return kind == .edgePeek && Self.peekSpecies.contains(species)
+            ? base.union(Self.peekFrameNames):base
+    }
     public var poseFrameNames:[String] {Self.poseSpecies.contains(species) ? PoseClip.frameNames:[]}
     public func poseClip(for kind:BehaviorKind,duration:Double,lookingFar:Bool=false) -> PoseClip? {
         guard Self.poseSpecies.contains(species) else {return nil}
@@ -47,7 +58,8 @@ public struct SpeciesSupportAudit:Codable {
         let profile=SpeciesBehaviorProfile.profile(for:species)
         capabilities=BirdCapability.allCases.filter{$0.requiredFrames.isSubset(of:availableFrames)}
         behaviors=BehaviorDefinitions.all.map {definition in
-            let allowed=profile.allows(definition.kind),missing=definition.missingFrames(in:availableFrames).sorted()
+            let allowed=profile.allows(definition.kind)
+            let missing=profile.requiredFrames(for:definition.kind).subtracting(availableFrames).sorted()
             return Behavior(kind:definition.kind,productAllowed:allowed,missingFrames:missing,contentSupported:allowed && missing.isEmpty)
         }
         poseFrames=profile.poseFrameNames

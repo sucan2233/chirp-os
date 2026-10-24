@@ -10,7 +10,7 @@ enum ChaseVerification {
         try FileManager.default.createDirectory(at:evidence,withIntermediateDirectories:true)
         let h=try Harness(folder:evidence)
         defer {h.close()}
-        for species:SpeciesID in [.treeSparrow,.barnSwallow] {
+        for species:SpeciesID in [.treeSparrow,.barnSwallow,.redWhiskeredBulbul] {
             try h.complete(species,into:&checks)
         }
         for index in 0..<2 {try h.click(index,into:&checks)}
@@ -509,7 +509,8 @@ enum ChaseVerification {
                 "imageEvidence":"Actual BirdArt/DesktopView and real host-window layer crop composites; not desktop screenshots.",
                 "input":"Live NSEvent pointer and pressed buttons, no warp or synthetic pointer samples. Direct pixel routing probes hover/click.",
                 "execution":"Manual fixed engine steps; no controller start, timers, user settings load/save, or bird spawning.",
-                "representativeSpecies":[SpeciesID.treeSparrow.rawValue,SpeciesID.barnSwallow.rawValue],
+                "representativeSpecies":[SpeciesID.treeSparrow.rawValue,SpeciesID.barnSwallow.rawValue,SpeciesID.redWhiskeredBulbul.rawValue],
+                "m6cScope":"Red-whiskered Bulbul: complete real-window pair, actual layers/feet, separation, pause and original landings; legacy cases retained.",
                 "supportedSpecies":ChaseBehavior.supportedSpecies.map(\.rawValue).sorted(),
                 "events":orderedEvents]
             try JSONSerialization.data(withJSONObject:report,options:[.prettyPrinted,.sortedKeys])
