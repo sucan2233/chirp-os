@@ -20,22 +20,24 @@ enum VisitorMemoryPersistenceVerification {
         missing.load(into:empty,now:0)
         missing.persistIfNeeded(from:empty,now:30)
         missing.flush(from:empty,now:31)
-        checks["visitorPersistenceMissingFileStartsEmptyWithoutWriting"]=empty.visitorMemoryArchive==initial &&
-            !missing.writesDisabled && missingLogs.isEmpty && missing.saveAttempts==0 && !files.fileExists(atPath:missingURL.path)
+        let bootstrapped=try VisitorMemoryArchive.load(from:missingURL)
+        checks["visitorPersistenceMissingFileBootstrapsStableEmptyNamespace"]=empty.visitorMemoryArchive==initial && bootstrapped==initial &&
+            missing.bootstrapCreated && missing.giftNamespaceAvailable && !missing.writesDisabled && missingLogs.isEmpty && missing.saveAttempts==0
 
         // Restore a learned core archive after the missing-file bootstrap. No
         // platform code invents identity, counters, or familiarity values.
-        try empty.restoreVisitorMemory(archive)
+        let learned=sampleArchive(seed:UInt64(initial.seed)!)
+        try empty.restoreVisitorMemory(learned)
         missing.flush(from:empty,now:32)
         let loaded=try VisitorMemoryArchive.load(from:missingURL)
         let reloadedEngine=BehaviorEngine(seed:999)
         let reloaded=VisitorMemoryPersistence(url:missingURL,enabled:true)
         reloaded.load(into:reloadedEngine,now:0)
-        checks["visitorPersistenceSaveReloadThroughEngineAndArchive"]=missing.successfulSaves==1 && loaded==archive &&
-            reloadedEngine.visitorMemoryArchive==archive && !reloaded.writesDisabled
+        checks["visitorPersistenceSaveReloadThroughEngineAndArchive"]=missing.successfulSaves==1 && loaded==learned &&
+            reloadedEngine.visitorMemoryArchive==learned && !reloaded.writesDisabled
         let returning=bird()
         reloadedEngine.installFixtureBirds([returning])
-        let visitor=reloadedEngine.visitor(of:returning),previous=archive.profiles.first
+        let visitor=reloadedEngine.visitor(of:returning),previous=learned.profiles.first
         checks["visitorPersistenceReloadRetainsIdentityFamiliarityAndVisits"]=visitor != nil &&
             visitor?.id==previous?.id && visitor?.familiarity==previous?.familiarity &&
             visitor?.visits==(previous?.visits ?? 0)+1
@@ -50,8 +52,9 @@ enum VisitorMemoryPersistenceVerification {
         desktop.birds=[bird()]
         let dirty=desktop.engine.visitorMemoryArchive
         for frame in 1..<1800 {desktop.persistVisitorMemoryIfNeeded(now:Double(frame)/60)}
-        checks["visitorPersistenceNoImmediateOrPerFrameWrites"]=desktop.visitorMemoryPersistence?.saveAttempts==0 &&
-            !files.fileExists(atPath:desktop.visitorMemoryURL.path)
+        let desktopBootstrap=try VisitorMemoryArchive.load(from:desktop.visitorMemoryURL)
+        checks["visitorPersistenceNoImmediateOrPerFrameDirtyWrites"]=desktop.visitorMemoryPersistence?.saveAttempts==0 &&
+            desktop.visitorMemoryPersistence?.bootstrapCreated==true && desktopBootstrap.profiles.isEmpty && desktopBootstrap.seed==dirty.seed
         desktop.persistVisitorMemoryIfNeeded(now:30)
         let periodicSaved=try VisitorMemoryArchive.load(from:desktop.visitorMemoryURL)
         checks["visitorPersistenceDirtyArchiveSavesAtThirtySeconds"]=desktop.visitorMemoryPersistence?.successfulSaves==1 &&
@@ -169,6 +172,8 @@ enum VisitorMemoryPersistenceVerification {
         let failure=VisitorMemoryPersistence(url:failureURL,enabled:true,log:{failureLogs.append($0)})
         failure.load(into:failureEngine,now:0);failureEngine.installFixtureBirds([bird()])
         let expected=failureEngine.visitorMemoryArchive,sentinel=Data("retain this file".utf8)
+        let retainedDirectory=root.appendingPathComponent("blocked-parent-retained")
+        try files.moveItem(at:blocker,to:retainedDirectory)
         try sentinel.write(to:blocker)
         failure.persistIfNeeded(from:failureEngine,now:30)
         for frame in 1..<1800 {failure.flush(from:failureEngine,now:30+Double(frame)/60)}
@@ -177,6 +182,7 @@ enum VisitorMemoryPersistenceVerification {
             failure.successfulSaves==0 && failureLogs.count==1 && retainedBlocker==sentinel &&
             failureEngine.visitorMemoryArchive==expected
         try files.removeItem(at:blocker)
+        try files.moveItem(at:retainedDirectory,to:blocker)
         failure.persistIfNeeded(from:failureEngine,now:60)
         let recoveredArchive=try VisitorMemoryArchive.load(from:failureURL)
         checks["visitorPersistenceWriteFailureRecoversAtNextBoundedRetry"]=failure.saveAttempts==2 && failure.successfulSaves==1 &&
@@ -186,8 +192,8 @@ enum VisitorMemoryPersistenceVerification {
     private static func bird() -> Bird {
         Bird(position:.zero,fraction:0.5,profile:SpeciesCatalog.standard.profile(.treeSparrow),random:{0.5})
     }
-    private static func sampleArchive() -> VisitorMemoryArchive {
-        let memory=VisitorMemory(seed:73)
+    private static func sampleArchive(seed:UInt64=73) -> VisitorMemoryArchive {
+        let memory=VisitorMemory(seed:seed)
         if let visitor=memory.acquire(species:.treeSparrow) {
             for _ in 0..<60 {memory.learn(visitor.id,elapsed:0.05)}
             memory.release(visitor.id)

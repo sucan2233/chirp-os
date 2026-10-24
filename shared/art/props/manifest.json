@@ -45,6 +45,13 @@
     "availableLifetime" : 180,
     "fadeDuration" : 0.20000000000000001,
     "file" : "leafToken.png",
+    "giftCarrierMayLand" : false,
+    "giftLifetime" : 120,
+    "giftReceiverAnchor" : "resolvedFixedPerch.foot",
+    "giftReleaseBeak" : [
+      42,
+      23
+    ],
     "gripAnchor" : [
       3,
       12

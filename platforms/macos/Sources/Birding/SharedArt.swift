@@ -27,11 +27,11 @@ extension BirdArt {
         }
         let insectMetadata:[String:Any]=["files":InsectArt.frameNames.map{$0+".png"},"logicalSize":[Int(InsectArt.logicalSize.width),Int(InsectArt.logicalSize.height)],"anchor":[Double(InsectArt.anchor.x),Double(InsectArt.anchor.y)],"collisionRadius":Double(InsectArt.collisionRadius),"frameDuration":InsectArt.frameDuration,"lifetime":CatchArtGeometry.insectLifetime,"maximumInstances":1,"scale":"worldScale","entry":"complete canvas starts offscreen"]
         let propMetadata:[String:Any]=["schemaVersion":1,"bathBasin":["file":"bathBasin.png","logicalSize":[128,40],"footAnchor":[64,20],"waterlineY":20,"waterEllipse":[16,10,96,20],"frontLayer":"derived from single basin art"],
-            "waterSplash":["files":BathGeometry.splashFrameNames.map{$0+".png"},"logicalSize":[24,24],"anchor":[12,22],"frameDuration":0.1,"lifetime":0.4,"maximumInstances":6],"leafToken":["file":"leafToken.png","logicalSize":[16,16],"gripAnchor":[3,12],"surfaceAnchor":[10,12],"scale":"worldScale","availableLifetime":180,"placedLifetime":8,"fadeDuration":0.2],"insect":insectMetadata,"clock":"singleEngineSimulationClock"]
+            "waterSplash":["files":BathGeometry.splashFrameNames.map{$0+".png"},"logicalSize":[24,24],"anchor":[12,22],"frameDuration":0.1,"lifetime":0.4,"maximumInstances":6],"leafToken":["file":"leafToken.png","logicalSize":[16,16],"gripAnchor":[3,12],"surfaceAnchor":[10,12],"scale":"worldScale","availableLifetime":180,"placedLifetime":8,"fadeDuration":0.2,"giftLifetime":GiftReceiverGeometry.displayLifetime,"giftReceiverAnchor":"resolvedFixedPerch.foot","giftCarrierMayLand":false,"giftReleaseBeak":[Double(CarryArtGeometry.magpieReleaseBeak.x),Double(CarryArtGeometry.magpieReleaseBeak.y)]],"insect":insectMetadata,"clock":"singleEngineSimulationClock"]
         try JSONSerialization.data(withJSONObject:propMetadata,options:[.prettyPrinted,.sortedKeys]).write(to:props.appendingPathComponent("manifest.json"))
         try exportSupport(to:folder.appendingPathComponent("species-support.json"))
-        // Includes the flycatcher's catch-only row, without adding base poses
-        // or changing the atlas/prop schema and historical frame prefixes.
+        // Includes catch-only flycatcher and the existing magpie's carry clip,
+        // without changing the atlas/prop schema or historical frame prefixes.
         let poseClips=Self.poseMetadata
         let metadata:[String:Any] = ["schemaVersion":2,"logicalFrameSize":48,"frameSizes":Dictionary(uniqueKeysWithValues:catalog.species.map{($0.id.rawValue,BirdArt(species:$0.id).frames["stand"]!.width)}),"footAnchor":[29,39],"frames":names,
                                     "speciesFrames":Dictionary(uniqueKeysWithValues:catalog.species.filter{Self.names(for:$0.id) != names}.map{($0.id.rawValue,Self.names(for:$0.id))}),

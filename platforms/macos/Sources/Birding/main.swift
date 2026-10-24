@@ -5,6 +5,8 @@ func argument(_ flag:String) -> String? {
     guard let i = CommandLine.arguments.firstIndex(of:flag),i+1<CommandLine.arguments.count else { return nil }
     return CommandLine.arguments[i+1]
 }
+// Ledger race workers never create NSApplication, windows or a controller.
+if let status=GiftLedgerPersistenceVerification.worker() {exit(status)}
 BehaviorStressCLI.runIfRequested()
 if let token=argument("--apply-update") { exit(UpdateInstaller.runHelper(token:token)) }
 if let path=argument("--verify-update-archive") {
@@ -111,6 +113,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 exit(passed ? 0:1)
             } catch {print(error);exit(1)}
         }
+        if let path = argument("--verify-visitor-gift") {
+            do {
+                let folder=URL(fileURLWithPath:path)
+                try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+                var checks:[String:Bool]=[:]
+                try autoreleasepool {try VisitorGiftArtVerification.run(into:&checks,folder:folder)}
+                try autoreleasepool {try GiftVerification.run(into:&checks,folder:folder)}
+                try autoreleasepool {try VisitorGiftSettingsVerification.run(into:&checks,folder:folder)}
+                try autoreleasepool {try GiftLedgerPersistenceVerification.run(into:&checks,folder:folder)}
+                let passed=checks.values.allSatisfy{$0}
+                saveJSON(["passed":passed,"checks":checks],to:folder.appendingPathComponent("report.json"))
+                print("Visitor gift: \(passed ? "PASS":"FAIL") — \(checks.count) checks")
+                exit(passed ? 0:1)
+            } catch {print(error);exit(1)}
+        }
         if let path = argument("--verify-birds") { ExpandedVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-settings") { SettingsVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--fixture") {
@@ -143,6 +160,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
     func applicationWillTerminate(_ notification:Notification) {
+        desktop?.cancelGiftAuthorization()
         desktop?.engine.handle(.cancelAmbient(.shutdown));desktop?.stopMouseMonitoring()
         desktop?.flushVisitorMemory()
         desktop?.flushObservationJournal()

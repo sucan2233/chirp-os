@@ -12,12 +12,13 @@ public struct BehaviorRunID: Hashable, Codable, Comparable {
 }
 public enum BirdRole: String {case resident, transient}
 public enum BehaviorKind: String, Codable {
-    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase, travelTogether, allopreening, fixedPerchVisit, foodTrayVisit, bathVisit, leafCarry, insectCatch
+    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase, travelTogether, allopreening, fixedPerchVisit, foodTrayVisit, bathVisit, leafCarry, insectCatch, visitorGift
     var isPerchActivity:Bool {[Self.rest,.preen,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek].contains(self)}
     var isSocial:Bool {[Self.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase,.travelTogether,.allopreening].contains(self)}
 }
-public enum BehaviorSource: String {case user, preview, automatic}
+public enum BehaviorSource: String, Codable {case user, preview, automatic}
 public enum BehaviorReason: String {
+    case notFamiliar, authorizationDenied
     case paused, disabled, busy, missingBird, unavailableBird, noSpace, noSpecies, missingFrames, pointerNearby, noCompanion
     case userInput, pointerMoved, targetInvalid, replaced, timedOut, removed, missedTarget
     case sleep, screensChanged, spaceChanged, shutdown, settingsChanged
@@ -38,6 +39,9 @@ public enum BehaviorResult: Equatable {
     public var accepted: Bool {if case .rejected = self {return false};return true}
 }
 public enum EngineCommand {
+    case visitorGift(BehaviorSource)
+    case cancelVisitorGiftRequest
+    case clearVisitorGift
     case relocate(BirdID)
     case pointerVisit(BehaviorSource)
     case flockPass(BehaviorSource)

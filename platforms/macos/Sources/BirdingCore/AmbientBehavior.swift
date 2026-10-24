@@ -12,7 +12,7 @@ public enum AmbientFrequency: String, Codable, CaseIterable {
     }
 }
 
-public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID), leafCarry(ScenePropID), insectCatch }
+public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID), leafCarry(ScenePropID), insectCatch, visitorGift }
 
 /// One simulation clock for encounters. Missed opportunities are discarded,
 /// so busy periods, sleep and pause never build up a queue of animations.
@@ -72,7 +72,7 @@ public struct AmbientScheduler {
     }
     public mutating func tick(_ dt: Double, pointer: CGPoint, buttonsDown: Bool,
                               pointerEnabled: Bool, flockEnabled: Bool, socialEnabled: Bool = false, leafEnabled: Bool = false,
-                              insectEnabled:Bool=false,
+                              insectEnabled:Bool=false,giftEnabled:Bool=false,
                               frequency: AmbientFrequency, busy: Bool, cadenceRate:Double=1, leafRandom: (() -> Double)? = nil,
                               random: () -> Double = { Double.random(in: 0..<1) }) -> AmbientEvent? {
         let step = min(0.1, max(0, dt))
@@ -107,9 +107,9 @@ public struct AmbientScheduler {
         } else {
             let daily=sceneUnit()
             if daily<0.08 {return insectEnabled && canAttemptInsectCatch ? .insectCatch:nil}
-            // Undelivered courtship [.08,.12) and gift [.12,.13) stay empty.
-            // A closed/failed insect opportunity never reaches the old selector.
-            if daily<0.13 {return nil}
+            // Courtship remains empty until its own delivery stage.
+            if daily<0.12 {return nil}
+            if daily<0.13 {return giftEnabled ? .visitorGift:nil}
         }
         // Reserve a small share of existing opportunities, never a second timer.
         // Failed leaf plans are discarded instead of falling through to another event.

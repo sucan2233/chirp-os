@@ -4,6 +4,19 @@ import CoreGraphics
 public enum CarriedObjectState:String {case available,attached,placed,retired}
 public enum CarriedObjectKind:String {case leaf}
 
+/// Delivery belongs to the persistent entity, so cancelling the bird after
+/// release cannot undo the descent or create another leaf.
+public struct GiftDelivery:Codable,Equatable {
+    public let carrier:BirdID
+    public let receiverSlot:Int
+    public let receiverRevision:UInt64
+    public let receiverFoot:CGPoint
+    public let releaseGrip:CGPoint
+    public let duration:Double
+    public fileprivate(set) var age:Double
+    public var arrived:Bool {age+1e-10>=duration}
+}
+
 /// One identity survives every transition. Lease and lifecycle are distinct:
 /// a run may reserve an available leaf before there is an attached owner.
 public struct CarriedObject {
@@ -16,6 +29,10 @@ public struct CarriedObject {
     public fileprivate(set) var reservedByRun:BehaviorRunID?
     public fileprivate(set) var surfaceAnchor:SurfaceAnchor
     public fileprivate(set) var remainingLifetime:Double
+    public fileprivate(set) var isVisitorGift=false
+    public fileprivate(set) var giftDelivery:GiftDelivery?
+    public var giftReceiverSlot:Int? {giftDelivery?.receiverSlot}
+    public var giftReceiverRevision:UInt64? {giftDelivery?.receiverRevision}
     fileprivate var reservedBird:BirdID?
     fileprivate var cachedSnapshot:ScenePropRenderState
     fileprivate var fadeRemaining=CarriedObjectGeometry.fadeDuration
@@ -55,13 +72,13 @@ final class CarriedObjectStore {
         return .accepted
     }
     @discardableResult func reserve(_ id:ScenePropID,run:BehaviorRunID,bird:BirdID) -> Bool {
-        guard var object=objects[id],object.state == .available,object.remainingLifetime>0,
+        guard var object=objects[id],!object.isVisitorGift,object.state == .available,object.remainingLifetime>0,
               object.reservedByRun==nil,object.owner==nil,
               !objects.values.contains(where:{$0.reservedBird==bird || $0.owner==bird}) else {return false}
         object.reservedByRun=run;object.reservedBird=bird;objects[id]=object;return true
     }
     @discardableResult func pickup(_ id:ScenePropID,run:BehaviorRunID,bird:BirdID,contact:ScenePropRenderState) -> Bool {
-        guard var object=objects[id],object.state == .available,object.remainingLifetime>0,
+        guard var object=objects[id],(object.state == .available || (object.isVisitorGift && object.state == .placed)),object.remainingLifetime>0,
               object.reservedByRun==run,object.reservedBird==bird,object.owner==nil,
               contact.id==id,Geometry.distance(contact.rect.origin,object.cachedSnapshot.rect.origin)<0.001,
               abs(contact.rect.width-object.cachedSnapshot.rect.width)<0.001,
@@ -71,7 +88,7 @@ final class CarriedObjectStore {
     }
     @discardableResult func place(_ id:ScenePropID,run:BehaviorRunID,at anchor:SurfaceAnchor,
                                  contact:ScenePropRenderState,in engine:BehaviorEngine) -> Bool {
-        guard var object=objects[id],object.state == .attached,object.reservedByRun==run,object.owner != nil,
+        guard var object=objects[id],!object.isVisitorGift,object.state == .attached,object.reservedByRun==run,object.owner != nil,
               let host=anchor.host(in:engine.world),let point=anchor.point(in:engine.world) else {return false}
         let snapshot=CarriedObjectGeometry.render(id:id,position:point,anchor:CarriedObjectGeometry.surface,
             worldScale:object.worldScale,facingRight:object.facingRight,
@@ -81,7 +98,8 @@ final class CarriedObjectStore {
               engine.world.displays.contains(where:{$0.contains(snapshot.rect)}),
               !snapshot.blockers.contains(where:{$0.intersects(snapshot.rect)}) else {return false}
         object.state = .placed;object.owner=nil;object.surfaceAnchor=anchor
-        object.remainingLifetime=CarriedObjectGeometry.placedLifetime;object.cachedSnapshot=snapshot
+        object.remainingLifetime=engine.settings.visitorGiftsEnabled ? CarriedObjectGeometry.giftMaterialLifetime:CarriedObjectGeometry.placedLifetime
+        object.cachedSnapshot=snapshot
         objects[id]=object
         engine.scheduler.endFocus(matching:SceneFocus(leafID:id),frequency:engine.settings.ambientFrequency)
         return true
@@ -91,6 +109,27 @@ final class CarriedObjectStore {
         object.reservedByRun=nil;object.reservedBird=nil;objects[id]=object
     }
     private func liveSnapshot(_ object:CarriedObject,in engine:BehaviorEngine) -> ScenePropRenderState? {
+        if let delivery=object.giftDelivery,object.state != .retired {
+            guard delivery.duration==GiftReceiverGeometry.fallDuration,
+                  delivery.duration>0,delivery.duration<=GiftReceiverGeometry.maximumFallDuration,
+                  delivery.age.isFinite,delivery.age>=0,delivery.age<=delivery.duration,
+                  engine.giftReceiverRevision(slot:delivery.receiverSlot)==delivery.receiverRevision,
+                  let perch=engine.fixedPerchSnapshot().first(where:{$0.slot==delivery.receiverSlot}),
+                  perch.foot==delivery.receiverFoot else {return nil}
+            let value=giftSnapshot(object,delivery:delivery,perch:perch,in:engine)
+            let remaining=delivery.arrived ? value.rect:GiftReceiverGeometry.descentRect(from:value.position,
+                on:perch,worldScale:object.worldScale,facingRight:object.facingRight)
+            // Release begins at the real bill, inside the conservative bird
+            // canvas. The original carrier may separate for this existing .6s
+            // simulated descent even after cancellation releases its run lease.
+            // Pausing freezes delivery.age; arrived ends the exemption even if
+            // the run still exists. No destination reservation is exempted.
+            let carrierIsSeparating = !delivery.arrived
+            guard !value.blockers.contains(where:{$0.intersects(remaining)}),
+                  !engine.birds.contains(where:{(!carrierIsSeparating || engine.id(of:$0) != delivery.carrier) && engine.bounds(of:$0).intersects(remaining)}),
+                  !engine.runtime.landingReservations.contains(where:{$0.footprint(in:engine)?.intersects(remaining) ?? true}) else {return nil}
+            return value
+        }
         switch object.state {
         case .available,.placed:
             guard let host=object.surfaceAnchor.host(in:engine.world),let point=object.surfaceAnchor.point(in:engine.world) else {return nil}
@@ -116,10 +155,19 @@ final class CarriedObjectStore {
     /// Call after a new world sample, before generic host tracking. Invalid IDs
     /// are returned to the engine so runtime cancellation remains the sole owner.
     func synchronize(in engine:BehaviorEngine) -> [ScenePropID] {
+        synchronize(in:engine,visitorGiftsOnly:false)
+    }
+    /// Settings changes can invalidate receivers without changing ordinary leaf
+    /// hosts. Filter before validation, including its immediate paused removal.
+    func synchronizeVisitorGifts(in engine:BehaviorEngine) -> [ScenePropID] {
+        synchronize(in:engine,visitorGiftsOnly:true)
+    }
+    private func synchronize(in engine:BehaviorEngine,visitorGiftsOnly:Bool) -> [ScenePropID] {
         var invalid:[ScenePropID]=[]
         for id in objects.keys.sorted() {
-            guard var object=objects[id],object.state != .retired else {continue}
-            guard engine.settings.leafCarryEnabled,engine.world.leafCarryArtAvailable,
+            guard var object=objects[id],object.state != .retired,
+                  !visitorGiftsOnly || object.isVisitorGift else {continue}
+            guard (object.isVisitorGift ? engine.settings.visitorGiftsEnabled:engine.settings.leafCarryEnabled),engine.world.leafCarryArtAvailable,
                   object.worldScale==engine.world.scale,object.screens==engine.world.screens,
                   object.displays==engine.world.displays,object.displayIDs==engine.world.displayIDs,
                   let value=liveSnapshot(object,in:engine),SurfaceAnchor.finite(value.rect),
@@ -154,6 +202,14 @@ final class CarriedObjectStore {
             if object.state == .retired {
                 object.fadeRemaining=max(0,object.fadeRemaining-dt)
                 if object.fadeRemaining<=1e-10 {objects.removeValue(forKey:id)} else {objects[id]=object}
+            } else if var delivery=object.giftDelivery,!delivery.arrived {
+                let used=min(dt,max(0,delivery.duration-delivery.age))
+                delivery.age=min(delivery.duration,delivery.age+used);object.giftDelivery=delivery
+                if delivery.arrived {object.remainingLifetime=max(0,GiftReceiverGeometry.displayLifetime-(dt-used))}
+                if let perch=engine.fixedPerchSnapshot().first(where:{$0.slot==delivery.receiverSlot}) {
+                    object.cachedSnapshot=giftSnapshot(object,delivery:delivery,perch:perch,in:engine)
+                }
+                objects[id]=object
             } else if object.state == .available || object.state == .placed {
                 object.remainingLifetime=max(0,object.remainingLifetime-dt);objects[id]=object
                 if object.remainingLifetime<=1e-10 {
@@ -185,12 +241,106 @@ final class CarriedObjectStore {
             let value=liveSnapshot(object,in:engine) ?? object.cachedSnapshot
             let opacity:Double
             if object.state == .retired {opacity=object.fadeOpacity*object.fadeRemaining/CarriedObjectGeometry.fadeDuration}
-            else if object.state == .placed {opacity=min(1,object.remainingLifetime/CarriedObjectGeometry.fadeDuration)}
+            else if object.state == .placed,object.giftDelivery?.arrived != false {opacity=min(1,object.remainingLifetime/CarriedObjectGeometry.fadeDuration)}
             else {opacity=1}
             return CarriedObjectGeometry.render(id:id,position:value.position,
                 anchor:CGPoint(x:value.anchor.x*CarriedObjectGeometry.leafSize,y:value.anchor.y*CarriedObjectGeometry.leafSize),
                 worldScale:object.worldScale,facingRight:!value.mirrored,rotation:value.rotation,opacity:opacity,blockers:value.blockers)
         }
+    }
+    /// Pure admission: a rejected request leaves identity, lifetime and leases
+    /// untouched. Delivered gifts can never be recycled into another gift.
+    func giftIsAvailable(_ id:ScenePropID,in engine:BehaviorEngine) -> Bool {
+        guard let object=objects[id],!object.isVisitorGift,
+              object.state == .available || object.state == .placed,
+              object.reservedByRun==nil,object.owner==nil,object.remainingLifetime>0,
+              object.worldScale==engine.world.scale,object.screens==engine.world.screens,
+              object.displays==engine.world.displays,object.displayIDs==engine.world.displayIDs,
+              let value=liveSnapshot(object,in:engine),engine.world.displays.contains(where:{$0.contains(value.rect)}),
+              !value.blockers.contains(where:{$0.intersects(value.rect)}) else {return false}
+        return true
+    }
+    @discardableResult func reserveGift(_ id:ScenePropID,run:BehaviorRunID,bird:BirdID,in engine:BehaviorEngine) -> Bool {
+        guard giftIsAvailable(id,in:engine),var object=objects[id],
+              !objects.values.contains(where:{$0.isVisitorGift && $0.state != .retired || $0.reservedBird==bird || $0.owner==bird}) else {return false}
+        object.isVisitorGift=true;object.reservedByRun=run;object.reservedBird=bird;objects[id]=object
+        engine.scheduler.endFocus(matching:SceneFocus(leafID:id),frequency:engine.settings.ambientFrequency)
+        return true
+    }
+    struct PreparedGiftRelease {
+        fileprivate let object:CarriedObject
+    }
+    /// No mutation, token use, RNG or time advancement is permitted here. The
+    /// returned value is the entire committed entity, not a fallible recipe.
+    func prepareGiftRelease(_ id:ScenePropID,run:BehaviorRunID,bird:BirdID,
+                            receiver:GiftReceiverReservation,contact:ScenePropRenderState,
+                            in engine:BehaviorEngine) -> PreparedGiftRelease? {
+        guard var object=objects[id],object.isVisitorGift,object.state == .attached,
+              object.owner==bird,object.reservedByRun==run,object.reservedBird==bird,
+              object.worldScale==engine.world.scale,object.screens==engine.world.screens,
+              object.displays==engine.world.displays,object.displayIDs==engine.world.displayIDs,
+              contact.id==id,SurfaceAnchor.finite(contact.rect),contact.rotation==0,
+              engine.settings.visitorGiftsEnabled,receiver.bird==bird,
+              receiver.isValid(in:engine,excluding:[bird]),
+              let actual=liveSnapshot(object,in:engine),actual.mirrored==contact.mirrored,
+              Geometry.distance(actual.position,contact.position)<0.001,actual.anchor==contact.anchor,
+              abs(actual.size-contact.size)<0.001,abs(actual.rotation-contact.rotation)<0.001,
+              let perch=engine.fixedPerchSnapshot().first(where:{$0.slot==receiver.slot}) else {return nil}
+        let finalGrip=GiftReceiverGeometry.finalGrip(on:perch,worldScale:object.worldScale,facingRight:object.facingRight)
+        let area=GiftReceiverGeometry.descentRect(from:contact.position,on:perch,
+            worldScale:object.worldScale,facingRight:object.facingRight)
+        guard contact.position.y<=finalGrip.y,finalGrip.y-contact.position.y<=100*object.worldScale,
+              receiver.rect.contains(area),engine.world.displays.contains(where:{$0.contains(area)}),
+              !Geometry.blockers(on:perch.surface,surfaces:engine.world.surfaces).contains(where:{$0.rect.intersects(area)}),
+              !engine.birds.contains(where:{engine.id(of:$0) != bird && engine.bounds(of:$0).intersects(area)}),
+              !engine.runtime.landingReservations.contains(where:{$0.bird != bird && ($0.footprint(in:engine)?.intersects(area) ?? true)}) else {return nil}
+        object.state = .placed;object.owner=nil;object.remainingLifetime=GiftReceiverGeometry.displayLifetime
+        object.cachedSnapshot=contact
+        object.giftDelivery=GiftDelivery(carrier:bird,receiverSlot:receiver.slot,receiverRevision:receiver.revision,
+            receiverFoot:perch.foot,releaseGrip:contact.position,duration:GiftReceiverGeometry.fallDuration,age:0)
+        return PreparedGiftRelease(object:object)
+    }
+    /// Call immediately after the token is consumed, with no callbacks between
+    /// the two statements. This assignment is deliberately nonfailable.
+    func commitGiftRelease(_ prepared:PreparedGiftRelease) {objects[prepared.object.id]=prepared.object}
+    func giftHasArrived(_ id:ScenePropID,in engine:BehaviorEngine) -> Bool {
+        guard let object=objects[id],object.isVisitorGift,object.state == .placed,
+              object.giftDelivery?.arrived==true,object.remainingLifetime>0,
+              let snapshot=liveSnapshot(object,in:engine),engine.world.displays.contains(where:{$0.contains(snapshot.rect)}),
+              !snapshot.blockers.contains(where:{$0.intersects(snapshot.rect)}) else {return false}
+        return true
+    }
+    /// Persists beyond the run/visitor. Slot/revision retain receiver identity;
+    /// actual remaining descent/leaf geometry blocks ordinary landings.
+    func giftReceiverReservations(in engine:BehaviorEngine) -> [GiftReceiverReservation] {
+        objects.keys.sorted().compactMap {id in
+            guard let object=objects[id],object.isVisitorGift,object.state == .placed,
+                  let delivery=object.giftDelivery,
+                  engine.giftReceiverRevision(slot:delivery.receiverSlot)==delivery.receiverRevision,
+                  let perch=engine.fixedPerchSnapshot().first(where:{$0.slot==delivery.receiverSlot}),
+                  perch.foot==delivery.receiverFoot else {return nil}
+            let value=giftSnapshot(object,delivery:delivery,perch:perch,in:engine)
+            let rect=delivery.arrived ? value.rect:GiftReceiverGeometry.descentRect(from:value.position,
+                on:perch,worldScale:object.worldScale,facingRight:object.facingRight)
+            return GiftReceiverReservation(bird:delivery.carrier,perch:perch,revision:delivery.receiverRevision,
+                rect:rect,worldScale:object.worldScale)
+        }
+    }
+    private func giftSnapshot(_ object:CarriedObject,delivery:GiftDelivery,perch:ResolvedFixedPerch,
+                              in engine:BehaviorEngine) -> ScenePropRenderState {
+        let end=GiftReceiverGeometry.finalGrip(on:perch,worldScale:object.worldScale,facingRight:object.facingRight)
+        let t=min(1,max(0,delivery.age/delivery.duration)),u=t*t*(3-2*t)
+        let point=CGPoint(x:delivery.releaseGrip.x+(end.x-delivery.releaseGrip.x)*t,
+            y:delivery.releaseGrip.y+(end.y-delivery.releaseGrip.y)*u)
+        return CarriedObjectGeometry.render(id:object.id,position:point,anchor:CarriedObjectGeometry.grip,
+            worldScale:object.worldScale,facingRight:object.facingRight,
+            blockers:Geometry.blockers(on:perch.surface,surfaces:engine.world.surfaces).map(\.rect))
+    }
+    func clearVisitorGifts(in engine:BehaviorEngine,immediate:Bool=true) {
+        for id in objects.keys.sorted() where objects[id]?.isVisitorGift==true {retire(id,in:engine,immediate:immediate)}
+    }
+    func clearOrdinaryLeaves(in engine:BehaviorEngine,immediate:Bool=true) {
+        for id in objects.keys.sorted() where objects[id]?.isVisitorGift==false {retire(id,in:engine,immediate:immediate)}
     }
     func removeAll() {objects.removeAll()}
 }

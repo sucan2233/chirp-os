@@ -49,6 +49,7 @@ struct FlightSceneEnvelope {
         let ids=Set(participants)
         // Ordinary windows allow flight overhead. Utility/system panels block it.
         var obstacles=engine.world.surfaces.filter{!$0.isGround && $0.layer>0}.map(\.rect)
+        obstacles.append(contentsOf:engine.giftObstacleRects(excluding:participants))
         for other in engine.birds where engine.id(of:other).map({!ids.contains($0)}) == true {
             let scale=engine.spriteScale(for:other)
             let speed=max(other.flightSpeed,FlightBehavior.cruiseSpeed(other.profile.id,multiplier:other.profile.speed))

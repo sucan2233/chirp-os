@@ -43,7 +43,9 @@
 - 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
 - 支持中英文切换、暂停动画和随系统启动。
 
-开发进度（2026-10-24）：M6f.2白眉姬鹟出击返回捕虫阶段验收通过，随本阶段记录本地提交、未安装，用户当前安装版仍为M6a/b。本批Release/严格签名、原生鸟类3322项、设置1820项、模拟v15的54份完整回放、旧17份报告完全一致、46鸟旧像素/索引、78 GIF及18次性能检查通过；核心证据为第三轮完整876项中其余875项通过（142.466s）＋第四轮白眉16项全通过（6.981s），不代表单次876全绿。累计已验证150张新增鸟体/10张道具，剩17/6张；下一阶段为M6g。M6/M7整体、2h/8h、物理多屏及真实睡眠唤醒仍未验收。见 [M6f.2验收记录](docs/M6F2-ACCEPTANCE.md)。
+开发进度（2026-10-24）：M6g灰喜鹊熟客赠叶已实现，默认关闭；整批原生验收未通过、未安装，用户当前安装版仍为M6a/b。第五轮Release/严格签名、核心第二轮定向49/49、settings第二轮1955/1955、模拟v16的57份完整跨率回放、旧18份报告不剔字段完全一致、46鸟旧像素/索引、素材art、parity、78 GIF及18次性能对照通过。native第二轮仅0.5×/1×双向四条旅程36/36通过；2×及新增点击落稳待解锁复验。累计已验证154张新增鸟体/10张道具，剩13/6张。首轮920核心测试的79项失败（5 unexpected、6方法）、birds3433/3437及settings1954/1955记录保留，不宣称单次920全绿。见 [M6g验收记录](docs/M6G-ACCEPTANCE.md)及此前的 [M6f.2验收记录](docs/M6F2-ACCEPTANCE.md)。
+
+M6g未安装候选保存在`.build/m6g-delivery/ChirpOS Dev M6g candidate.app`；本地checkpoint提交不表示阶段完成。M6h隔离真实墙钟长跑与M7a可继续独立实施；M6/M7整体、2h/8h、物理多屏及真实睡眠唤醒仍未验收，核心加速性能结果不能替代这些验收。
 
 ### 鸟种 / Bird species
 
@@ -141,7 +143,9 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - Hourly update checks download and verify new releases in the background. A notification opens release notes and installation confirmation; a red dot and menu entry remain if you postpone.
 - Chinese and English menus, animation pause, and launch at login.
 
-Development status (2026-10-24): M6f.2 Yellow-rumped Flycatcher sorties and returns passed stage acceptance, committed locally with this stage record and not installed. The installed development app remains M6a/b. Release/signature, 3,322 native bird checks, 1,820 settings checks, 54 full simulation-v15 replays, exact comparisons of 17 older reports, all 46 legacy bird atlases/indices, 78 GIFs, and 18 performance runs passed. Core evidence combines the other 875 passing tests from the full 876-test third round (142.466s) with all 16 flycatcher tests passing in the fourth targeted round (6.981s); no single all-green 876-test run is claimed. Verified additions total 150 bird poses and ten props, with 17 poses and six props remaining. M6g follows this stage; the overall M6/M7 goal, two-hour observation, eight-hour soak, physical multi-monitor, and real sleep/wake acceptance remain open. See the [M6f.2 acceptance record](docs/M6F2-ACCEPTANCE.md).
+Development status (2026-10-24): M6g fictional leaf gifts from returning Azure-winged Magpies are implemented and default off. Full native acceptance has not passed; the candidate is not installed, and the installed development app remains M6a/b. The fifth Release build and strict signature check, the second targeted core run (49/49), second settings run (1,955/1,955), 57 full simulation-v16 replays across rates, exact comparisons of 18 older reports without removing fields, all 46 legacy bird atlases/indices, art checks, parity, 78 GIFs, and 18 performance runs passed. The second native run passed only four journeys at 0.5×/1× in both directions (36/36 checks); 2× and the new click/settled-landing checks await an unlocked desktop. Verified additions total 154 bird poses and ten props, with 13 poses and six props remaining. Initial failures remain recorded: 79 failures across six core methods, including five unexpected failures, in the 920-test run; birds 3,433/3,437; settings 1,954/1,955. No single all-green 920-test run is claimed. See the [M6g acceptance record](docs/M6G-ACCEPTANCE.md) and earlier [M6f.2 record](docs/M6F2-ACCEPTANCE.md).
+
+The uninstalled M6g candidate is saved at `.build/m6g-delivery/ChirpOS Dev M6g candidate.app`. A local checkpoint commit does not mark stage completion. M6h isolated wall-clock soak work and M7a may proceed independently; overall M6/M7, two-hour observation, eight-hour soak, physical multi-monitor, and real sleep/wake acceptance remain open. Accelerated core performance comparisons do not substitute for these checks.
 
 ### Get started
 

@@ -13,6 +13,7 @@ protocol BehaviorExecution: AnyObject {
     var landingReservations: [LandingReservation] {get}
     var propIDs:[ScenePropID] {get}
     var habitatReservations:[HabitatObjectID] {get}
+    var giftReceiverReservations:[GiftReceiverReservation] {get}
     func propSnapshots(in engine:BehaviorEngine) -> [ScenePropRenderState]
     func start(in engine:BehaviorEngine)
     /// Pure validity checks also run while animation time is paused.
@@ -27,6 +28,7 @@ extension BehaviorExecution {
     var runsWhilePaused:Bool {BehaviorDefinitions.definition(for:kind).runsWhilePaused}
     var propIDs:[ScenePropID] {[]}
     var habitatReservations:[HabitatObjectID] {[]}
+    var giftReceiverReservations:[GiftReceiverReservation] {[]}
     func propSnapshots(in engine:BehaviorEngine) -> [ScenePropRenderState] {[]}
     var landingReservations: [LandingReservation] {[]}
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {nil}
@@ -58,6 +60,9 @@ final class BehaviorRuntime {
     var landingReservations:[LandingReservation] {
         runs.keys.sorted().flatMap {runs[$0]?.execution.landingReservations ?? []}
     }
+    var giftReceiverReservations:[GiftReceiverReservation] {
+        runs.keys.sorted().flatMap {runs[$0]?.execution.giftReceiverReservations ?? []}
+    }
     func kind(for bird:BirdID) -> BehaviorKind? {owners[bird].flatMap{runs[$0]?.execution.kind}}
     func canAdvance(_ bird:BirdID,paused:Bool) -> Bool {
         !paused || owners[bird].flatMap{runs[$0]?.execution.runsWhilePaused} == true
@@ -87,7 +92,15 @@ final class BehaviorRuntime {
               !execution.occupiesEncounter || (!encounterBusy && !runs.values.contains(where:{ [BehaviorKind.foodTrayVisit,.fixedPerchVisit].contains($0.execution.kind) })),
               ![BehaviorKind.foodTrayVisit,.fixedPerchVisit].contains(execution.kind) || !encounterBusy else {return .rejected(.busy)}
         let requested=execution.landingReservations
+        let receivers=execution.giftReceiverReservations
         guard requested.allSatisfy({execution.participants.contains($0.bird) && $0.isValid(in:engine)}),
+              receivers.allSatisfy({execution.participants.contains($0.bird) && $0.isValid(in:engine,excluding:execution.participants)}),
+              !requested.contains(where:{slot in giftReceiverReservations.contains{$0.conflicts(with:slot,in:engine)}}),
+              !receivers.enumerated().contains(where:{index,receiver in
+                  receivers.dropFirst(index+1).contains{receiver.conflicts(with:$0,in:engine)} ||
+                  giftReceiverReservations.contains{receiver.conflicts(with:$0,in:engine)} ||
+                  landingReservations.contains{receiver.conflicts(with:$0,in:engine)}
+              }),
               !requested.enumerated().contains(where:{index,slot in
                   requested.dropFirst(index+1).contains{slot.conflicts(with:$0,in:engine)} ||
                   landingReservations.contains{slot.conflicts(with:$0,in:engine)}
@@ -111,6 +124,15 @@ final class BehaviorRuntime {
             }
             let slots=run.execution.landingReservations
             let foreign=runs.keys.sorted().filter{$0 != id}.flatMap{runs[$0]?.execution.landingReservations ?? []}
+            let receivers=run.execution.giftReceiverReservations
+            let foreignReceivers=runs.keys.sorted().filter{$0 != id}.flatMap{runs[$0]?.execution.giftReceiverReservations ?? []}
+            if receivers.contains(where:{!$0.isValid(in:engine,excluding:run.execution.participants)}) ||
+                receivers.contains(where:{receiver in
+                    foreign.contains{receiver.conflicts(with:$0,in:engine)} ||
+                    foreignReceivers.contains{receiver.conflicts(with:$0,in:engine)}
+                }) || slots.contains(where:{slot in foreignReceivers.contains{$0.conflicts(with:slot,in:engine)}}) {
+                finish(id,result:.failed(.targetInvalid),in:engine);continue
+            }
             if slots.contains(where:{!$0.isValid(in:engine)}) || slots.enumerated().contains(where:{index,slot in
                 slots.dropFirst(index+1).contains{slot.conflicts(with:$0,in:engine)} ||
                     foreign.contains{slot.conflicts(with:$0,in:engine)}
@@ -124,7 +146,7 @@ final class BehaviorRuntime {
         validate(in:engine)
         for id in runs.keys.sorted() {
             guard var run=runs[id],!engine.paused || run.execution.runsWhilePaused else {continue}
-            let afterMotion=run.execution.kind == .insectCatch
+            let afterMotion=run.execution.kind == .insectCatch || run.execution.kind == .visitorGift
             let advanceDT=afterMotion ? min(dt,max(0,run.execution.timeout-run.age)):dt
             run.motionDT=afterMotion ? advanceDT:nil
             run.age+=advanceDT;runs[id]=run
@@ -145,6 +167,7 @@ final class BehaviorRuntime {
                 engine.poseMixer.release(pose,for:bird,bird:model)
             }
         }
+        engine.releaseGiftAuthorization(run:id)
         runs.removeValue(forKey:id)
         for bird in run.execution.participants where owners[bird]==id {owners.removeValue(forKey:bird)}
         for bird in run.execution.participants {engine.perchPlanner.didFinish(bird,kind:run.execution.kind)}

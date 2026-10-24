@@ -11,6 +11,7 @@ public enum CarriedObjectGeometry {
     public static let frameNames=["carryLook","carryLower","carryGrip","carryPlace"]
     public static let availableLifetime=180.0
     public static let placedLifetime=8.0
+    public static let giftMaterialLifetime=600.0
     public static let fadeDuration=0.2
     public static let timeout=25.0
 
@@ -44,7 +45,10 @@ public enum CarriedObjectGeometry {
     static func localFootprint(species:SpeciesID,birdScale:CGFloat,worldScale:CGFloat,
                                rotationRange:ClosedRange<CGFloat> = 0...0) -> CGRect? {
         guard birdScale.isFinite,birdScale>0,worldScale.isFinite,worldScale>0 else {return nil}
-        let names=frameNames+["stand","land0","land1","land2"]+(0...7).map{"fly\($0)"}
+        var names=frameNames+["stand","land0","land1","land2"]+(0...7).map{"fly\($0)"}
+        if species == .azureWingedMagpie {
+            names += (0...2).map{"glide\($0)"}+(0...2).map{"bank\($0)"}+["bound"]
+        }
         var area=Geometry.landingFootprint(at:.zero,scale:birdScale)
         let radius=hypot(max(grip.x,leafSize-grip.x),max(grip.y,leafSize-grip.y))*worldScale
         for name in names {

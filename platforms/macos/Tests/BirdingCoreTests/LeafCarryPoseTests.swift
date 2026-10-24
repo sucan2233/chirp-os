@@ -76,7 +76,7 @@ final class LeafCarryPoseTests:XCTestCase {
         }
     }
 
-    func testEveryTransportFrameHasAFinitePreciseSparrowBillWithoutGrantingOtherSpecies() throws {
+    func testEveryTransportFrameHasAFinitePreciseSparrowBillWithoutExpandingLeafCarryEligibility() throws {
         let frames=(0..<8).map{"fly\($0)"} + (0..<3).map{"land\($0)"}
         for frame in frames {
             let anchor=try XCTUnwrap(PoseClip.carryBeakAnchor(species:.treeSparrow,frame:frame))
@@ -87,7 +87,18 @@ final class LeafCarryPoseTests:XCTestCase {
             XCTAssertEqual(a.x,-b.x,accuracy:1e-9);XCTAssertEqual(a.y,b.y,accuracy:1e-9)
             XCTAssertEqual(PoseClip.beakAnchor(species:.treeSparrow,frame:frame),anchor)
         }
-        for species in SpeciesID.allCases where species != .treeSparrow {
+        // M6g authors magpie anchors for visitorGift. Shared artwork does not
+        // grant the magpie the sparrow-only leafCarry behavior or clips.
+        XCTAssertFalse(SpeciesBehaviorProfile.profile(for:.azureWingedMagpie).allows(.leafCarry))
+        for frame in frames+["carryGrip","carryPlace"] {
+            let anchor=try XCTUnwrap(PoseClip.carryBeakAnchor(species:.azureWingedMagpie,frame:frame))
+            XCTAssertTrue(anchor.x.isFinite && anchor.y.isFinite)
+            XCTAssertTrue((0...48).contains(anchor.x));XCTAssertTrue((0...48).contains(anchor.y))
+            let a=anchor.world(foot:.zero,scale:1,facingRight:true)
+            let b=anchor.world(foot:.zero,scale:1,facingRight:false)
+            XCTAssertEqual(a.x,-b.x,accuracy:1e-9);XCTAssertEqual(a.y,b.y,accuracy:1e-9)
+        }
+        for species in SpeciesID.allCases where species != .treeSparrow && species != .azureWingedMagpie {
             for frame in frames+["carryGrip","carryPlace"] {
                 XCTAssertNil(PoseClip.carryBeakAnchor(species:species,frame:frame))
             }

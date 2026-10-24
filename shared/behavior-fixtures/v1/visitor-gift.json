@@ -1,0 +1,419 @@
+{
+  "version": 1,
+  "simulationVersion": 16,
+  "seed": "1971",
+  "settings": {
+    "schemaVersion": 1,
+    "catalog": {
+      "species": [
+        {
+          "id": "azureWingedMagpie",
+          "flapFPS": 32,
+          "name": "灰喜鹊",
+          "englishName": "Azure-winged Magpie",
+          "weight": 3200,
+          "perchMin": 24,
+          "speed": 1.1,
+          "adultLengthCM": 35,
+          "perchMax": 56,
+          "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
+        },
+        {
+          "perchMax": 36,
+          "flapFPS": 48,
+          "adultLengthCM": 14.5,
+          "name": "麻雀",
+          "id": "treeSparrow",
+          "englishName": "Eurasian Tree Sparrow",
+          "weight": 18647,
+          "perchMin": 16,
+          "speed": 1.12,
+          "weightBasis": "上海2017–2023观鸟研究表2：18647只次"
+        }
+      ]
+    },
+    "probabilities": {
+      "entries": [
+        {
+          "id": "azureWingedMagpie",
+          "points": 10000,
+          "locked": false
+        },
+        {
+          "id": "treeSparrow",
+          "points": 0,
+          "locked": false
+        }
+      ]
+    },
+    "perchDefaultsVersion": 1,
+    "visitorGiftsEnabled": true,
+    "visitorMemoryEnabled": true,
+    "fixedPerchesEnabled": true,
+    "fixedPerches": [
+      {
+        "slot": 1,
+        "displayID": "gift-display",
+        "displayFrame": [
+          [
+            0,
+            0
+          ],
+          [
+            2400,
+            2200
+          ]
+        ],
+        "x": 0.75,
+        "y": 0.5
+      }
+    ],
+    "perchActions": false,
+    "passiveAttentionEnabled": false,
+    "pointerVisits": false,
+    "flockPasses": false,
+    "socialInteractions": false,
+    "ambientLeafPlayEnabled": false,
+    "leafCarryEnabled": true
+  },
+  "initialWorld": {
+    "screens": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 2400,
+        "height": 2200
+      }
+    ],
+    "displays": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 2400,
+        "height": 2200
+      }
+    ],
+    "displayIDs": [
+      "gift-display"
+    ],
+    "surfaces": [
+      {
+        "id": 1971,
+        "pid": 42,
+        "layer": 0,
+        "isGround": false,
+        "rect": {
+          "x": 200,
+          "y": 1700,
+          "width": 2000,
+          "height": 180
+        }
+      }
+    ],
+    "scale": 1,
+    "pointer": {
+      "x": 20,
+      "y": 20
+    },
+    "buttonsDown": false,
+    "availableFrames": {
+      "azureWingedMagpie": [
+        "stand",
+        "blink",
+        "land0",
+        "land1",
+        "land2",
+        "carryLook",
+        "carryLower",
+        "carryGrip",
+        "carryPlace",
+        "fly0",
+        "fly1",
+        "fly2",
+        "fly3",
+        "fly4",
+        "fly5",
+        "fly6",
+        "fly7"
+      ],
+      "treeSparrow": [
+        "stand",
+        "blink",
+        "land0",
+        "land1",
+        "land2",
+        "carryLook",
+        "carryLower",
+        "carryGrip",
+        "carryPlace",
+        "fly0",
+        "fly1",
+        "fly2",
+        "fly3",
+        "fly4",
+        "fly5",
+        "fly6",
+        "fly7"
+      ]
+    },
+    "fixedPerchArtAvailable": true,
+    "leafCarryArtAvailable": true
+  },
+  "initialVisitorMemory": {
+    "version": 1,
+    "seed": "73",
+    "nextID": "100",
+    "visitOrdinal": "100",
+    "profiles": [
+      {
+        "id": "99",
+        "species": "azureWingedMagpie",
+        "seed": "9001",
+        "calmSeconds": 180,
+        "visits": 2,
+        "lastVisitOrdinal": "100"
+      }
+    ]
+  },
+  "fixtureBirds": [
+    {
+      "species": "azureWingedMagpie",
+      "host": 1971,
+      "fraction": 0.15,
+      "perchDuration": 3600,
+      "facingRight": true
+    }
+  ],
+  "inputs": [
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 270,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "placeCarryLeaf",
+        "point": {
+          "x": 1000,
+          "y": 1700
+        }
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "visitorGift",
+        "source": "preview"
+      }
+    },
+    {
+      "kind": "giftAuthorization",
+      "giftAuthorization": {
+        "binding": {
+          "requestID": "1",
+          "visitorArchiveSeed": "73",
+          "visitorID": "99",
+          "birdID": {
+            "rawValue": 1
+          },
+          "species": "azureWingedMagpie",
+          "source": "preview",
+          "leafID": {
+            "rawValue": 1
+          },
+          "receiverSlot": 1,
+          "receiverRevision": 1
+        },
+        "token": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "binding": {
+            "requestID": "1",
+            "visitorArchiveSeed": "73",
+            "visitorID": "99",
+            "birdID": {
+              "rawValue": 1
+            },
+            "species": "azureWingedMagpie",
+            "source": "preview",
+            "leafID": {
+              "rawValue": 1
+            },
+            "receiverSlot": 1,
+            "receiverRevision": 1
+          }
+        }
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 15,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": true
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 60,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": false
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 1050,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "clearVisitorGift"
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "placeCarryLeaf",
+        "point": {
+          "x": 1000,
+          "y": 1700
+        }
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "visitorGift",
+        "source": "preview"
+      }
+    },
+    {
+      "kind": "giftAuthorization",
+      "giftAuthorization": {
+        "binding": {
+          "requestID": "2",
+          "visitorArchiveSeed": "73",
+          "visitorID": "99",
+          "birdID": {
+            "rawValue": 1
+          },
+          "species": "azureWingedMagpie",
+          "source": "preview",
+          "leafID": {
+            "rawValue": 2
+          },
+          "receiverSlot": 1,
+          "receiverRevision": 1
+        },
+        "token": {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "binding": {
+            "requestID": "2",
+            "visitorArchiveSeed": "73",
+            "visitorID": "99",
+            "birdID": {
+              "rawValue": 1
+            },
+            "species": "azureWingedMagpie",
+            "source": "preview",
+            "leafID": {
+              "rawValue": 2
+            },
+            "receiverSlot": 1,
+            "receiverRevision": 1
+          }
+        }
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": true
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 60,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "clearVisitorGift"
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": false
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 150,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "placeCarryLeafAfter",
+        "delay": 3
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "cancelCarryLeafPlacement"
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "cancelAmbient",
+        "reason": "sleep"
+      }
+    }
+  ]
+}

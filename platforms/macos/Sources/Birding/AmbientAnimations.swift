@@ -16,6 +16,7 @@ extension DesktopController {
         world.leafCarryArtAvailable=ScenePropRenderer.leafCarryArtAvailable
         world.insectArtAvailable=ScenePropRenderer.insectArtAvailable
         engine.updateWorld(world,sampleDT:sampleDT)
+        reconcileGiftAuthorization()
     }
     func renderSnapshot() -> [BirdRenderState] {syncWorld();return engine.renderSnapshot()}
     @discardableResult func startPointerVisit(at point:CGPoint) -> Bool {
@@ -29,7 +30,20 @@ extension DesktopController {
     }
     func consumeBehaviorEvents() {
         for event in engine.events where event.sequence>lastBehaviorEvent {
-            if event.kind == .insectCatch,event.source == .preview {
+            if event.kind == .visitorGift {
+                switch event.type {
+                case .completed:
+                    settingsWindow?.message.stringValue=event.source == .preview ?
+                        t("模拟虚拟礼物已在接收枝可见；预览单独计数，未使用自动额度。","The simulated virtual gift is visible on its receiving branch; only the preview count changed, with no automatic quota used."):
+                        t("熟客的虚拟礼物已在接收枝可见并记入观察手册。","The returning visitor's virtual gift is visible on its receiving branch and recorded in the journal.")
+                case .failed,.cancelled,.rejected,.previewResult:
+                    if let reason=event.reason {
+                        settingsWindow?.message.stringValue=settingsWindow?.visitorGiftMessage(reason) ?? behaviorMessage(reason)
+                    }
+                default:break
+                }
+                settingsWindow?.refreshVisitorGiftControls()
+            } else if event.kind == .insectCatch,event.source == .preview {
                 let species=event.participants.compactMap{engine.bird($0)?.profile.id}.first ?? .barnSwallow
                 switch event.type {
                 case .previewResult:

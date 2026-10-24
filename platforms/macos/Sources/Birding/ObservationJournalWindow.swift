@@ -183,6 +183,7 @@ final class ObservationJournalWindow: NSWindowController, NSTableViewDataSource,
         case "bathVisit": return language.text("洗澡", "Bathing")
         case "leafCarry": return language.text("携带叶片", "Leaf Carrying")
         case "insectCatch": return language.text("捕虫", "Insect Catching")
+        case "visitorGift": return language.text("熟客虚拟礼物", "Virtual Visitor Gift")
         default: return behavior
         }
     }

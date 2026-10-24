@@ -21,7 +21,7 @@ final class HabitatObjectTests:XCTestCase {
     }
     private func assertReplay(_ e:BehaviorEngine,file:StaticString=#filePath,line:UInt=#line) throws {
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(log.simulationVersion,15,file:file,line:line)
+        XCTAssertEqual(log.simulationVersion,16,file:file,line:line)
         for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),log.expected,"\(hz)Hz",file:file,line:line)}
         XCTAssertEqual(try log.replay(),log.expected,file:file,line:line)
     }

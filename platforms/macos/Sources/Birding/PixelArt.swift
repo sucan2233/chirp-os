@@ -58,7 +58,8 @@ final class BirdArt {
     /// Keep all historical preview rows first, appending only new species.
     static var poseExportSpecies:[SpeciesID] {
         let base=SpeciesBehaviorProfile.poseSpecies
-        return base+SpeciesBehaviorProfile.species(for:.insectCatch).filter{!base.contains($0)}
+        let catchSpecies=SpeciesBehaviorProfile.species(for:.insectCatch).filter{!base.contains($0)}
+        return base+catchSpecies+SpeciesBehaviorProfile.species(for:.visitorGift).filter{!base.contains($0) && !catchSpecies.contains($0)}
     }
     static func names(for species:SpeciesID) -> [String] {
         names + (SpeciesBehaviorProfile.profile(for:species).allows(.allopreening) ? allopreeningNames : []) +
@@ -66,7 +67,7 @@ final class BirdArt {
             SpeciesBehaviorProfile.profile(for:species).poseFrameNames +
             (SpeciesBehaviorProfile.peekSpecies.contains(species) ? peekNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.bathVisit) ? bathNames : []) +
-            (SpeciesBehaviorProfile.profile(for:species).allows(.leafCarry) ? carryNames : []) +
+            (SpeciesBehaviorProfile.profile(for:species).allows(.leafCarry) || SpeciesBehaviorProfile.profile(for:species).allows(.visitorGift) ? carryNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch) ? catchNames : [])
     }
     let frames: [String: CGImage]

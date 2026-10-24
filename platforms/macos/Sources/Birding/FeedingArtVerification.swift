@@ -99,7 +99,7 @@ enum FeedingArtVerification {
             // every earlier index must remain unchanged, including pre-catch.
             let bath=[SpeciesID.treeSparrow,.lightVentedBulbul].contains(id)
                 ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]
-            let carry=id == .treeSparrow ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]
+            let carry=[SpeciesID.treeSparrow,.azureWingedMagpie].contains(id) ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]
             let preCatch=prior+bath+carry
             let catchFrames=[SpeciesID.barnSwallow,.yellowRumpedFlycatcher].contains(id)
                 ? ["catchOpen","catchClose","catchRecover"]:[]

@@ -103,6 +103,22 @@
           40.184371319187001,
           14.405783957329
         ],
+        "carryGrip" : [
+          40,
+          39
+        ],
+        "carryLook" : [
+          39.766769717678578,
+          17.919019321874806
+        ],
+        "carryLower" : [
+          40,
+          31
+        ],
+        "carryPlace" : [
+          42,
+          23
+        ],
         "lookFar" : [
           39.737056907780001,
           16.338556643735
@@ -230,6 +246,68 @@
           "maximumLoops" : 1,
           "recovery" : "currentEngineState"
         },
+        "visitorGiftPickup" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 39.766769717678578,
+                "y" : 17.919019321874806
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "carryLook"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 31
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "carryLower"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 39
+              },
+              "duration" : 0.20000000000000001,
+              "name" : "carryGrip"
+            },
+            {
+              "beak" : {
+                "x" : 39.766769717678578,
+                "y" : 17.919019321874806
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "carryLook"
+            }
+          ],
+          "id" : "azureWingedMagpie.visitorGift.pickup",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "visitorGiftRelease" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 42,
+                "y" : 23
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "carryPlace"
+            }
+          ],
+          "id" : "azureWingedMagpie.visitorGift.release",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
         "watch" : {
           "foot" : {
             "x" : 29,
@@ -266,9 +344,100 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact; visitorGift pickup 1.2s with atomic grip at 0.7s, airborne release 0.3s; token drop remains execution-owned",
       "transportBeakAnchors" : {
-
+        "bank0" : [
+          41.80505920721231,
+          19.706444146055858
+        ],
+        "bank1" : [
+          42.069105142591255,
+          20.752467059207884
+        ],
+        "bank2" : [
+          42.259342608615171,
+          21.814396387058839
+        ],
+        "bound" : [
+          42.362941580183836,
+          22.733340612532867
+        ],
+        "carryGrip" : [
+          40,
+          39
+        ],
+        "carryLook" : [
+          39.766769717678578,
+          17.919019321874806
+        ],
+        "carryLower" : [
+          40,
+          31
+        ],
+        "carryPlace" : [
+          42,
+          23
+        ],
+        "fly0" : [
+          42.349507056740201,
+          22.579777089650086
+        ],
+        "fly1" : [
+          42.299999999999997,
+          21.82
+        ],
+        "fly2" : [
+          42.192587016548778,
+          21.01006693309137
+        ],
+        "fly3" : [
+          42.159735928827267,
+          21.205933685786313
+        ],
+        "fly4" : [
+          42.245722626039573,
+          21.961779793578412
+        ],
+        "fly5" : [
+          42.313034776376135,
+          22.773066449437753
+        ],
+        "fly6" : [
+          42.362941580183836,
+          22.733340612532867
+        ],
+        "fly7" : [
+          42.397193394485868,
+          22.841192176070276
+        ],
+        "glide0" : [
+          42.069105142591255,
+          20.752467059207884
+        ],
+        "glide1" : [
+          42.069105142591255,
+          20.752467059207884
+        ],
+        "glide2" : [
+          42.069105142591255,
+          20.752467059207884
+        ],
+        "land0" : [
+          40.5,
+          19
+        ],
+        "land1" : [
+          40.5,
+          19
+        ],
+        "land2" : [
+          40.5,
+          19
+        ],
+        "stand" : [
+          40.5,
+          19
+        ]
       },
       "waterContactAnchors" : {
 
@@ -3346,7 +3515,11 @@
       "restTuck",
       "restWake",
       "takeoffCrouch",
-      "takeoffPush"
+      "takeoffPush",
+      "carryLook",
+      "carryLower",
+      "carryGrip",
+      "carryPlace"
     ],
     "barnSwallow" : [
       "stand",

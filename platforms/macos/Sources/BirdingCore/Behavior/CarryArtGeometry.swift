@@ -9,7 +9,14 @@ public enum CarryArtGeometry {
     public static let sparrowHeadWidth:Double=9
     public static let sparrowHeadHeight:Double=8
     public static let sparrowHeadY:Double=16
+    public static let magpieHeadWidth:Double=7.5
+    public static let magpieHeadHeight:Double=7
+    public static let magpieHeadY:Double=15
+    /// Source-art coverage only; leafCarry and visitorGift keep separate permissions.
+    public static let species:[SpeciesID]=[.treeSparrow,.azureWingedMagpie]
     public static let contactBeak=CGPoint(x:40,y:39)
+    /// Upper mandible at aerial release, before any world scale or mirroring.
+    public static let magpieReleaseBeak=CGPoint(x:42,y:23)
     public static let leafLogicalSize=CGSize(width:16,height:16)
     public static let leafGripAnchor=CGPoint(x:3,y:12)
     public static let leafSurfaceAnchor=CGPoint(x:10,y:12)
@@ -23,22 +30,28 @@ public enum CarryArtGeometry {
     ]
 
     public struct Pose {
+        public let species:SpeciesID
         public let body:CGRect
         public let head:CGPoint
         public let pitch:Double
         public let tail:CGPoint
         public let release:Bool
+        public var headWidth:Double {species == .azureWingedMagpie ? CarryArtGeometry.magpieHeadWidth:CarryArtGeometry.sparrowHeadWidth}
+        public var headHeight:Double {species == .azureWingedMagpie ? CarryArtGeometry.magpieHeadHeight:CarryArtGeometry.sparrowHeadHeight}
+        public var billRoot:Double {headWidth/2-0.5}
+        public var billLength:Double {TransportArtGeometry.ordinaryBillLength(species:species)}
         public func headPoint(_ x:Double,_ y:Double)->CGPoint {
             CGPoint(x:Double(head.x)+x*cos(pitch)-y*sin(pitch),
                     y:Double(head.y)+x*sin(pitch)+y*cos(pitch))
         }
         public var billTip:CGPoint {
-            let length=TransportArtGeometry.ordinaryBillLength(species:.treeSparrow)
-            return headPoint(CarryArtGeometry.sparrowHeadWidth/2-0.5+length,0.5)
+            let length=TransportArtGeometry.ordinaryBillLength(species:species)
+            return headPoint(headWidth/2-0.5+length,0.5)
         }
     }
 
     public static func pose(species:SpeciesID,frame:String)->Pose? {
+        if species == .azureWingedMagpie {return magpiePose(frame)}
         guard species == .treeSparrow else {return nil}
         let body:CGRect,head:CGPoint,pitch:Double,tail:CGPoint
         let target:CGPoint?
@@ -66,7 +79,46 @@ public enum CarryArtGeometry {
             center=CGPoint(x:Double(target.x)-tip*cos(pitch)+0.5*sin(pitch),
                            y:Double(target.y)-tip*sin(pitch)-0.5*cos(pitch))
         } else {center=head}
-        return Pose(body:body,head:center,pitch:pitch,tail:tail,release:frame == "carryPlace")
+        return Pose(species:species,body:body,head:center,pitch:pitch,tail:tail,release:frame == "carryPlace")
+    }
+
+    private static func magpiePose(_ frame:String)->Pose? {
+        let body:CGRect,head:CGPoint,pitch:Double,tail:CGPoint,target:CGPoint?
+        switch frame {
+        case "carryLook":
+            body=CGRect(x:17.5,y:23,width:17,height:11)
+            head=CGPoint(x:32.5,y:18);pitch = -0.08;tail=CGPoint(x:3.2,y:44.5);target=nil
+        case "carryLower":
+            body=CGRect(x:18.3,y:24.3,width:17.5,height:10.5)
+            head = .zero;pitch=0.62;tail=CGPoint(x:2.5,y:40.5);target=CGPoint(x:40,y:31)
+        case "carryGrip":
+            body=CGRect(x:18.8,y:25,width:17.2,height:10.3)
+            head = .zero;pitch=0.96;tail=CGPoint(x:2.2,y:37.8);target=contactBeak
+        case "carryPlace":
+            body=CGRect(x:18,y:22,width:17.5,height:9.2)
+            head = .zero;pitch=0.18;tail=CGPoint(x:3.5,y:33);target=magpieReleaseBeak
+        default:return nil
+        }
+        let center:CGPoint
+        if let target {
+            let tip=magpieHeadWidth/2-0.5+TransportArtGeometry.ordinaryBillLength(species:.azureWingedMagpie)
+            center=CGPoint(x:Double(target.x)-tip*cos(pitch)+0.5*sin(pitch),
+                           y:Double(target.y)-tip*sin(pitch)-0.5*cos(pitch))
+        } else {center=head}
+        return Pose(species:.azureWingedMagpie,body:body,head:center,pitch:pitch,tail:tail,release:frame == "carryPlace")
+    }
+
+    /// Anatomy is shared with the unchanged common-frame drawing. Unsupported
+    /// species do not acquire transport or leafCarry capability through this API.
+    public static func transportBillAnchor(species:SpeciesID,frame:String)->CGPoint? {
+        let width:Double,height:Double,y:Double
+        switch species {
+        case .treeSparrow:width=sparrowHeadWidth;height=sparrowHeadHeight;y=sparrowHeadY
+        case .azureWingedMagpie:width=magpieHeadWidth;height=magpieHeadHeight;y=magpieHeadY
+        default:return nil
+        }
+        return TransportArtGeometry.billAnchor(frame:frame,species:species,
+            headWidth:width,headHeight:height,headY:y)
     }
 
     /// Complete token canvas about its actual grip. This conservative envelope

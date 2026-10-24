@@ -37,7 +37,9 @@ for bird in ('lightVentedBulbul', 'magpieRobin'):
     expected_extras[bird] = expected_extras[bird] + ['peekLower', 'peekLook', 'peekRecover']
 for bird in ('treeSparrow', 'lightVentedBulbul'):
     expected_extras[bird] += ['bathInspect', 'bathTouch', 'bathLower', 'bath0', 'bath1', 'bath2', 'bathRise']
-expected_extras['treeSparrow'] += ['carryLook', 'carryLower', 'carryGrip', 'carryPlace']
+carry_frames = ['carryLook', 'carryLower', 'carryGrip', 'carryPlace']
+for bird in ('treeSparrow', 'azureWingedMagpie'):
+    expected_extras[bird] += carry_frames
 expected_extras['barnSwallow'] += ['catchOpen', 'catchClose', 'catchRecover']
 expected_extras['yellowRumpedFlycatcher'] = ['catchOpen', 'catchClose', 'catchRecover']
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
@@ -58,8 +60,26 @@ assert set(metadata['yellowRumpedFlycatcher']['clips']) == {'insectCatchRecovery
 transport_frames = [f'fly{i}' for i in range(8)] + [f'land{i}' for i in range(3)] + [f'glide{i}' for i in range(3)] + [f'bank{i}' for i in range(3)] + ['bound', 'stand']
 for bird in ('barnSwallow', 'yellowRumpedFlycatcher'):
     assert set(metadata[bird]['transportBeakAnchors']) == set(transport_frames + expected_extras['yellowRumpedFlycatcher']), f'Incomplete catch beak geometry: {bird}'
+for bird in ('treeSparrow', 'azureWingedMagpie'):
+    assert set(metadata[bird]['transportBeakAnchors']) == set(transport_frames + carry_frames), f'Incomplete carry beak geometry: {bird}'
+magpie = metadata['azureWingedMagpie']
+assert len(specific['azureWingedMagpie']) == 48, 'Magpie must append only four carry frames after its historical 44'
+assert set(magpie['clips']) == {'watch', 'alert', 'rest', 'takeoffPreparation', 'visitorGiftPickup', 'visitorGiftRelease'}, 'Gift clips changed unrelated magpie capability'
+pickup = magpie['clips']['visitorGiftPickup']
+release = magpie['clips']['visitorGiftRelease']
+assert [frame['name'] for frame in pickup['frames']] == ['carryLook', 'carryLower', 'carryGrip', 'carryLook']
+assert [frame['duration'] for frame in pickup['frames']] == [0.4, 0.3, 0.2, 0.3]
+assert [frame['name'] for frame in release['frames']] == ['carryPlace'] and release['frames'][0]['duration'] == 0.3
+for frame, expected in (('carryGrip', [40, 39]), ('carryPlace', [42, 23])):
+    anchor = magpie['transportBeakAnchors'][frame]
+    assert len(anchor) == 2 and all(abs(a - b) < 1e-9 for a, b in zip(anchor, expected)), f'Wrong magpie contact anchor: {frame}'
 
 prop_manifest = json.loads((ROOT / 'shared/art/props/manifest.json').read_text())
+leaf = prop_manifest['leafToken']
+assert leaf['file'] == 'leafToken.png' and leaf['logicalSize'] == [16, 16], 'Gift must reuse the existing leaf'
+assert leaf['gripAnchor'] == [3, 12] and leaf['surfaceAnchor'] == [10, 12] and leaf['scale'] == 'worldScale', 'Leaf scale or support contract changed'
+assert leaf['giftLifetime'] == 120 and leaf['giftReceiverAnchor'] == 'resolvedFixedPerch.foot' and leaf['giftCarrierMayLand'] is False
+assert leaf['giftReleaseBeak'] == [42, 23], 'Aerial release metadata differs from the actual bill'
 insect = prop_manifest.get('insect', {})
 assert insect.get('files') == [f'insect{i}.png' for i in range(4)], 'Missing four insect phases'
 assert insect.get('logicalSize') == [16, 16] and insect.get('anchor') == [8, 8], 'Insect pivot/size differs from core'

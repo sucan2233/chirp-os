@@ -110,16 +110,18 @@ final class DesktopController: NSObject {
     override init() {
         engine=BehaviorEngine(recordInputs:CommandLine.arguments.contains("--record-behavior"))
         super.init()
+        installGiftAuthorizationObserver()
     }
     /// Isolated native fixtures keep ordinary routing and scheduler randomness
     /// reproducible without changing the production controller's random seed.
     init(verificationSeed:UInt64) {
         engine=BehaviorEngine(seed:verificationSeed)
         super.init()
+        installGiftAuthorizationObserver()
     }
     var settings:BirdSettings {
         get {engine.settings}
-        set {engine.applySettings(newValue)}
+        set {engine.applySettings(newValue);reconcileGiftAuthorization()}
     }
     var catalog: SpeciesCatalog { settings.catalog }
     var preferences = UserDefaults.standard
@@ -133,6 +135,14 @@ final class DesktopController: NSObject {
     var visitorMemoryPersistenceEnabled=VisitorMemoryPersistence.automaticEnabled(arguments:CommandLine.arguments)
     var visitorMemoryURL=VisitorMemoryPersistence.defaultURL
     var visitorMemoryPersistence:VisitorMemoryPersistence?
+    var giftLedgerURL=GiftLedgerPersistence.defaultURL
+    var giftLedgerPersistenceEnabled:Bool?
+    var giftLedgerPersistence:GiftLedgerPersistence?
+    var giftAuthorizationSession=UUID()
+    var giftAuthorizationAttempt:GiftPlatformAttempt?
+    // Isolated platform-input fixtures may hold a provider result. Production
+    // leaves this nil and always uses the asynchronous durable provider below.
+    var giftAuthorizationProvider:((GiftAuthorizationRequest,@escaping (GiftAuthorizationResult)->Void)->Void)?
     let observationJournal=ObservationJournal()
     var observationWindow:ObservationJournalWindow?
     var observationJournalURL=ObservationJournalPersistence.defaultURL
@@ -205,7 +215,7 @@ final class DesktopController: NSObject {
     var scale: CGFloat = 1
     var paused:Bool {
         get {engine.paused}
-        set {engine.handle(.pause(newValue))}
+        set {if newValue {cancelGiftAuthorization()};engine.handle(.pause(newValue))}
     }
     var timer: Timer?
     var lastTick = ProcessInfo.processInfo.systemUptime
@@ -258,10 +268,11 @@ final class DesktopController: NSObject {
         t.tolerance = 0.003
         RunLoop.main.add(t, forMode: .common); timer = t
     }
-    @objc func sleeping() { engine.handle(.cancelAmbient(.sleep));timer?.invalidate() }
+    @objc func sleeping() { cancelGiftAuthorization();engine.handle(.cancelAmbient(.sleep));timer?.invalidate() }
     @objc func waking() { lastSample = 0; startTimer() }
-    @objc func spaceChanged() { engine.handle(.cancelAmbient(.spaceChanged));lastSample = 0; sampleWindows(dt: 1); for v in views { v.needsDisplay = true } }
+    @objc func spaceChanged() { cancelGiftAuthorization();engine.handle(.cancelAmbient(.spaceChanged));lastSample = 0; sampleWindows(dt: 1); for v in views { v.needsDisplay = true } }
     @objc func rebuildScreens() {
+        cancelGiftAuthorization()
         engine.handle(.cancelFoodTrayPlacement)
         engine.handle(.cancelBathPlacement)
         engine.handle(.cancelCarryLeafPlacement)
@@ -317,11 +328,13 @@ final class DesktopController: NSObject {
         engine.ambientEnabled=engine.populationEnabled && !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"})
         engine.autonomousRouting=integration == nil
         engine.advance(dt)
+        reconcileGiftAuthorization()
         consumeBehaviorEvents()
         settingsWindow?.refreshFoodTrayControls()
         settingsWindow?.refreshBathControls()
         settingsWindow?.refreshLeafCarryControls()
         settingsWindow?.refreshInsectCatchControls()
+        settingsWindow?.refreshVisitorGiftControls()
     }
     func tick() {
         let now = ProcessInfo.processInfo.systemUptime
@@ -499,5 +512,5 @@ final class DesktopController: NSObject {
         let root = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
         NSWorkspace.shared.open(root.appendingPathComponent("README.md"))
     }
-    @objc func quit() { engine.handle(.cancelAmbient(.shutdown));stopMouseMonitoring();NSApp.terminate(nil) }
+    @objc func quit() { cancelGiftAuthorization();engine.handle(.cancelAmbient(.shutdown));stopMouseMonitoring();NSApp.terminate(nil) }
 }

@@ -88,6 +88,11 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var cancelInsectCatchPreviewButton:NSButton!
     var clearInsectButton:NSButton!
     var insectCatchStatus:NSTextField!
+    var visitorGiftsButton:NSButton!
+    var previewVisitorGiftButton:NSButton!
+    var cancelVisitorGiftRequestButton:NSButton!
+    var clearVisitorGiftButton:NSButton!
+    var visitorGiftStatus:NSTextField!
     private weak var foodTrayEngine:BehaviorEngine?
     private var ownsFoodTrayPlacement=false
     private var ownsBathPlacement=false
@@ -136,6 +141,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         cancelBathPlacement()
         cancelCarryLeafPlacement()
         cancelInsectCatchPreview()
+        cancelVisitorGiftRequest()
         let selected = tabs?.indexOfTabViewItem(tabs!.selectedTabViewItem!) ?? 0
         sliders=[]; fields=[]; locks=[]; detailFields=[]
         let root = SettingsContentView(frame:NSRect(x:0,y:0,width:840,height:690)); root.wantsLayer=true; window!.contentView = root
@@ -186,7 +192,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:7020))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:7580))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -317,6 +323,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         buildBath(in:interactionView)
         buildLeafCarry(in:interactionView)
         buildInsectCatch(in:interactionView)
+        buildVisitorGifts(in:interactionView)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -446,7 +453,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         refreshFixedPerchPlacementButton()
     }
     @objc private func fixedPerchWindowWillClose(_ notification:Notification) {
-        cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement();cancelInsectCatchPreview()
+        cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement();cancelInsectCatchPreview();cancelVisitorGiftRequest()
     }
     @objc func previewFixedPerch() {
         desktop.syncWorld()
@@ -862,6 +869,76 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         default:return desktop.behaviorMessage(reason)
         }
     }
+    private func buildVisitorGifts(in view:NSView) {
+        label(t("熟客虚拟礼物","Virtual gifts from returning visitors"),NSRect(x:20,y:7020,width:710,height:30),in:view,size:20).identifier=NSUserInterfaceItemIdentifier("visitorGiftSectionTitle")
+        visitorGiftsButton=NSButton(checkboxWithTitle:t("开启熟客虚拟礼物","Enable virtual visitor gifts"),target:self,action:#selector(visitorGiftSettingsChanged))
+        visitorGiftsButton.frame=NSRect(x:20,y:7062,width:710,height:26);visitorGiftsButton.state=draft.visitorGiftsEnabled ? .on:.off
+        visitorGiftsButton.identifier=NSUserInterfaceItemIdentifier("visitorGiftsEnabled");visitorGiftsButton.setAccessibilityLabel(visitorGiftsButton.title);view.addSubview(visitorGiftsButton)
+        previewVisitorGiftButton=button(t("模拟礼物预览","Preview a simulated gift"),#selector(previewVisitorGift),NSRect(x:20,y:7108,width:350,height:32),in:view)
+        clearVisitorGiftButton=button(t("清除礼物","Clear gift"),#selector(clearVisitorGift),NSRect(x:390,y:7108,width:340,height:32),in:view)
+        cancelVisitorGiftRequestButton=button(t("取消待授权申请","Cancel pending authorization"),#selector(cancelVisitorGiftRequestClicked),NSRect(x:20,y:7154,width:350,height:32),in:view)
+        for (control,id) in [(previewVisitorGiftButton!,"previewVisitorGift"),(clearVisitorGiftButton!,"clearVisitorGift"),(cancelVisitorGiftRequestButton!,"cancelVisitorGiftRequest")] {
+            control.identifier=NSUserInterfaceItemIdentifier(id);control.setAccessibilityLabel(control.title)
+        }
+        label(language.visitorGiftSupport+t("\n默认关闭，保存后生效。这是拟人化虚拟设计，不代表野生鸟类会送礼。需要已有熟客（来访至少3次、熟悉度≥0.6）、普通边缘上的静止叶片及已保存的空闲接收栖木。\n\n灰喜鹊拾取叶片、飞越并释放，不落上小树枝；叶片到达接收锚并可见才完成，保留120秒。模拟预览不消费自动额度，仅记预览。\n\n自动礼物每位熟客一次，全局授权至少相隔24小时；需安全保存额度。取消不退款，存储失败会停止自动礼物。取消申请或清除礼物保留其他草稿；无通知声或弹窗。",
+            "\nOff by default; save to apply. This is a fictional virtual gift, not a claim about wild birds. It needs an existing visitor with at least 3 visits and familiarity ≥0.6, a static leaf on an ordinary edge, and a saved, empty receiving perch.\n\nThe bird picks up the leaf, flies past and releases it without landing on the branch. Completion requires a visible gift at its receiving anchor; it remains for 120 seconds. Simulated previews use no automatic allowance and count only as previews.\n\nAutomatic gifts require durable authorization: once per visitor, at least 24 hours apart globally. Cancellation does not refund allowances. Storage errors stop automatic gifts. Cancel and Clear preserve other drafts. No notification sound or popup."),NSRect(x:20,y:7200,width:710,height:220),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("visitorGiftHelp")
+        visitorGiftStatus=label("",NSRect(x:20,y:7436,width:710,height:84),in:view,size:12)
+        visitorGiftStatus.identifier=NSUserInterfaceItemIdentifier("visitorGiftStatus");visitorGiftStatus.setAccessibilityLabel(t("礼物状态","Gift status"))
+        refreshVisitorGiftControls()
+    }
+    func refreshVisitorGiftControls() {
+        guard visitorGiftStatus != nil else {return}
+        let pending=desktop.engine.giftAuthorizationRequest != nil
+        let active=desktop.birds.contains{desktop.engine.behavior(of:$0) == .visitorGift}
+        previewVisitorGiftButton.isEnabled = !pending && !active
+        cancelVisitorGiftRequestButton.isEnabled=pending
+        if pending {visitorGiftStatus.stringValue=desktop.engine.giftAuthorizationRequest?.binding.source == .preview ?
+            t("正在准备模拟礼物的内存授权，不使用自动额度。","Preparing in-memory authorization for the simulated gift; no automatic allowance is used."):
+            t("正在授权礼物并核验自动额度，最多5秒；小鸟动画继续。","Authorizing the gift and checking its automatic allowance, for up to 5 seconds. Bird animation continues.")}
+        else if active {visitorGiftStatus.stringValue=t("正在拾取并飞越送叶；叶片到达接收锚、可见后才记入观察手册。","Picking up and delivering the leaf in flight. A journal entry requires a visible gift at the receiving anchor.")}
+        else if let denial=desktop.engine.lastGiftAuthorizationDenial {visitorGiftStatus.stringValue=language.giftAuthorizationMessage(denial)}
+        else {visitorGiftStatus.stringValue=language.visitorGiftSupport}
+    }
+    @objc func visitorGiftSettingsChanged() {
+        draft.visitorGiftsEnabled=visitorGiftsButton.state == .on
+        if !draft.visitorGiftsEnabled {cancelVisitorGiftRequest()}
+        message.stringValue=t("尚未保存 · 虚拟礼物默认关闭，保存后生效。","Unsaved · Virtual gifts default off; save to apply.")
+    }
+    @objc func previewVisitorGift() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.visitorGift(.preview))
+        if case .rejected(let reason)=result {message.stringValue=visitorGiftMessage(reason)}
+        else {message.stringValue=t("正在模拟礼物：使用已有熟客与叶片，不消耗自动额度，仅记预览。","Simulating a gift with the existing visitor and leaf. No automatic allowance is used; only preview is counted.")}
+        refreshVisitorGiftControls();refreshLeafCarryControls();refreshBathControls()
+    }
+    func cancelVisitorGiftRequest() {
+        if desktop.engine.giftAuthorizationRequest != nil {desktop.cancelGiftAuthorization()}
+        refreshVisitorGiftControls()
+    }
+    @objc func cancelVisitorGiftRequestClicked() {
+        cancelVisitorGiftRequest()
+        message.stringValue=t("待授权礼物申请已取消；已提交的自动额度不会返还。","Pending gift authorization cancelled. Committed automatic allowances are not refunded.")
+    }
+    @objc func clearVisitorGift() {
+        desktop.cancelGiftAuthorization();desktop.engine.handle(.clearVisitorGift);desktop.consumeBehaviorEvents()
+        refreshVisitorGiftControls();refreshLeafCarryControls();refreshBathControls()
+        message.stringValue=t("已清除礼物，不追加观察记录；自动额度保持不变。","Gift cleared without another journal entry. Automatic allowances are unchanged.")
+    }
+    func visitorGiftMessage(_ reason:BehaviorReason)->String {
+        switch reason {
+        case .notFamiliar:return t("请等待已有灰喜鹊熟客：来访至少3次、熟悉度达到0.6。 ","Wait for an existing returning magpie with at least 3 visits and familiarity of 0.6. ")+language.visitorGiftSupport
+        case .authorizationDenied:
+            return desktop.engine.lastGiftAuthorizationDenial.map{language.giftAuthorizationMessage($0)} ??
+                t("礼物授权未通过，未开始互动或追加观察记录。","Gift authorization was denied; no encounter or journal entry was added.")
+        case .disabled,.settingsChanged:return t("请先保存并开启虚拟礼物和熟客记忆。","Save and enable virtual gifts and returning-visitor memory first.")
+        case .noSpecies,.missingBird,.unavailableBird,.noCompanion:return t("请启用灰喜鹊及熟客记忆并保存，等待已有熟客（来访≥3、熟悉度≥0.6）停稳。 ","Enable the magpie and visitor memory, then save. An existing visitor needs ≥3 visits, familiarity ≥0.6 and a settled perch. ")+language.visitorGiftSupport
+        case .missingFrames:return t("礼物携带姿态或飞行喙锚不完整。 ","Gift-carrying poses or flight bill anchors are incomplete. ")+language.visitorGiftSupport
+        case .noSpace,.targetInvalid:return t("需要普通边缘上的静止叶片、已保存的空闲接收栖木及安全飞越路线。","A static leaf on an ordinary edge, a saved empty receiving perch and a safe fly-past route are required.")
+        case .busy:return t("请等待当前互动、礼物或授权结束，并让接收栖木保持空闲。","Wait for the current encounter, gift or authorization to finish, and keep the receiving perch empty.")
+        case .timedOut:return t("礼物申请或路线已超时结束，未记入观察手册；已提交额度不返还。","The gift request or route timed out without a journal entry. Committed allowances are not refunded.")
+        default:return desktop.behaviorMessage(reason)
+        }
+    }
     @objc func simulateUpdate() {
         let started=desktop.updater?.simulateUpdate() == true
         message.stringValue=started ? t("已显示模拟更新，可点击通知或菜单查看。","Simulated update ready; click the notification or menu to review."):t("更新器正在忙碌，请稍后重试。","The updater is busy; try again shortly.")
@@ -1163,6 +1240,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.bathEnabled=bathButton.state == .on
         draft.leafCarryEnabled=leafCarryButton.state == .on
         draft.insectCatchEnabled=insectCatchButton.state == .on
+        draft.visitorGiftsEnabled=visitorGiftsButton.state == .on
         refreshFixedPerchControls()
         return true
     }
@@ -1172,6 +1250,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         cancelBathPlacement()
         cancelCarryLeafPlacement()
         cancelInsectCatchPreview()
+        cancelVisitorGiftRequest()
         window?.makeFirstResponder(nil)
         guard readInteraction() else {tabs.selectTabViewItem(at:2);message.stringValue=t("请输入 0–10 秒之间的有效等待时间。","Enter a valid hover delay between 0 and 10 seconds.");return}
         guard readDetails() else { tabs.selectTabViewItem(at:1); message.stringValue=t("请检查体型与动作数值：最长停留不能小于最短停留。","Check size and behavior ranges; maximum perch time must not be below minimum."); return }
@@ -1179,7 +1258,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         catch { message.stringValue=t("保存失败，请重试。当前设置未改变。","Could not save. Try again; active settings are unchanged.") }
     }
     @objc func resetDefaults() { cancelFixedPerchCapture();window?.makeFirstResponder(nil); draft=BirdSettings();selectedFixedPerchSlot=1; build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
-    @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement();cancelInsectCatchPreview();window?.close() }
+    @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement();cancelInsectCatchPreview();cancelVisitorGiftRequest();window?.close() }
     func relocalize() {
         cancelFixedPerchCapture()
         window?.makeFirstResponder(nil)

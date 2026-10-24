@@ -10,6 +10,7 @@ extension BirdArt {
         for species in Self.poseExportSpecies {
             let art=BirdArt(species:species),profile=SpeciesBehaviorProfile.profile(for:species)
             let bird=SpeciesCatalog.standard.profile(species)
+            let giftLeaf=profile.allows(.visitorGift) ? CarryArt.leafImage():nil
             var tracks:[PoseClip]=[(BehaviorKind.watch,2.0),(.alert,1.5),(.rest,4),(.takeoffPreparation,0.45)].compactMap {
                 profile.poseClip(for:$0.0,duration:$0.1,lookingFar:true)
             }
@@ -17,6 +18,12 @@ extension BirdArt {
             if let bath=PoseClip.bath(species:species) {tracks.append(bath)}
             if let pickup=PoseClip.leafCarryPickup(species:species),let place=PoseClip.leafCarryPlace(species:species),
                let carry=PoseClip(id:"\(species.rawValue).leafCarry.preview",frames:pickup.frames+place.frames) {tracks.append(carry)}
+            if let pickup=PoseClip.visitorGiftPickup(species:species),let release=PoseClip.visitorGiftRelease(species:species),
+               let fly=PoseClip.carryBeakAnchor(species:species,frame:"fly1"),
+               let glide=PoseClip.carryBeakAnchor(species:species,frame:"glide1"),
+               let carry=PoseClip(id:"\(species.rawValue).visitorGift.preview",frames:pickup.frames +
+                    [PoseClip.Frame(name:"fly1",duration:0.25,beak:fly),
+                     PoseClip.Frame(name:"glide1",duration:0.25,beak:glide)]+release.frames) {tracks.append(carry)}
             if let recovery=PoseClip.insectCatchRecovery(species:species),
                let clip=PoseClip(id:"\(species.rawValue).insectCatch.preview",
                     frames:[PoseClip.Frame(name:"catchOpen",duration:0.24,
@@ -50,6 +57,17 @@ extension BirdArt {
                         context.setStrokeColor(NSColor.gray.withAlphaComponent(0.4).cgColor)
                         context.move(to:CGPoint(x:CGFloat(i*cell+8),y:foot.y));context.addLine(to:CGPoint(x:CGFloat((i+1)*cell-8),y:foot.y));context.strokePath()
                         art.draw(name:frame,at:foot,scale:size,right:right,context:context)
+                        // Presentation-only prop: independent world scale, not
+                        // baked into a bird frame or scaled with its body size.
+                        if clip.id=="\(species.rawValue).visitorGift.preview",age>=0.7,age<1.7,let leaf=giftLeaf,
+                           let anchor=PoseClip.carryBeakAnchor(species:species,frame:frame) {
+                            let grip=anchor.world(foot:foot,scale:size,facingRight:right)
+                            context.saveGState();context.translateBy(x:grip.x,y:grip.y)
+                            context.scaleBy(x:right ? scale:-scale,y:scale)
+                            context.translateBy(x:-CarryArtGeometry.leafGripAnchor.x,y:-CarryArtGeometry.leafGripAnchor.y)
+                            context.translateBy(x:0,y:16);context.scaleBy(x:1,y:-1)
+                            context.draw(leaf,in:CGRect(x:0,y:0,width:16,height:16));context.restoreGState()
+                        }
                         context.saveGState();context.translateBy(x:CGFloat(i*cell+8),y:CGFloat(height-10));context.scaleBy(x:1,y:-1)
                         ("\(clip.id.dropFirst(species.rawValue.count+1))\n\(frame)" as NSString).draw(at:.zero,withAttributes:[.font:NSFont.monospacedSystemFont(ofSize:10,weight:.regular),.foregroundColor:NSColor(calibratedWhite:0.2,alpha:1)])
                         context.restoreGState()

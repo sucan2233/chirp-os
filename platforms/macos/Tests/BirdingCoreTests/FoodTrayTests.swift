@@ -392,7 +392,7 @@ final class FoodTrayTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let file=root.appendingPathComponent("shared/behavior-fixtures/v1/food-tray.json")
         let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
-        XCTAssertEqual(log.simulationVersion,15)
+        XCTAssertEqual(log.simulationVersion,16)
         for hz in [30,120] {XCTAssertEqual(try log.replay(callbackHz:hz),reference)}
         XCTAssertEqual(reference.events.filter{$0.kind=="foodTrayVisit" && $0.type=="completed"}.count,1)
         XCTAssertFalse(reference.events.contains{["cancelled","failed","rejected"].contains($0.type)})

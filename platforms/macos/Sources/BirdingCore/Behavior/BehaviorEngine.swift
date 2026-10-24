@@ -13,6 +13,33 @@ public final class BehaviorEngine {
     let habitatObjects=HabitatObjectStore()
     let carriedObjects=CarriedObjectStore()
     let insects=InsectStore()
+    private let giftRandom:EngineRandom
+    private struct PendingGift {
+        let request:GiftAuthorizationRequest
+        let plan:VisitorGiftPlan
+        let motionRevision:UInt64
+    }
+    private var pendingGift:PendingGift?
+    private var nextGiftRequestID:UInt64=1
+    private struct RegisteredGiftToken {
+        let token:GiftAuthorizationToken
+        var run:BehaviorRunID?
+        var consumed=false
+    }
+    private var registeredGiftToken:RegisteredGiftToken?
+    private var giftReceiverRevisions:[Int:UInt64]=[:]
+    private var giftReceiverAnchors:[FixedPerchAnchor]=[]
+    private var giftReceiverDisplayIDs:[String]=[]
+    private var nextGiftReceiverRevision:UInt64=1
+    /// The platform must return results on the simulation executor. In
+    /// production it schedules IO asynchronously, including preview grants.
+    public var giftAuthorizationObserver:((GiftAuthorizationRequest)->Void)?
+    public var giftAuthorizationRequest:GiftAuthorizationRequest? {pendingGift?.request}
+    public private(set) var lastGiftAuthorizationDenial:GiftAuthorizationDenial?
+    public var activeGiftAuthorizationCount:Int {registeredGiftToken == nil ? 0:1}
+    var giftAuthorizationForReplay:(token:GiftAuthorizationToken,run:BehaviorRunID?,consumed:Bool)? {
+        registeredGiftToken.map{($0.token,$0.run,$0.consumed)}
+    }
     private let insectRandom:EngineRandom
     private struct PendingInsectPreview {let species:SpeciesID;var remaining:Double}
     private var pendingInsectPreview:PendingInsectPreview?
@@ -76,6 +103,7 @@ public final class BehaviorEngine {
         self.bathRandom=EngineRandom(seed:seed ^ SceneRandomSalt.bath)
         self.insectRandom=EngineRandom(seed:seed ^ SceneRandomSalt.insectCatch)
         self.leafCarryRandom=EngineRandom(seed:seed ^ SceneRandomSalt.leafCarry)
+        self.giftRandom=EngineRandom(seed:seed ^ SceneRandomSalt.visitorGift)
         self.foodRandom=EngineRandom(seed:seed ^ 0x464F4F4454524159)
         self.habitatRandom=EngineRandom(seed:seed ^ 0x5045524348524E47)
         self.socialRandom=EngineRandom(seed:seed ^ 0x534F4349414C524E)
@@ -110,9 +138,9 @@ public final class BehaviorEngine {
     public var activeRunCount:Int {runtime.runs.count}
     public var leasedBirdCount:Int {runtime.owners.count}
     public var reservedLandingCount:Int {runtime.landingReservations.count}
-    public var ambientBusy:Bool {runtime.encounterBusy}
+    public var ambientBusy:Bool {pendingGift != nil || runtime.encounterBusy}
     private var encounterUnavailable:Bool {
-        ambientBusy || runtime.runs.values.contains{[BehaviorKind.foodTrayVisit,.fixedPerchVisit].contains($0.execution.kind)}
+        pendingGift != nil || ambientBusy || runtime.runs.values.contains{[BehaviorKind.foodTrayVisit,.fixedPerchVisit].contains($0.execution.kind)}
     }
     public var hasPointerPreview:Bool {scheduledEncounter?.kind == .pointerVisit}
     public var hasLeafPreview:Bool {scheduledEncounter?.kind == .leafPlay}
@@ -123,6 +151,15 @@ public final class BehaviorEngine {
     public var insectPreviewSpecies:SpeciesID? {pendingInsectPreview?.species}
     public var hasCarryLeafPlacement:Bool {pendingCarryLeafPlacement != nil}
     public func carriedObjectSnapshot()->[CarriedObject] {carriedObjects.objects.keys.sorted().compactMap{carriedObjects.objects[$0]}}
+    /// Receiver geometry remains an obstacle for the full object lifetime.
+    /// Only its active delivery run may pass through its own release corridor.
+    func giftObstacleRects(excluding participants:[BirdID]=[]) -> [CGRect] {
+        guard settings.visitorGiftsEnabled else {return []}
+        let ignored=Set(participants)
+        let active=Set(runtime.runs.values.filter{$0.execution.kind == .visitorGift}.flatMap{$0.execution.participants})
+        return runtime.giftReceiverReservations.filter{!ignored.contains($0.bird)}.map(\.rect) +
+            carriedObjects.giftReceiverReservations(in:self).filter{!ignored.contains($0.bird) || !active.contains($0.bird)}.map(\.rect)
+    }
     public var hasBathPlacement:Bool {pendingBathPlacement != nil}
     public var hasFoodTrayPlacement:Bool {pendingFoodTrayPlacement != nil}
     public var habitatReservationCount:Int {runtime.habitatReservations.count}
@@ -196,6 +233,7 @@ public final class BehaviorEngine {
     }
     func show(_ id:BirdID) {records[id]?.visible=true}
     func removeRecord(_ id:BirdID) {
+        if pendingGift?.request.binding.birdID==id {cancelGiftRequest(.removed)}
         guard let record=records.removeValue(forKey:id) else {return}
         identities.removeValue(forKey:ObjectIdentifier(record.bird));order.removeAll{$0==id}
         if let visitorID=visitorIDs.removeValue(forKey:id) {visitorMemory.release(visitorID)}
@@ -232,8 +270,12 @@ public final class BehaviorEngine {
         world=value
         refreshFixedPerches(previous:previousPerches)
         refreshHabitatObjects()
+        // Release obsolete gift-route reservations before the independent
+        // falling leaf checks the new world's obstacles and reservations.
+        if settings.visitorGiftsEnabled {runtime.validate(in:self,where:{$0.kind == .visitorGift})}
         refreshCarriedObjects(sampleDT:sampleDT)
         refreshInsects(sampleDT:sampleDT)
+        refreshGiftRequest()
         if !value.leafCarryArtAvailable {pendingCarryLeafPlacement=nil}
         if !value.buttonsDown {clickHandled=false}
         // Contact scenes use fixed anchors. Release them against the new world
@@ -255,10 +297,23 @@ public final class BehaviorEngine {
         }},reason:.settingsChanged,in:self)
         if !value.foodTrayEnabled {pendingFoodTrayPlacement=nil;removeHabitatObjects(reason:.settingsChanged,ids:habitatIDs(.foodTray))}
         if !value.bathEnabled {pendingBathPlacement=nil;removeHabitatObjects(reason:.settingsChanged,ids:habitatIDs(.bath))}
-        if !value.leafCarryEnabled {pendingCarryLeafPlacement=nil;removeCarriedObjects(reason:.settingsChanged)}
+        if !value.leafCarryEnabled {
+            pendingCarryLeafPlacement=nil
+            removeCarriedObjects(reason:.settingsChanged,ids:carriedObjects.objects.values.filter{!$0.isVisitorGift}.map(\.id))
+        }
+        if !value.visitorGiftsEnabled || !value.visitorMemoryEnabled || !value.fixedPerchesEnabled ||
+            !value.probabilities.entries.contains(where:{$0.id == .azureWingedMagpie && $0.points>0}) {clearVisitorGifts(reason:.settingsChanged)}
         if !value.fixedPerchesEnabled {runtime.cancel(where:{$0.kind == .fixedPerchVisit},reason:.settingsChanged,in:self)}
         refreshFixedPerches(previous:world.surfaces.filter(\.isFixedPerch))
         refreshHabitatObjects()
+        refreshGiftRequest()
+        // Saved receiving branches can disappear while paused. Cancel their
+        // runs and retire invalid gift entities in this settings transaction.
+        if carriedObjects.objects.values.contains(where:{$0.isVisitorGift}) {
+            runtime.validate(in:self,where:{$0.kind == .visitorGift})
+            let invalid=carriedObjects.synchronizeVisitorGifts(in:self)
+            if !invalid.isEmpty {removeCarriedObjects(reason:.targetInvalid,ids:invalid)}
+        }
         for id in visitorIDs.keys {
             let familiarity=value.visitorMemoryEnabled ? visitorIDs[id].flatMap{visitorMemory.profile($0)?.familiarity} ?? 0:0
             perchPlanner.setFamiliarity(familiarity,for:id)
@@ -305,7 +360,12 @@ public final class BehaviorEngine {
     @discardableResult public func handle(_ command:EngineCommand) -> BehaviorResult {
         beginRecordingInput(.command(command));defer {endRecordingInput()}
         switch command {
-        case .relocate(let id): return relocate(id)
+        case .visitorGift(let source):return requestVisitorGift(source:source)
+        case .cancelVisitorGiftRequest:cancelGiftRequest(.userInput);return .accepted
+        case .clearVisitorGift:clearVisitorGifts(reason:.removed);return .accepted
+        case .relocate(let id):
+            if pendingGift?.request.binding.birdID==id {cancelGiftRequest(.replaced)}
+            return relocate(id)
         case .insectCatch(let species,let source):return requestInsectCatch(species:species,source:source)
         case .cancelInsectCatchPreview:cancelInsectPreview(.userInput);return .accepted
         case .clearInsect:clearInsects(reason:.removed);return .accepted
@@ -320,7 +380,9 @@ public final class BehaviorEngine {
             pendingCarryLeafPlacement=max(0,min(10,delay.isFinite ? delay:3));return .scheduled
         case .cancelCarryLeafPlacement:pendingCarryLeafPlacement=nil;return .accepted
         case .removeCarryLeaf:
-            pendingCarryLeafPlacement=nil;removeCarriedObjects(reason:.removed);return .accepted
+            pendingCarryLeafPlacement=nil
+            removeCarriedObjects(reason:.removed,ids:carriedObjects.objects.values.filter{!$0.isVisitorGift}.map(\.id))
+            return .accepted
         case .placeBath(let point):return placeBath(at:point)
         case .bathVisit(let source):return requestBathVisit(source:source)
         case .placeBathAfter(let delay):
@@ -381,19 +443,22 @@ public final class BehaviorEngine {
             if insects.current?.id==id {clearInsects(reason:.removed)}
             return .accepted
         case .pointerClick:
+            cancelGiftRequest(.userInput)
             cancelInsectPreview(.userInput)
             recordPointerClick(explicit:true)
             scheduler.suppress(reason:.userInput)
-            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind.isPerchActivity || $0.kind.isSocial || $0.kind == .leafPlay || $0.kind == .fixedPerchVisit || $0.kind == .foodTrayVisit || $0.kind == .bathVisit || $0.kind == .leafCarry || $0.kind == .insectCatch},reason:.userInput,in:self)
+            runtime.cancel(where:{$0.kind == .pointerVisit || $0.kind.isPerchActivity || $0.kind.isSocial || $0.kind == .leafPlay || $0.kind == .fixedPerchVisit || $0.kind == .foodTrayVisit || $0.kind == .bathVisit || $0.kind == .leafCarry || $0.kind == .insectCatch || $0.kind == .visitorGift},reason:.userInput,in:self)
             perchPlanner.suppressAll()
         case .pause(let value):
             guard paused != value else {return .accepted}
             paused=value;accumulator=0;resetPerception()
             if value {
+                cancelGiftRequest(.paused)
                 cancelPreview(.paused)
                 runtime.cancel(where:{$0.kind == .pointerVisit},reason:.paused,in:self)
             }
         case .cancelAmbient(let reason):
+            cancelGiftRequest(reason)
             cancelInsectPreview(reason)
             if [.sleep,.screensChanged,.spaceChanged,.shutdown].contains(reason) {clearInsects(reason:reason)}
             pendingBathPlacement=nil;pendingFoodTrayPlacement=nil;pendingCarryLeafPlacement=nil
@@ -402,12 +467,14 @@ public final class BehaviorEngine {
             let all:[BehaviorReason]=[.sleep,.screensChanged,.spaceChanged,.shutdown]
             runtime.cancel(where:{all.contains(reason) || $0.occupiesEncounter},reason:reason,in:self)
         case .scatter:
+            cancelGiftRequest(.userInput)
             cancelInsectPreview(.userInput)
             cancelPreview(.userInput);perchPlanner.suppressAll()
-            runtime.cancel(where:{!$0.occupiesEncounter || $0.kind == .pointerVisit || $0.kind.isSocial || $0.kind == .leafPlay || $0.kind == .insectCatch},reason:.replaced,in:self)
+            runtime.cancel(where:{!$0.occupiesEncounter || $0.kind == .pointerVisit || $0.kind.isSocial || $0.kind == .leafPlay || $0.kind == .insectCatch || $0.kind == .visitorGift},reason:.replaced,in:self)
             scheduler.suppress(reason:.userInput)
             for bird in birds where !bird.isDeparting {_=route(bird)}
         case .remove(let id):
+            if pendingGift?.request.binding.birdID==id {cancelGiftRequest(.removed)}
             guard records[id] != nil else {return .rejected(.missingBird)}
             runtime.cancel(bird:id,reason:.removed,in:self);removeRecord(id)
         }
@@ -667,8 +734,21 @@ public final class BehaviorEngine {
     /// Persistent habitat surfaces are derived from saved anchors, never from
     /// a behavior run. Re-layout releases birds before any host tracking occurs.
     private func refreshFixedPerches(previous:[Surface]) {
+        let old=fixedPerches
         world.surfaces.removeAll(where: \.isFixedPerch)
         fixedPerches=settings.fixedPerchesEnabled && world.fixedPerchArtAvailable ? FixedPerchLayout.resolve(anchors:settings.fixedPerches,world:world):[]
+        let live=Set(fixedPerches.map(\.slot))
+        giftReceiverRevisions=giftReceiverRevisions.filter{live.contains($0.key)}
+        for perch in fixedPerches {
+            let unchanged=giftReceiverDisplayIDs==world.displayIDs &&
+                giftReceiverAnchors.first(where:{$0.slot==perch.slot})==settings.fixedPerches.first(where:{$0.slot==perch.slot}) &&
+                old.contains{$0.slot==perch.slot && $0.surface==perch.surface && $0.foot==perch.foot && $0.rect==perch.rect}
+            if !unchanged || giftReceiverRevisions[perch.slot]==nil {
+                guard nextGiftReceiverRevision<UInt64.max else {giftReceiverRevisions.removeValue(forKey:perch.slot);continue}
+                giftReceiverRevisions[perch.slot]=nextGiftReceiverRevision;nextGiftReceiverRevision+=1
+            }
+        }
+        giftReceiverAnchors=settings.fixedPerches;giftReceiverDisplayIDs=world.displayIDs
         world.surfaces.append(contentsOf:fixedPerches.map(\.surface))
         runtime.validate(in:self,where:{$0.kind == .fixedPerchVisit})
         for bird in birds {
@@ -678,6 +758,124 @@ public final class BehaviorEngine {
             if bird.hostID==old.id,bird.hostPID==old.pid,!bird.isDeparting {bird.requestFlightRecovery()}
         }
     }
+    func giftReceiverRevision(slot:Int) -> UInt64? {giftReceiverRevisions[slot]}
+    private func giftEnabled(source:BehaviorSource) -> Bool {
+        (source == .automatic || source == .preview) &&
+            BehaviorDefinitions.definition(for:.visitorGift).isEnabled(settings:settings,source:source) &&
+            (source != .automatic || ambientEnabled) &&
+            settings.probabilities.entries.contains{$0.id == .azureWingedMagpie && $0.points>0}
+    }
+    private func giftAdmissionReason(source:BehaviorSource) -> BehaviorReason? {
+        if paused {return .paused}
+        if !giftEnabled(source:source) {return .disabled}
+        if world.buttonsDown {return .userInput}
+        if encounterUnavailable || scheduledEncounter != nil || registeredGiftToken != nil {return .busy}
+        if !world.fixedPerchArtAvailable || !world.leafCarryArtAvailable {return .missingFrames}
+        let required=SpeciesBehaviorProfile.profile(for:.azureWingedMagpie).requiredFrames(for:.visitorGift)
+        if !required.isSubset(of:world.availableFrames[.azureWingedMagpie] ?? []) {return .missingFrames}
+        let residents=birds.filter{$0.profile.id == .azureWingedMagpie && role(of:$0) == .resident && !$0.isDeparting}
+        if residents.isEmpty {return .noSpecies}
+        if !residents.contains(where:{visitor(of:$0).map{$0.visits>=3 && $0.familiarity>=0.6} ?? false}) {return .notFamiliar}
+        return nil
+    }
+    private func requestVisitorGift(source:BehaviorSource) -> BehaviorResult {
+        if let reason=giftAdmissionReason(source:source) {return reject(.visitorGift,source,reason)}
+        guard let plan=giftRandom.element(VisitorGiftPlan.candidates(in:self,source:source)),
+              let bird=bird(plan.id),let visitor=visitor(of:bird) else {return reject(.visitorGift,source,.noSpace)}
+        guard nextGiftRequestID<UInt64.max else {return reject(.visitorGift,source,.authorizationDenied)}
+        let binding=GiftBinding(requestID:String(nextGiftRequestID),visitorArchiveSeed:visitorMemoryArchive.seed,
+            visitorID:visitor.id,birdID:plan.id,species:bird.profile.id,source:source,leafID:plan.leafID,
+            receiverSlot:plan.receiverSlot,receiverRevision:plan.receiverRevision)
+        guard binding.isValid else {return reject(.visitorGift,source,.authorizationDenied)}
+        nextGiftRequestID+=1
+        let request=GiftAuthorizationRequest(binding:binding)
+        pendingGift=PendingGift(request:request,plan:plan,motionRevision:bird.motionRevision)
+        lastGiftAuthorizationDenial=nil;scheduler.suppress()
+        giftAuthorizationObserver?(request)
+        return .scheduled
+    }
+    /// Even a late/repeated result is an external input. Recording it does not
+    /// revive a cancelled request, issue another grant, or read the real ledger.
+    public func receiveGiftAuthorization(_ result:GiftAuthorizationResult) {
+        guard result.isValid else {return}
+        var input=RecordedInput(kind:"giftAuthorization");input.giftAuthorization=result
+        if let recorder=inputRecorder {recorder.append(input);recorder.depth+=1}
+        defer {if let recorder=inputRecorder {recorder.depth-=1}}
+        guard let pending=pendingGift,pending.request.binding==result.binding else {return}
+        pendingGift=nil
+        if let denial=result.denial {
+            lastGiftAuthorizationDenial=denial
+            _=reject(.visitorGift,result.binding.source,denial == .timedOut ? .timedOut:.authorizationDenied)
+            return
+        }
+        guard let token=result.token,token.binding==pending.request.binding else {return}
+        if let reason=giftAdmissionReason(source:result.binding.source) {_=reject(.visitorGift,result.binding.source,reason);return}
+        guard let bird=bird(result.binding.birdID),bird.motionRevision==pending.motionRevision,
+              visitorMemoryArchive.seed==result.binding.visitorArchiveSeed,
+              visitor(of:bird)?.id==result.binding.visitorID,
+              giftReceiverRevision(slot:result.binding.receiverSlot)==result.binding.receiverRevision,
+              let plan=pending.plan.revalidate(in:self),plan.id==result.binding.birdID,
+              plan.leafID==result.binding.leafID,plan.receiverSlot==result.binding.receiverSlot,
+              plan.receiverRevision==result.binding.receiverRevision else {
+            _=reject(.visitorGift,result.binding.source,.targetInvalid);return
+        }
+        registeredGiftToken=RegisteredGiftToken(token:token)
+        let started=runtime.start(VisitorGiftExecution(plan:plan,token:token),source:result.binding.source,in:self)
+        if case .rejected(let reason)=started {
+            registeredGiftToken=nil;_=reject(.visitorGift,result.binding.source,reason)
+        } else {scheduler.suppress();perchPlanner.suppress(plan.id)}
+    }
+    func bindGiftAuthorization(_ token:GiftAuthorizationToken,run:BehaviorRunID) -> Bool {
+        guard var grant=registeredGiftToken,grant.token==token,grant.run==nil,!grant.consumed,
+              runtime.owners[token.binding.birdID]==run,
+              runtime.runs[run]?.execution.kind == .visitorGift,
+              runtime.runs[run]?.source==token.binding.source else {return false}
+        grant.run=run;registeredGiftToken=grant;return true
+    }
+    func consumeGiftAuthorization(_ tokenID:UUID,run:BehaviorRunID) -> Bool {
+        guard var grant=registeredGiftToken,grant.token.id==tokenID,grant.run==run,!grant.consumed,
+              runtime.owners[grant.token.binding.birdID]==run else {return false}
+        grant.consumed=true;registeredGiftToken=grant;return true
+    }
+    func invalidateGiftAuthorization(_ tokenID:UUID,run:BehaviorRunID) {
+        guard let grant=registeredGiftToken,grant.token.id==tokenID,grant.run==run else {return}
+        registeredGiftToken=nil
+    }
+    func releaseGiftAuthorization(run:BehaviorRunID) {
+        guard let grant=registeredGiftToken else {return}
+        if grant.run==run || (grant.run==nil && runtime.runs[run]?.execution.kind == .visitorGift &&
+            runtime.owners[grant.token.binding.birdID]==run) {registeredGiftToken=nil}
+    }
+    private func cancelGiftRequest(_ reason:BehaviorReason) {
+        guard let pending=pendingGift else {return}
+        pendingGift=nil
+        emit(pending.request.binding.source == .preview ? .previewResult:.rejected,
+            kind:.visitorGift,source:pending.request.binding.source,reason:reason)
+    }
+    private func refreshGiftRequest() {
+        guard let pending=pendingGift else {return}
+        let b=pending.request.binding
+        guard !paused,giftEnabled(source:b.source) else {cancelGiftRequest(paused ? .paused:.settingsChanged);return}
+        guard !world.buttonsDown else {cancelGiftRequest(.userInput);return}
+        guard let bird=bird(b.birdID),role(of:bird) == .resident,!bird.isDeparting,
+              bird.motionRevision==pending.motionRevision,runtime.owners[b.birdID]==nil,
+              visitorMemoryArchive.seed==b.visitorArchiveSeed,visitor(of:bird)?.id==b.visitorID,
+              giftReceiverRevision(slot:b.receiverSlot)==b.receiverRevision,
+              let leaf=carriedObjects.objects[b.leafID],!leaf.isVisitorGift,
+              leaf.state == .available || leaf.state == .placed,leaf.owner==nil,leaf.reservedByRun==nil else {
+            cancelGiftRequest(.targetInvalid);return
+        }
+        let frames=SpeciesBehaviorProfile.profile(for:b.species).requiredFrames(for:.visitorGift)
+        if !world.leafCarryArtAvailable || !world.fixedPerchArtAvailable ||
+            !frames.isSubset(of:world.availableFrames[b.species] ?? []) {cancelGiftRequest(.missingFrames)}
+    }
+    private func clearVisitorGifts(reason:BehaviorReason) {
+        cancelGiftRequest(reason)
+        runtime.cancel(where:{$0.kind == .visitorGift},reason:reason,in:self)
+        carriedObjects.clearVisitorGifts(in:self,immediate:true)
+        registeredGiftToken=nil
+    }
+    func recoverFromVisitorGift(_ id:BirdID) {recoverFromInsectCatch(id)}
     private func insectSpeciesEnabled(_ species:SpeciesID) -> Bool {
         SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch) &&
             settings.probabilities.entries.contains{$0.id==species && $0.points>0}
@@ -886,6 +1084,7 @@ public final class BehaviorEngine {
     }
     private func removeCarriedObjects(reason:BehaviorReason,ids:[ScenePropID]?=nil) {
         let targets=Set(ids ?? Array(carriedObjects.objects.keys))
+        if let leaf=pendingGift?.request.binding.leafID,targets.contains(leaf) {cancelGiftRequest(reason)}
         runtime.cancel(where:{!targets.isDisjoint(with:$0.propIDs)},reason:reason,in:self)
         let immediate=paused || [.sleep,.shutdown,.screensChanged,.spaceChanged].contains(reason)
         for id in targets.sorted() {carriedObjects.retire(id,in:self,immediate:immediate)}
@@ -990,7 +1189,7 @@ public final class BehaviorEngine {
         guard let bird=bird(id),runtime.owners[id]==nil,!bird.isDeparting else {recoveringHabitatBirds.remove(id);return}
         var recoveryWorld=world
         recoveryWorld.surfaces.removeAll{$0.isHabitat}
-        let reserved=runtime.landingReservations.filter{$0.bird != id}.compactMap{$0.footprint(in:self)}
+        let reserved=runtime.landingReservations.filter{$0.bird != id}.compactMap{$0.footprint(in:self)}+giftObstacleRects(excluding:[id])
         if let destination=DestinationPlanner.plan(for:bird,birds:birds,world:recoveryWorld,reserved:reserved,random:random),
            destination.host != nil {
             destination.apply(to:bird,random:random)
@@ -1187,13 +1386,17 @@ public final class BehaviorEngine {
     }
     func plan(for bird:Bird,entering:Bool=false,avoiding:CGPoint?=nil) -> DestinationPlan? {
         DestinationPlanner.plan(for:bird,birds:birds,world:world,entering:entering,avoiding:avoiding,
-            reserved:runtime.landingReservations.filter{$0.bird != id(of:bird)}.compactMap{$0.footprint(in:self)},random:random)
+            reserved:runtime.landingReservations.filter{$0.bird != id(of:bird)}.compactMap{$0.footprint(in:self)} +
+                giftObstacleRects(excluding:id(of:bird).map{[$0]} ?? []),random:random)
     }
     @discardableResult public func route(_ bird:Bird,entering:Bool=false,avoiding:CGPoint?=nil) -> Bool {
         var input=RecordedInput(kind:"route");input.bird=id(of:bird).map{String($0.rawValue)};input.entering=entering;input.avoiding=avoiding.map(RecordedPoint.init)
         beginRecordingInput(input);defer {endRecordingInput()}
         guard let plan=plan(for:bird,entering:entering,avoiding:avoiding) else {return false}
-        if let id=id(of:bird) {runtime.cancel(bird:id,reason:.replaced,in:self)}
+        if let id=id(of:bird) {
+            if pendingGift?.request.binding.birdID==id {cancelGiftRequest(.replaced)}
+            runtime.cancel(bird:id,reason:.replaced,in:self)
+        }
         plan.apply(to:bird,random:random);return true
     }
     private func routeAutonomously(_ bird:Bird,id:BirdID) {
@@ -1233,7 +1436,10 @@ public final class BehaviorEngine {
         var input=RecordedInput(kind:"depart");input.bird=id(of:bird).map{String($0.rawValue)}
         beginRecordingInput(input);defer {endRecordingInput()}
         guard let point=Migration.outsidePoint(screens:world.displays,right:random.unit()<0.5,fraction:random.value(in:0.2...0.75),margin:80*world.scale*3+20) else {return}
-        if let id=id(of:bird) {runtime.cancel(bird:id,reason:.replaced,in:self)}
+        if let id=id(of:bird) {
+            if pendingGift?.request.binding.birdID==id {cancelGiftRequest(.replaced)}
+            runtime.cancel(bird:id,reason:.replaced,in:self)
+        }
         bird.depart(to:point,duration:max(2.8,Double(Geometry.distance(bird.position,point))/400*Bird.flightSpeedMultiplier))
     }
     public func reconcileLayout() {
@@ -1308,6 +1514,7 @@ public final class BehaviorEngine {
                 }
             }
         }
+        refreshGiftRequest()
         if !paused {
             advanceInsectPreview(dt)
             // Other birds can invalidate a return between world samples.
@@ -1318,12 +1525,14 @@ public final class BehaviorEngine {
         // Resolve input cancellations and pending spawns before integrating motion.
         runtime.advance(dt,in:self)
         collectRetiredHabitatObjects()
-        let insectRun=runtime.runs.values.first{$0.execution.kind == .insectCatch}
-        let insectBird=insectRun?.execution.participants.first
-        let insectMotionDT=insectRun?.motionDT ?? dt
+        // These single-bird scenes share the exclusive encounter lease.
+        let motionRun=runtime.runs.values.first{$0.execution.kind == .insectCatch || $0.execution.kind == .visitorGift}
+        let insectRun=motionRun?.execution.kind == .insectCatch ? motionRun:nil
+        let motionBird=motionRun?.execution.participants.first
+        let sceneMotionDT=motionRun?.motionDT ?? dt
         for id in order {
             guard let record=records[id],record.visible,runtime.canAdvance(id,paused:paused) else {continue}
-            let motionDT=insectBird==id ? insectMotionDT:dt
+            let motionDT=motionBird==id ? sceneMotionDT:dt
             if motionDT>0 {record.bird.tick(motionDT)}
         }
         if !paused {
@@ -1344,6 +1553,11 @@ public final class BehaviorEngine {
                 }
             }
             for (runID,result) in completions {runtime.finish(runID,result:result,in:self)}
+            for id in runtime.runs.keys.sorted() {
+                guard let run=runtime.runs[id],let gift=run.execution as? VisitorGiftExecution else {continue}
+                if let result=gift.resolveMotion(in:self) {runtime.finish(id,result:result,in:self)}
+                else if run.age+1e-10>=run.execution.timeout {runtime.finish(id,result:.failed(.timedOut),in:self)}
+            }
             carriedObjects.captureAttachedSnapshots(in:self)
         }
         for id in order {
@@ -1359,13 +1573,14 @@ public final class BehaviorEngine {
         }
         let encounterRate=ActivityRhythmPolicy.ambientRate(mode:settings.activityRhythm,minute:world.localMinuteOfDay)
         if !paused,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
-            pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,socialEnabled:settings.socialInteractions,leafEnabled:settings.leafPlayEnabled && settings.ambientLeafPlayEnabled,insectEnabled:settings.insectCatchEnabled,frequency:settings.ambientFrequency,
+            pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,socialEnabled:settings.socialInteractions,leafEnabled:settings.leafPlayEnabled && settings.ambientLeafPlayEnabled,insectEnabled:settings.insectCatchEnabled,giftEnabled:settings.visitorGiftsEnabled && settings.visitorMemoryEnabled,frequency:settings.ambientFrequency,
             busy:encounterUnavailable || scheduledEncounter != nil || hasInsectCatchPreview,cadenceRate:ambientEnabled ? encounterRate:0,leafRandom:ecologyRandom.unit,random:random.unit) {
             switch event {
             case .pointerVisit:_=requestPointer(.automatic)
             case .flockPass:_=requestFlock(.automatic)
             case .socialGreeting:requestSocialEncounter()
             case .leafPlay:requestAutomaticLeaf()
+            case .visitorGift:_=requestVisitorGift(source:.automatic)
             case .insectCatch:requestAutomaticInsectCatch()
             case .leafCarry(let object):
                 if scheduler.sceneFocus?.leafID==object {_=requestLeafCarry(source:.automatic)}

@@ -71,7 +71,9 @@ enum DetailedBirdArt {
         case .blackKite: return Shape(width: 19, height: 14, headWidth: 7.5, headHeight: 7, headY: 13, tailX: 3, tailY: 42)
         case .commonBuzzard: return Shape(width: 22, height: 16, headWidth: 8, headHeight: 7, headY: 12, tailX: 10, tailY: 39)
         case .orientalMagpie: return Shape(width: 18, height: 12, headWidth: 8, headHeight: 7, headY: 14, tailX: 1, tailY: 45)
-        case .azureWingedMagpie: return Shape(width: 17, height: 11, headWidth: 7.5, headHeight: 7, headY: 15, tailX: 2, tailY: 44)
+        case .azureWingedMagpie: return Shape(width: 17, height: 11,
+            headWidth: CarryArtGeometry.magpieHeadWidth, headHeight: CarryArtGeometry.magpieHeadHeight,
+            headY: CarryArtGeometry.magpieHeadY, tailX: 2, tailY: 44)
         case .largeBilledCrow: return Shape(width: 22, height: 15, headWidth: 10, headHeight: 8, headY: 12, tailX: 8, tailY: 41)
         case .hoopoe: return Shape(width: 19, height: 11, headWidth: 7, headHeight: 6, headY: 15, tailX: 7, tailY: 39)
         case .barnSwallow: return Shape(width: 18, height: 9,
@@ -1741,10 +1743,9 @@ extension DetailedBirdArt {
     }
 
     /// Exact tip of the existing transport drawing, including the compressed
-    /// flight torso, outer pitch and bob. This batch only enables the sparrow;
-    /// later carriers supply their own anatomy to the same transport geometry.
+    /// flight torso, outer pitch and bob, with each carrier's unchanged anatomy.
     static func transportBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
-        guard id == .treeSparrow else {return nil}
+        guard CarryArtGeometry.species.contains(id) else {return nil}
         let a=shape(id)
         return TransportArtGeometry.billAnchor(frame:frame,species:id,
             headWidth:a.headWidth,headHeight:a.headHeight,headY:a.headY)
@@ -1752,6 +1753,7 @@ extension DetailedBirdArt {
 
     static func carryImage(_ frame:String,species id:SpeciesID,
                            part:FoundationPosePart?=nil)->CGImage? {
+        if id == .azureWingedMagpie {return magpieCarryImage(frame,part:part)}
         guard let p=CarryArtGeometry.pose(species:id,frame:frame) else {return nil}
         let density=SpeciesCatalog.standard.profile(id).relativeScale
         let c=BirdPainter(size:max(48,Int((48*density).rounded())))
@@ -1832,6 +1834,105 @@ extension DetailedBirdArt {
         c.oval(ex,ey,1,1.1,"eye");c.oval(ex+0.35,ey,0.4,0.4,"white")
         if release {c.line([(x+4,y+6.8),(x+6,y+6.8)],"buff",width:0.55)}
         c.ctx.restoreGState()
+    }
+
+    /// M6g uses a new long-tailed corvid silhouette, not a recoloured sparrow.
+    /// Place is airborne: the fixed reference anchor stays (29,39), but actual
+    /// toes tuck under the belly and the token is released from the upper tip.
+    private static func magpieCarryImage(_ frame:String,part:FoundationPosePart?)->CGImage? {
+        guard let p=CarryArtGeometry.pose(species:.azureWingedMagpie,frame:frame) else {return nil}
+        let density=SpeciesCatalog.standard.profile(.azureWingedMagpie).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let b=p.body,x=Double(b.minX),y=Double(b.minY),w=Double(b.width),h=Double(b.height)
+        let lower=frame == "carryLower",grip=frame == "carryGrip"
+        if part == nil || part == .body {
+            let tx=Double(p.tail.x),ty=Double(p.tail.y)
+            // Long paired rectrices change their carriage at each real pose.
+            c.poly([(x+5,y+h*0.40),(x+10,y+h*0.65),(tx+4.2,ty+1),(tx,ty)],"cyan",outline:true)
+            c.poly([(x+6,y+h*0.48),(tx+1,ty-0.2),(tx+1.7,ty+0.3),
+                    (x+7.2,y+h*0.59)],"blue")
+            c.line([(x+7.3,y+h*0.54),(tx+3.2,ty+0.5)],"silver",width:0.7)
+            c.line([(tx+0.5,ty),(tx+4,ty+0.8)],"cream",width:0.9)
+            if p.release {
+                // Far raised wing remains well inside the canvas, including
+                // the half-native-pixel outline. No global sprite translation.
+                c.poly([(27,23),(24,17),(23,8),(20,4.5),(17.5,6),
+                        (18,13),(20,20),(23,25)],"blue",outline:true)
+                c.poly([(24,21),(22,15),(21,8),(19,7),(20,15),(22,22)],"cyan")
+            }
+            c.oval(x,y,w,h,"gray",outline:true)
+            c.oval(x+w*0.51,y+1.5,w*0.49-0.6,h-1.9,"cream")
+            c.poly([(x+3,y+1),(x+10,y+0.8),(x+12,y+3),
+                    (x+8,y+5.2),(x+2,y+5)],"silver")
+            if p.release {
+                c.poly([(25,24),(20,19),(16,10),(12,7),(9,8.5),(11,15),
+                        (13,15.5),(13,20),(16,20),(18,25),(23,28)],"cyan",outline:true)
+                c.poly([(24,24),(20,21),(16,13),(12,10),(13,15),(16,19),(20,25)],"blue")
+                c.line([(12,10),(16,17),(21,24)],"silver",width:0.8)
+                c.line([(13,15.5),(17,21),(22,25)],"navy",width:0.7)
+                c.line([(16,20),(20,25)],"cream",width:0.7)
+            } else {
+                let roll=grip ? 1.2:(lower ? 0.6:0)
+                c.poly([(x+3+roll,y+1),(x+9,y+1),(x+12,y+3.5),
+                        (x+8,y+h*0.80),(x+1,y+h+0.5),(x-0.5,y+h-0.5),
+                        (x+0.5,y+5)],"cyan",outline:true)
+                c.poly([(x+4+roll,y+1.7),(x+8,y+1.4),(x+10,y+3.4),
+                        (x+4,y+h*0.73),(x+1,y+h-1)],"blue")
+                for i in 0..<4 {
+                    let xx=x+1.5+Double(i)*1.7
+                    c.line([(xx+5,y+3.5),(xx,y+h-0.5)],i%2 == 0 ? "cyan":"navy",width:0.65)
+                }
+                c.line([(x+2.5+roll,y+4),(x+8,y+4.5)],"silver",width:0.8)
+            }
+        }
+        if part == nil || part == .feet {
+            if p.release {
+                // Visible folded toes, deliberately separated from the fixed
+                // ground-contact band y38...41 of the three pickup frames.
+                c.line([(27.5,29.5),(26,31.5),(28.5,32.5)],"brown",width:0.8)
+                c.line([(28.5,32.5),(30,32),(28.2,31.4)],"dark",width:0.65)
+                c.line([(31,29),(30.5,30.8),(32.7,31.5)],"brown",width:0.8)
+                c.line([(32.7,31.5),(33.7,31),(32.2,30.5)],"dark",width:0.65)
+            } else {
+                for xx in [27.0,31.0] {
+                    c.line([(xx-1,33),(xx,35),(xx-0.5,38.5)],"brown",width:1)
+                    c.line([(xx-2,39),(xx,38.5),(xx+2,39)],"brown")
+                }
+            }
+        }
+        if part == nil || part == .headNeck {
+            let nape=p.headPoint(-p.headWidth*0.32,-0.1)
+            let chin=p.headPoint(p.headWidth*0.23,p.headHeight*0.33)
+            c.poly([(x+w*0.48,y+1.8),(nape.x,nape.y),(chin.x,chin.y),
+                    (x+w-1,y+h*0.74)],"cream")
+            c.poly([(x+w*0.45,y+1),(nape.x,nape.y),(nape.x+0.5,nape.y+1.2),
+                    (x+w*0.64,y+4.5)],"gray")
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.pitch))
+            let hx = -p.headWidth/2,hy = -p.headHeight/2
+            c.oval(hx,hy,p.headWidth,p.headHeight,"black",outline:true)
+            c.ctx.saveGState();c.ctx.addEllipse(in:CGRect(x:hx,y:hy,width:p.headWidth,height:p.headHeight));c.ctx.clip()
+            // Pale cheek stays below the black cap; no sparrow bib or crown.
+            c.poly([(hx+0.7,hy+4),(hx+4,hy+3.7),(hx+p.headWidth,hy+3.8),
+                    (hx+p.headWidth,hy+p.headHeight),(hx+1,hy+p.headHeight)],"cream")
+            c.line([(hx+0.8,hy+1.3),(hx+3,hy+0.8)],"dark",width:0.6)
+            let ex=hx+p.headWidth*0.72,ey=hy+p.headHeight*0.38
+            c.oval(ex,ey,1,1.1,"eye");c.oval(ex+0.35,ey,0.4,0.4,"white")
+            c.ctx.restoreGState();c.ctx.restoreGState()
+        }
+        if part == nil || part == .bill {
+            let root=p.billRoot,length=p.billLength
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.pitch))
+            if p.release {
+                c.poly([(root,-0.7),(root+length,0.5),(root+length-0.9,0.9),(root,0.85)],"dark")
+                c.poly([(root,1.7),(root+3.1,2.5),(root+2.5,2.9),(root,2.1)],"dark")
+                c.poly([(root+0.1,0.95),(root+2.4,1.25),(root+0.2,1.6)],"cream")
+            } else {
+                c.poly([(root,-0.7),(root+length,0.5),(root+length-1,1.2),(root,1.3)],"dark")
+                if grip {c.line([(root+0.3,0.7),(root+2.8,0.7)],"black",width:0.4)}
+            }
+            c.ctx.restoreGState()
+        }
+        return c.image
     }
 }
 

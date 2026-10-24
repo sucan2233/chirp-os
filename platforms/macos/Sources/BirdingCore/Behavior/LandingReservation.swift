@@ -56,6 +56,7 @@ struct LandingReservation {
         let scale=engine.spriteScale(for:model)
         guard scale.isFinite,scale>0 else {return false}
         return engine.world.displays.contains{$0.contains(area)} &&
+            !engine.giftObstacleRects(excluding:[bird]).contains{$0.intersects(area)} &&
             !Geometry.blockers(on:host,surfaces:engine.world.surfaces).contains {
                 let overlap=area.intersection($0.rect)
                 return !overlap.isNull && !overlap.isEmpty

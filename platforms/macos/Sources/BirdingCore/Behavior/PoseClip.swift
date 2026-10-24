@@ -110,6 +110,24 @@ public struct PoseClip:Codable,Equatable {
                 Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
             })
     }
+    /// Shares pickup timing with leafCarry without granting that behavior to a
+    /// gift carrier. The execution performs the atomic grip at age 0.7s.
+    public static func visitorGiftPickup(species:SpeciesID) -> Self? {
+        guard SpeciesBehaviorProfile.profile(for:species).allows(.visitorGift),
+              CarryArtGeometry.frameNames.allSatisfy({carryBeakAnchor(species:species,frame:$0) != nil}) else {return nil}
+        return Self(id:"\(species.rawValue).visitorGift.pickup",
+            frames:zip(["carryLook","carryLower","carryGrip","carryLook"],[0.4,0.3,0.2,0.3]).map {
+                Frame(name:$0.0,duration:$0.1,beak:carryBeakAnchor(species:species,frame:$0.0)!)
+            })
+    }
+    /// Aerial release only. The runtime keeps the real flight moving and owns
+    /// the separate token/drop; no grounded look frame is appended here.
+    public static func visitorGiftRelease(species:SpeciesID) -> Self? {
+        guard SpeciesBehaviorProfile.profile(for:species).allows(.visitorGift),
+              let anchor=carryBeakAnchor(species:species,frame:"carryPlace") else {return nil}
+        return Self(id:"\(species.rawValue).visitorGift.release",
+            frames:[Frame(name:"carryPlace",duration:GiftReceiverGeometry.releaseDuration,beak:anchor)])
+    }
     /// A caught insect is already gone. The execution decides whether its
     /// recovery requires an ordinary flight handoff or an actual settled return.
     public static func insectCatchRecovery(species:SpeciesID) -> Self? {

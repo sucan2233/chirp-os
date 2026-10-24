@@ -4,7 +4,7 @@ import CoreGraphics
 /// Runtime identities are never reused. Ephemeral props belong to a run;
 /// persistent carried objects retain this identity across reservation, attachment
 /// and placement, with at most one run holding their lease at a time.
-public struct ScenePropID:Hashable,Comparable {
+public struct ScenePropID:Hashable,Comparable,Codable {
     public let rawValue:UInt64
     public init(_ value:UInt64) {rawValue=value}
     public static func < (lhs:Self,rhs:Self) -> Bool {lhs.rawValue<rhs.rawValue}

@@ -96,6 +96,9 @@ public struct RecordedCommand:Codable {
         case .cancelCarryLeafPlacement:name="cancelCarryLeafPlacement"
         case .removeCarryLeaf:name="removeCarryLeaf"
         case .leafCarry(let value):name="leafCarry";source=value.rawValue
+        case .visitorGift(let value):name="visitorGift";source=value.rawValue
+        case .cancelVisitorGiftRequest:name="cancelVisitorGiftRequest"
+        case .clearVisitorGift:name="clearVisitorGift"
         case .placeBath(let value):name="placeBath";point=RecordedPoint(value)
         case .placeBathAfter(let value):name="placeBathAfter";delay=max(0,min(10,value.isFinite ? value:3))
         case .cancelBathPlacement:name="cancelBathPlacement"
@@ -148,6 +151,9 @@ public struct RecordedCommand:Codable {
         case "cancelCarryLeafPlacement":return .cancelCarryLeafPlacement
         case "removeCarryLeaf":return .removeCarryLeaf
         case "leafCarry":return .leafCarry(try origin())
+        case "visitorGift":return .visitorGift(try origin())
+        case "cancelVisitorGiftRequest":return .cancelVisitorGiftRequest
+        case "clearVisitorGift":return .clearVisitorGift
         case "placeBath":guard let point,point.valid else {throw bad()};return .placeBath(at:point.value)
         case "placeBathAfter":return .placeBathAfter(try wait())
         case "cancelBathPlacement":return .cancelBathPlacement
@@ -185,6 +191,7 @@ public struct RecordedInput:Codable {
     public var kind:String
     public var world:RecordedWorld?,settings:BirdSettings?,command:RecordedCommand?,options:RecordedSimulationOptions?
     public var visitorMemory:VisitorMemoryArchive?
+    public var giftAuthorization:GiftAuthorizationResult?
     public var elapsed:Double?,sampleDT:Double?,remaining:Double?
     public var lower:Int?,upper:Int?,repeatCount:Int?
     public var bird:String?,entering:Bool?,avoiding:RecordedPoint?
@@ -271,6 +278,11 @@ public struct RecordedCarriedObjectState:Codable,Equatable {
     public var id:String,kind:String,state:String,owner:String?,reservedByRun:String?
     public var hostID:UInt32,hostPID:Int32,fraction:Double,isGround:Bool,groundScale:Double
     public var worldScale:Double,facingRight:Bool,remainingLifetime:Double
+    public var isVisitorGift:Bool?
+    public var giftReceiverSlot:Int?,giftReceiverRevision:UInt64?
+    public var giftCarrier:String?
+    public var giftReceiverFoot:RecordedPoint?,giftReleaseGrip:RecordedPoint?
+    public var giftFallAge:Double?,giftFallDuration:Double?
     init(_ object:CarriedObject) {
         id=String(object.id.rawValue);kind=object.kind.rawValue;state=object.state.rawValue
         owner=object.owner.map{String($0.rawValue)};reservedByRun=object.reservedByRun.map{String($0.rawValue)}
@@ -278,6 +290,12 @@ public struct RecordedCarriedObjectState:Codable,Equatable {
         fraction=Double(object.surfaceAnchor.fraction);isGround=object.surfaceAnchor.isGround
         groundScale=Double(object.surfaceAnchor.groundScale);worldScale=Double(object.worldScale)
         facingRight=object.facingRight;remainingLifetime=object.remainingLifetime
+        isVisitorGift=object.isVisitorGift ? true:nil
+        giftReceiverSlot=object.giftReceiverSlot;giftReceiverRevision=object.giftReceiverRevision
+        giftCarrier=object.giftDelivery.map{String($0.carrier.rawValue)}
+        giftReceiverFoot=object.giftDelivery.map{RecordedPoint($0.receiverFoot)}
+        giftReleaseGrip=object.giftDelivery.map{RecordedPoint($0.releaseGrip)}
+        giftFallAge=object.giftDelivery?.age;giftFallDuration=object.giftDelivery?.duration
     }
 }
 public struct RecordedInsectState:Codable,Equatable {
@@ -303,6 +321,13 @@ public struct RecordedInsectContact:Codable,Equatable {
         time=contact.time;insectAge=contact.insectAge;beakPosition=RecordedPoint(contact.beakPosition);insectPosition=RecordedPoint(contact.insectPosition)
     }
 }
+public struct RecordedGiftReceiverReservation:Codable,Equatable {
+    public var bird:String,slot:Int,revision:UInt64,rect:RecordedRect,worldScale:Double
+    init(_ value:GiftReceiverReservation) {
+        bird=String(value.bird.rawValue);slot=value.slot;revision=value.revision
+        rect=RecordedRect(value.rect);worldScale=Double(value.worldScale)
+    }
+}
 public struct BehaviorReplayReport:Codable,Equatable {
     public var time:Double,paused:Bool,residents:Int,transients:Int,pending:Int,runs:Int,leases:Int,reservations:Int
     public var events:[RecordedEvent],birds:[RecordedBirdState],props:[RecordedPropState]
@@ -325,6 +350,13 @@ public struct BehaviorReplayReport:Codable,Equatable {
     public var schedulerRemaining:Double?
     public var sceneCooldownRemaining:Double?
     public var userInputRemaining:Double?
+    public var giftAuthorizationRequest:GiftAuthorizationRequest?
+    public var lastGiftAuthorizationDenial:GiftAuthorizationDenial?
+    public var activeGiftAuthorizationCount:Int?
+    public var giftAuthorizationToken:GiftAuthorizationToken?
+    public var giftAuthorizationRun:String?
+    public var giftAuthorizationConsumed:Bool?
+    public var giftReceiverReservations:[RecordedGiftReceiverReservation]?
     init(engine:BehaviorEngine,events:[RecordedEvent]) {
         time=engine.time;paused=engine.paused;residents=engine.residentCount;transients=engine.passingCount;pending=engine.pendingCount
         runs=engine.activeRunCount;leases=engine.leasedBirdCount;reservations=engine.reservedLandingCount
@@ -348,6 +380,17 @@ public struct BehaviorReplayReport:Codable,Equatable {
         }
         schedulerRemaining=engine.scheduler.remaining;sceneCooldownRemaining=engine.scheduler.sceneCooldownRemaining
         userInputRemaining=engine.scheduler.userInputRemaining
+        giftAuthorizationRequest=engine.giftAuthorizationRequest
+        lastGiftAuthorizationDenial=engine.lastGiftAuthorizationDenial
+        if let grant=engine.giftAuthorizationForReplay {
+            giftAuthorizationToken=grant.token;giftAuthorizationRun=grant.run.map{String($0.rawValue)}
+            giftAuthorizationConsumed=grant.consumed
+        }
+        if engine.settings.visitorGiftsEnabled || engine.giftAuthorizationRequest != nil ||
+            engine.activeGiftAuthorizationCount>0 || engine.carriedObjectSnapshot().contains(where:{$0.isVisitorGift}) {
+            activeGiftAuthorizationCount=engine.activeGiftAuthorizationCount
+            giftReceiverReservations=engine.runtime.giftReceiverReservations.map(RecordedGiftReceiverReservation.init)
+        }
         visitorMemory=engine.visitorMemoryArchive
     }
     public func save(to url:URL) throws {try BehaviorInputLog.encoder().encode(self).write(to:url,options:.atomic)}
@@ -356,12 +399,13 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=15,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=16,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String
     public var settings:BirdSettings
     public var initialWorld:RecordedWorld?
+    public var initialVisitorMemory:VisitorMemoryArchive?
     public var fixtureBirds:[RecordedFixtureBird]?
     public var inputs:[RecordedInput]=[]
     public var expected:BehaviorReplayReport?
@@ -390,6 +434,7 @@ public struct BehaviorInputLog:Codable {
             throw BehaviorRecordingError.invalid(failure ?? "unsupported or oversized recording")
         }
         _=try BirdSettings.decode(JSONEncoder().encode(settings))
+        try initialVisitorMemory?.validate()
     }
     public func save(to url:URL) throws {
         try validateEnvelope()
@@ -404,11 +449,15 @@ public struct BehaviorInputLog:Codable {
         var events:[RecordedEvent]=[]
         engine.eventObserver={events.append(RecordedEvent($0))}
         if let initialWorld {engine.updateWorld(try initialWorld.validated())}
+        if let initialVisitorMemory {try engine.restoreVisitorMemory(initialVisitorMemory)}
         if let fixtureBirds {engine.installFixtureBirds(try fixtureBirds.map{try $0.make(in:engine)})}
         var totalElapsed=0.0,totalCallbacks=0
         for (index,input) in inputs.enumerated() {
             func bad() -> BehaviorRecordingError {.invalid("invalid input \(index): \(input.kind)")}
             switch input.kind {
+            case "giftAuthorization":
+                guard let result=input.giftAuthorization,result.isValid else {throw bad()}
+                engine.receiveGiftAuthorization(result)
             case "visitorMemory":
                 guard let memory=input.visitorMemory else {throw bad()}
                 try engine.restoreVisitorMemory(memory)

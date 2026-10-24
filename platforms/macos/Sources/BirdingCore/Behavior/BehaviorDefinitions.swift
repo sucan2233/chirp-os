@@ -54,6 +54,7 @@ public struct BehaviorDefinition {
         if source == .automatic,settings.activityRhythm == .quiet,occupiesEncounter {return false}
         switch kind {
         case .relocate:return true
+        case .visitorGift:return settings.visitorGiftsEnabled && settings.visitorMemoryEnabled && settings.fixedPerchesEnabled
         case .insectCatch:return settings.insectCatchEnabled
         case .leafCarry:return settings.leafCarryEnabled
         case .bathVisit:return settings.bathEnabled && (source != .automatic || settings.activityRhythm != .quiet)
@@ -105,6 +106,9 @@ public enum BehaviorDefinitions {
         case .insectCatch:
             return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.flight,.landing,.insectCatching],occupiesEncounter:true,
                 runsWhilePaused:false,priority:60,cooldown:180)
+        case .visitorGift:
+            return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.flight,.landing,.carryingLeaf],occupiesEncounter:true,
+                runsWhilePaused:false,priority:60,cooldown:0)
         case .leafCarry:
             return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.flight,.landing,.carryingLeaf],occupiesEncounter:true,
                 runsWhilePaused:false,priority:60,cooldown:45)
@@ -147,7 +151,7 @@ public enum BehaviorDefinitions {
     /// Stable content order, independent of dictionary or Set iteration.
     public static var all:[BehaviorDefinition] {
         let kinds:[BehaviorKind] = [.relocate,.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,
-            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch]
+            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,.visitorGift]
         return kinds.map {definition(for:$0)}
     }
 
@@ -160,10 +164,10 @@ public enum BehaviorDefinitions {
             switch current {
             case .rest,.preen,.watch:return true
             case .relocate,.pointerVisit,.flockPass,.socialGreeting,.sideBySide,.giveWay,
-                 .pairedTakeoff,.leafPlay,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch:return false
+                 .pairedTakeoff,.leafPlay,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,.visitorGift:return false
             }
         case .pointerVisit,.flockPass,.rest,.preen,.socialGreeting,.sideBySide,.giveWay,
-             .pairedTakeoff,.leafPlay,.watch,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch:return false
+             .pairedTakeoff,.leafPlay,.watch,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,.visitorGift:return false
         }
     }
 }

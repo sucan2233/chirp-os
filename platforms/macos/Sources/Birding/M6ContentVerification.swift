@@ -1,7 +1,7 @@
 import AppKit
 import BirdingCore
 
-/// M6a/b historical coverage, M6c, and M6f.1/f.2 catch/insect source art.
+/// M6a/b historical coverage, M6c, M6f.1/f.2 catch and M6g carry source art.
 /// The caller owns CLI registration/execution.
 /// Uses installed fixture birds, isolated defaults and production commands/layers;
 /// never starts DesktopController, loads preferences, schedules timers or saves settings.
@@ -24,11 +24,12 @@ enum M6ContentVerification {
         var evidence=[[String:Any]](),allPosePixels=Set<Data>(),historicalPixels=Set<Data>(),peekPixels=Set<Data>()
         defer {
             let own=checks.filter{$0.key.hasPrefix("m6")}
-            saveJSON(["scope":"M6a/M6b historical checks retained; M6c twelve-species poses and two-species edge peeking; M6f.1/f.2 authored catch art and shared insects",
+            saveJSON(["scope":"M6a/M6b historical checks retained; M6c twelve-species poses and two-species edge peeking; M6f.1/f.2 authored catch art and shared insects; M6g magpie carry source art",
                       "historicalScope":["poseSpecies":m6bSpecies.map(\.rawValue),"independentPoseFrames":40,"commonFrames":34],
                       "currentScope":["poseSpecies":species.map(\.rawValue),"independentPoseFrames":120,
                                       "peekSpecies":peekSpecies.map(\.rawValue),"peekFrames":6,
-                                      "catchSpecies":CatchArtGeometry.species.map(\.rawValue),"catchFrames":6,"insectFrames":4],
+                                      "catchSpecies":CatchArtGeometry.species.map(\.rawValue),"catchFrames":6,"insectFrames":4,
+                                      "giftCarrySpecies":[SpeciesID.azureWingedMagpie.rawValue],"giftCarryFrames":4],
                       "wingBoundaryScope":["enforcedPoseSpecies":m6cSpecies.map(\.rawValue),"poseFrames":80,
                                            "enforcedPeekSpecies":peekSpecies.map(\.rawValue),"peekFrames":6,
                                            "diagnosticOnlySpecies":m6bSpecies.map(\.rawValue),"diagnosticOnlyFrames":40],
@@ -38,6 +39,7 @@ enum M6ContentVerification {
         }
         checkPermissions(into:&checks)
         try checkCatchArt(into:&checks,evidence:&evidence,folder:output)
+        try VisitorGiftArtVerification.run(into:&checks,folder:output)
         let fixture=try Fixture(folder:output)
         defer {fixture.close()}
         try checkSettings(fixture,into:&checks,folder:output)
@@ -120,7 +122,7 @@ enum M6ContentVerification {
             let extra=species.contains(id) ? names:[]
             let peek=peekSpecies.contains(id) ? peekNames:[]
             let profile=SpeciesBehaviorProfile.profile(for:id)
-            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=BirdArt.names(for:id)==old+extra+peek+([SpeciesID.treeSparrow,.lightVentedBulbul].contains(id) ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]) + (id == .treeSparrow ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]) + ([SpeciesID.barnSwallow,.yellowRumpedFlycatcher].contains(id) ? CatchArtGeometry.frameNames:[]) &&
+            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=BirdArt.names(for:id)==old+extra+peek+([SpeciesID.treeSparrow,.lightVentedBulbul].contains(id) ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]) + ([SpeciesID.treeSparrow,.azureWingedMagpie].contains(id) ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]) + ([SpeciesID.barnSwallow,.yellowRumpedFlycatcher].contains(id) ? CatchArtGeometry.frameNames:[]) &&
                 SpeciesBehaviorProfile.profile(for:id).poseFrameNames==extra
             checks["m6cPeekRequiredFrames-"+id.rawValue]=Set(profile.requiredFrames(for:.edgePeek)) ==
                 BehaviorDefinitions.definition(for:.edgePeek).requiredFrames.union(peek)
