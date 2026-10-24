@@ -2,11 +2,13 @@ import XCTest
 @testable import BirdingCore
 
 final class SocialSchedulingTests: XCTestCase {
-    func testAutomaticGreetingUsesTheSharedSchedulerAndPauseDoesNotAccumulateAttempts() {
+    func testAutomaticGreetingUsesTheSharedSchedulerAndPauseDoesNotAccumulateAttempts() throws {
         var settings=BirdSettings();settings.ambientLeafPlayEnabled=false
         settings.pointerVisits=false;settings.flockPasses=false;settings.perchActions=false
         settings.socialInteractions=true;settings.ambientFrequency = .high
-        let engine=BehaviorEngine(seed:73,settings:settings)
+        // Scene seed 0's first daily draw is .5188, outside the reserved 13%.
+        // This fixture tests the social branch and pause clock after admission.
+        let engine=BehaviorEngine(seed:0,settings:settings)
         engine.populationEnabled=false;engine.autonomousRouting=false
         let screen=CGRect(x:-1000,y:-300,width:1800,height:1200)
         let host=Surface(id:31,rect:CGRect(x:-600,y:400,width:500,height:160))
@@ -19,13 +21,25 @@ final class SocialSchedulingTests: XCTestCase {
         func advance(_ seconds:Int) {for _ in 0..<seconds*60 {engine.advance(BehaviorEngine.step)}}
         advance(44)
         XCTAssertFalse(engine.events.contains{$0.kind == .socialGreeting})
+        let remaining=engine.scheduler.remaining
+        XCTAssertGreaterThan(remaining,BehaviorEngine.step)
         engine.handle(.pause(true));advance(200)
+        XCTAssertEqual(engine.scheduler.remaining,remaining)
         XCTAssertFalse(engine.events.contains{$0.kind == .socialGreeting})
-        engine.handle(.pause(false));advance(59)
+        engine.handle(.pause(false))
+        XCTAssertEqual(engine.scheduler.remaining,remaining)
+        let resumedAt=engine.time
+        let beforeDeadline=max(0,Int((remaining/BehaviorEngine.step).rounded(.down))-1)
+        for _ in 0..<beforeDeadline {engine.advance(BehaviorEngine.step)}
         XCTAssertFalse(engine.events.contains{$0.kind == .socialGreeting})
-        advance(2)
+        XCTAssertGreaterThan(engine.scheduler.remaining,0)
+        for _ in 0..<3 where !engine.events.contains(where:{$0.kind == .socialGreeting && $0.type == .started}) {
+            engine.advance(BehaviorEngine.step)
+        }
         let starts=engine.events.filter{$0.kind == .socialGreeting && $0.type == .started}
         XCTAssertEqual(starts.count,1)
+        let first=try XCTUnwrap(starts.first)
+        XCTAssertEqual(first.time-resumedAt,remaining,accuracy:BehaviorEngine.step*1.1)
         XCTAssertEqual(starts.first?.source,.automatic)
         XCTAssertEqual(starts.first?.participants.count,2)
         XCTAssertEqual(engine.activeRunCount,1)

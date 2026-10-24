@@ -180,6 +180,7 @@ final class ObservationJournalWindow: NSWindowController, NSTableViewDataSource,
         case "allopreening": return language.text("同伴理羽", "Companion preening")
         case "fixedPerchVisit": return language.text("访问固定栖木", "Fixed perch visit")
         case "foodTrayVisit": return language.text("访问临时食盘", "Food tray visit")
+        case "bathVisit": return language.text("洗澡", "Bathing")
         default: return behavior
         }
     }

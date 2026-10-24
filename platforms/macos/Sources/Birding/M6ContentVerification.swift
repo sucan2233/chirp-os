@@ -117,7 +117,7 @@ enum M6ContentVerification {
             let extra=species.contains(id) ? names:[]
             let peek=peekSpecies.contains(id) ? peekNames:[]
             let profile=SpeciesBehaviorProfile.profile(for:id)
-            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=BirdArt.names(for:id)==old+extra+peek &&
+            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=BirdArt.names(for:id)==old+extra+peek+([SpeciesID.treeSparrow,.lightVentedBulbul].contains(id) ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]) &&
                 SpeciesBehaviorProfile.profile(for:id).poseFrameNames==extra
             checks["m6cPeekRequiredFrames-"+id.rawValue]=Set(profile.requiredFrames(for:.edgePeek)) ==
                 BehaviorDefinitions.definition(for:.edgePeek).requiredFrames.union(peek)

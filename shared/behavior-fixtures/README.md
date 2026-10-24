@@ -3,7 +3,7 @@
 这些 JSON 是引擎输入，采用 Quartz 桌面坐标（向右为 x 正方向，向下为 y 正方向）。它们不依赖 AppKit、窗口标题、桌面截图或用户配置，供 macOS 与后续 Windows 核心运行同一场景。
 
 - `version`：文件格式版本；未知版本拒绝，不能忽略无法理解的事件。
-- `simulationVersion`：M6c 当前为 11。白头鹎、鹊鸲、红耳鹎的准入扩展会改变旧请求结果，因此在 M6d 调度变化之前先升级语义。版本 1–10 的生产录制明确拒绝；需要在对应旧提交重放或重新录制，不能直接修改版本标签假装迁移。改变随机算法、调度或固定步契约时需明确迁移，不能让旧期望静默漂移。14 份仓库手写夹具已以临时 v11 输入完成42次运行，与 M6a/b 保存的完整报告逐项一致后迁移版本，保留原输入和独立断言，不生成或覆盖 `expected`。
+- `simulationVersion`：M6d 当前为12，单scheduler场景模式、日常13%预留区间及共享租约改变模拟语义。旧生产录制版本1–11明确拒绝；请在相应旧提交重放或重新录制，不能直接改版本标签。14份仓库手写夹具保留原输入与独立断言，仅迁移版本；新增第15份浴盆夹具。v11曾完成42次与M6a/b完整报告对照；v12不承诺旧摘要不变，不从当前实现反向生成expected。
 - `seed`、鸟/运行/道具/栖息地对象 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
 - `settings`：完整配置或合法的旧格式配置；按 BirdSettings schema 迁移。
 - `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟；可选 `flightOrigin` 让鸟从该坐标开始普通直达飞行，仍需 `advance` 输入才能移动和产生速度。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。
@@ -13,7 +13,7 @@
 - `world.availableFrames`：首次输入或素材变化时写入完整清单；省略时继承上一世界，显式空字典会清空。避免每帧重复记录不变素材。
 - `world.displayIDs`：与 displays 顺序对应的稳定标识；省略为空。`fixedPerchArtAvailable` 表示真实栖木素材是否可用，省略为 true；生产平台必须按实际资源填写。
 - `world.foodTrayArtAvailable`：真实食盘素材是否可用，省略为 true。每次 world 输入都是该能力的完整快照；省略不继承前次 false。该字段的变化参与录制去重，不能被省略素材清单的压缩逻辑吞掉。
-- `world.surfaces[].habitatKind`：可选 `fixedPerch` 或 `foodTray`；未知标签拒绝。保留 `isFixedPerch` 旧格式兼容，缺少新标签时 true 映射为 `fixedPerch`；显式新标签优先。普通窗口缺少标签。对象表面由引擎对象存储生成，录制表面标签不能凭空恢复对象、食物或预约。
+- `world.surfaces[].habitatKind`：可选 `fixedPerch`、`foodTray` 或 `bath`；未知标签拒绝。保留 `isFixedPerch` 旧格式兼容，缺少新标签时 true 映射为 `fixedPerch`；显式新标签优先。普通窗口缺少标签。对象表面由引擎对象存储生成，录制表面标签不能凭空恢复对象、食物或预约。
 - `world.localMinuteOfDay`：本地民用时钟的分钟（0–1439）；缺失或 null 表示没有时钟输入，日夜模式采用中性节奏。重放不读取机器时区或当前时间；世界更新中省略该字段会清空，不继承。
 - `world` 输入的 `sampleDT`：窗口采样时长。无该字段的世界更新只校验世界，不推进窗口跟随。
 - `expected`：生产录制保存终态报告和完整事件序列。重放命令逐项比较，包括鸟坐标、姿态、生态记忆、道具、租约和熟客档案，以及下述栖息地对象状态。共享手写夹具另由 XCTest 对完成行为、取消原因及零残留作独立断言，不用当前实现反向生成通过标准。
@@ -67,3 +67,13 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 `fixed-perch.json` 从已有居民的窗口脚位出发，真实飞往保存的栖木中心并落稳；独立断言检查目标坐标、原居民 ID、完整完成、栖木快照和资源释放。
 
 `food-tray.json` 是第 14 个共享场景：已有麻雀停稳后放盘，观察、真实接近、暂停继续、进食并返回窗口原脚锚。独立断言检查原居民 ID、原脚坐标、一次完整完成、两份余粮和零运行/预约；三种回调频率比较完整报告。`FoodTrayTests` 另对两种鸟的中间状态、到期/耗尽延迟删除、取消恢复及自动种子样本设断言。
+
+## M6d 浴盆与场景焦点
+
+`placeBath(point)`、`placeBathAfter(delay)`、`cancelBathPlacement`、`removeBath`及`bathVisit(source)`采用食盘相同payload形状；`clearCurrentScene`清除当前食盘或浴盆及待放置。两种对象共用一个容量，退休仍占容量，不覆盖已有场景。`world.bathArtAvailable`每次world输入独立快照，缺省true，实际平台按可绘制资源填写。
+
+浴盆固定水线y20、单槽脚(64,20)，128×40画布；只支持麻雀和白头鹎，必需7张bath姿态及shake、stand、完整起降帧。300秒寿命、三次完整访问，安全返程落稳才扣次。取消不计成功，暂停冻结寿命/年龄/水花；暂停删除立即解开承载引用，恢复后使用已有找落点/离场路径。
+
+唯一sceneFocus控制同一AmbientScheduler：首机会min(remaining,10)，用户输入60秒抑制优先；场景机会70%尝试浴盆，30%旧选择器；低/中/高间隔30–45/20–35/15–25秒。日常8%捕虫/4%求偶/1%礼物区间本批仍为空机会。新随机流使用固定盐，暂停不消费。
+
+报告增加`hasBathPlacement`、`sceneFocusID`、`schedulerRemaining`、`sceneCooldownRemaining`、`userInputRemaining`；道具记录frame与anchor，使水花相位也参与回放比较。`bath.json`覆盖已有居民试水/洗澡/暂停/真实返回，独立断言不依赖生成的expected。统一验证结果在M6d验收文档记录。

@@ -33,6 +33,7 @@ public struct RecordedWorld:Codable,Equatable {
     public var screens,displays:[RecordedRect]
     public var displayIDs:[String]?
     public var fixedPerchArtAvailable:Bool?
+    public var bathArtAvailable:Bool?
     public var foodTrayArtAvailable:Bool?
     public var surfaces:[RecordedSurface]
     public var scale:Double,pointer:RecordedPoint
@@ -40,7 +41,7 @@ public struct RecordedWorld:Codable,Equatable {
     public var localMinuteOfDay:Int?
     public var availableFrames:[String:[String]]?
     public init(_ world:BehaviorWorld) {
-        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable;foodTrayArtAvailable=world.foodTrayArtAvailable
+        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable;foodTrayArtAvailable=world.foodTrayArtAvailable;bathArtAvailable=world.bathArtAvailable
         surfaces=world.surfaces.map(RecordedSurface.init);scale=Double(world.scale);pointer=RecordedPoint(world.pointer)
         buttonsDown=world.buttonsDown;localMinuteOfDay=world.localMinuteOfDay
         availableFrames=Dictionary(uniqueKeysWithValues:world.availableFrames.map{($0.key.rawValue,$0.value.sorted())})
@@ -62,7 +63,7 @@ public struct RecordedWorld:Codable,Equatable {
         return BehaviorWorld(screens:screens.map(\.value),displays:displays.map(\.value),surfaces:surfaces.map(\.value),
             scale:scale,pointer:pointer.value,buttonsDown:buttonsDown,
             availableFrames:Dictionary(uniqueKeysWithValues:frames.map{(SpeciesID(rawValue:$0.key)!,Set($0.value))}),
-            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true,foodTrayArtAvailable:foodTrayArtAvailable ?? true)
+            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true,foodTrayArtAvailable:foodTrayArtAvailable ?? true,bathArtAvailable:bathArtAvailable ?? true)
     }
 }
 public struct RecordedSimulationOptions:Codable,Equatable {
@@ -85,6 +86,12 @@ public struct RecordedCommand:Codable {
         case .socialMotion(let kind,let value):name="socialMotion";action=kind.rawValue;source=value.rawValue
         case .perchAction(let kind,let value):name="perchAction";action=kind.rawValue;source=value.rawValue
         case .fixedPerchVisit(let value):name="fixedPerchVisit";source=value.rawValue
+        case .placeBath(let value):name="placeBath";point=RecordedPoint(value)
+        case .placeBathAfter(let value):name="placeBathAfter";delay=max(0,min(10,value.isFinite ? value:3))
+        case .cancelBathPlacement:name="cancelBathPlacement"
+        case .removeBath:name="removeBath"
+        case .clearCurrentScene:name="clearCurrentScene"
+        case .bathVisit(let value):name="bathVisit";source=value.rawValue
         case .placeFoodTray(let value):name="placeFoodTray";point=RecordedPoint(value)
         case .placeFoodTrayAfter(let value):name="placeFoodTrayAfter";delay=max(0,min(10,value.isFinite ? value:3))
         case .cancelFoodTrayPlacement:name="cancelFoodTrayPlacement"
@@ -123,6 +130,12 @@ public struct RecordedCommand:Codable {
         case "socialMotion":guard let action,let kind=SocialMotionKind(rawValue:action) else {throw bad()};return .socialMotion(kind,try origin())
         case "perchAction":guard let action,let kind=PerchActionKind(rawValue:action) else {throw bad()};return .perchAction(kind,try origin())
         case "fixedPerchVisit":return .fixedPerchVisit(try origin())
+        case "placeBath":guard let point,point.valid else {throw bad()};return .placeBath(at:point.value)
+        case "placeBathAfter":return .placeBathAfter(try wait())
+        case "cancelBathPlacement":return .cancelBathPlacement
+        case "removeBath":return .removeBath
+        case "clearCurrentScene":return .clearCurrentScene
+        case "bathVisit":return .bathVisit(try origin())
         case "placeFoodTray":guard let point,point.valid else {throw bad()};return .placeFoodTray(at:point.value)
         case "placeFoodTrayAfter":return .placeFoodTrayAfter(try wait())
         case "cancelFoodTrayPlacement":return .cancelFoodTrayPlacement
@@ -215,9 +228,11 @@ public struct RecordedBirdState:Codable,Equatable {
 }
 public struct RecordedPropState:Codable,Equatable {
     public var id:String,kind:String,position:RecordedPoint,size:Double,rotation:Double,opacity:Double
+    public var frame:String?
+    public var anchor:RecordedPoint?
     init(_ prop:ScenePropRenderState) {
         id=String(prop.id.rawValue);kind=prop.kind.rawValue;position=RecordedPoint(prop.position);size=Double(prop.size)
-        rotation=Double(prop.rotation);opacity=prop.opacity
+        rotation=Double(prop.rotation);opacity=prop.opacity;frame=prop.frameName;anchor=RecordedPoint(prop.anchor)
     }
 }
 public struct RecordedFixedPerchState:Codable,Equatable {
@@ -240,6 +255,11 @@ public struct BehaviorReplayReport:Codable,Equatable {
     public var fixedPerches:[RecordedFixedPerchState]
     public var habitats:[RecordedHabitatObjectState]
     public var hasFoodTrayPlacement:Bool,habitatReservations:Int
+    public var hasBathPlacement:Bool?
+    public var sceneFocusID:String?
+    public var schedulerRemaining:Double?
+    public var sceneCooldownRemaining:Double?
+    public var userInputRemaining:Double?
     init(engine:BehaviorEngine,events:[RecordedEvent]) {
         time=engine.time;paused=engine.paused;residents=engine.residentCount;transients=engine.passingCount;pending=engine.pendingCount
         runs=engine.activeRunCount;leases=engine.leasedBirdCount;reservations=engine.reservedLandingCount
@@ -248,6 +268,9 @@ public struct BehaviorReplayReport:Codable,Equatable {
         fixedPerches=engine.fixedPerchSnapshot().map(RecordedFixedPerchState.init)
         habitats=engine.habitatSnapshot().map(RecordedHabitatObjectState.init)
         hasFoodTrayPlacement=engine.hasFoodTrayPlacement;habitatReservations=engine.habitatReservationCount
+        hasBathPlacement=engine.hasBathPlacement;sceneFocusID=engine.sceneFocus.map{String($0.objectID.rawValue)}
+        schedulerRemaining=engine.scheduler.remaining;sceneCooldownRemaining=engine.scheduler.sceneCooldownRemaining
+        userInputRemaining=engine.scheduler.userInputRemaining
         visitorMemory=engine.visitorMemoryArchive
     }
     public func save(to url:URL) throws {try BehaviorInputLog.encoder().encode(self).write(to:url,options:.atomic)}
@@ -256,7 +279,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=11,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=12,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

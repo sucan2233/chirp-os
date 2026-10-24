@@ -39,13 +39,90 @@ enum ObservationJournalPersistenceVerification {
             entry?.firstSeen==firstSeen && entry?.lastSeen==lastSeen &&
             entry?.automaticCount==2 && entry?.previewCount==3 && entry?.userCount==1 && entry?.totalCount==6
         let object=try JSONSerialization.jsonObject(with:Data(contentsOf:missingURL)) as? [String:Any]
-        checks["observationPersistenceSavesVersionOneEnvelope"]=(object?["formatVersion"] as? Int)==1 &&
+        checks["observationPersistenceSavesVersionTwoEnvelope"]=(object?["formatVersion"] as? Int)==2 &&
             (object?["entries"] as? [Any])?.count==1
 
+        try checkMigration(into:&checks,root:root,archive:archive)
         try checkDesktop(into:&checks,root:root)
         try checkProtectedFiles(into:&checks,root:root,archive:archive)
         try checkModes(into:&checks,root:root,userURL:userURL)
         try checkFailureRecovery(into:&checks,root:root)
+    }
+
+    private static func checkMigration(into checks:inout [String:Bool],root:URL,archive:ObservationArchive) throws {
+        for (name,source) in [("Populated",archive),("Empty",ObservationArchive())] {
+            let legacy=try envelope(source,version:1)
+            for terminating in [false,true] {
+                let mode=terminating ? "Exit":"Periodic"
+                let url=root.appendingPathComponent("migration-\(name)-\(mode).json")
+                try legacy.write(to:url,options:.atomic)
+                let journal=ObservationJournal()
+                var logs:[String]=[]
+                let persistence=ObservationJournalPersistence(url:url,enabled:true,arguments:["Birding"],log:{logs.append($0)})
+                persistence.load(into:journal,now:0)
+                let baseline=journal.archive,revision=journal.revision
+                let loadedBytes=try Data(contentsOf:url)
+                checks["observationPersistenceV1\(name)\(mode)LoadPreservesBytes"]=baseline==source &&
+                    baseline.formatVersion==2 && !persistence.writesDisabled && persistence.saveAttempts==0 &&
+                    loadedBytes==legacy && logs.isEmpty
+                persistence.persistIfNeeded(from:journal,now:29.999)
+                let beforeDeadline=try Data(contentsOf:url)
+                checks["observationPersistenceV1\(name)\(mode)MigrationWaitsForSave"]=persistence.saveAttempts==0 &&
+                    beforeDeadline==legacy
+                if terminating {persistence.flush(from:journal,now:29.999,terminating:true)}
+                else {persistence.persistIfNeeded(from:journal,now:30)}
+                let storedBytes=try Data(contentsOf:url)
+                let stored=try ObservationArchive.decode(storedBytes)
+                let object=try JSONSerialization.jsonObject(with:storedBytes) as? [String:Any]
+                checks["observationPersistenceV1\(name)\(mode)MigratesWithoutNewObservations"]=persistence.successfulSaves==1 &&
+                    persistence.saveAttempts==1 && (object?["formatVersion"] as? Int)==2 &&
+                    !stored.requiresMigration && stored==source && journal.archive==baseline &&
+                    journal.revision==revision && logs.isEmpty
+                persistence.persistIfNeeded(from:journal,now:60)
+                persistence.flush(from:journal,now:61,terminating:true)
+                let unchanged=try Data(contentsOf:url)
+                checks["observationPersistenceV1\(name)\(mode)MigrationWritesOnlyOnce"]=persistence.saveAttempts==1 &&
+                    unchanged==storedBytes
+                let restored=ObservationJournal()
+                let reload=ObservationJournalPersistence(url:url,enabled:true,arguments:["Birding"],log:{logs.append($0)})
+                reload.load(into:restored,now:0)
+                reload.persistIfNeeded(from:restored,now:30)
+                reload.flush(from:restored,now:31,terminating:true)
+                checks["observationPersistenceV1\(name)\(mode)ReloadIsClean"]=restored.archive==source &&
+                    !reload.writesDisabled && reload.saveAttempts==0 && logs.isEmpty
+            }
+
+            // Migration itself is a pending write, even without a new event.
+            // A newer process may replace the file after our v1 load.
+            let url=root.appendingPathComponent("migration-\(name)-future-replacement.json")
+            try legacy.write(to:url,options:.atomic)
+            let journal=ObservationJournal()
+            var logs:[String]=[]
+            let persistence=ObservationJournalPersistence(url:url,enabled:true,arguments:["Birding"],log:{logs.append($0)})
+            persistence.load(into:journal,now:0)
+            let baseline=journal.archive,revision=journal.revision
+            let future=try envelope(source,version:ObservationArchive.currentVersion+1)
+            try future.write(to:url,options:.atomic)
+            persistence.persistIfNeeded(from:journal,now:30)
+            persistence.flush(from:journal,now:59.999)
+            let preserved=try Data(contentsOf:url)
+            checks["observationPersistenceV1\(name)MigrationPreservesFutureReplacement"]=persistence.saveAttempts==1 &&
+                persistence.successfulSaves==0 && persistence.saveFailed && logs.count==1 &&
+                preserved==future && journal.archive==baseline && journal.revision==revision
+            persistence.persistIfNeeded(from:journal,now:60)
+            persistence.flush(from:journal,now:61,terminating:true)
+            let retried=try Data(contentsOf:url)
+            checks["observationPersistenceV1\(name)MigrationRetryAndExitPreserveFuture"]=persistence.saveAttempts==3 &&
+                persistence.successfulSaves==0 && persistence.saveFailed && logs.count==1 &&
+                retried==future && journal.archive==baseline && journal.revision==revision
+        }
+    }
+
+    private static func envelope(_ archive:ObservationArchive,version:Int) throws -> Data {
+        let encoded=try JSONEncoder().encode(archive)
+        var object=try JSONSerialization.jsonObject(with:encoded) as? [String:Any] ?? [:]
+        object["formatVersion"]=version
+        return try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])
     }
 
     private static func checkDesktop(into checks:inout [String:Bool],root:URL) throws {
@@ -141,7 +218,7 @@ enum ObservationJournalPersistenceVerification {
         let sampleURL=root.appendingPathComponent("version-template.json")
         try archive.save(to:sampleURL)
         var future=try JSONSerialization.jsonObject(with:Data(contentsOf:sampleURL)) as? [String:Any] ?? [:]
-        future["formatVersion"]=Int.max
+        future["formatVersion"]=ObservationArchive.currentVersion+1
         let invalid:[(String,Data)]=[
             ("Future",try JSONSerialization.data(withJSONObject:future,options:[.sortedKeys])),
             ("Corrupt",Data("{\"formatVersion\":1,\"entries\":".utf8))

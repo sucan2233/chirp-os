@@ -168,6 +168,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -365,6 +379,14 @@
 
         ],
         "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
       }
     ],
     "capabilities" : [
@@ -378,7 +400,8 @@
       "observationPose",
       "alertPose",
       "restPose",
-      "takeoffPose"
+      "takeoffPose",
+      "bathing"
     ],
     "missingPoseFrames" : [
 
@@ -566,6 +589,14 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
       }
     ],
     "capabilities" : [
@@ -579,7 +610,8 @@
       "alertPose",
       "restPose",
       "takeoffPose",
-      "edgePeekPose"
+      "edgePeekPose",
+      "bathing"
     ],
     "missingPoseFrames" : [
 
@@ -764,6 +796,20 @@
 
         ],
         "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -965,6 +1011,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -1163,6 +1223,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -1366,6 +1440,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -1551,6 +1639,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -1753,6 +1855,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -1938,6 +2054,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -2127,6 +2257,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -2312,6 +2456,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -2501,6 +2659,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -2686,6 +2858,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -2875,6 +3061,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3062,6 +3262,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3247,6 +3461,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -3449,6 +3677,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3636,6 +3878,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3816,6 +4072,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -4019,6 +4289,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4206,6 +4490,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4386,6 +4684,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -4589,6 +4901,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4774,6 +5100,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -4963,6 +5303,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -5148,6 +5502,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -5337,6 +5705,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -5522,6 +5904,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -5711,6 +6107,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -5896,6 +6306,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -6085,6 +6509,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -6270,6 +6708,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -6459,6 +6911,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -6644,6 +7110,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -6833,6 +7313,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7020,6 +7514,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7205,6 +7713,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -7407,6 +7929,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7592,6 +8128,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -7781,6 +8331,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7966,6 +8530,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -8155,6 +8733,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -8340,6 +8932,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }
@@ -8529,6 +9135,20 @@
           "feedLook"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -8714,6 +9334,20 @@
           "feedDown1",
           "feedLift",
           "feedLook"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "bathVisit",
+        "missingFrames" : [
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathInspect",
+          "bathLower",
+          "bathRise",
+          "bathTouch"
         ],
         "productAllowed" : false
       }

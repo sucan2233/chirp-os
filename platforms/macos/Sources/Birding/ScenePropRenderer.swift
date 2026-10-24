@@ -20,9 +20,12 @@ final class ScenePropRenderer {
                 container.addSublayer(texture);container.mask=CAShapeLayer()
                 root.addSublayer(container);props[prop.id]=container
             }
-            // The unrotated clipping envelope accommodates every leaf angle.
-            let side=prop.size*sqrt(2.0)
-            let rect=CGRect(x:prop.position.x-side/2,y:prop.position.y-side/2,width:side,height:side)
+            // A splash is anchored at its authored water-contact row. Leaves
+            // retain the existing rotation envelope and center anchor.
+            let splash=prop.kind == .waterSplash
+            let side=splash ? prop.size:prop.size*sqrt(2.0)
+            let rect=splash ? prop.rect:CGRect(x:prop.position.x-side/2,y:prop.position.y-side/2,width:side,height:side)
+            container.zPosition=splash ? 1:0
             let pieces=Geometry.visiblePieces(rect,blockers:prop.blockers)
             container.isHidden = !rect.intersects(desktopRect) || pieces.isEmpty || prop.opacity<=0
             container.opacity=Float(min(1,max(0,prop.opacity)))
@@ -30,9 +33,11 @@ final class ScenePropRenderer {
             container.frame=rect.offsetBy(dx:-desktopRect.minX,dy:-desktopRect.minY)
             let texture=container.sublayers![0]
             texture.bounds=CGRect(x:0,y:0,width:prop.size,height:prop.size)
-            texture.position=CGPoint(x:side/2,y:side/2)
+            texture.anchorPoint=prop.anchor
+            texture.position=splash ? CGPoint(x:prop.position.x-rect.minX,y:prop.position.y-rect.minY):CGPoint(x:side/2,y:side/2)
             texture.setAffineTransform(CGAffineTransform(rotationAngle:prop.rotation))
-            texture.contents=leafTexture
+            texture.contents=splash ? BathArt.splashImage(prop.frameName):leafTexture
+            container.isHidden = container.isHidden || texture.contents==nil
             let path=CGMutablePath()
             for piece in pieces {path.addRect(piece.offsetBy(dx:-rect.minX,dy:-rect.minY))}
             let mask=container.mask as! CAShapeLayer

@@ -269,6 +269,7 @@ enum SettingsVerification {
             try AllopreeningSettingsVerification.run(into:&checks,folder:folder)
             try FixedPerchSettingsVerification.run(into:&checks,folder:folder)
             try FoodTraySettingsVerification.run(into:&checks,folder:folder)
+            try BathSettingsVerification.run(into:&checks,folder:folder)
             ActivityRhythmClockVerification.run(into:&checks)
             try VisitorMemoryPersistenceVerification.run(into:&checks,folder:folder)
             try ObservationJournalPersistenceVerification.run(into:&checks,folder:folder)

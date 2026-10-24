@@ -8,11 +8,11 @@ public struct HabitatObjectID:Hashable,Codable,Comparable {
     public init(_ value:UInt64) {rawValue=value}
     public static func < (a:Self,b:Self)->Bool {a.rawValue<b.rawValue}
 }
-public enum HabitatObjectKind:String,Codable {case foodTray}
+public enum HabitatObjectKind:String,Codable {case foodTray,bath}
 public struct HabitatObjectRenderState {
     public let id:HabitatObjectID
     public let kind:HabitatObjectKind
-    /// The center of the upper edge is the foot/seed contact anchor.
+    /// Asset bounds; the bath's fixed foot is on its internal waterline.
     public let rect:CGRect
     public let blockers:[CGRect]
     public let remainingUses:Int
@@ -30,14 +30,26 @@ struct HabitatObject {
     let surface:Surface
     var remainingUses:Int
     var remainingLifetime:Double
-    var retiring:Bool {remainingUses<=0 || remainingLifetime<=0}
-    var foot:CGPoint {CGPoint(x:rect.midX,y:rect.minY)}
+    var retirementAge:Double?=nil
+    var retirementReason:BehaviorReason?=nil
+    var completedVisitRuns:Set<UInt64>=[]
+    var retiring:Bool {retirementReason != nil || remainingUses<=0 || remainingLifetime<=0}
+    var foot:CGPoint {
+        kind == .bath ? BathGeometry.foot(in:rect,scale:scale):CGPoint(x:rect.midX,y:rect.minY)
+    }
 }
 final class HabitatObjectStore {
     private(set) var objects:[HabitatObjectID:HabitatObject]=[:]
     private var nextID:UInt64=1
     static let foodLifetime=180.0
     static let foodPortions=3
+    static let bathLifetime=300.0
+    static let bathVisits=3
+    static let retirementLimit=2.0
+    var retiringIDs:[HabitatObjectID] {objects.keys.sorted().filter{objects[$0]?.retiring == true}}
+    var removalDueIDs:[HabitatObjectID] {
+        retiringIDs.filter{(objects[$0]?.retirementAge ?? 0)+1e-10>=Self.retirementLimit}
+    }
 
     func placeFood(at point:CGPoint,in engine:BehaviorEngine)->Bool {
         let world=engine.world,scale=world.scale
@@ -61,14 +73,68 @@ final class HabitatObjectStore {
         return true
     }
     static let surfaceID:UInt32=0xFE000001
+    static let bathSurfaceID:UInt32=0xFE000002
+    /// The supplied point is the stable slot foot, not the asset's top edge.
+    func placeBath(at point:CGPoint,in engine:BehaviorEngine) -> BehaviorResult {
+        let world=engine.world,scale=world.scale
+        guard !engine.paused else {return .rejected(.paused)}
+        guard engine.settings.bathEnabled else {return .rejected(.disabled)}
+        guard world.bathArtAvailable else {return .rejected(.missingFrames)}
+        guard !world.buttonsDown else {return .rejected(.userInput)}
+        // Retiring objects continue to own capacity until their surface is gone.
+        guard objects.isEmpty else {return .rejected(.busy)}
+        let maxScale=BathVisitBehavior.supportedSpecies.map{engine.settings.catalog.profile($0).relativeScale}.max() ?? 1
+        guard let area=BathGeometry.clearance(foot:point,worldScale:scale,spriteScale:scale*maxScale),
+              let display=world.displays.first(where:{$0.contains(area)}),
+              world.screens.contains(where:{$0.contains(area)}),
+              !world.surfaces.contains(where:{$0.layer>0 && $0.rect.intersects(area)}),
+              !engine.fixedPerchSnapshot().contains(where:{$0.rect.insetBy(dx:-50*scale,dy:-80*scale).intersects(area)}),
+              !engine.birds.contains(where:{engine.bounds(of:$0).intersects(area)}),
+              !engine.runtime.landingReservations.contains(where:{$0.footprint(in:engine)?.intersects(area) ?? true}),
+              !world.surfaces.contains(where:{$0.id==Self.bathSurfaceID}) else {return .rejected(.noSpace)}
+        let id=HabitatObjectID(nextID);nextID+=1
+        let rect=BathGeometry.rect(foot:point,scale:scale)
+        let surface=Surface(id:Self.bathSurfaceID,pid:Int32.min+20,
+            rect:CGRect(x:rect.minX,y:point.y,width:rect.width,height:1),habitatKind:.bath)
+        objects[id]=HabitatObject(id:id,kind:.bath,rect:rect,display:display,screens:world.screens,
+            displays:world.displays,scale:scale,surface:surface,remainingUses:Self.bathVisits,remainingLifetime:Self.bathLifetime)
+        return .accepted
+    }
+    func beginRetirement(_ id:HabitatObjectID,reason:BehaviorReason) {
+        guard var object=objects[id] else {return}
+        if object.retirementReason==nil {object.retirementReason=reason}
+        if object.retirementAge==nil {object.retirementAge=0}
+        objects[id]=object
+    }
+    /// Commit only after the complete bath and an actual safe return landing.
+    /// Per-object successful run IDs are bounded by the three-visit capacity.
+    @discardableResult func completeVisit(_ id:HabitatObjectID,runID:BehaviorRunID) -> Bool {
+        guard var object=objects[id],object.kind == .bath,!object.retiring,
+              runID.rawValue>0,!object.completedVisitRuns.contains(runID.rawValue) else {return false}
+        object.completedVisitRuns.insert(runID.rawValue);object.remainingUses-=1
+        objects[id]=object
+        if object.remainingUses==0 {beginRetirement(id,reason:.removed)}
+        return true
+    }
     func consume(_ id:HabitatObjectID) {
-        guard var object=objects[id],object.remainingUses>0 else {return}
+        guard var object=objects[id],object.kind == .foodTray,object.remainingUses>0 else {return}
         object.remainingUses-=1;objects[id]=object
     }
     func advance(_ dt:Double) {
+        guard dt.isFinite,dt>0 else {return}
         for id in objects.keys.sorted() {
             guard var object=objects[id] else {continue}
-            object.remainingLifetime=max(0,object.remainingLifetime-dt);objects[id]=object
+            let previousLifetime=object.remainingLifetime
+            object.remainingLifetime=max(0,previousLifetime-dt)
+            if object.retiring {
+                // A newly expired lifetime contributes only the portion of this
+                // step after expiry; an already-retiring object uses all of dt.
+                let elapsed=object.retirementAge==nil && previousLifetime>0 && object.remainingUses>0
+                    ? max(0,dt-previousLifetime):dt
+                object.retirementAge=(object.retirementAge ?? 0)+elapsed
+                if object.retirementReason==nil {object.retirementReason = .removed}
+            }
+            objects[id]=object
         }
     }
     func remove(_ id:HabitatObjectID) {objects.removeValue(forKey:id)}

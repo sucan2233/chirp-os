@@ -7,7 +7,7 @@ final class ObservationJournalTests:XCTestCase {
     private let date=Date(timeIntervalSince1970:1_790_000_000)
     private let kinds:[BehaviorKind]=[.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,.sideBySide,.giveWay,
         .pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,
-        .allopreening,.fixedPerchVisit,.foodTrayVisit]
+        .allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit]
 
     private func fixture(seed:UInt64=73,species:[SpeciesID]=[.treeSparrow]) -> BehaviorEngine {
         let engine=BehaviorEngine(seed:seed)
@@ -370,7 +370,7 @@ final class ObservationJournalTests:XCTestCase {
         var corrupt=try object(.init(entries:[entry()]))
         var entries=try XCTUnwrap(corrupt["entries"] as? [[String:Any]])
         entries[0]["automaticCount"] = -1;corrupt["entries"]=entries
-        let payloads=[try data(["formatVersion":2,"entries":"future schema"]),Data("broken json".utf8),
+        let payloads=[try data(["formatVersion":3,"entries":"future schema"]),Data("broken json".utf8),
                       try data(corrupt),Data(repeating:32,count:ObservationArchive.maximumBytes+1)]
         for payload in payloads {
             try payload.write(to:target)
@@ -389,7 +389,7 @@ final class ObservationJournalTests:XCTestCase {
 
     func testRejectsVersionsUnknownBehaviorsSpeciesDuplicatesAndCorruptCounts() throws {
         let original=try object(.init(entries:[entry()]))
-        for version:Any in [2,0,-1,true,"1",1.5,NSNull()] {
+        for version:Any in [3,0,-1,true,"1",1.5,NSNull()] {
             XCTAssertThrowsError(try ObservationArchive.decode(data(["formatVersion":version,"entries":"future schema"])))
         }
         for payload in [Data(),Data("null".utf8),Data("[]".utf8),Data("{".utf8),Data("{}".utf8)] {

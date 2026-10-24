@@ -1,0 +1,123 @@
+import XCTest
+@testable import BirdingCore
+
+final class SceneSchedulingTests:XCTestCase {
+    private func tick(_ scheduler:inout AmbientScheduler,frequency:AmbientFrequency = .high,
+                      hz:Int=60,busy:Bool=false,buttons:Bool=false,legacy:Double=0)->AmbientEvent? {
+        scheduler.tick(1/Double(hz),pointer:.zero,buttonsDown:buttons,pointerEnabled:false,
+            flockEnabled:true,frequency:frequency,busy:busy,random:{legacy})
+    }
+    private func nextOpportunity(_ scheduler:inout AmbientScheduler,frequency:AmbientFrequency = .high,
+                                 hz:Int=60,busy:Bool=false,legacy:Double=0)->AmbientEvent? {
+        let count=Int(ceil(scheduler.remaining*Double(hz)))+2
+        for _ in 0..<count {
+            let before=scheduler.remaining
+            let event=tick(&scheduler,frequency:frequency,hz:hz,busy:busy,legacy:legacy)
+            if scheduler.remaining>before {return event}
+            XCTAssertNil(event)
+        }
+        XCTFail("The finite opportunity clock did not expire");return nil
+    }
+
+    func testOneClockAcquiresOnlyOneFocusAndUsesExactFrequencyWindows() {
+        for (frequency,daily,scene):(AmbientFrequency,ClosedRange<Double>,ClosedRange<Double>) in [
+            (.low,180...360,30...45),(.medium,90...180,20...35),(.high,45...90,15...25)] {
+            XCTAssertEqual(frequency.interval,daily);XCTAssertEqual(frequency.sceneInterval,scene)
+            var scheduler=AmbientScheduler(seed:14);scheduler.reset(frequency)
+            let first=SceneFocus(objectID:HabitatObjectID(1)),second=SceneFocus(objectID:HabitatObjectID(2))
+            XCTAssertTrue(scheduler.acquireFocus(first,frequency:frequency))
+            XCTAssertEqual(scheduler.remaining,10);XCTAssertEqual(scheduler.sceneFocus,first)
+            XCTAssertFalse(scheduler.acquireFocus(second,frequency:frequency))
+            XCTAssertEqual(scheduler.remaining,10);XCTAssertEqual(scheduler.sceneFocus,first)
+            for _ in 0..<6 {
+                _=nextOpportunity(&scheduler,frequency:frequency)
+                XCTAssertTrue(scene.contains(scheduler.remaining))
+                scheduler.suppress()
+                XCTAssertLessThanOrEqual(scheduler.remaining,scene.upperBound)
+            }
+            scheduler.endFocus(frequency:frequency)
+            XCTAssertNil(scheduler.sceneFocus);XCTAssertEqual(scheduler.remaining,daily.lowerBound)
+            XCTAssertNil(tick(&scheduler,frequency:frequency))
+        }
+        var soon=AmbientScheduler();soon.reset(.high)
+        for _ in 0..<42*60 {_=tick(&soon)}
+        let remaining=soon.remaining
+        XCTAssertTrue(soon.acquireFocus(.init(objectID:HabitatObjectID(9)),frequency:.high))
+        XCTAssertEqual(soon.remaining,remaining,"Placement cannot postpone an already closer opportunity")
+    }
+
+    func testSceneSeventyPercentAndDailyReservedThirteenPercentAreNotRedistributed() {
+        var sceneHits=0,dailyEmpty=0
+        let count=512,id=HabitatObjectID(7)
+        for seed in 0..<count {
+            var scene=AmbientScheduler(seed:UInt64(seed));scene.reset(.high)
+            XCTAssertTrue(scene.acquireFocus(.init(objectID:id),frequency:.high))
+            let event=nextOpportunity(&scene)
+            if event == .bathVisit(id) {sceneHits+=1}
+            else {XCTAssertEqual(event,.flockPass,"The other 30% uses exactly the existing selector")}
+            var daily=AmbientScheduler(seed:UInt64(seed));daily.reset(.high)
+            let ordinary=nextOpportunity(&daily)
+            if ordinary == nil {dailyEmpty+=1}
+            else {XCTAssertEqual(ordinary,.flockPass)}
+            XCTAssertEqual(daily.remaining,45,accuracy:1e-7)
+        }
+        XCTAssertEqual(Double(sceneHits)/Double(count),0.70,accuracy:0.06)
+        // In M6d the frozen insect/courtship/gift intervals (8%+4%+1%)
+        // are all empty, even with an available legacy flock action.
+        XCTAssertEqual(Double(dailyEmpty)/Double(count),0.13,accuracy:0.04)
+    }
+
+    func testBusyAndCoolingSceneOpportunitiesAreDiscardedWithoutImmediateRetry() {
+        for busy in [false,true] {
+            var scheduler=AmbientScheduler(seed:88);scheduler.reset(.high)
+            let id=HabitatObjectID(3)
+            XCTAssertTrue(scheduler.acquireFocus(.init(objectID:id),frequency:.high))
+            if !busy {scheduler.didFinishScene();XCTAssertFalse(scheduler.canAttemptScene(id))}
+            let event=nextOpportunity(&scheduler,busy:busy)
+            if busy {XCTAssertNil(event)}
+            else {XCTAssertNotEqual(event,.bathVisit(id))}
+            XCTAssertGreaterThanOrEqual(scheduler.remaining,15)
+            for _ in 0..<14*60 {XCTAssertNil(tick(&scheduler))}
+            XCTAssertGreaterThan(scheduler.remaining,0)
+        }
+    }
+
+    func testUserInputSixtySecondsSurvivesPlacementAndOrdinarySuppressionUsesSceneFloor() {
+        for frequency:AmbientFrequency in [.low,.medium,.high] {
+            var scheduler=AmbientScheduler(seed:17);scheduler.reset(frequency)
+            scheduler.suppress(reason:.userInput)
+            XCTAssertTrue(scheduler.acquireFocus(.init(objectID:HabitatObjectID(1)),frequency:frequency))
+            XCTAssertEqual(scheduler.remaining,60);XCTAssertEqual(scheduler.userInputRemaining,60)
+            for _ in 0..<59*60 {XCTAssertNil(tick(&scheduler,frequency:frequency))}
+            XCTAssertFalse(scheduler.canAttemptScene(HabitatObjectID(1)))
+            scheduler.suppress()
+            XCTAssertEqual(scheduler.remaining,frequency.sceneInterval.lowerBound)
+            scheduler.suppress(reason:.userInput)
+            XCTAssertEqual(scheduler.remaining,60);XCTAssertEqual(scheduler.userInputRemaining,60)
+            for _ in 0..<120 {XCTAssertNil(tick(&scheduler,frequency:frequency,buttons:true))}
+            XCTAssertGreaterThan(scheduler.userInputRemaining,59.9)
+            scheduler.endFocus(frequency:frequency)
+            XCTAssertGreaterThanOrEqual(scheduler.remaining,60)
+        }
+    }
+
+    func testLegacyRandomConsumptionCannotChangeFocusSelectionOrItsSingleClock() {
+        struct Trace:Equatable {let time:Int,event:AmbientEvent?,remaining:Double}
+        func sample(_ legacy:Double)->[Trace] {
+            var scheduler=AmbientScheduler(seed:731);scheduler.reset(.high)
+            _=scheduler.acquireFocus(.init(objectID:HabitatObjectID(1)),frequency:.high)
+            var trace:[Trace]=[]
+            for second in 0..<180 {
+                var event:AmbientEvent?
+                for _ in 0..<60 {if let next=tick(&scheduler,legacy:legacy) {event=next}}
+                trace.append(.init(time:second,event:event,remaining:(scheduler.remaining*1e7).rounded()/1e7))
+            }
+            return trace
+        }
+        let reference=sample(0)
+        XCTAssertEqual(sample(0.999),reference,"A single legacy choice must not consume the scene stream")
+        XCTAssertEqual(SceneRandomSalt.scheduler,0x5343454E45464F43)
+        XCTAssertEqual(SceneRandomSalt.bath,0x4241544856495349)
+        XCTAssertNotEqual(SceneRandomSalt.scheduler,SceneRandomSalt.bath)
+    }
+}

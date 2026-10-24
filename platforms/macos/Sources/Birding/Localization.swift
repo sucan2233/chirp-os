@@ -5,6 +5,13 @@ enum AppLanguage: String {
     case chinese = "zh", english = "en"
     func text(_ zh:String,_ en:String) -> String { self == .chinese ? zh : en }
     var switchTitle: String { self == .chinese ? "English" : "中文" }
+    var sceneBusyMessage:String {text("场景位已占用，请先清除当前场景再放置；固定栖木保留。","The scene slot is occupied. Clear the current scene before placing another; fixed perches remain.")}
+    func habitatName(_ kind:HabitatObjectKind) -> String {
+        switch kind {
+        case .foodTray:return text("临时食盘","Temporary food tray")
+        case .bath:return text("浴盆","Bath")
+        }
+    }
     /// Keep settings help and preview requirements in the product permission order.
     func supportedSpeciesNames(for kind:BehaviorKind) -> String {
         SpeciesBehaviorProfile.species(for:kind).map { name($0) }

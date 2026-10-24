@@ -237,6 +237,63 @@ enum ObservationJournalUIVerification {
                 try snapshot(window, name: "layout-" + suffix, folder: evidence, checks: &checks)
             }
         }
+        // New v2 records use the same completed-observation path and source
+        // filters as historical entries. Do not rewrite or renumber old rows.
+        record(.treeSparrow,.bathVisit,.automatic,seconds:700)
+        record(.treeSparrow,.bathVisit,.preview,seconds:710)
+        record(.lightVentedBulbul,.bathVisit,.preview,seconds:720)
+        w.refresh()
+        checks["observationUIBathVersionTwoRetainsHistoricalRows"] = ObservationArchive.currentVersion==2 &&
+            d.observationJournal.archive.entries.count==6 && archiveBeforeControls.entries.allSatisfy {old in
+                d.observationJournal.archive.entries.contains{$0.species==old.species && $0.behavior==old.behavior}
+            }
+        for language:AppLanguage in [.chinese,.english] {
+            d.language=language;w.relocalize();select(.all,in:w)
+            for query in ["bathVisit","洗澡","Bathing"] {
+                search(query,in:w)
+                checks["observationUIBathSearch-"+language.rawValue+"-"+query] = w.renderedEntries.count==2 &&
+                    w.renderedEntries.allSatisfy{$0.behavior=="bathVisit"} &&
+                    w.renderedEntries.indices.allSatisfy {row in
+                        cell("behavior",row:row,in:w)?.textField?.stringValue==language.text("洗澡","Bathing")
+                    }
+            }
+            select(.natural,in:w)
+            checks["observationUIBathNaturalExcludesPreviewOnly-"+language.rawValue] = w.renderedEntries.count==1 &&
+                w.renderedEntries.first?.species == .treeSparrow && sourceCounts(w,species:.treeSparrow)==["1","1","0"]
+            select(.preview,in:w)
+            checks["observationUIBathPreviewKeepsNaturalSeparate-"+language.rawValue] = w.renderedEntries.count==2 &&
+                sourceCounts(w,species:.lightVentedBulbul)==["0","1","0"]
+            try snapshot(window,name:"bath-v2-"+language.rawValue,folder:evidence,checks:&checks)
+        }
+        // Exercise real v1 loading and future-envelope protection in separate
+        // files. The UI remains a reader; no archive flush is requested here.
+        let v1URL=evidence.appendingPathComponent("journal-v1.json")
+        let oldArchive=ObservationArchive(entries:archiveBeforeControls.entries)
+        var oldEnvelope=try JSONSerialization.jsonObject(with:encoder.encode(oldArchive)) as! [String:Any]
+        oldEnvelope["formatVersion"]=1
+        let oldBytes=try JSONSerialization.data(withJSONObject:oldEnvelope,options:.sortedKeys)
+        try oldBytes.write(to:v1URL)
+        let migrated=ObservationJournal(),v1Persistence=ObservationJournalPersistence(url:v1URL,enabled:true,arguments:[],log:{_ in})
+        v1Persistence.load(into:migrated,now:0)
+        let v1After=try Data(contentsOf:v1URL)
+        checks["observationUIV1ReadKeepsRowsAndDoesNotWrite"] = !v1Persistence.writesDisabled &&
+            migrated.archive.entries.count==archiveBeforeControls.entries.count &&
+            migrated.archive.formatVersion==2 && v1Persistence.saveAttempts==0 && v1After==oldBytes
+        let futureURL=evidence.appendingPathComponent("journal-future.json")
+        let futureBytes=try JSONSerialization.data(withJSONObject:["formatVersion":ObservationArchive.currentVersion+1,"entries":[]] as [String:Any])
+        try futureBytes.write(to:futureURL)
+        let future=ObservationJournalPersistence(url:futureURL,enabled:true,arguments:[],log:{_ in})
+        future.load(into:ObservationJournal(),now:0);d.observationPersistence=future
+        for language:AppLanguage in [.chinese,.english] {
+            d.language=language;w.relocalize()
+            checks["observationUIFutureVersionVisibleAndProtected-"+language.rawValue] = future.writesDisabled &&
+                !w.persistenceLabel.isHidden && !w.persistenceLabel.stringValue.isEmpty &&
+                w.persistenceLabel.stringValue==future.statusMessage(language:language)
+            try snapshot(window,name:"future-v2-"+language.rawValue,folder:evidence,checks:&checks)
+        }
+        let futureAfter=try Data(contentsOf:futureURL)
+        checks["observationUIFutureVersionNeverOverwritten"] = futureAfter==futureBytes && future.saveAttempts==0
+        d.observationPersistence=persistence;w.relocalize()
         let currentSettings = try encoder.encode(d.settings), currentDraft = try encoder.encode(settings.draft)
         let currentSavedSettings = try Data(contentsOf: d.settingsURL)
         checks["observationUIReadOnlySettingsAndDraft"] = currentSettings == activeSettings && currentDraft == draft &&

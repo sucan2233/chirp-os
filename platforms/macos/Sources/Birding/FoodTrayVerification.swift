@@ -85,7 +85,14 @@ enum FoodTrayVerification {
             return d.birds.count==1 && d.birds.first === bird && d.engine.id(of:bird)==birdID && d.residentCount==1 &&
                 d.engine.pendingCount==0 && d.engine.passingCount==0 && d.engine.departingCount==0 && d.arrivalCount==0 && d.departureCount==0
         }
-        var sprite:CALayer? {view.layer?.sublayers?.first{$0.name==nil && $0.mask is CAShapeLayer}}
+        var sprite:CALayer? {
+            guard let birdID else {return nil}
+            // DesktopView names sprites by their engine identity. Require one
+            // exact match so a prop or another resident cannot satisfy geometry.
+            let matches=view.layer?.sublayers?.filter{$0.name=="bird-sprite-\(birdID.rawValue)"} ?? []
+            guard matches.count==1,let layer=matches.first,layer.mask is CAShapeLayer else {return nil}
+            return layer
+        }
         var tray:CALayer? {view.layer?.sublayers?.first{$0.name?.hasPrefix("habitat-food-tray-")==true}}
         var state:BirdRenderState? {d.engine.renderSnapshot().first{$0.id==birdID}}
         func events() {for event in d.engine.events {log[event.sequence]=event}}
@@ -236,7 +243,9 @@ enum FoodTrayVerification {
                     bird.map{Geometry.distance($0.position,origin)<0.001 && $0.state == .perched && !$0.needsDestination}==true
                 let object=d.engine.habitatSnapshot().first
                 checks[prefix+"ConsumesExactlyOnePortion"]=visit==2 ? object==nil:object?.remainingUses==2-visit
-                cases.append(["case":name,"visit":visit+1,"phaseTimes":times,"run":run?.rawValue ?? 0,"terminalCount":ends.count])
+                cases.append(["case":name,"visit":visit+1,"phaseTimes":times,"run":run?.rawValue ?? 0,"terminalCount":ends.count,
+                    "productionLayerGeometryOK":geometryOK,"continuous":continuous,"identityOK":identityOK,
+                    "leasesOK":leasesOK,"sameBird":sameBird,"resourcesClear":clear])
             }
         }
         func ready(feeding:Bool) throws {

@@ -69,8 +69,16 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var cancelFoodTrayPlacementButton:NSButton!
     var previewFoodTrayButton:NSButton!
     var foodTrayStatus:NSTextField!
+    var bathButton:NSButton!
+    var placeBathButton:NSButton!
+    var removeBathButton:NSButton!
+    var cancelBathPlacementButton:NSButton!
+    var clearCurrentSceneButton:NSButton!
+    var previewBathButton:NSButton!
+    var bathStatus:NSTextField!
     private weak var foodTrayEngine:BehaviorEngine?
     private var ownsFoodTrayPlacement=false
+    private var ownsBathPlacement=false
     private(set) var selectedFixedPerchSlot=1
     private(set) var fixedPerchCaptureTimer:Timer?
     private(set) var fixedPerchCaptureRequest:UUID?
@@ -92,6 +100,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     deinit {
         fixedPerchCaptureTimer?.invalidate()
         if ownsFoodTrayPlacement,foodTrayEngine?.hasFoodTrayPlacement == true {foodTrayEngine?.handle(.cancelFoodTrayPlacement)}
+        if ownsBathPlacement,foodTrayEngine?.hasBathPlacement == true {foodTrayEngine?.handle(.cancelBathPlacement)}
         NotificationCenter.default.removeObserver(self)
     }
     @discardableResult func label(_ text:String,_ rect:NSRect,in view:NSView,size:CGFloat = 13) -> NSTextField {
@@ -108,6 +117,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     func build() {
         cancelFixedPerchCapture()
         cancelFoodTrayPlacement()
+        cancelBathPlacement()
         let selected = tabs?.indexOfTabViewItem(tabs!.selectedTabViewItem!) ?? 0
         sliders=[]; fields=[]; locks=[]; detailFields=[]
         let root = SettingsContentView(frame:NSRect(x:0,y:0,width:840,height:690)); root.wantsLayer=true; window!.contentView = root
@@ -158,7 +168,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:5230))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:5820))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -286,6 +296,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         label(t("预览使用已保存的设置和现有小鸟，不会增加小鸟。请让两只上述同种鸟在同一窗口边缘相邻停稳，并把鼠标移远。\n暂停、尚未保存开启、没有合适同伴或空间不足时，下方会提示原因。安静陪伴仍可手动预览。","Previews use saved settings and existing birds, without adding birds. Let two supported birds of the same species settle beside each other on one window and move the pointer away.\nPausing, saved switches being off, no suitable companion or insufficient space are explained below. Manual preview works in Quiet companionship."),NSRect(x:20,y:4062,width:710,height:88),in:interactionView,size:12).identifier=NSUserInterfaceItemIdentifier("allopreeningPreviewHelp")
         buildFixedPerches(in:interactionView)
         buildFoodTray(in:interactionView)
+        buildBath(in:interactionView)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -415,7 +426,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         refreshFixedPerchPlacementButton()
     }
     @objc private func fixedPerchWindowWillClose(_ notification:Notification) {
-        cancelFixedPerchCapture();cancelFoodTrayPlacement()
+        cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement()
     }
     @objc func previewFixedPerch() {
         desktop.syncWorld()
@@ -537,6 +548,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         switch reason {
         case .busy:
             if placing,!desktop.engine.habitatSnapshot().isEmpty {
+                if desktop.engine.habitatSnapshot().contains(where:{$0.kind != .foodTray}) {return language.sceneBusyMessage}
                 return t("已有临时食盘，请先移除食盘再放置；食物和剩余时间不会重置。","A temporary tray is already placed. Remove it before placing another; food and remaining time stay unchanged.")
             }
             return desktop.behaviorMessage(reason)
@@ -551,6 +563,104 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             }
             return t("食盘访问路线空间不足，请移除后在更开阔的位置重新放置。","Not enough flight space to visit. Remove the tray, then place it in a clearer area.")
         case .pointerNearby:return t("鼠标靠近会取消取食，请先把鼠标移离食盘与小鸟。","A nearby pointer cancels feeding. Move it away from the tray and birds.")
+        default:return desktop.behaviorMessage(reason)
+        }
+    }
+    private func buildBath(in view:NSView) {
+        label(t("浅水浴盆","Shallow bird bath"),NSRect(x:20,y:5260,width:710,height:30),in:view,size:20).identifier=NSUserInterfaceItemIdentifier("bathSectionTitle")
+        bathButton=NSButton(checkboxWithTitle:t("开启浴盆访问","Enable bath visits"),target:self,action:#selector(bathSettingsChanged))
+        bathButton.frame=NSRect(x:20,y:5302,width:710,height:26);bathButton.state=draft.bathEnabled ? .on:.off
+        bathButton.identifier=NSUserInterfaceItemIdentifier("bathEnabled");bathButton.setAccessibilityLabel(bathButton.title);view.addSubview(bathButton)
+        placeBathButton=button(t("3 秒后在鼠标处放置浴盆","Place bath at pointer in 3 seconds"),#selector(placeBath),NSRect(x:20,y:5348,width:350,height:32),in:view)
+        removeBathButton=button(t("移除浴盆","Remove bath"),#selector(removeBath),NSRect(x:390,y:5348,width:340,height:32),in:view)
+        cancelBathPlacementButton=button(t("取消等待中的浴盆放置","Cancel pending bath placement"),#selector(cancelBathPlacementClicked),NSRect(x:20,y:5394,width:350,height:32),in:view)
+        clearCurrentSceneButton=button(t("清除当前场景","Clear current scene"),#selector(clearCurrentScene),NSRect(x:390,y:5394,width:340,height:32),in:view)
+        previewBathButton=button(t("预览洗澡","Preview bathing"),#selector(previewBath),NSRect(x:20,y:5440,width:350,height:32),in:view)
+        for (control,id) in [(placeBathButton!,"placeBath"),(removeBathButton!,"removeBath"),
+                             (cancelBathPlacementButton!,"cancelBathPlacement"),(clearCurrentSceneButton!,"clearCurrentScene"),
+                             (previewBathButton!,"previewBath")] {
+            control.identifier=NSUserInterfaceItemIdentifier(id);control.setAccessibilityLabel(control.title)
+        }
+        label(t("支持鸟种：","Supported species: ")+language.supportedSpeciesNames(for:.bathVisit)+t("。\n浴盆最多保留 300 秒，供成功洗澡 3 次；完成洗澡并安全离开落稳才扣次数和记录，取消不计。暂停冻结放置、寿命与水花。\n\n开关默认开启，保存后生效。放置后不会立即召鸟；预览使用已保存开关、现有停稳小鸟和真实空间，不生成鸟、不改鸟种概率。鼠标靠近会取消访问。\n\n点击放置后移动鼠标，3 秒后采样目标位置。浴盆与食盘共用一个场景位，已有场景时先清除，不自动替换；固定栖木保留。关闭、取消、保存、重置或重建设置会取消等待中的放置。浴盆与位置不跨重启保存，无需定时照料。",
+            ".\nA bath lasts up to 300 seconds or 3 successful visits. A visit is counted only after bathing and a safe departure and landing; cancellation does not count. Pausing freezes placement, lifetime and splashes.\n\nOn by default; save to apply. Placement does not summon birds immediately. Previews use saved settings, existing settled birds and safe space, without spawning birds or changing species probabilities. A nearby pointer cancels visits.\n\nAfter Place, move the pointer; its position is sampled after 3 seconds. Baths and trays share one scene slot: clear an existing scene first; perches remain. Closing, cancelling, saving, resetting or rebuilding Settings cancels pending placement. Baths and positions are not saved across restarts. No care schedule is required."),NSRect(x:20,y:5486,width:710,height:220),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("bathHelp")
+        bathStatus=label("",NSRect(x:20,y:5722,width:710,height:70),in:view,size:12)
+        bathStatus.identifier=NSUserInterfaceItemIdentifier("bathStatus");bathStatus.setAccessibilityLabel(t("浴盆状态","Bath status"))
+        refreshBathControls()
+    }
+    func refreshBathControls() {
+        guard bathStatus != nil else {return}
+        let pending=desktop.engine.hasBathPlacement
+        if !pending {ownsBathPlacement=false}
+        let objects=desktop.engine.habitatSnapshot(),bath=objects.first{$0.kind == .bath}
+        placeBathButton.isEnabled = !pending
+        cancelBathPlacementButton.isEnabled=pending
+        removeBathButton.isEnabled=pending || bath != nil
+        clearCurrentSceneButton.isEnabled=pending || desktop.engine.hasFoodTrayPlacement || !objects.isEmpty || desktop.engine.scenePropCount>0
+        previewBathButton.isEnabled=true
+        if pending {bathStatus.stringValue=t("等待 3 秒采样鼠标位置；暂停冻结倒计时。","Waiting to sample the pointer after 3 seconds; pausing freezes the countdown.")}
+        else if let bath {
+            bathStatus.stringValue=bath.retiring ? t("浴盆正在收回，小鸟将安全离开。","Bath is retiring; the bird will leave safely."):
+                t("浴盆已放置 · 剩余 \(bath.remainingUses) / 3 次 · \(Int(ceil(max(0,bath.remainingLifetime)))) 秒","Bath placed · \(bath.remainingUses) / 3 visits · \(Int(ceil(max(0,bath.remainingLifetime)))) seconds remaining")
+        } else if let object=objects.first {bathStatus.stringValue=language.habitatName(object.kind)+t("已占用场景位。"," occupies the scene slot.")+language.sceneBusyMessage}
+        else {bathStatus.stringValue=HabitatObjectRenderer.bathArtAvailable ?
+            t("尚未放置浴盆；所需鸟种：","No bath placed. Required species: ")+language.supportedSpeciesNames(for:.bathVisit)+t("。","."):
+            t("浴盆素材未能载入，暂不能放置或预览。","Bath artwork could not load; placement and previews are unavailable.")}
+    }
+    @objc func bathSettingsChanged() {
+        draft.bathEnabled=bathButton.state == .on
+        if !draft.bathEnabled {cancelBathPlacement()}
+        message.stringValue=t("尚未保存 · 浴盆开关保存后生效。","Unsaved · Save to apply the bath switch.")
+    }
+    @objc func placeBath() {
+        guard window?.isVisible == true else {return}
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.placeBathAfter(3))
+        if case .rejected(let reason)=result {message.stringValue=bathMessage(reason,placing:true)}
+        else {ownsBathPlacement=true;message.stringValue=t("3 秒后放置临时浴盆，请把鼠标移到开阔位置。","Placing a temporary bath in 3 seconds; move the pointer to a clear area.")}
+        refreshBathControls();refreshFoodTrayControls()
+    }
+    func cancelBathPlacement() {
+        if desktop.engine.hasBathPlacement {desktop.engine.handle(.cancelBathPlacement)}
+        ownsBathPlacement=false;refreshBathControls()
+    }
+    @objc func cancelBathPlacementClicked() {
+        cancelBathPlacement();desktop.consumeBehaviorEvents()
+        message.stringValue=t("已取消等待中的浴盆放置；已放置场景保留。","Pending bath placement cancelled; an existing scene stays in place.")
+    }
+    @objc func removeBath() {
+        desktop.engine.handle(.removeBath);desktop.consumeBehaviorEvents()
+        refreshBathControls();refreshFoodTrayControls()
+        message.stringValue=t("已移除浴盆并取消等待中的放置；固定栖木保留。","Bath removed and pending placement cancelled; fixed perches remain.")
+    }
+    @objc func clearCurrentScene() {
+        desktop.engine.handle(.clearCurrentScene);desktop.consumeBehaviorEvents()
+        ownsBathPlacement=false;ownsFoodTrayPlacement=false
+        refreshBathControls();refreshFoodTrayControls()
+        message.stringValue=t("已清除当前临时场景并取消待放置操作；固定栖木保留。","Current temporary scene cleared and pending placement cancelled; fixed perches remain.")
+    }
+    @objc func previewBath() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.bathVisit(.preview))
+        if case .rejected(let reason)=result {message.stringValue=bathMessage(reason)}
+        else {message.stringValue=t("正在预览洗澡：观察、试水、洗澡、甩水，再安全离开落稳。","Previewing bathing: inspect, touch the water, bathe, shake, then leave and land safely.")}
+        refreshBathControls()
+    }
+    func bathMessage(_ reason:BehaviorReason,placing:Bool=false) -> String {
+        if !HabitatObjectRenderer.bathArtAvailable {return t("浴盆或水花素材未能载入，请安装完整版本后重试。","Bath or splash artwork could not load. Install the complete app and retry.")}
+        switch reason {
+        case .busy:return placing ? language.sceneBusyMessage:desktop.behaviorMessage(reason)
+        case .disabled,.settingsChanged:return t("请先保存并开启浴盆访问。","Save and enable bath visits first.")
+        case .noSpecies,.noCompanion,.missingBird,.unavailableBird:
+            return t("请等待现有支持鸟种停稳并安静下来：","Wait for an existing supported bird to settle calmly: ")+language.supportedSpeciesNames(for:.bathVisit)+t("。",".")
+        case .missingFrames:return t("洗澡专用帧不完整，无法预览；所需鸟种：","Bathing frames are incomplete. Required species: ")+language.supportedSpeciesNames(for:.bathVisit)+t("。",".")
+        case .targetInvalid,.removed:return t("请先放置可用浴盆，再把鼠标移远后预览。","Place an available bath first, then move the pointer away before previewing.")
+        case .noSpace:
+            if !placing && !desktop.engine.habitatSnapshot().contains(where:{$0.kind == .bath}) {
+                return t("请先放置浴盆，再把鼠标移远并等待支持鸟种停稳。","Place a bath first, then move the pointer away and let a supported bird settle.")
+            }
+            return placing ? t("浴盆与小鸟需要完整空间，请把鼠标移到更开阔的位置后重试。","The bath and bird need clear space. Move the pointer to a more open area and retry."):
+                t("浴盆、飞入与离开的空间不足，或原停靠处不可用；请调整场景后重试。","Not enough room at the bath or along the arrival and departure routes, or the original perch is unavailable. Adjust the scene and retry.")
+        case .pointerNearby,.pointerMoved:return t("请把鼠标移离浴盆、小鸟与访问路线后再试。","Move the pointer away from the bath, bird and visit route, then retry.")
         default:return desktop.behaviorMessage(reason)
         }
     }
@@ -852,12 +962,14 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.activityRhythm=ActivityRhythmMode.allCases[activityRhythmPopup.indexOfSelectedItem]
         draft.fixedPerchesEnabled=fixedPerchesButton.state == .on
         draft.foodTrayEnabled=foodTrayButton.state == .on
+        draft.bathEnabled=bathButton.state == .on
         refreshFixedPerchControls()
         return true
     }
     @objc func save() {
         cancelFixedPerchCapture()
         cancelFoodTrayPlacement()
+        cancelBathPlacement()
         window?.makeFirstResponder(nil)
         guard readInteraction() else {tabs.selectTabViewItem(at:2);message.stringValue=t("请输入 0–10 秒之间的有效等待时间。","Enter a valid hover delay between 0 and 10 seconds.");return}
         guard readDetails() else { tabs.selectTabViewItem(at:1); message.stringValue=t("请检查体型与动作数值：最长停留不能小于最短停留。","Check size and behavior ranges; maximum perch time must not be below minimum."); return }
@@ -865,7 +977,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         catch { message.stringValue=t("保存失败，请重试。当前设置未改变。","Could not save. Try again; active settings are unchanged.") }
     }
     @objc func resetDefaults() { cancelFixedPerchCapture();window?.makeFirstResponder(nil); draft=BirdSettings();selectedFixedPerchSlot=1; build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
-    @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();window?.close() }
+    @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();window?.close() }
     func relocalize() {
         cancelFixedPerchCapture()
         window?.makeFirstResponder(nil)

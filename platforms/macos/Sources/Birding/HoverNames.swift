@@ -17,11 +17,26 @@ extension DesktopController {
     // Use the same visible sprite pixels for hovering and clicking, including
     // mirroring, species size, hops, and foreground-window occlusion.
     func birdSnapshot(at point:CGPoint) -> BirdRenderState? {
-        renderSnapshot().reversed().first { bird in
+        let snapshot=renderSnapshot(),immersion=engine.bathImmersionSnapshot()
+        let baths=engine.habitatSnapshot().filter{$0.kind == .bath}
+        // The visible foreground basin wall also occludes hit targets. Use its
+        // authored alpha, exactly as the layer renderer does, at the same scale.
+        let coveredByBasin=baths.contains {bath in
+            guard bath.rect.contains(point),!bath.blockers.contains(where:{$0.contains(point)}) else {return false}
+            let front=BathArt.image(layer:.front)
+            guard let data=front.dataProvider?.data,let bytes=CFDataGetBytePtr(data) else {return false}
+            let x=min(front.width-1,max(0,Int((point.x-bath.rect.minX)/bath.rect.width*CGFloat(front.width))))
+            let y=min(front.height-1,max(0,Int((point.y-bath.rect.minY)/bath.rect.height*CGFloat(front.height))))
+            return bytes[y*front.bytesPerRow+x*4+3]>0
+        }
+        guard !coveredByBasin else {return nil}
+        return snapshot.reversed().first { bird in
             let x=(point.x-bird.position.x)/bird.scale+(bird.facingRight ? 29:19)
             let y=(point.y-bird.position.y)/bird.scale-bird.hopOffset+39
             guard x>=0,x<48,y>=0,y<48,
                   !bird.blockers.contains(where:{$0.contains(point)}) else {return false}
+            if let bath=immersion[bird.id],bath.feetRect.contains(point) ||
+                (point.y>bath.waterlineY && BathGeometry.containsContact(point,waterRect:bath.waterRect)) {return false}
             return arts[bird.species]!.contains(frame:bird.frameName,x:bird.facingRight ? Int(x):47-Int(x),y:Int(y))
         }
     }

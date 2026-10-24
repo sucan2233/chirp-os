@@ -81,7 +81,8 @@ final class BehaviorRuntime {
               execution.habitatReservations.allSatisfy({engine.habitatObjects.objects[$0].map{!$0.retiring} ?? false}),
               Set(execution.propIDs).count==execution.propIDs.count,
               propIDs.isDisjoint(with:execution.propIDs),
-              !execution.occupiesEncounter || !encounterBusy else {return .rejected(.busy)}
+              !execution.occupiesEncounter || (!encounterBusy && !runs.values.contains(where:{ [BehaviorKind.foodTrayVisit,.fixedPerchVisit].contains($0.execution.kind) })),
+              ![BehaviorKind.foodTrayVisit,.fixedPerchVisit].contains(execution.kind) || !encounterBusy else {return .rejected(.busy)}
         let requested=execution.landingReservations
         guard requested.allSatisfy({execution.participants.contains($0.bird) && $0.isValid(in:engine)}),
               !requested.enumerated().contains(where:{index,slot in

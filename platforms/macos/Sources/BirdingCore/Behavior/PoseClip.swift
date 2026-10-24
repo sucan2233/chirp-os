@@ -84,8 +84,24 @@ public struct PoseClip:Codable,Equatable {
                 Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
             })
     }
+    /// Contact age starts only after the approach has landed. The final .8s
+    /// shake uses existing art outside this seven-frame dedicated clip.
+    public static func bath(species:SpeciesID) -> Self? {
+        guard SpeciesBehaviorProfile.profile(for:species).allows(.bathVisit) else {return nil}
+        var names=["bathInspect","bathTouch","bathLower"]
+        var times=[0.6,0.6,0.4]
+        for _ in 0..<3 {names += ["bath0","bath1","bath2"];times += [0.8/3,0.8/3,0.8/3]}
+        names.append("bathRise");times.append(0.4)
+        return Self(id:"\(species.rawValue).bathVisit",frames:zip(names,times).map {
+            Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
+        })
+    }
+    public static func bathWaterContacts(species:SpeciesID,frame:String)->[Anchor] {
+        BathPoseAnchors.waterContacts(species:species,frame:frame)
+    }
     /// Logical canvas anchors track the editable species drawing, never bitmap size.
     public static func beakAnchor(species:SpeciesID,frame:String) -> Anchor {
+        if let anchor=BathPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=M6cPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         let anchors:[Anchor]
         switch species {

@@ -12,6 +12,7 @@ extension DesktopController {
         var world=BehaviorWorld(screens:screenRects,displays:displayRects,surfaces:surfaces,
             scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? pointerButtonsDown(),availableFrames:frameCapabilities,localMinuteOfDay:activityMinuteOfDay(),displayIDs:fixedPerchDisplayIDs,fixedPerchArtAvailable:FixedPerchArt.shared != nil)
         world.foodTrayArtAvailable=HabitatObjectRenderer.foodTrayArtAvailable
+        world.bathArtAvailable=HabitatObjectRenderer.bathArtAvailable
         engine.updateWorld(world,sampleDT:sampleDT)
     }
     func renderSnapshot() -> [BirdRenderState] {syncWorld();return engine.renderSnapshot()}
@@ -32,6 +33,11 @@ extension DesktopController {
                         settingsWindow?.foodTrayMessage(reason,placing:true) ?? behaviorMessage(reason)
                     } ?? t("临时食盘已放置，请把鼠标移远后预览访问。","Temporary tray placed. Move the pointer away before previewing a visit.")
                     settingsWindow?.refreshFoodTrayControls()
+                } else if event.kind == .bathVisit {
+                    settingsWindow?.message.stringValue=event.reason.map {reason in
+                        settingsWindow?.bathMessage(reason,placing:true) ?? behaviorMessage(reason)
+                    } ?? t("临时浴盆已放置，请移开鼠标并让支持鸟种安静停稳后预览。","Temporary bath placed. Move the pointer away and let a supported bird settle calmly before previewing.")
+                    settingsWindow?.refreshBathControls();settingsWindow?.refreshFoodTrayControls()
                 } else {
                     settingsWindow?.message.stringValue=event.reason.map(behaviorMessage) ??
                         (event.kind == .leafPlay ? leafPlayMessage:pointerVisitPreviewMessage)

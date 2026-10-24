@@ -57,7 +57,7 @@ public struct ObservationEntry:Codable,Equatable {
 /// Aggregates only; neither desktop inputs nor individual run history is saved.
 /// Codable dates use Foundation's numeric seconds since its reference date.
 public struct ObservationArchive:Codable,Equatable {
-    public static let currentVersion=1
+    public static let currentVersion=2
     public static let maximumEntries=2048
     public static let maximumBytes=2*1024*1024
     public static let maximumCount=1_000_000
@@ -65,14 +65,33 @@ public struct ObservationArchive:Codable,Equatable {
     public static let maximumTimestamp:Double=253_402_300_799
     public let formatVersion:Int
     public fileprivate(set) var entries:[ObservationEntry]
+    /// Decode provenance only; never encoded or included in aggregate equality.
+    /// Persistence must still write a migrated archive with no new observations.
+    public let requiresMigration:Bool
 
-    public init(entries:[ObservationEntry]=[]) {formatVersion=Self.currentVersion;self.entries=entries}
+    // Freeze the v1 vocabulary: adding a BehaviorKind must not retroactively
+    // make a v1-tagged archive containing new behavior IDs a valid old archive.
+    private static let versionOneBehaviors:Set<String> = [
+        "pointerVisit","flockPass","rest","preen","socialGreeting","sideBySide","giveWay",
+        "pairedTakeoff","leafPlay","watch","alert","sideHop","takeoffPreparation","edgePeek",
+        "chase","travelTogether","allopreening","fixedPerchVisit","foodTrayVisit"
+    ]
+
+    public init(entries:[ObservationEntry]=[]) {
+        formatVersion=Self.currentVersion;self.entries=entries;requiresMigration=false
+    }
+    public static func == (lhs:Self,rhs:Self)->Bool {
+        lhs.formatVersion==rhs.formatVersion && lhs.entries==rhs.entries
+    }
     private enum CodingKeys:String,CodingKey {case formatVersion,entries}
     public init(from decoder:Decoder) throws {
         let values=try decoder.container(keyedBy:CodingKeys.self)
-        formatVersion=try values.decode(Int.self,forKey:.formatVersion)
+        let sourceVersion=try values.decode(Int.self,forKey:.formatVersion)
         // Reject a future envelope before interpreting its nested payload.
-        guard formatVersion==Self.currentVersion else {throw ObservationJournalError.invalid("unsupported version \(formatVersion)")}
+        guard sourceVersion==1 || sourceVersion==Self.currentVersion else {
+            throw ObservationJournalError.invalid("unsupported version \(sourceVersion)")
+        }
+        formatVersion=Self.currentVersion;requiresMigration=sourceVersion != Self.currentVersion
         var nested=try values.nestedUnkeyedContainer(forKey:.entries)
         var decoded:[ObservationEntry]=[]
         while !nested.isAtEnd {
@@ -81,6 +100,9 @@ public struct ObservationArchive:Codable,Equatable {
         }
         entries=decoded
         try validate()
+        guard sourceVersion != 1 || entries.allSatisfy({Self.versionOneBehaviors.contains($0.behavior)}) else {
+            throw ObservationJournalError.invalid("behavior not supported by archive version 1")
+        }
     }
     fileprivate static func validDate(_ date:Date)->Bool {
         let seconds=date.timeIntervalSince1970

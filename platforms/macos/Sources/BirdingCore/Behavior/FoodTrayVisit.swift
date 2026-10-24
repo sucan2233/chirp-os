@@ -31,7 +31,7 @@ struct FoodTrayVisitPlan {
     static func candidates(in engine:BehaviorEngine,source:BehaviorSource,target:BirdID?=nil)->[Self] {
         guard !engine.paused,!engine.world.buttonsDown,!engine.ambientBusy,
               BehaviorDefinitions.definition(for:.foodTrayVisit).isEnabled(settings:engine.settings,source:source),
-              let object=engine.habitatObjects.objects.values.sorted(by:{$0.id<$1.id}).first,
+              let object=engine.habitatObjects.objects.values.sorted(by:{$0.id<$1.id}).first(where:{$0.kind == .foodTray}),
               !object.retiring,!engine.runtime.habitatReservations.contains(object.id) else {return []}
         var result:[Self]=[]
         let candidates=engine.birds.filter {bird in

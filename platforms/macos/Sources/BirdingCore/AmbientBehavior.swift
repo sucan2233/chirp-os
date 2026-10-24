@@ -12,21 +12,53 @@ public enum AmbientFrequency: String, Codable, CaseIterable {
     }
 }
 
-public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay }
+public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID) }
 
 /// One simulation clock for encounters. Missed opportunities are discarded,
 /// so busy periods, sleep and pause never build up a queue of animations.
 public struct AmbientScheduler {
     public private(set) var remaining: Double = 180
     public private(set) var stationaryTime: Double = 0
+    public private(set) var sceneFocus:SceneFocus?
+    public private(set) var sceneCooldownRemaining=0.0
+    public private(set) var userInputRemaining=0.0
     private var pointerAnchor: CGPoint?
-    public init() {}
+    private var frequency:AmbientFrequency = .low
+    private var sceneRandomState:UInt64
+    public init(seed:UInt64=0) {sceneRandomState=seed ^ SceneRandomSalt.scheduler}
+    private mutating func sceneUnit() -> Double {
+        sceneRandomState &+= 0x9E3779B97F4A7C15
+        var value=sceneRandomState
+        value=(value ^ (value >> 30)) &* 0xBF58476D1CE4E5B9
+        value=(value ^ (value >> 27)) &* 0x94D049BB133111EB
+        value ^= value >> 31
+        return Double(value >> 11)/9007199254740992
+    }
     public mutating func reset(_ frequency: AmbientFrequency) {
-        remaining = frequency.interval.lowerBound
+        self.frequency=frequency
+        remaining=max(userInputRemaining,sceneFocus == nil ? frequency.interval.lowerBound:frequency.sceneInterval.lowerBound)
         stationaryTime = 0; pointerAnchor = nil
     }
-    public mutating func suppress() {
-        remaining = max(remaining, 60)
+    @discardableResult public mutating func acquireFocus(_ focus:SceneFocus,frequency:AmbientFrequency) -> Bool {
+        guard sceneFocus==nil else {return false}
+        self.frequency=frequency;sceneFocus=focus
+        remaining=max(userInputRemaining,min(remaining,10))
+        return true
+    }
+    public mutating func endFocus(frequency:AmbientFrequency) {
+        self.frequency=frequency;sceneFocus=nil
+        remaining=max(userInputRemaining,frequency.interval.lowerBound)
+        stationaryTime=0;pointerAnchor=nil
+    }
+    public func canAttemptScene(_ objectID:HabitatObjectID) -> Bool {
+        sceneFocus?.objectID==objectID && sceneCooldownRemaining<=0 && userInputRemaining<=0
+    }
+    public mutating func didFinishScene() {sceneCooldownRemaining=max(sceneCooldownRemaining,20)}
+    public mutating func suppress(reason:AmbientSuppressionReason = .interaction) {
+        switch reason {
+        case .interaction:remaining=max(remaining,sceneFocus == nil ? 60:frequency.sceneInterval.lowerBound)
+        case .userInput:userInputRemaining=max(userInputRemaining,60);remaining=max(remaining,60)
+        }
         stationaryTime = 0; pointerAnchor = nil
     }
     public mutating func tick(_ dt: Double, pointer: CGPoint, buttonsDown: Bool,
@@ -34,17 +66,34 @@ public struct AmbientScheduler {
                               frequency: AmbientFrequency, busy: Bool, cadenceRate:Double=1, leafRandom: (() -> Double)? = nil,
                               random: () -> Double = { Double.random(in: 0..<1) }) -> AmbientEvent? {
         let step = min(0.1, max(0, dt))
+        self.frequency=frequency
+        sceneCooldownRemaining=max(0,sceneCooldownRemaining-step)
+        userInputRemaining=max(0,userInputRemaining-step)
+        if buttonsDown {suppress(reason:.userInput)}
         if buttonsDown || pointerAnchor == nil || Geometry.distance(pointer, pointerAnchor!) > 6 {
             pointerAnchor = pointer; stationaryTime = 0
         } else { stationaryTime += step }
         // Only opportunity cadence changes; pointer dwell and motion use real simulation time.
-        let rate=cadenceRate.isFinite ? min(1,max(0,cadenceRate)):1
+        let requestedRate=cadenceRate.isFinite ? min(1,max(0,cadenceRate)):0
+        let rate=sceneFocus != nil && requestedRate>0 ? 1:requestedRate
         remaining -= step*rate
         guard rate>0 else {return nil}
         guard remaining <= 0 else { return nil }
-        let interval = frequency.interval
-        remaining = interval.lowerBound + (interval.upperBound - interval.lowerBound) * random()
-        guard !busy, !buttonsDown else { return nil }
+        let interval=sceneFocus == nil ? frequency.interval:frequency.sceneInterval
+        let intervalDraw=sceneFocus == nil ? random():sceneUnit()
+        remaining=interval.lowerBound+(interval.upperBound-interval.lowerBound)*intervalDraw
+        guard !busy,!buttonsDown,userInputRemaining<=0 else {return nil}
+        if let focus=sceneFocus {
+            if sceneUnit()<0.7 {
+                // A failed/closed/cooling focus opportunity is discarded. It
+                // never falls through and never creates a second opportunity.
+                return canAttemptScene(focus.objectID) ? .bathVisit(focus.objectID):nil
+            }
+        } else if sceneUnit()<0.13 {
+            // Frozen daily ranges: insect [0,.08), courtship [.08,.12), gift
+            // [.12,.13). Undelivered ranges remain empty, never redistributed.
+            return nil
+        }
         // Reserve a small share of existing opportunities, never a second timer.
         // Failed leaf plans are discarded instead of falling through to another event.
         if leafEnabled && (leafRandom.map{$0()} ?? random())<0.1 {return .leafPlay}

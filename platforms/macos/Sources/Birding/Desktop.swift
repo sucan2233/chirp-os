@@ -31,6 +31,7 @@ final class DesktopView: NSView {
         guard let controller, let root = layer else { return }
         let snapshot=controller.renderSnapshot()
         let propSnapshot=controller.engine.propSnapshot()
+        let immersion=controller.engine.bathImmersionSnapshot()
         CATransaction.begin(); CATransaction.setDisableActions(true)
         propRenderer.update(propSnapshot,on:root,desktopRect:desktopRect)
         fixedPerchRenderer.update(controller.engine.fixedPerchSnapshot(),world:controller.engine.world,on:root,desktopRect:desktopRect)
@@ -45,6 +46,7 @@ final class DesktopView: NSView {
         }
         for (index,bird) in snapshot.enumerated() {
             let container = sprites[index]
+            container.name="bird-sprite-\(bird.id.rawValue)"
             let scale = bird.scale
             let side = 48*scale
             let rect = bird.rect
@@ -62,6 +64,7 @@ final class DesktopView: NSView {
             let mask = container.mask as! CAShapeLayer
             mask.frame = CGRect(origin:.zero,size:rect.size)
             mask.path = path; mask.fillColor = NSColor.black.cgColor
+            HabitatObjectRenderer.applyImmersion(immersion[bird.id],to:mask,birdRect:rect)
         }
         if nameLabel.superlayer == nil {
             nameLabel.fontSize=13;nameLabel.alignmentMode = .center
@@ -82,6 +85,14 @@ final class DesktopView: NSView {
             let y=max(desktopRect.minY,top-28)
             nameLabel.frame=CGRect(x:x-desktopRect.minX,y:y-desktopRect.minY,width:width,height:23)
             nameLabel.string=text;nameLabel.isHidden=false
+        }
+        // Keep the physical sibling order consistent with zPosition too.
+        // Software layer captures do not implement all CA compositing rules;
+        // a newly appended rear basin must never paint over an existing bird.
+        if controller.engine.habitatSnapshot().contains(where:{$0.kind == .bath}) {
+            root.sublayers=(root.sublayers ?? []).enumerated().sorted {a,b in
+                a.element.zPosition==b.element.zPosition ? a.offset<b.offset:a.element.zPosition<b.element.zPosition
+            }.map(\.element)
         }
         CATransaction.commit()
     }
@@ -242,6 +253,7 @@ final class DesktopController: NSObject {
     @objc func spaceChanged() { engine.handle(.cancelAmbient(.spaceChanged));lastSample = 0; sampleWindows(dt: 1); for v in views { v.needsDisplay = true } }
     @objc func rebuildScreens() {
         engine.handle(.cancelFoodTrayPlacement)
+        engine.handle(.cancelBathPlacement)
         engine.handle(.cancelAmbient(.screensChanged))
         panels.forEach { $0.orderOut(nil) }; panels.removeAll(); views.removeAll()
         for screen in NSScreen.screens {
@@ -295,6 +307,7 @@ final class DesktopController: NSObject {
         engine.advance(dt)
         consumeBehaviorEvents()
         settingsWindow?.refreshFoodTrayControls()
+        settingsWindow?.refreshBathControls()
     }
     func tick() {
         let now = ProcessInfo.processInfo.systemUptime

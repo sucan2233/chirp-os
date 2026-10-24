@@ -94,9 +94,14 @@ enum FeedingArtVerification {
         for id in SpeciesID.allCases {
             let legacy=BirdArt.names+([SpeciesID.barnSwallow,.swinhoesWhiteEye].contains(id) ? BirdArt.allopreeningNames:[])
             let peek=SpeciesBehaviorProfile.peekSpecies.contains(id) ? BirdArt.peekNames:[]
-            let expected=legacy+(species.contains(id) ? names:[])+SpeciesBehaviorProfile.profile(for:id).poseFrameNames+peek
+            let prior=legacy+(species.contains(id) ? names:[])+SpeciesBehaviorProfile.profile(for:id).poseFrameNames+peek
+            // M6d appends only these authored frames for these two species;
+            // every pre-bath index, including feeding, must remain unchanged.
+            let bath=[SpeciesID.treeSparrow,.lightVentedBulbul].contains(id)
+                ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]
             let actual=BirdArt.names(for:id)
-            manifestOK = manifestOK && BirdArt.names.count==34 && actual==expected &&
+            manifestOK = manifestOK && BirdArt.names.count==34 && actual==prior+bath &&
+                Array(actual.prefix(prior.count))==prior &&
                 Array(actual.prefix(legacy.count))==legacy && Set(actual).count==actual.count
             supportedOnly = supportedOnly && Set(actual).intersection(names)==(species.contains(id) ? Set(names):Set<String>())
             if !species.contains(id) {

@@ -8,7 +8,7 @@ public struct ScenePropID:Hashable,Comparable {
     public init(_ value:UInt64) {rawValue=value}
     public static func < (lhs:Self,rhs:Self) -> Bool {lhs.rawValue<rhs.rawValue}
 }
-public enum ScenePropKind:String {case leaf}
+public enum ScenePropKind:String {case leaf,waterSplash}
 
 /// Quartz coordinates, like BirdRenderState. Props do not participate in mouse
 /// hit testing; explicit commands control their lifetime.
@@ -20,7 +20,9 @@ public struct ScenePropRenderState {
     public let rotation:CGFloat
     public let opacity:Double
     public let blockers:[CGRect]
-    public var rect:CGRect {CGRect(x:position.x-size/2,y:position.y-size/2,width:size,height:size)}
+    public var frameName:String = "leaf"
+    public var anchor:CGPoint = CGPoint(x:0.5,y:0.5)
+    public var rect:CGRect {CGRect(x:position.x-size*anchor.x,y:position.y-size*anchor.y,width:size,height:size)}
 }
 
 public enum ScenePropAssets {

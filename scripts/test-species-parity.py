@@ -35,6 +35,8 @@ for bird in ('treeSparrow', 'spottedDove', 'barnSwallow', 'nightHeron',
     expected_extras[bird] = expected_extras.get(bird, []) + pose_frames
 for bird in ('lightVentedBulbul', 'magpieRobin'):
     expected_extras[bird] = expected_extras[bird] + ['peekLower', 'peekLook', 'peekRecover']
+for bird in ('treeSparrow', 'lightVentedBulbul'):
+    expected_extras[bird] += ['bathInspect', 'bathTouch', 'bathLower', 'bath0', 'bath1', 'bath2', 'bathRise']
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
     assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'

@@ -14,6 +14,7 @@ extension BirdArt {
                 profile.poseClip(for:$0.0,duration:$0.1,lookingFar:true)!
             }
             if let peek=PoseClip.edgePeek(species:species) {tracks.append(peek)}
+            if let bath=PoseClip.bath(species:species) {tracks.append(bath)}
             for scale:CGFloat in [0.5,1,2] {for right in [true,false] {
                 let size=scale*bird.relativeScale,cell=max(140,Int(ceil(48*size))+32)
                 let width=cell*tracks.count,height=cell+42

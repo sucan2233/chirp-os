@@ -33,6 +33,7 @@
 - “鸟种设置 → 交互”可分别开关绕鼠标与鸟群过境，选择低／中／高频率并预览。默认低频，两种动作合计每 3–6 分钟尝试一次，条件不合适时跳过；暂停、睡眠不累积事件。
 - macOS 小鸟停稳后会偶尔闭眼休息，着陆后可能整理羽毛，每只鸟的节奏有所不同；鼠标靠近或点击即可打断。在“鸟种设置 → 交互 → 停栖小动作”中开关和预览。
 - macOS 开发版可在“鸟种设置 → 交互 → 固定小栖木”中放置最多 3 根栖木：点击放置后把鼠标移到目标位置，3 秒后记录，再保存并应用。支持的现有小鸟会偶尔飞来停留，也可手动预览；关闭开关保留位置。
+- macOS 开发版可放置浅水浴盆，供麻雀与白头鹎偶尔试水、拍翼洗澡并甩水离开。浴盆保留最多 5 分钟或 3 次完整访问，与食盘共用一个场景位置；暂停会冻结寿命与动作，完成返程落稳后才记入观察手册。
 - 夜鹭会长时间守望、伸颈、抖毛，偶尔“挤洗手液”；大斑啄木鸟会沿窗口侧边停靠、啄击。
 - 菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
 - macOS 开发版新增“观察手册”：行为完成后按鸟种记录首次／最近时间和次数，分别标明自动、手动与预览。支持搜索和来源筛选，数据保存在本地；发现新行为不会弹窗。
@@ -123,6 +124,7 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - Hover over a bird for about 1 second to see its name, with clicks still passing through. On macOS, adjust the delay from 0 to 10 seconds in Bird Settings → Interaction; 0 shows names immediately.
 - On macOS, click a bird to move it to another spot away from its previous perch. Clicks still pass through to the window beneath without taking focus.
 - macOS development builds support up to three fixed perches in Bird settings → Interaction → Fixed perches. Click Place, move the pointer to the desired position, then Save & Apply after the three-second capture. Existing supported birds occasionally visit; manual preview is also available. Turning the feature off keeps saved positions.
+- macOS development builds offer a shallow bath for Eurasian Tree Sparrows and Light-vented Bulbuls. Birds may test the water, splash, shake, and return safely. The bath lasts up to five minutes or three completed visits and shares one scene slot with the food tray. Pausing freezes its lifetime and animation; visits count only after the bird returns and lands.
 - macOS encounters: a small bird may circle a stationary pointer at a safe distance when there is room; moving or clicking ends the visit. Loose flocks of 3–5 birds of one species can also pass across the upper screen without affecting resident counts.
 - Bird Settings → Interaction has separate encounter switches, Low/Medium/High frequency, and previews. Low (default) attempts one of the encounters every 3–6 minutes, skipping unsuitable opportunities. Pause and sleep do not accumulate events.
 - Night herons watch, stretch, shake and occasionally leave a fleeting dropping; woodpeckers cling to and peck window sides.

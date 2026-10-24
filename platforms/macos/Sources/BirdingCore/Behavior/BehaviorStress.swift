@@ -268,8 +268,8 @@ public enum BehaviorStress {
             let habitats=engine.habitatSnapshot(),habitatIDs=runs.values.flatMap{$0.execution.habitatReservations}
             check("habitatOwnership",Set(habitatIDs).count==habitatIDs.count && Set(habitatIDs)==engine.runtime.habitatReservations &&
                 habitatIDs.allSatisfy{id in habitats.contains{$0.id==id}} && habitats.count<=1 && habitats.allSatisfy {object in
-                    object.remainingLifetime.isFinite && (0...180).contains(object.remainingLifetime) && (0...3).contains(object.remainingUses) &&
-                    (!object.retiring || habitatIDs.contains(object.id))
+                    object.remainingLifetime.isFinite && (0...(object.kind == .bath ? 300.0:180.0)).contains(object.remainingLifetime) && (0...3).contains(object.remainingUses) &&
+                    (!object.retiring || habitatIDs.contains(object.id) || (engine.habitatObjects.objects[object.id]?.retirementAge ?? .infinity)<=2)
                 })
             let propIDs=runs.values.flatMap{$0.execution.propIDs}
             check("propOwnership",Set(propIDs).count==propIDs.count && Set(props.map(\.id)).count==props.count && Set(props.map(\.id)).isSubset(of:Set(propIDs)))
@@ -294,10 +294,10 @@ public enum BehaviorStress {
             let reservationCounts=Dictionary(grouping:slots,by: \.bird).mapValues(\.count)
             let perBirdSlotsBounded=reservationCounts.allSatisfy {bird,count in
                 guard let owner=owners[bird],let run=runs[owner] else {return false}
-                return count <= ([BehaviorKind.edgePeek,.foodTrayVisit].contains(run.execution.kind) ? 2:1)
+                return count <= ([BehaviorKind.edgePeek,.foodTrayVisit,.bathVisit].contains(run.execution.kind) ? 2:1)
             }
             check("boundedResources",total<=birdLimit+5 && runs.count<=birdLimit+1 && owners.count<=birdLimit+5 &&
-                slots.count<=2*birdLimit+5 && perBirdSlotsBounded && propIDs.count<=1 && engine.events.count<=256)
+                slots.count<=2*birdLimit+5 && perBirdSlotsBounded && propIDs.count<=6 && props.filter{$0.kind == .leaf}.count<=1 && props.filter{$0.kind == .waterSplash}.count<=6 && engine.events.count<=256)
             peaks.activeRuns=max(peaks.activeRuns,runs.count); peaks.birds=max(peaks.birds,total)
             peaks.leases=max(peaks.leases,owners.count); peaks.reservations=max(peaks.reservations,slots.count)
             peaks.props=max(peaks.props,propIDs.count); peaks.events=max(peaks.events,engine.events.count)
@@ -318,6 +318,7 @@ public enum BehaviorStress {
             for p in props {
                 hash(p.id.rawValue,into:&stateHash); hash(Double(p.position.x).bitPattern,into:&stateHash)
                 hash(Double(p.position.y).bitPattern,into:&stateHash); hash(p.opacity.bitPattern,into:&stateHash)
+                if p.kind == .waterSplash {hash(p.frameName,into:&stateHash)}
             }
         }
         func finish(requiredCompletedKinds:[String]=[],requireAutonomy:Bool=false) {
@@ -564,7 +565,7 @@ public enum BehaviorStress {
             value.pointerVisits=enabled; value.flockPasses=enabled; value.socialInteractions=enabled
             value.perchActions=enabled; value.leafPlayEnabled=enabled; value.ambientLeafPlayEnabled=enabled
             value.sideHopEnabled=enabled; value.takeoffPreparationEnabled=enabled; value.passiveAttentionEnabled=enabled
-            value.pointerFollowEnabled=enabled;value.edgePeekEnabled=enabled;value.chaseEnabled=enabled;value.travelTogetherEnabled=enabled;value.allopreeningEnabled=enabled;value.fixedPerchesEnabled=enabled;value.foodTrayEnabled=enabled
+            value.pointerFollowEnabled=enabled;value.edgePeekEnabled=enabled;value.chaseEnabled=enabled;value.travelTogetherEnabled=enabled;value.allopreeningEnabled=enabled;value.fixedPerchesEnabled=enabled;value.foodTrayEnabled=enabled;value.bathEnabled=enabled
             measured("settings"){engine.applySettings(value)}; auditor.metrics.settingsChanges+=1; inspect()
         }
         func pause(_ value:Bool) {

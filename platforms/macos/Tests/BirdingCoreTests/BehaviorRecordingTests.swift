@@ -86,17 +86,18 @@ final class BehaviorRecordingTests:XCTestCase {
             XCTAssertThrowsError(try BehaviorInputLog.decode(JSONSerialization.data(withJSONObject:object)))
         }
     }
-    func testM6cRecordsVersionElevenAndRejectsVersionTenRatherThanReinterpretingItsEvents() throws {
+    func testM6dRecordsVersionTwelveAndRejectsPriorSimulationSemantics() throws {
         let e=fixture();e.bringInBird();advance(e,1)
         let current=try e.recordedInputs()
         XCTAssertEqual(BehaviorInputLog.currentVersion,1)
-        XCTAssertEqual(BehaviorInputLog.engineVersion,11)
-        XCTAssertEqual(current.simulationVersion,11)
-        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,11)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,12)
+        XCTAssertEqual(current.simulationVersion,12)
+        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,12)
 
         // Exercise the compatibility boundary with a well-formed old envelope.
         // Never promote its version and replay it under the newly expanded lists.
-        var old=current;old.simulationVersion=10
+        for version in [10,11] {
+        var old=current;old.simulationVersion=version
         let data=try BehaviorInputLog.encoder().encode(old)
         XCTAssertEqual(old.expected,current.expected)
         XCTAssertThrowsError(try BehaviorInputLog.decode(data)) {error in
@@ -107,15 +108,16 @@ final class BehaviorRecordingTests:XCTestCase {
         let folder=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
         defer {try? FileManager.default.removeItem(at:folder)}
-        let file=folder.appendingPathComponent("v10.json")
+        let file=folder.appendingPathComponent("v\(version).json")
         XCTAssertThrowsError(try directlyDecoded.save(to:file))
         XCTAssertFalse(FileManager.default.fileExists(atPath:file.path))
 
         var incompatible=try XCTUnwrap(JSONSerialization.jsonObject(with:data) as? [String:Any])
-        incompatible["settings"]="version ten nested settings must not be decoded"
+        incompatible["settings"]="prior-version nested settings must not be decoded"
         incompatible["inputs"]="unknown old representation"
         XCTAssertThrowsError(try BehaviorInputLog.decode(JSONSerialization.data(withJSONObject:incompatible))) {error in
             XCTAssertTrue(error.localizedDescription.contains("unsupported recording or simulation version"))
+        }
         }
     }
     func testUnknownOrInvalidInputsAreRejectedWithoutSilentSkipping() throws {
@@ -240,10 +242,10 @@ final class BehaviorRecordingTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let folder=root.appendingPathComponent("shared/behavior-fixtures/v1")
         let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="json"}.sorted{$0.path<$1.path}
-        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json","food-tray.json"])
+        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json","food-tray.json","bath.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
-            XCTAssertEqual(log.simulationVersion,11,file.lastPathComponent)
+            XCTAssertEqual(log.simulationVersion,12,file.lastPathComponent)
             if let expected=log.expected {XCTAssertEqual(reference,expected,file.lastPathComponent)}
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
             XCTAssertEqual(try log.replay(callbackHz:120),reference,file.lastPathComponent)
@@ -252,7 +254,18 @@ final class BehaviorRecordingTests:XCTestCase {
             XCTAssertEqual(reference.habitatReservations,0,file.lastPathComponent)
             XCTAssertFalse(reference.hasFoodTrayPlacement,file.lastPathComponent)
             let finished=reference.events.filter{$0.type=="completed"}.compactMap(\.kind)
-            if file.lastPathComponent=="food-tray.json" {
+            if file.lastPathComponent=="bath.json" {
+                XCTAssertEqual(finished.filter{$0=="bathVisit"}.count,1)
+                XCTAssertEqual(reference.birds.map(\.id),["1"])
+                XCTAssertEqual(reference.birds.map(\.position.x),[400]);XCTAssertEqual(reference.birds.map(\.position.y),[1050])
+                XCTAssertEqual(reference.birds.map(\.state),["perched"])
+                XCTAssertEqual(reference.habitats.count,1);XCTAssertEqual(reference.habitats.first?.kind,"bath")
+                XCTAssertEqual(reference.habitats.first?.remainingUses,2)
+                XCTAssertFalse(try XCTUnwrap(reference.habitats.first).retiring)
+                XCTAssertEqual(reference.sceneFocusID,reference.habitats.first?.id)
+                XCTAssertEqual(reference.hasBathPlacement,false);XCTAssertTrue(reference.props.isEmpty)
+                XCTAssertFalse(reference.events.contains{$0.type=="failed" || $0.type=="cancelled" || $0.type=="rejected"})
+            } else if file.lastPathComponent=="food-tray.json" {
                 XCTAssertEqual(finished.filter{$0=="foodTrayVisit"}.count,1)
                 XCTAssertEqual(reference.birds.map(\.id),["1"])
                 XCTAssertEqual(reference.birds.map(\.position.x),[400]);XCTAssertEqual(reference.birds.map(\.position.y),[1050])

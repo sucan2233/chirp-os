@@ -108,6 +108,7 @@ enum DetailedBirdArt {
         }
     }
     static func make(_ frame:String,species id:SpeciesID)->CGImage {
+        if let image=bathImage(frame,species:id) {return image}
         // M6b has its own anatomy; no existing stand/idle raster is reused.
         if let image=poseImage(frame,species:id) {return image}
         // B14 is an independent native drawing; old peck/common poses do not
@@ -960,6 +961,7 @@ extension DetailedBirdArt {
     /// coordinates. Reflect with x -> 48-x, just like BirdRenderState. A tucked
     /// bill still has an anchor even though scapular feathers cover its tip.
     static func poseBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        if let anchor=bathBillAnchor(frame,species:id) {return anchor}
         if let a=M6cPoseGeometry.anatomy(id),let pose=M6cPoseGeometry.pose(species:id,frame:frame) {
             return pose.billTip(species:id,anatomy:a)
         }
@@ -980,6 +982,7 @@ extension DetailedBirdArt {
 
     static func poseImage(_ frame:String,species id:SpeciesID,
                           part:FoundationPosePart?=nil)->CGImage? {
+        if let image=bathImage(frame,species:id,part:part) {return image}
         if let image=m6cPoseImage(frame,species:id,part:part) {return image}
         guard let pose=foundationPose(frame,species:id) else {return nil}
         let density=SpeciesCatalog.standard.profile(id).relativeScale
@@ -1499,6 +1502,220 @@ extension DetailedBirdArt {
         case .littleOwl:
             for n in 0..<4 {let u=0.25+Double(n)*0.13;c.line([p(u,0.20),p(u+0.04,0.30)],"cream",width:0.8)}
         default:break
+        }
+    }
+}
+
+// M6d uses newly authored wet plumage, wing strokes and head/neck geometry.
+// The raw source and all four semantic layers remain unmasked. Only a settled
+// bath visit may apply BathArt's contextual water/feet/front-wall occlusion.
+extension DetailedBirdArt {
+    private struct BathPose {
+        let body:CGRect
+        let head:CGPoint
+        let pitch:Double
+        let tail:CGPoint
+        let stroke:Int // 0 folded, 1 downward fan, 2 raised, 3 second downstroke
+        func headPoint(_ x:Double,_ y:Double)->CGPoint {
+            CGPoint(x:Double(head.x)+x*cos(pitch)-y*sin(pitch),
+                    y:Double(head.y)+x*sin(pitch)+y*cos(pitch))
+        }
+    }
+
+    private static func bathPose(_ frame:String,_ id:SpeciesID)->BathPose? {
+        guard id == .treeSparrow || id == .lightVentedBulbul,
+              let index=BathGeometry.frameNames.firstIndex(of:frame) else {return nil}
+        // body x/y/w/h, head center x/y/pitch, tail tip x/y, wing stroke.
+        // These values also generate BathPoseAnchors; no old raster is reused.
+        let poses:[[Double]]
+        if id == .treeSparrow {
+            poses=[
+                [16.5,26,18.5,12,32,23,0.35,11,31,0],
+                [17,27.5,19,10.5,0,0,0.88,11,32,0],
+                [16,30,20,12,32,28,0.24,10.5,31,0],
+                [15.5,31,21,12,31,29,0.18,10,30,1],
+                [16,30,20,12,32,27,-0.12,10.5,29,2],
+                [16.5,31.5,20.5,12,33,30,0.32,9.5,33,3],
+                [16,25.5,19,12.5,32.5,21.5,-0.14,12,33.5,0]
+            ]
+        } else {
+            poses=[
+                [14,25.5,20,12.5,32,21.5,0.25,6,28,0],
+                [14.5,27,20.5,11,0,0,0.98,6.5,29.5,0],
+                [13.5,29,22,13,32,27,0.22,5.5,29,0],
+                [13,30.5,23,13,31.5,27.5,0.12,5,27.5,1],
+                [13.5,29.5,22,13,32,25.5,-0.18,6,26,2],
+                [14,31,22.5,13,33,29,0.28,4.5,30,3],
+                [14,25,20.5,13,32.5,20,-0.18,5,31,0]
+            ]
+        }
+        let p=poses[index],pitch=p[6]
+        let head:CGPoint
+        if frame == "bathTouch" {
+            let tip=shape(id).headWidth/2-0.5+4
+            // Solve the rotated head from the frozen bill tip. The torso and
+            // toes stay planted; only the newly drawn head and neck reach water.
+            head=CGPoint(x:Double(BathGeometry.rightBeak.x)-tip*cos(pitch)+0.5*sin(pitch),
+                         y:Double(BathGeometry.rightBeak.y)-tip*sin(pitch)-0.5*cos(pitch))
+        } else {head=CGPoint(x:p[4],y:p[5])}
+        return BathPose(body:CGRect(x:p[0],y:p[1],width:p[2],height:p[3]),head:head,
+                        pitch:pitch,tail:CGPoint(x:p[7],y:p[8]),stroke:Int(p[9]))
+    }
+
+    static func bathBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        guard let p=bathPose(frame,id) else {return nil}
+        if frame == "bathTouch" {return BathGeometry.rightBeak}
+        return p.headPoint(shape(id).headWidth/2-0.5+4,0.5)
+    }
+
+    /// Exact intersections of the newly authored belly/wing contours with y39.
+    /// Inspect/Rise have no feather-water contact; the feet are masked separately.
+    /// Mirror each x as 48-x before using a left-facing contact.
+    static func bathWaterContacts(_ frame:String,species id:SpeciesID)->[CGPoint] {
+        guard let p=bathPose(frame,id) else {return []}
+        if frame == "bathTouch" {return [BathGeometry.rightBeak]}
+        let y=BathGeometry.birdWaterlineY,b=p.body
+        guard b.maxY>y else {return []}
+        let dy=(y-b.midY)/(b.height/2)
+        let dx=b.width/2*sqrt(max(0,1-dy*dy))
+        var contacts=[CGPoint(x:b.midX-dx,y:y),CGPoint(x:b.midX+dx,y:y)]
+        if p.stroke == 1 || p.stroke == 3 {
+            for far in [false,true] {
+                let edge=bathWingEdge(p,id,far:far)
+                for i in edge.indices {
+                    let a=edge[i],b=edge[(i+1)%edge.count],water=Double(y)
+                    if abs(a.1-water)<0.000001 {
+                        contacts.append(CGPoint(x:a.0,y:water))
+                    } else if (a.1<water && b.1>water) || (a.1>water && b.1<water) {
+                        let t=(water-a.1)/(b.1-a.1)
+                        contacts.append(CGPoint(x:a.0+(b.0-a.0)*t,y:water))
+                    }
+                }
+            }
+        }
+        return contacts
+    }
+
+    static func bathImage(_ frame:String,species id:SpeciesID,
+                          part:FoundationPosePart?=nil)->CGImage? {
+        guard let p=bathPose(frame,id) else {return nil}
+        let density=SpeciesCatalog.standard.profile(id).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let s=colours(id),b=p.body
+        let x=Double(b.minX),y=Double(b.minY),w=Double(b.width),h=Double(b.height)
+        let bulbul=id == .lightVentedBulbul
+        if part == nil || part == .feet {
+            for xx in [27.0,31.0] {
+                c.line([(xx-1,min(34,y+h-2)),(xx,35),(xx-0.5,38.5)],"brown",width:1)
+                c.line([(xx-2,39),(xx,38.5),(xx+2,39)],"brown")
+            }
+        }
+        if part == nil || part == .body {
+            let tx=Double(p.tail.x),ty=Double(p.tail.y),tw=bulbul ? 4.5:3.5
+            c.poly([(x+6,y+h*0.45),(x+10,y+h*0.69),(tx+tw,ty+1),(tx,ty)],s.1,outline:true)
+            c.line([(x+7,y+h*0.5),(tx+0.8,ty)],s.0,width:0.8)
+            if bulbul {c.line([(tx,ty),(tx+tw,ty+1)],"silver",width:0.8)}
+            if p.stroke>0 {bathWing(c,p,id,far:true)}
+            c.oval(x,y,w,h,s.0,outline:true)
+            c.oval(x+w*0.48,y+1.5,w*0.52-0.8,h-1.8,s.3)
+            // Wet belly feathers remain visible below y39 in the raw source.
+            // Their radial edges follow this compressed torso, not a stand pose.
+            for n in 0..<4 {
+                let xx=x+w*0.40+Double(n)*2.3,yy=y+h-2.2
+                c.line([(xx,yy-1.2),(xx-0.3,yy)],n<2 ? s.0:"buff",width:0.6)
+            }
+            if p.stroke == 0 {bathFoldedWing(c,p,id)}
+        }
+        if part == nil || part == .headNeck {
+            let a=shape(id),nape=p.headPoint(-a.headWidth*0.32,1)
+            let chin=p.headPoint(a.headWidth*0.28,a.headHeight*0.38)
+            // Every neck endpoint is above the water/foot plane, including
+            // Touch; the forward bill alone reaches the exact y39 contact.
+            c.poly([(x+w*0.50,y+2),(nape.x,nape.y),(chin.x,chin.y),
+                    (x+w-1,min(37.5,y+h*0.58))],s.3)
+            c.poly([(x+w*0.50,y+2),(nape.x,nape.y),(nape.x+1,nape.y+1),
+                    (x+w*0.63,min(37.5,y+5))],s.0)
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.pitch))
+            if bulbul {bathBulbulHead(c)}
+            else {foundationHead(c,id,tucked:false,drowsy:false)}
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .bill {
+            let root=shape(id).headWidth/2-0.5
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.pitch))
+            // Both edges rise toward the tip. No bill vertex falls below y39
+            // in Touch, so the immersion mask cannot erase the contact point.
+            c.poly([(root,-0.7),(root+4,0.5),(root+3,1.2),(root,1.3)],"dark")
+            c.ctx.restoreGState()
+        }
+        if (part == nil || part == .body) && p.stroke>0 {bathWing(c,p,id,far:false)}
+        return c.image
+    }
+
+    private static func bathBulbulHead(_ c:BirdPainter) {
+        c.oval(-4,-3.5,8,7,"black",outline:true)
+        c.poly([(-4,-2.5),(-1,-2.5),(0,0.5),(-2,2.5),(-4,0.5)],"white")
+        c.poly([(-1,1.5),(4,0.5),(4,3.5),(0,4)],"silver")
+        c.oval(1.76,-0.84,1,1.1,"eye");c.oval(2.16,-0.84,0.45,0.45,"white")
+    }
+
+    private static func bathFoldedWing(_ c:BirdPainter,_ p:BathPose,_ id:SpeciesID) {
+        let x=Double(p.body.minX),y=Double(p.body.minY),h=Double(p.body.height),s=colours(id)
+        c.poly([(x+3,y+1),(x+8,y+0.5),(x+12,y+3),(x+9,y+h*0.69),
+                (x+1,y+h-1),(x,y+h-2),(x+1,y+5)],s.1,outline:true)
+        c.poly([(x+4,y+1.5),(x+8,y+1),(x+10,y+3),(x+5,y+h*0.61),(x+2,y+h*0.66)],s.0)
+        for n in 0..<5 {
+            let xx=x+2+Double(n)*1.5
+            c.line([(xx+4,y+3.5),(xx,y+h-2)],n%2 == 0 ? s.0:"dark")
+        }
+        if id == .treeSparrow {
+            c.line([(x+3,y+3.5),(x+9,y+4.2)],"cream",width:1)
+            c.line([(x+2,y+5.5),(x+7,y+6.2)],"buff",width:0.8)
+        } else {c.line([(x+3,y+3),(x+8,y+4)],"olive",width:0.9)}
+    }
+
+    private static func bathWingEdge(_ p:BathPose,_ id:SpeciesID,far:Bool)->[(Double,Double)] {
+        let bulbul=id == .lightVentedBulbul
+        switch p.stroke {
+        case 1:
+            if far {return bulbul ? [(29,33),(36,32),(41,39),(44,41),(42,43),(38,42),(32,37)] :
+                [(30,33),(35,33),(39,39),(41,41),(38,42),(34,40),(30,37)]}
+            return bulbul ? [(23,33),(16,34),(12,39),(8,41),(11,44),(16,43),(26,38)] :
+                [(24,33),(17,35),(14,39),(12,41),(18,43),(22,42),(27,39)]
+        case 2:
+            if far {return bulbul ? [(29,32),(35,25),(41,18),(44,18),(43,24),(40,29),(33,36)] :
+                [(29,32),(34,26),(39,20),(42,22),(40,27),(36,31),(31,36)]}
+            return bulbul ? [(23,32),(16,26),(9,16),(6,15),(7,23),(12,29),(19,36),(26,37)] :
+                [(24,32),(17,27),(12,19),(9,17),(10,23),(13,28),(19,36),(26,37)]
+        default:
+            if far {return bulbul ? [(30,34),(37,35),(40,39),(44,42),(41,44),(37,42),(31,38)] :
+                [(31,34),(35,35),(38,39),(41,42),(38,43),(34,41),(30,38)]}
+            return bulbul ? [(25,34),(19,36),(15,39),(11,43),(15,45),(21,44),(28,39)] :
+                [(25,34),(20,36),(17,39),(14,43),(19,44),(24,43),(28,39)]
+        }
+    }
+
+    private static func bathWing(_ c:BirdPainter,_ p:BathPose,_ id:SpeciesID,far:Bool) {
+        let edge=bathWingEdge(p,id,far:far),s=colours(id)
+        let base:String,light:String
+        if far {
+            for (key,name) in [(s.1,"bathFarFeather"),(s.0,"bathFarCovert")] {
+                let v=c.palette[key]!,r=UInt32(Double((v>>24)&255)*0.78)
+                let g=UInt32(Double((v>>16)&255)*0.78),b=UInt32(Double((v>>8)&255)*0.78)
+                c.palette[name]=(r<<24)|(g<<16)|(b<<8)|255
+            }
+            base="bathFarFeather";light="bathFarCovert"
+        } else {base=s.1;light=s.0}
+        c.poly(edge,base,outline:true)
+        let root=edge[0],wrist=edge[2]
+        c.poly([root,edge[1],wrist,((root.0+wrist.0)/2+1,(root.1+wrist.1)/2+2)],light)
+        for i in 3..<(edge.count-1) {
+            let tip=edge[i]
+            c.line([((root.0+wrist.0)*0.5,(root.1+wrist.1)*0.5),
+                    (tip.0*0.88+root.0*0.12,tip.1*0.88+root.1*0.12)],i%2 == 0 ? light:"dark",width:0.65)
+        }
+        if id == .treeSparrow {
+            c.line([(root.0-0.5,root.1+0.7),((root.0+wrist.0)*0.5,(root.1+wrist.1)*0.5)],"cream",width:0.9)
         }
     }
 }

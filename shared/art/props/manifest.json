@@ -1,0 +1,42 @@
+{
+  "bathBasin" : {
+    "file" : "bathBasin.png",
+    "footAnchor" : [
+      64,
+      20
+    ],
+    "frontLayer" : "derived from single basin art",
+    "logicalSize" : [
+      128,
+      40
+    ],
+    "waterEllipse" : [
+      16,
+      10,
+      96,
+      20
+    ],
+    "waterlineY" : 20
+  },
+  "clock" : "owningBehaviorSimulationAge",
+  "schemaVersion" : 1,
+  "waterSplash" : {
+    "anchor" : [
+      12,
+      22
+    ],
+    "files" : [
+      "splash0.png",
+      "splash1.png",
+      "splash2.png",
+      "splash3.png"
+    ],
+    "frameDuration" : 0.10000000000000001,
+    "lifetime" : 0.40000000000000002,
+    "logicalSize" : [
+      24,
+      24
+    ],
+    "maximumInstances" : 6
+  }
+}

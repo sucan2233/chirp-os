@@ -266,7 +266,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+
+      }
     },
     "barnSwallow" : {
       "beakAnchors" : {
@@ -445,7 +448,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+
+      }
     },
     "chineseBlackbird" : {
       "beakAnchors" : {
@@ -624,7 +630,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+
+      }
     },
     "lightVentedBulbul" : {
       "beakAnchors" : {
@@ -639,6 +648,34 @@
         "alertRise" : [
           40.42834568152,
           13.851226551559
+        ],
+        "bath0" : [
+          38.88620866526,
+          28.894245872593999
+        ],
+        "bath1" : [
+          39.468342482624003,
+          24.649200045699999
+        ],
+        "bath2" : [
+          40.069737963049,
+          31.553195083386001
+        ],
+        "bathInspect" : [
+          39.143141183202999,
+          23.839985905264001
+        ],
+        "bathLower" : [
+          39.210116058438999,
+          29.124670897771999
+        ],
+        "bathRise" : [
+          39.968342482624003,
+          19.149200045699999
+        ],
+        "bathTouch" : [
+          40,
+          39
         ],
         "lookFar" : [
           39.968342482624003,
@@ -714,6 +751,121 @@
             }
           ],
           "id" : "lightVentedBulbul.alert",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "bathVisit" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 39.143141183202999,
+                "y" : 23.839985905264001
+              },
+              "duration" : 0.59999999999999998,
+              "name" : "bathInspect"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 39
+              },
+              "duration" : 0.59999999999999998,
+              "name" : "bathTouch"
+            },
+            {
+              "beak" : {
+                "x" : 39.210116058438999,
+                "y" : 29.124670897771999
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "bathLower"
+            },
+            {
+              "beak" : {
+                "x" : 38.88620866526,
+                "y" : 28.894245872593999
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath0"
+            },
+            {
+              "beak" : {
+                "x" : 39.468342482624003,
+                "y" : 24.649200045699999
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath1"
+            },
+            {
+              "beak" : {
+                "x" : 40.069737963049,
+                "y" : 31.553195083386001
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath2"
+            },
+            {
+              "beak" : {
+                "x" : 38.88620866526,
+                "y" : 28.894245872593999
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath0"
+            },
+            {
+              "beak" : {
+                "x" : 39.468342482624003,
+                "y" : 24.649200045699999
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath1"
+            },
+            {
+              "beak" : {
+                "x" : 40.069737963049,
+                "y" : 31.553195083386001
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath2"
+            },
+            {
+              "beak" : {
+                "x" : 38.88620866526,
+                "y" : 28.894245872593999
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath0"
+            },
+            {
+              "beak" : {
+                "x" : 39.468342482624003,
+                "y" : 24.649200045699999
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath1"
+            },
+            {
+              "beak" : {
+                "x" : 40.069737963049,
+                "y" : 31.553195083386001
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath2"
+            },
+            {
+              "beak" : {
+                "x" : 39.968342482624003,
+                "y" : 19.149200045699999
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "bathRise"
+            }
+          ],
+          "id" : "lightVentedBulbul.bathVisit",
           "maximumLoops" : 1,
           "recovery" : "currentEngineState"
         },
@@ -850,7 +1002,93 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+        "bath0" : [
+          [
+            13.557911993553001,
+            39
+          ],
+          [
+            35.442088006447001,
+            39
+          ],
+          [
+            12,
+            39
+          ],
+          [
+            24,
+            39
+          ],
+          [
+            41,
+            39
+          ],
+          [
+            34.399999999999999,
+            39
+          ]
+        ],
+        "bath1" : [
+          [
+            14.741677804508999,
+            39
+          ],
+          [
+            34.258322195490997,
+            39
+          ]
+        ],
+        "bath2" : [
+          [
+            14.303654253263,
+            39
+          ],
+          [
+            36.196345746737002,
+            39
+          ],
+          [
+            15,
+            39
+          ],
+          [
+            28,
+            39
+          ],
+          [
+            40,
+            39
+          ],
+          [
+            32.5,
+            39
+          ]
+        ],
+        "bathInspect" : [
+
+        ],
+        "bathLower" : [
+          [
+            15.230849026835999,
+            39
+          ],
+          [
+            33.769150973164002,
+            39
+          ]
+        ],
+        "bathRise" : [
+
+        ],
+        "bathTouch" : [
+          [
+            40,
+            39
+          ]
+        ]
+      }
     },
     "littleOwl" : {
       "beakAnchors" : {
@@ -1029,7 +1267,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+
+      }
     },
     "magpieRobin" : {
       "beakAnchors" : {
@@ -1255,7 +1496,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+
+      }
     },
     "nightHeron" : {
       "beakAnchors" : {
@@ -1434,7 +1678,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+
+      }
     },
     "redBilledLeiothrix" : {
       "beakAnchors" : {
@@ -1613,7 +1860,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+
+      }
     },
     "redWhiskeredBulbul" : {
       "beakAnchors" : {
@@ -1792,7 +2042,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+
+      }
     },
     "spottedDove" : {
       "beakAnchors" : {
@@ -1971,7 +2224,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+
+      }
     },
     "swinhoesWhiteEye" : {
       "beakAnchors" : {
@@ -2150,7 +2406,10 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+
+      }
     },
     "treeSparrow" : {
       "beakAnchors" : {
@@ -2165,6 +2424,34 @@
         "alertRise" : [
           40.389555000000001,
           15.584047999999999
+        ],
+        "bath0" : [
+          38.781234755592003,
+          30.924158433801001
+        ],
+        "bath1" : [
+          40.002325190474998,
+          26.538706659616
+        ],
+        "bath2" : [
+          40.436600064350998,
+          32.99115019397
+        ],
+        "bathInspect" : [
+          39.343532799050998,
+          26.212868816067001
+        ],
+        "bathLower" : [
+          39.651852485603001,
+          30.387289998842999
+        ],
+        "bathRise" : [
+          40.491499527023002,
+          20.878763080952002
+        ],
+        "bathTouch" : [
+          40,
+          39
         ],
         "lookFar" : [
           39.960264000000002,
@@ -2228,6 +2515,121 @@
             }
           ],
           "id" : "treeSparrow.alert",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "bathVisit" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 39.343532799050998,
+                "y" : 26.212868816067001
+              },
+              "duration" : 0.59999999999999998,
+              "name" : "bathInspect"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 39
+              },
+              "duration" : 0.59999999999999998,
+              "name" : "bathTouch"
+            },
+            {
+              "beak" : {
+                "x" : 39.651852485603001,
+                "y" : 30.387289998842999
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "bathLower"
+            },
+            {
+              "beak" : {
+                "x" : 38.781234755592003,
+                "y" : 30.924158433801001
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath0"
+            },
+            {
+              "beak" : {
+                "x" : 40.002325190474998,
+                "y" : 26.538706659616
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath1"
+            },
+            {
+              "beak" : {
+                "x" : 40.436600064350998,
+                "y" : 32.99115019397
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath2"
+            },
+            {
+              "beak" : {
+                "x" : 38.781234755592003,
+                "y" : 30.924158433801001
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath0"
+            },
+            {
+              "beak" : {
+                "x" : 40.002325190474998,
+                "y" : 26.538706659616
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath1"
+            },
+            {
+              "beak" : {
+                "x" : 40.436600064350998,
+                "y" : 32.99115019397
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath2"
+            },
+            {
+              "beak" : {
+                "x" : 38.781234755592003,
+                "y" : 30.924158433801001
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath0"
+            },
+            {
+              "beak" : {
+                "x" : 40.002325190474998,
+                "y" : 26.538706659616
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath1"
+            },
+            {
+              "beak" : {
+                "x" : 40.436600064350998,
+                "y" : 32.99115019397
+              },
+              "duration" : 0.26666666666666666,
+              "name" : "bath2"
+            },
+            {
+              "beak" : {
+                "x" : 40.491499527023002,
+                "y" : 20.878763080952002
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "bathRise"
+            }
+          ],
+          "id" : "treeSparrow.bathVisit",
           "maximumLoops" : 1,
           "recovery" : "currentEngineState"
         },
@@ -2329,12 +2731,98 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase"
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+      "waterContactAnchors" : {
+        "bath0" : [
+          [
+            16.100505063387999,
+            39
+          ],
+          [
+            35.899494936612001,
+            39
+          ],
+          [
+            14,
+            39
+          ],
+          [
+            27,
+            39
+          ],
+          [
+            39,
+            39
+          ],
+          [
+            32.666666666666998,
+            39
+          ]
+        ],
+        "bath1" : [
+          [
+            17.339745962156002,
+            39
+          ],
+          [
+            34.660254037843998,
+            39
+          ]
+        ],
+        "bath2" : [
+          [
+            16.825480175342999,
+            39
+          ],
+          [
+            36.674519824656997,
+            39
+          ],
+          [
+            17,
+            39
+          ],
+          [
+            28,
+            39
+          ],
+          [
+            38,
+            39
+          ],
+          [
+            31.333333333333002,
+            39
+          ]
+        ],
+        "bathInspect" : [
+
+        ],
+        "bathLower" : [
+          [
+            17.339745962156002,
+            39
+          ],
+          [
+            34.660254037843998,
+            39
+          ]
+        ],
+        "bathRise" : [
+
+        ],
+        "bathTouch" : [
+          [
+            40,
+            39
+          ]
+        ]
+      }
     }
   },
   "poseClock" : "owningBehaviorSimulationAge",
   "schemaVersion" : 2,
-  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry}.swift",
+  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt}.swift",
   "speciesFrames" : {
     "azureWingedMagpie" : [
       "stand",
@@ -2527,7 +3015,14 @@
       "takeoffPush",
       "peekLower",
       "peekLook",
-      "peekRecover"
+      "peekRecover",
+      "bathInspect",
+      "bathTouch",
+      "bathLower",
+      "bath0",
+      "bath1",
+      "bath2",
+      "bathRise"
     ],
     "littleOwl" : [
       "stand",
@@ -2912,7 +3407,14 @@
       "restTuck",
       "restWake",
       "takeoffCrouch",
-      "takeoffPush"
+      "takeoffPush",
+      "bathInspect",
+      "bathTouch",
+      "bathLower",
+      "bath0",
+      "bath1",
+      "bath2",
+      "bathRise"
     ]
   }
 }

@@ -2,7 +2,7 @@ import XCTest
 @testable import BirdingCore
 
 final class SpeciesBehaviorProfileTests:XCTestCase {
-    // Literal M6c authorization, independent of the implementation. Existing
+    // Literal M6d authorization, independent of the implementation. Existing
     // entries retain their relative order; only the approved species are added.
     private let dedicated:[(BehaviorKind,[SpeciesID])] = [
         (.edgePeek,[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel,.lightVentedBulbul,.magpieRobin]),
@@ -10,7 +10,8 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         (.travelTogether,[.treeSparrow,.barnSwallow,.spottedDove,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling,.redWhiskeredBulbul]),
         (.allopreening,[.barnSwallow,.swinhoesWhiteEye]),
         (.fixedPerchVisit,[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.redWhiskeredBulbul,.magpieRobin,.redBilledLeiothrix,.lightVentedBulbul]),
-        (.foodTrayVisit,[.treeSparrow,.spottedDove])
+        (.foodTrayVisit,[.treeSparrow,.spottedDove]),
+        (.bathVisit,[.treeSparrow,.lightVentedBulbul])
     ]
     private let flock:[SpeciesID] = [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,
         .lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]
@@ -123,7 +124,8 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         let contactFrames:Set<String> = ["feedLook","feedDown0","feedDown1","feedLift",
             "allopreenGive0","allopreenGive1","allopreenGive2",
             "allopreenReceive0","allopreenReceive1","allopreenReceive2"]
-        let allFrames=commonFrames.union(contactFrames).union(poseFrames).union(peekFrames)
+        let bathFrames:Set<String>=["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise","shake"]
+        let allFrames=commonFrames.union(contactFrames).union(poseFrames).union(peekFrames).union(bathFrames)
         for species in SpeciesID.allCases {
             let audit=SpeciesSupportAudit(species:species,availableFrames:allFrames)
             XCTAssertEqual(audit.species,species)

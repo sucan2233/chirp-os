@@ -24,8 +24,15 @@ extension BirdArt {
                let data=try? JSONEncoder().encode(clip),let object=try? JSONSerialization.jsonObject(with:data) {
                 clips[BehaviorKind.edgePeek.rawValue]=object
             }
-            let anchorNames=profile.poseFrameNames + (SpeciesBehaviorProfile.peekSpecies.contains(species) ? Self.peekNames:[])
-            result[species.rawValue]=["clips":clips,"durationPolicy":"watch/alert/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase",
+            if let clip=PoseClip.bath(species:species),
+               let data=try? JSONEncoder().encode(clip),let object=try? JSONSerialization.jsonObject(with:data) {
+                clips[BehaviorKind.bathVisit.rawValue]=object
+            }
+            let anchorNames=profile.poseFrameNames + (SpeciesBehaviorProfile.peekSpecies.contains(species) ? Self.peekNames:[]) + (profile.allows(.bathVisit) ? Self.bathNames:[])
+            result[species.rawValue]=["clips":clips,"durationPolicy":"watch/alert/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s",
+                "waterContactAnchors":Dictionary(uniqueKeysWithValues:(profile.allows(.bathVisit) ? Self.bathNames:[]).map {name in
+                    (name,PoseClip.bathWaterContacts(species:species,frame:name).map{[$0.x,$0.y]})
+                }),
                 "beakAnchors":Dictionary(uniqueKeysWithValues:anchorNames.map {name in
                     let anchor=PoseClip.beakAnchor(species:species,frame:name)
                     return (name,[anchor.x,anchor.y])

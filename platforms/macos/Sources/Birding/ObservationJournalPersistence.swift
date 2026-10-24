@@ -24,6 +24,7 @@ final class ObservationJournalPersistence {
     private(set) var successfulSaves=0
     private(set) var saveFailed=false
     private var savedArchive:ObservationArchive?
+    private var migrationPending=false
     private var lastCheck:Double=0
     private var retryAfter:Double?
     private let log:(String)->Void
@@ -44,8 +45,10 @@ final class ObservationJournalPersistence {
         loaded=true;lastCheck=now
         guard enabled else {return}
         do {
-            try journal.restore(ObservationArchive.load(from:url))
+            let archive=try ObservationArchive.load(from:url)
+            try journal.restore(archive)
             savedArchive=journal.archive
+            migrationPending=archive.requiresMigration
         } catch {
             let failure=error as NSError
             if failure.domain == NSCocoaErrorDomain &&
@@ -65,11 +68,12 @@ final class ObservationJournalPersistence {
         guard loaded,enabled,!writesDisabled,now.isFinite,
               (terminating || (retryAfter.map({now >= $0}) ?? true)) else {return}
         let archive=journal.archive
-        guard archive != savedArchive else {return}
+        guard migrationPending || archive != savedArchive else {return}
         saveAttempts+=1
         do {
             try saveMerged(archive,lockWait:terminating ? 0.5:0)
-            savedArchive=archive;successfulSaves+=1;retryAfter=nil;saveFailed=false
+            savedArchive=archive;migrationPending=false
+            successfulSaves+=1;retryAfter=nil;saveFailed=false
         } catch {
             retryAfter=now+Self.saveInterval
             if !saveFailed {log("save failed; retrying at most every 30 seconds: \(error.localizedDescription)")}
@@ -93,6 +97,9 @@ final class ObservationJournalPersistence {
             Thread.sleep(forTimeInterval:0.01)
         }
         defer {_ = flock(descriptor,LOCK_UN)}
+        // Re-read under the same sibling lock used by v1. A running old process
+        // will reject our v2 envelope before merging; a future/invalid archive
+        // installed since load is likewise preserved by this read and save().
         let disk:ObservationArchive?
         do {disk=try ObservationArchive.load(from:url)}
         catch {

@@ -37,7 +37,9 @@ final class BehaviorEngineTests:XCTestCase {
             var settings=e.settings;settings.ambientFrequency = .high;e.applySettings(settings)
             let bird=e.birds[0],id=e.id(of:bird)!
             var trace:[Trace]=[]
-            for second in 0..<150 {
+            // Preserve the whole scripted prefix, then allow bounded additional
+            // opportunities after input suppression and reserved empty draws.
+            for second in 0..<600 {
                 switch second {
                 case 0:_=try runID(e.handle(.pointerVisit(.preview)))
                 case 2:e.handle(.pointerClick)
@@ -54,6 +56,7 @@ final class BehaviorEngineTests:XCTestCase {
                 trace.append(Trace(positions:states.map(\.position),frames:states.map(\.frameName),
                     events:e.events.map{"\($0.sequence):\($0.time):\($0.type):\($0.kind?.rawValue ?? ""):\($0.reason?.rawValue ?? ""):\($0.participants.map(\.rawValue))"},
                     counts:[e.residentCount,e.passingCount,e.pendingCount,e.activeRunCount,e.leasedBirdCount]))
+                if second>=149,e.events.contains(where:{$0.type == .started && $0.source == .automatic}) {break}
             }
             XCTAssertTrue(e.events.contains{$0.type == .started && $0.source == .automatic})
             return trace

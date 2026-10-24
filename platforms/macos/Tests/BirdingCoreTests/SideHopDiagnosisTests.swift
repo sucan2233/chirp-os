@@ -139,7 +139,9 @@ final class SideHopDiagnosisTests:XCTestCase {
     func testRecordedRun183GeometryShowsMarginIntrusionWithoutDestinationSlotOverlap() {
         // Frozen measured geometry from .build/m6a-sidehop-183.json. This is
         // evidence of the failure boundary, not a reconstruction of bird 23's
-        // unrecorded route or ownership history.
+        // unrecorded route or ownership history. The historical M5n/M6ab
+        // seed73/run183/bird27/event396/t734.1 evidence and diagnosis remain in
+        // docs/m6a-sidehop-diagnosis.md; simulation 12 has a different scheduler.
         let corridor=CGRect(x:256.8847997859697,y:50.5560272098087,
             width:138.63702174504618,height:58.16937975316625)
         let peer=CGRect(x:196.35375665100855,y:36.45638150969205,
@@ -462,30 +464,41 @@ final class SideHopDiagnosisTests:XCTestCase {
         XCTAssertEqual(decoded.omittedSamples,8)
     }
 
-    func testM5nRun183FailureReproductionUsesProductionWorkloadAndExactHistoricalIdentity() throws {
+    func testCurrentSchedulerWorkloadPreservesSideHopTerminalsIntegrityAndCleanup() throws {
+        // Keep the production workload's seed, population and duration, while
+        // applying current simulation semantics. Historical event identities
+        // belong to the archived evidence and frozen geometry test above.
         let report=try BehaviorStress.run(configuration:BehaviorStress.m5nSideHopConfiguration)
         XCTAssertTrue(report.passed,"Integrity: \(report.integrity.violations); cleanup: \(report.cleanup)")
+        XCTAssertEqual(report.configuration.seed,73)
+        XCTAssertEqual(report.configuration.birds,12);XCTAssertEqual(report.configuration.displays,2)
+        XCTAssertTrue(report.configuration.autonomous)
         XCTAssertEqual(report.workload.version,7)
         XCTAssertEqual(report.workload.warmupSteps,160*60)
-        let sample=try XCTUnwrap(report.failures.samples.first(where:{$0.matchesM5nSideHopFailure}),
-            "Must reproduce seed73/run183/bird27/event396/t734.1; an unrelated failure is insufficient")
-        let diagnostic=try XCTUnwrap(sample.sideHop)
-        XCTAssertEqual(diagnostic.cause,.birdIntrusion)
-        XCTAssertEqual(diagnostic.classification,.safetyExit)
-        XCTAssertEqual(diagnostic.stage,"executionValidation")
-        XCTAssertEqual(diagnostic.conflictingBird,23)
-        XCTAssertEqual(diagnostic.expectedMotionRevision,2)
-        XCTAssertEqual(diagnostic.actualMotionRevision,2)
-        XCTAssertNil(diagnostic.accompanyingSafety)
-        XCTAssertEqual(diagnostic.birdID,27)
-        XCTAssertEqual(diagnostic.simulationTime,sample.simulationTime,accuracy:0.000001)
-        XCTAssertEqual(report.metrics.failureReasons["targetInvalid"],1)
+        XCTAssertEqual(report.workload.activeSteps,575*60)
+        XCTAssertGreaterThan(report.metrics.startedByKind["sideHop"] ?? 0,0)
+        XCTAssertGreaterThan(report.metrics.completedByKind["sideHop"] ?? 0,0)
+        XCTAssertEqual(report.metrics.startedRuns,
+            report.metrics.completedRuns+report.metrics.cancelledRuns+report.metrics.failedRuns)
+        XCTAssertEqual(report.integrity.checks["runLifecycle"],true)
+        XCTAssertEqual(report.integrity.checks["finalRunBalance"],true)
+        XCTAssertEqual(report.integrity.checks["noTimeouts"],true)
+        XCTAssertEqual(report.metrics.failureReasons["timedOut"] ?? 0,0)
+        for sample in report.failures.samples where sample.behavior=="sideHop" {
+            let diagnostic=try XCTUnwrap(sample.sideHop)
+            XCTAssertEqual(sample.reason,"targetInvalid")
+            XCTAssertEqual(sample.participants,[diagnostic.birdID])
+            XCTAssertEqual(diagnostic.simulationTime,sample.simulationTime,accuracy:0.000001)
+            XCTAssertNotEqual(diagnostic.classification,.invariantViolation)
+        }
+        XCTAssertTrue(report.cleanup.passed);XCTAssertTrue(report.cleanup.drainReachedIdle)
         XCTAssertEqual(report.cleanup.activeRuns,0)
         XCTAssertEqual(report.cleanup.leases,0)
         XCTAssertEqual(report.cleanup.reservations,0)
         XCTAssertEqual(report.cleanup.ecologyMemories,0)
-        // Freeze the observed direct cause. Bird 23's complete route and owner
-        // are not recorded by this report, so this does not prove a planner bug
-        // or assert that every upstream planning decision was correct.
+        XCTAssertEqual(report.cleanup.birds,0);XCTAssertEqual(report.cleanup.pendingBirds,0)
+        XCTAssertEqual(report.cleanup.props,0);XCTAssertEqual(report.cleanup.pendingPreviews,0)
+        XCTAssertEqual(report.cleanup.habitatObjects,0);XCTAssertEqual(report.cleanup.habitatReservations,0)
+        XCTAssertEqual(report.cleanup.visitorLeases,0)
     }
 }
