@@ -104,8 +104,9 @@ enum FeedingArtVerification {
             let catchFrames=[SpeciesID.barnSwallow,.yellowRumpedFlycatcher].contains(id)
                 ? ["catchOpen","catchClose","catchRecover"]:[]
             let courtship=id == .spottedDove ? ["courtRaise","courtBow0","courtBow1","courtBowRecover","courtObserve"]:[]
+            let nesting=id == .spottedDove ? NestArtGeometry.frameNames:[]
             let actual=BirdArt.names(for:id)
-            manifestOK = manifestOK && BirdArt.names.count==34 && actual==preCatch+catchFrames+courtship &&
+            manifestOK = manifestOK && BirdArt.names.count==34 && actual==preCatch+catchFrames+courtship+nesting &&
                 Array(actual.prefix(preCatch.count+catchFrames.count))==preCatch+catchFrames &&
                 Array(actual.prefix(preCatch.count))==preCatch &&
                 Array(actual.prefix(prior.count))==prior &&

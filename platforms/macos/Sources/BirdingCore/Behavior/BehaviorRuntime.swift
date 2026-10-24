@@ -146,7 +146,7 @@ final class BehaviorRuntime {
         validate(in:engine)
         for id in runs.keys.sorted() {
             guard var run=runs[id],!engine.paused || run.execution.runsWhilePaused else {continue}
-            let afterMotion=run.execution.kind == .insectCatch || run.execution.kind == .visitorGift
+            let afterMotion=run.execution.kind == .insectCatch || run.execution.kind == .visitorGift || run.execution.kind.isNestActivity
             let advanceDT=afterMotion ? min(dt,max(0,run.execution.timeout-run.age)):dt
             run.motionDT=afterMotion ? advanceDT:nil
             run.age+=advanceDT;runs[id]=run
@@ -168,6 +168,7 @@ final class BehaviorRuntime {
             }
         }
         if run.execution.kind == .courtshipDisplay {engine.scheduler.didFinishCourtship()}
+        if run.execution.kind.isNestActivity {engine.scheduler.didFinishNest()}
         engine.releaseGiftAuthorization(run:id)
         runs.removeValue(forKey:id)
         for bird in run.execution.participants where owners[bird]==id {owners.removeValue(forKey:bird)}

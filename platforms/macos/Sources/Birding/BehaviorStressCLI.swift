@@ -22,7 +22,7 @@ enum BehaviorStressCLI {
         let args=Array(CommandLine.arguments.dropFirst())
         guard args.contains(where:{$0.hasPrefix("--stress-")}) else {return}
         do {
-            let flags:Set<String>=["--stress-behavior","--stress-seconds","--stress-birds","--stress-displays","--stress-seed","--stress-mode","--stress-sidehop-case"]
+            let flags:Set<String>=["--stress-behavior","--stress-seconds","--stress-birds","--stress-displays","--stress-seed","--stress-mode","--stress-sidehop-case","--stress-content"]
             var values:[String:String]=[:]
             var index=0
             while index<args.count {
@@ -56,7 +56,9 @@ enum BehaviorStressCLI {
                     throw ArgumentError.invalid("m5n-183 requires >=575 seconds, 12 birds, 2 displays, seed 73, autonomous mode")
                 }
             }
-            let report=try BehaviorStress.run(configuration:.init(seconds:seconds,birds:birds,displays:displays,seed:seed,autonomous:mode == "autonomous"))
+            let content=values["--stress-content"] ?? "enabled"
+            guard ["enabled","disabled"].contains(content) else {throw ArgumentError.invalid("stress content must be enabled or disabled")}
+            let report=try BehaviorStress.run(configuration:.init(seconds:seconds,birds:birds,displays:displays,seed:seed,autonomous:mode == "autonomous",newContentDisabled:content == "disabled"))
             let expected=report.failures.samples.first(where:{$0.matchesM5nSideHopFailure})
             let reproduced=sideHopCase.map{_ in expected?.sideHop != nil}
             let passed=report.passed && reproduced != false

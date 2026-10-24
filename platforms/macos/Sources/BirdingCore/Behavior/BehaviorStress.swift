@@ -10,9 +10,11 @@ public enum BehaviorStress {
         public let displays: Int
         public let seed: UInt64
         public let autonomous: Bool
-        public init(seconds: Double = 600, birds: Int = 24, displays: Int = 2, seed: UInt64 = 73, autonomous:Bool=false) {
+        /// Explicit M5n comparison mode; nil keeps the historical workload unchanged.
+        public let newContentDisabled:Bool?
+        public init(seconds: Double = 600, birds: Int = 24, displays: Int = 2, seed: UInt64 = 73, autonomous:Bool=false,newContentDisabled:Bool=false) {
             self.seconds=seconds; self.birds=birds; self.displays=displays; self.seed=seed
-            self.autonomous=autonomous
+            self.autonomous=autonomous;self.newContentDisabled=newContentDisabled ? true:nil
         }
         func validate() throws {
             guard seconds.isFinite, (1...3600).contains(seconds) else {throw ConfigurationError.seconds}
@@ -268,11 +270,22 @@ public enum BehaviorStress {
             let habitats=engine.habitatSnapshot(),habitatIDs=runs.values.flatMap{$0.execution.habitatReservations}
             check("habitatOwnership",Set(habitatIDs).count==habitatIDs.count && Set(habitatIDs)==engine.runtime.habitatReservations &&
                 habitatIDs.allSatisfy{id in habitats.contains{$0.id==id}} && habitats.count<=1 && habitats.allSatisfy {object in
-                    object.remainingLifetime.isFinite && (0...(object.kind == .bath ? 300.0:180.0)).contains(object.remainingLifetime) && (0...3).contains(object.remainingUses) &&
+                    object.remainingLifetime.isFinite && (0...(object.kind == .nest ? 900.0:object.kind == .bath ? 300.0:180.0)).contains(object.remainingLifetime) && (0...3).contains(object.remainingUses) &&
                     (!object.retiring || habitatIDs.contains(object.id) || (engine.habitatObjects.objects[object.id]?.retirementAge ?? .infinity)<=2)
                 })
             let propIDs=runs.values.flatMap{$0.execution.propIDs}
-            check("propOwnership",Set(propIDs).count==propIDs.count && Set(props.map(\.id)).count==props.count && Set(props.map(\.id)).isSubset(of:Set(propIDs).union(engine.carriedObjects.objects.keys).union(engine.insects.current.map{[$0.id]} ?? [])) && engine.carriedObjects.objects.values.allSatisfy { object in
+            let nests=engine.habitatObjects.objects.values.compactMap(\.nest)
+            let materialIDs=nests.flatMap{$0.materials.map(\.id)}
+            let nestOwnership=Set(materialIDs).count==materialIDs.count && nests.allSatisfy { nest in
+                nest.materials.count==3 && nest.materials.allSatisfy { material in
+                    if material.state == .attached {
+                        guard let lease=nest.reservation else {return false}
+                        return lease.materialID==material.id && material.owner==lease.birdID && owners[lease.birdID]==lease.runID
+                    }
+                    return material.owner==nil
+                }
+            }
+            check("propOwnership",nestOwnership && Set(propIDs).count==propIDs.count && Set(props.map(\.id)).count==props.count && Set(props.map(\.id)).isSubset(of:Set(propIDs).union(engine.carriedObjects.objects.keys).union(engine.insects.current.map{[$0.id]} ?? []).union(materialIDs)) && engine.carriedObjects.objects.values.allSatisfy { object in
                 if object.state == .attached {return object.owner.flatMap{owners[$0]} == object.reservedByRun && object.reservedByRun != nil}
                 return object.owner==nil
             })
@@ -382,6 +395,10 @@ public enum BehaviorStress {
         init(_ configuration:Configuration) {
             config=configuration
             var settings=BirdSettings(); settings.ambientFrequency = .high
+            if configuration.newContentDisabled == true {
+                settings.bathEnabled=false;settings.leafCarryEnabled=false;settings.insectCatchEnabled=false
+                settings.visitorGiftsEnabled=false;settings.courtshipEnabled=false;settings.nestBuildingEnabled=false
+            }
             engine=BehaviorEngine(seed:configuration.seed,settings:settings)
             screens=(0..<configuration.displays).map {i in CGRect(x:-2400+i*2400,y:-400+(i%2)*80,width:2400,height:1800)}
             var hosts:[Surface]=[]
@@ -574,6 +591,10 @@ public enum BehaviorStress {
             value.perchActions=enabled; value.leafPlayEnabled=enabled; value.ambientLeafPlayEnabled=enabled
             value.sideHopEnabled=enabled; value.takeoffPreparationEnabled=enabled; value.passiveAttentionEnabled=enabled
             value.pointerFollowEnabled=enabled;value.edgePeekEnabled=enabled;value.chaseEnabled=enabled;value.travelTogetherEnabled=enabled;value.allopreeningEnabled=enabled;value.fixedPerchesEnabled=enabled;value.foodTrayEnabled=enabled;value.bathEnabled=enabled;value.leafCarryEnabled=enabled;value.insectCatchEnabled=enabled
+            if config.newContentDisabled == true {
+                value.bathEnabled=false;value.leafCarryEnabled=false;value.insectCatchEnabled=false
+                value.visitorGiftsEnabled=false;value.courtshipEnabled=false;value.nestBuildingEnabled=false
+            }
             measured("settings"){engine.applySettings(value)}; auditor.metrics.settingsChanges+=1; inspect()
         }
         func pause(_ value:Bool) {

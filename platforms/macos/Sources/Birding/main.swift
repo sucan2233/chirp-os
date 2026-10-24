@@ -158,6 +158,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 exit(passed ? 0:1)
             } catch {print(error);exit(1)}
         }
+        if let path = argument("--verify-nest-art") {
+            do {
+                let folder=URL(fileURLWithPath:path)
+                try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+                var checks:[String:Bool]=[:]
+                try NestArtVerification.run(into:&checks,folder:folder)
+                let passed=checks.values.allSatisfy{$0}
+                saveJSON(["passed":passed,"checks":checks,
+                    "scope":"Source art only; excludes native transport, build and settings acceptance."],
+                    to:folder.appendingPathComponent("report.json"))
+                print("Nest art: \(passed ? "PASS":"FAIL") — \(checks.count) checks")
+                exit(passed ? 0:1)
+            } catch {print(error);exit(1)}
+        }
+        if let path = argument("--verify-nest") {
+            do {
+                let folder=URL(fileURLWithPath:path)
+                try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+                var checks:[String:Bool]=[:]
+                var errors:[String:String]=[:]
+                let groups:[(String,(inout [String:Bool],URL)throws->Void)]=[
+                    ("art",{try NestArtVerification.run(into:&$0,folder:$1)}),
+                    ("materialNative",{try NestMaterialVerification.run(into:&$0,folder:$1)}),
+                    ("materialSettings",{try NestMaterialSettingsVerification.run(into:&$0,folder:$1)}),
+                    ("buildNative",{try NestBuildVerification.run(into:&$0,folder:$1)}),
+                    ("buildSettings",{try NestBuildSettingsVerification.run(into:&$0,folder:$1)})]
+                // Each group owns and tears down its fixture. A blocked native
+                // route must fail the overall run without hiding other groups.
+                for (name,run) in groups {
+                    do {try autoreleasepool {try run(&checks,folder)}}
+                    catch {errors[name]=error.localizedDescription}
+                }
+                let passed=errors.isEmpty && checks.values.allSatisfy{$0}
+                saveJSON(["passed":passed,"checks":checks,"errors":errors],to:folder.appendingPathComponent("report.json"))
+                print("Nest: \(passed ? "PASS":"FAIL") — \(checks.count) checks")
+                for name in errors.keys.sorted() {print("\(name): \(errors[name]!)")}
+                exit(passed ? 0:1)
+            } catch {print(error);exit(1)}
+        }
         if let path = argument("--verify-courtship") {
             do {
                 let folder=URL(fileURLWithPath:path)

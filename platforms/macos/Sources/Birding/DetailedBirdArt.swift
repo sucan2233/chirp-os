@@ -118,6 +118,7 @@ enum DetailedBirdArt {
         }
     }
     static func make(_ frame:String,species id:SpeciesID)->CGImage {
+        if let image=nestImage(frame,species:id) {return image}
         if let image=courtshipImage(frame,species:id) {return image}
         if let image=catchImage(frame,species:id) {return image}
         if let image=carryImage(frame,species:id) {return image}
@@ -974,6 +975,7 @@ extension DetailedBirdArt {
     /// coordinates. Reflect with x -> 48-x, just like BirdRenderState. A tucked
     /// bill still has an anchor even though scapular feathers cover its tip.
     static func poseBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        if let anchor=nestBillAnchor(frame,species:id) {return anchor}
         if let anchor=courtshipBillAnchor(frame,species:id) {return anchor}
         if let anchor=catchBillAnchor(frame,species:id) {return anchor}
         if let anchor=carryBillAnchor(frame,species:id) {return anchor}
@@ -999,6 +1001,7 @@ extension DetailedBirdArt {
 
     static func poseImage(_ frame:String,species id:SpeciesID,
                           part:FoundationPosePart?=nil)->CGImage? {
+        if let image=nestImage(frame,species:id,part:part) {return image}
         if let image=courtshipImage(frame,species:id,part:part) {return image}
         if let image=catchImage(frame,species:id,part:part) {return image}
         if let image=carryImage(frame,species:id,part:part) {return image}
@@ -2119,6 +2122,84 @@ extension DetailedBirdArt {
             (Double(root.x+(v.x-root.x)*0.47),Double(root.y+(v.y-root.y)*0.47))
         }
         c.poly([(Double(root.x)-1,Double(root.y)+0.6)]+patch+[(Double(root.x)+0.8,Double(root.y)+1.2)],"white")
+    }
+}
+
+// M7b/c: independent material handling. No twig is baked into a bird bitmap.
+extension DetailedBirdArt {
+    static func nestBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        NestArtGeometry.billAnchor(species:id,frame:frame)
+    }
+    static func nestImage(_ frame:String,species id:SpeciesID,
+                          part:FoundationPosePart?=nil)->CGImage? {
+        guard let p=NestArtGeometry.pose(species:id,frame:frame) else {return nil}
+        let density=SpeciesCatalog.standard.profile(id).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let w=Double(p.body.width),h=Double(p.body.height)
+        if part == nil || part == .body {
+            let root=p.bodyPoint(5,h*0.36),base=p.bodyPoint(10,h*0.77)
+            let tx=Double(p.tail.x),ty=Double(p.tail.y)
+            c.poly([(root.x,root.y),(base.x,base.y),(tx+5.2,ty+1),(tx,ty)],"brown",outline:true)
+            c.line([(root.x,root.y+1),(tx+1.1,ty)],"tan",width:0.8)
+            c.line([(tx+0.4,ty),(tx+4.8,ty+0.8)],"silver",width:0.8)
+            c.ctx.saveGState();c.ctx.translateBy(x:p.body.midX,y:p.body.midY)
+            c.ctx.rotate(by:CGFloat(p.bodyPitch));c.ctx.translateBy(x:-w/2,y:-h/2)
+            c.oval(0,0,w,h,"tan",outline:true)
+            c.oval(w*0.48,1.5,w*0.52-0.5,h-1.7,"pink")
+            c.oval(w*0.61,h*0.48,w*0.34,h*0.34,"cream")
+            // Shoulder rolls and wing carriage follow the changing torso, with
+            // coverts and tail clear of the forward bill/material contact.
+            let wingLift=p.pressing ? 0.6:(p.adjusting ? -0.5:0.1)
+            c.poly([(3,1+wingLift),(9,0.5+wingLift),(16,3.3),(12,h*0.73),
+                    (3,h-0.5),(1,h-0.6),(1.7,h*0.5)],"brown",outline:true)
+            c.poly([(4,1.9+wingLift),(9,1.4),(12.5,3.4),(8,h*0.66),(3.5,h*0.74)],"tan")
+            for n in 0..<5 {
+                let x=3.4+Double(n)*1.5
+                c.line([(x+4,3.9),(max(2,x-0.7),h-1.1)],n%2 == 0 ? "tan":"umber",width:0.65)
+            }
+            for n in 0..<9 {
+                let x=4+Double(n%3)*2.4,y=1.8+Double(n/3)*1.6
+                c.line([(x,y),(x+0.9,y-0.3),(x+1.7,y+0.5)],"buff",width:0.6)
+            }
+            if p.pressing {c.line([(10,2.1),(15,4.1),(13,6.2)],"silver",width:0.65)}
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .feet {
+            for x in [27.0,31.0] {
+                c.line([(x-1,33),(x,35),(x-0.5,38.5)],"brown",width:1)
+                c.line([(x-2,39),(x,38.5),(x+2,39)],"brown")
+            }
+        }
+        if part == nil || part == .headNeck {
+            let neck=[p.neckPoint(0,0),p.neckPoint(1,0),p.neckPoint(1,1),p.neckPoint(0,1)]
+            c.poly(neck.map{(Double($0.x),Double($0.y))},"pink")
+            let nape=[p.neckPoint(0,0),p.neckPoint(1,0),p.neckPoint(1,0.18),p.neckPoint(0,0.20)]
+            c.poly(nape.map{(Double($0.x),Double($0.y))},"tan")
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.headPitch))
+            let hx = -p.headWidth/2,hy = -p.headHeight/2
+            c.oval(hx,hy,p.headWidth,p.headHeight,"gray",outline:true)
+            c.oval(hx+0.7,0.6,p.headWidth-1.2,1.8,"pink")
+            let ex=hx+p.headWidth*0.72,ey=hy+p.headHeight*0.38
+            c.oval(ex-0.3,ey-0.2,1.5,1.5,"buff")
+            if p.pressing {c.line([(ex,ey+0.6),(ex+1,ey+0.5)],"eye",width:0.65)}
+            else {c.oval(ex,ey,0.95,1.05,"eye");c.oval(ex+0.3,ey,0.35,0.35,"white")}
+            c.ctx.restoreGState()
+            c.poly(p.collar.map{(Double($0.x),Double($0.y))},"black")
+            // The mapped centers are on this species' native pixel grid. Each
+            // white spot occupies exactly one cell and retains black between
+            // the five spots even in the compressed handling poses.
+            c.ctx.setFillColor(c.color("white"))
+            for point in p.collarSpots {
+                c.ctx.fill(CGRect(x:point.x-c.unit/2,y:point.y-c.unit/2,width:c.unit,height:c.unit))
+            }
+        }
+        if part == nil || part == .bill {
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.headPitch))
+            let root=p.billRoot,length=p.billLength
+            c.poly([(root,-0.7),(root+length,0.5),(root+length-1,1.2),(root,1.3)],"dark")
+            c.ctx.restoreGState()
+        }
+        return c.image
     }
 }
 

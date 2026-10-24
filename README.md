@@ -43,7 +43,7 @@
 - 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
 - 支持中英文切换、暂停动画和随系统启动。
 
-开发进度（2026-10-24）：M7a珠颈斑鸠求偶已实现：两只现有居民在同一合法普通边缘完成4秒展示，默认开启并受社交总开关控制。Release/严格签名、求偶专项250/250、完整原生鸟3615/3615、设置2052/2052、定向核心32/32通过；60份完整跨率回放及旧19份完整报告一致，46鸟旧像素/索引、78 GIF/7800帧通过。累计已验证159张新增鸟体与10张道具，剩8/6张用于运巢材与筑巢。本批18次性能对照通过；首轮952核心测试中一个夹具的7项失败及后续修订历史保留，不声称单次952全绿。见 [M7a验收](docs/M7A-ACCEPTANCE.md)与[M6g验收](docs/M6G-ACCEPTANCE.md)。
+开发进度（2026-10-24）：M7a珠颈斑鸠求偶已通过阶段验收。M7b/c巢材运输与简化筑巢已实现：用户放置巢台和三根材料，运输与整理分别记录，取消保留已提交进度，不自动补充材料。8张新姿态和6张新道具已导出，46鸟旧像素/索引保持，66份跨率回放及旧20份完整报告一致，78 GIF/7800帧通过。全量核心992项、修正后巢台定向46项和素材347项通过；0.5×/1×运材80项通过，当前Mac锁定，待补齐原生复验；尚未授予M7b/c阶段通过。详细轮次、失败历史和性能口径见[M7b/c验收](docs/M7BC-ACCEPTANCE.md)。
 
 用户安装版仍为M6a/b，后续候选尚未安装。M6h隔离真实桌面工具的30秒smoke及16项离线检查通过；这不替代2h人工观察、8h长跑、物理多屏或真实睡眠唤醒。M6/M7整体继续实施，详见[实施进度](docs/IMPLEMENTATION-PROGRESS.md)与[M6h记录](docs/M6H-ACCEPTANCE.md)。
 
@@ -143,7 +143,7 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - Hourly update checks download and verify new releases in the background. A notification opens release notes and installation confirmation; a red dot and menu entry remain if you postpone.
 - Chinese and English menus, animation pause, and launch at login.
 
-Development status (2026-10-24): M7a Spotted Dove courtship is implemented: two existing residents perform a four-second display on the same eligible ordinary edge. It defaults on under the social master switch. Release/signature checks, all 250 courtship checks, 3,615 bird checks, 2,052 settings checks, and 32 targeted core tests passed. All 60 full replay reports agree across rates; 19 older reports match the M6g baseline without removing fields. Legacy pixels/indices for all 46 species and 78 GIFs/7,800 frames passed. Verified additions total 159 bird poses and ten props; eight poses and six props remain for nest delivery/building. All 18 performance comparison runs passed. Initial failures and fixture corrections remain documented; no single all-green 952-test run is claimed. See the [M7a acceptance record](docs/M7A-ACCEPTANCE.md).
+Development status (2026-10-24): M7a Spotted Dove courtship passed stage acceptance. M7b/c nest delivery and building are implemented: a user-placed platform holds exactly three twigs, delivery and arrangement complete as separate visits, and cancellation preserves committed progress without replenishment. Eight poses and six props are exported; all 46 legacy pixel/index sets, 66 cross-rate replay reports, 20 full legacy reports, and 78 GIFs/7,800 frames passed. The full core suite passed 992 tests; after corrections, 46 nest-related tests and 347 art checks passed. Native transport passed 80 checks at 0.5×/1×. Native revalidation is waiting for the locked Mac to be unlocked; M7b/c acceptance is not yet granted. See the [M7b/c evidence](docs/M7BC-ACCEPTANCE.md).
 
 The installed development app remains M6a/b; later candidates are not installed. The isolated production desktop completed a real 30-second smoke and all 16 offline checks. Two-hour human observation, eight-hour soak, physical multi-monitor and real sleep/wake acceptance remain open. Overall M6/M7 work continues; see the [progress record](docs/IMPLEMENTATION-PROGRESS.md) and [M6h evidence](docs/M6H-ACCEPTANCE.md).
 

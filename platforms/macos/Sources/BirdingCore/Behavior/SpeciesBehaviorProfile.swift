@@ -5,7 +5,7 @@ import Foundation
 /// candidate sorting and random streams.
 public struct SpeciesBehaviorProfile {
     public let species:SpeciesID
-    public static let dedicatedKinds:[BehaviorKind] = [.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,.visitorGift,.courtshipDisplay]
+    public static let dedicatedKinds:[BehaviorKind] = [.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,.visitorGift,.courtshipDisplay,.nestMaterialCarry,.nestBuild]
     private static let permissions:[BehaviorKind:[SpeciesID]] = [
         .edgePeek:[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel,.lightVentedBulbul,.magpieRobin],
         .chase:[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling,.redWhiskeredBulbul],
@@ -17,7 +17,9 @@ public struct SpeciesBehaviorProfile {
         .leafCarry:[.treeSparrow],
         .insectCatch:[.barnSwallow,.yellowRumpedFlycatcher],
         .visitorGift:[.azureWingedMagpie],
-        .courtshipDisplay:[.spottedDove]
+        .courtshipDisplay:[.spottedDove],
+        .nestMaterialCarry:[.spottedDove],
+        .nestBuild:[.spottedDove]
     ]
     public static let ambientFlockSpecies:[SpeciesID] = [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,
         .lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]
@@ -27,6 +29,8 @@ public struct SpeciesBehaviorProfile {
     public static let catchFrameNames=["catchOpen","catchClose","catchRecover"]
     public static let courtshipFrameNames=["courtRaise","courtBow0","courtBow1","courtBowRecover","courtObserve"]
     public static let carryFrameNames=["carryLook","carryLower","carryGrip","carryPlace"]
+    public static let nestCarryFrameNames=carryFrameNames
+    public static let nestBuildFrameNames=["nestPlace","nestAdjust0","nestAdjust1","nestSettle"]
     public static let bathFrameNames=BathGeometry.frameNames
     public static let peekSpecies:[SpeciesID] = [.lightVentedBulbul,.magpieRobin]
     public static let peekFrameNames:[String] = ["peekLower","peekLook","peekRecover"]

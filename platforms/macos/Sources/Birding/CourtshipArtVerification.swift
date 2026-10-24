@@ -73,7 +73,7 @@ enum CourtshipArtVerification {
         }
         checks[prefix+"ExactlyFiveAfterUnchangedFortyEightPrefix"]=prior.count==48 && unique.count==5 &&
             BirdArt.courtshipNames==names && CourtshipArtGeometry.frameNames==names &&
-            BirdArt.names(for:id)==prior+names && Array(BirdArt.names(for:id).prefix(48))==prior
+            BirdArt.names(for:id)==prior+names+NestArtGeometry.frameNames && Array(BirdArt.names(for:id).prefix(48))==prior
         checks[prefix+"TorsoWingTailIndependentlyChange"]=Set(bodies).count==5
         checks[prefix+"OnlySpottedDoveProvided"]=CourtshipArtGeometry.species==[id] &&
             SpeciesBehaviorProfile.species(for:.courtshipDisplay)==[id] && SpeciesID.allCases.filter{$0 != id}.allSatisfy {species in
@@ -98,7 +98,8 @@ enum CourtshipArtVerification {
         let anchors=metadata["courtshipBeakAnchors"] as? [String:[Double]] ?? [:]
         let clips=metadata["clips"] as? [String:Any] ?? [:]
         checks[prefix+"RoleMetadataAndSixSharedBillAnchors"]=Set(anchors.keys)==Set(names+["stand"]) &&
-            Set(clips.keys)==Set(["watch","alert","rest","takeoffPreparation","courtshipInitiator","courtshipObserver"]) &&
+            Set(clips.keys)==Set(["watch","alert","rest","takeoffPreparation","courtshipInitiator","courtshipObserver",
+                "nestMaterialPickup","nestMaterialPlace","nestBuild"]) &&
             names.allSatisfy {name in
                 guard let point=CourtshipArtGeometry.billAnchor(species:id,frame:name),let pair=anchors[name],pair.count==2 else {return false}
                 return abs(pair[0]-Double(point.x))<1e-9 && abs(pair[1]-Double(point.y))<1e-9

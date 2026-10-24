@@ -2383,6 +2383,22 @@
           40.959800999999999,
           12.599348000000001
         ],
+        "carryGrip" : [
+          40,
+          39
+        ],
+        "carryLook" : [
+          40,
+          19
+        ],
+        "carryLower" : [
+          40,
+          31
+        ],
+        "carryPlace" : [
+          40,
+          39
+        ],
         "courtBow0" : [
           41,
           24
@@ -2410,6 +2426,22 @@
         "lookNear" : [
           41.589210000000001,
           23.415016999999999
+        ],
+        "nestAdjust0" : [
+          39.999999999999993,
+          39
+        ],
+        "nestAdjust1" : [
+          41,
+          39
+        ],
+        "nestPlace" : [
+          40,
+          26
+        ],
+        "nestSettle" : [
+          40,
+          39
         ],
         "restLower" : [
           38.261130999999999,
@@ -2610,6 +2642,143 @@
           "maximumLoops" : 1,
           "recovery" : "currentEngineState"
         },
+        "nestBuild" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 26
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "nestPlace"
+            },
+            {
+              "beak" : {
+                "x" : 39.999999999999993,
+                "y" : 39
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "nestAdjust0"
+            },
+            {
+              "beak" : {
+                "x" : 41,
+                "y" : 39
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "nestAdjust1"
+            },
+            {
+              "beak" : {
+                "x" : 39.999999999999993,
+                "y" : 39
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "nestAdjust0"
+            },
+            {
+              "beak" : {
+                "x" : 41,
+                "y" : 39
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "nestAdjust1"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 39
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "nestSettle"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 26
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "nestPlace"
+            }
+          ],
+          "id" : "spottedDove.nestBuild",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "nestMaterialPickup" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 19
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "carryLook"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 31
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "carryLower"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 39
+              },
+              "duration" : 0.20000000000000001,
+              "name" : "carryGrip"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 19
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "carryLook"
+            }
+          ],
+          "id" : "spottedDove.nestMaterialCarry.pickup",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "nestMaterialPlace" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 39
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "carryPlace"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 19
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "carryLook"
+            }
+          ],
+          "id" : "spottedDove.nestMaterialCarry.place",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
         "rest" : {
           "foot" : {
             "x" : 29,
@@ -2734,7 +2903,117 @@
           17.5
         ]
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact; courtshipDisplay both roles sample shared run age 4.0s: face 0.4, raise 0.5, two bows 1.0 each (0.35\/0.40\/0.25), observe 0.5, recover 0.6; facing and mutual clearance are execution-owned",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact; courtshipDisplay both roles sample shared run age 4.0s: face 0.4, raise 0.5, two bows 1.0 each (0.35\/0.40\/0.25), observe 0.5, recover 0.6; facing and mutual clearance are execution-owned; nestMaterialCarry pickup 1.2s with atomic grip at 0.7s, settled place 0.4s plus empty-bill recovery 0.3s; nestBuild 2.2s with commit at 1.9s before raised recovery; both visits complete only after execution-owned safe exit",
+      "nestBeakAnchors" : {
+        "bank0" : [
+          41.285927372584581,
+          19.314140515845725
+        ],
+        "bank1" : [
+          41.57868349461279,
+          20.324814621831351
+        ],
+        "bank2" : [
+          41.800033232269342,
+          21.353489783937547
+        ],
+        "bound" : [
+          41.93209651925411,
+          22.245721362018219
+        ],
+        "carryGrip" : [
+          40,
+          39
+        ],
+        "carryLook" : [
+          40,
+          19
+        ],
+        "carryLower" : [
+          40,
+          31
+        ],
+        "carryPlace" : [
+          40,
+          39
+        ],
+        "fly0" : [
+          41.913807426648326,
+          22.096490598696938
+        ],
+        "fly1" : [
+          41.849999999999994,
+          21.349999999999998
+        ],
+        "fly2" : [
+          41.724151981483615,
+          20.558438083344694
+        ],
+        "fly3" : [
+          41.682362602811089,
+          20.763763234932519
+        ],
+        "fly4" : [
+          41.781827225757354,
+          21.505489252807511
+        ],
+        "fly5" : [
+          41.867757197855695,
+          22.298590024241545
+        ],
+        "fly6" : [
+          41.93209651925411,
+          22.245721362018219
+        ],
+        "fly7" : [
+          41.976186234560359,
+          22.345054119384979
+        ],
+        "glide0" : [
+          41.57868349461279,
+          20.324814621831351
+        ],
+        "glide1" : [
+          41.57868349461279,
+          20.324814621831351
+        ],
+        "glide2" : [
+          41.57868349461279,
+          20.324814621831351
+        ],
+        "land0" : [
+          40.5,
+          17.5
+        ],
+        "land1" : [
+          40.5,
+          17.5
+        ],
+        "land2" : [
+          40.5,
+          17.5
+        ],
+        "nestAdjust0" : [
+          39.999999999999993,
+          39
+        ],
+        "nestAdjust1" : [
+          41,
+          39
+        ],
+        "nestPlace" : [
+          40,
+          26
+        ],
+        "nestSettle" : [
+          40,
+          39
+        ],
+        "stand" : [
+          40.5,
+          17.5
+        ]
+      },
       "transportBeakAnchors" : {
 
       },
@@ -3657,7 +3936,7 @@
   },
   "poseClock" : "owningBehaviorSimulationAge",
   "schemaVersion" : 2,
-  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt}.swift; platforms\/macos\/Sources\/BirdingCore\/Behavior\/CourtshipArtGeometry.swift",
+  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt,NestArt}.swift; platforms\/macos\/Sources\/BirdingCore\/Behavior\/{CourtshipArtGeometry,NestArtGeometry,TwigGeometry}.swift",
   "speciesFrames" : {
     "azureWingedMagpie" : [
       "stand",
@@ -4152,7 +4431,15 @@
       "courtBow0",
       "courtBow1",
       "courtBowRecover",
-      "courtObserve"
+      "courtObserve",
+      "carryLook",
+      "carryLower",
+      "carryGrip",
+      "carryPlace",
+      "nestPlace",
+      "nestAdjust0",
+      "nestAdjust1",
+      "nestSettle"
     ],
     "swinhoesWhiteEye" : [
       "stand",

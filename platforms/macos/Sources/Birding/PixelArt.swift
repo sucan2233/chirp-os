@@ -55,6 +55,8 @@ final class BirdArt {
     static let bathNames = SpeciesBehaviorProfile.bathFrameNames
     static let peekNames = SpeciesBehaviorProfile.peekFrameNames
     static let courtshipNames = CourtshipArtGeometry.frameNames
+    static let nestCarryNames = NestArtGeometry.carryFrameNames
+    static let nestBuildNames = NestArtGeometry.buildFrameNames
     /// Export catch-only species without granting the twelve-species base pack.
     /// Keep all historical preview rows first, appending only new species.
     static var poseExportSpecies:[SpeciesID] {
@@ -70,7 +72,9 @@ final class BirdArt {
             (SpeciesBehaviorProfile.profile(for:species).allows(.bathVisit) ? bathNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.leafCarry) || SpeciesBehaviorProfile.profile(for:species).allows(.visitorGift) ? carryNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch) ? catchNames : []) +
-            (CourtshipArtGeometry.species.contains(species) ? courtshipNames : [])
+            (CourtshipArtGeometry.species.contains(species) ? courtshipNames : []) +
+            (SpeciesBehaviorProfile.profile(for:species).allows(.nestMaterialCarry) ? nestCarryNames : []) +
+            (SpeciesBehaviorProfile.profile(for:species).allows(.nestBuild) ? nestBuildNames : [])
     }
     let frames: [String: CGImage]
     let species: SpeciesID

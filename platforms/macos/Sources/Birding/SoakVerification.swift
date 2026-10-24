@@ -33,6 +33,31 @@ enum SoakVerification {
         let preferences = try read("preferences.json")
         checks["soakSmokeRequestedPopulationPersistedOnlyInIsolatedDomain"] = number(preferences, "populationLower") == number(manifest, "birds") &&
             number(preferences, "populationUpper") == number(manifest, "birds") && number(manifest, "birds") != nil
+        let isolation = try read("preference-isolation.json")
+        let autosaveName = manifest["statusAutosaveName"] as? String ?? ""
+        let sessionID = String(autosaveName.dropFirst("ChirpOS.Soak.".count))
+        let standardDomain = manifest["standardPreferencesDomain"] as? String ?? ""
+        checks["soakSmokePreferenceIsolationReportMatchesManifestAndSummary"] = number(manifest, "preferenceIsolationVersion") == 1 &&
+            number(isolation, "schemaVersion") == 1 && !standardDomain.isEmpty &&
+            isolation["standardPreferencesDomain"] as? String == standardDomain &&
+            NSDictionary(dictionary: isolation).isEqual(to: summary["preferencesIsolation"] as? [String: Any] ?? [:]) &&
+            manifest["standardDefaultsRedirected"] as? Bool == false && isolation["standardDefaultsRedirected"] as? Bool == false
+        checks["soakSmokeStatusUsesExplicitSessionUniqueAutosaveName"] = autosaveName.hasPrefix("ChirpOS.Soak.") &&
+            UUID(uuidString: sessionID) != nil && manifest["preferencesDomain"] as? String == "dev.birding.desktop.soak." + sessionID &&
+            autosaveName != "ChirpOS.Main" && manifest["statusAutosaveMode"] as? String == "sessionUniqueName" &&
+            isolation["expectedStatusAutosaveName"] as? String == autosaveName &&
+            isolation["statusAutosaveNameAtRemoval"] as? String == autosaveName &&
+            isolation["statusAutosaveConfigured"] as? Bool == true && isolation["statusAutosaveMatchesAtRemoval"] as? Bool == true
+        let removed = isolation["sessionAutosaveKeysRemoved"] as? [String]
+        let remaining = isolation["sessionAutosaveKeysRemaining"] as? [String]
+        checks["soakSmokeOnlyThisSessionsAutosaveKeysCleanedAndNoneRemain"] = removed != nil && remaining?.isEmpty == true &&
+            removed?.allSatisfy { $0.contains(autosaveName) && !$0.contains("ChirpOS.Main") } == true
+        checks["soakSmokeDefaultApplicationAndProductionPreferencesUnchanged"] =
+            (isolation["defaultApplicationDomainChangedKeysAfterCleanup"] as? [String])?.isEmpty == true &&
+            (isolation["protectedProductionPreferenceKeysChanged"] as? [String])?.isEmpty == true &&
+            isolation["defaultApplicationDomainUnchanged"] as? Bool == true && isolation["productionPreferenceKeysUnchanged"] as? Bool == true
+        checks["soakSmokeIsolatedSuiteRemovedAndPreferenceCleanupSucceeded"] = isolation["isolatedPreferencesDomainRemoved"] as? Bool == true &&
+            isolation["isolationSucceeded"] as? Bool == true && summary["preferenceIsolationSucceeded"] as? Bool == true
         checks["soakSmokeBinaryIdentityRecorded"] = (manifest["binarySHA256"] as? String)?.count == 64 &&
             (manifest["binaryPath"] as? String)?.hasPrefix("/") == true && (number(manifest, "pid") ?? 0) > 0
         checks["soakSmokeProductionSchedulingActuallyRan"] = (number(natural, "tickCount") ?? 0) > 0 &&
@@ -47,7 +72,9 @@ enum SoakVerification {
             "giftReceiverReservations", "props", "habitats", "carriedObjects", "insects", "pendingPointer", "pendingLeaf",
             "pendingFoodPlacement", "pendingBathPlacement", "pendingCarryPlacement", "pendingInsectPreview",
             "pendingGift", "giftTokens", "platformGiftAttempt", "sceneFocus", "activeVisitors"]
-        checks["soakSmokeAllResourceCountsExplicitAndZero"] = requiredZero.allSatisfy { counts[$0]?.intValue == 0 }
+        let nestZero = ["nests", "nestMaterials", "pendingNestPlacement"]
+        checks["soakSmokeAllResourceCountsExplicitAndZero"] = requiredZero.allSatisfy { counts[$0]?.intValue == 0 } &&
+            ((number(manifest, "simulationVersion") ?? 0) < 18 || nestZero.allSatisfy { counts[$0]?.intValue == 0 })
         let layers = summary["layersAfterClose"] as? [String: NSNumber] ?? [:]
         checks["soakSmokeWindowsLayersTimerAndMouseReleased"] = summary["windowsClosed"] as? Bool == true &&
             summary["timerStopped"] as? Bool == true && summary["mouseMonitorsStopped"] as? Bool == true &&
@@ -73,6 +100,7 @@ enum SoakVerification {
             eventCounts.allSatisfy { totals[$0.key]?.uint64Value == $0.value }
         var samples = 0, periodic = 0, naturalLine: Int?, cleanupLine: Int?
         var measuredRSS = false, measuredCPU = false
+        var statusSamples = 0, statusNamesIsolated = true
         try forEachLine(root.appendingPathComponent("telemetry.jsonl")) { record in
             samples += 1
             if record["label"] as? String == "periodic" { periodic += 1 }
@@ -81,9 +109,18 @@ enum SoakVerification {
             if let rss = number(record, "rssBytes"), rss.isFinite && rss > 0 { measuredRSS = true }
             if let cpu = number(record, "processCPUSeconds"), cpu.isFinite && cpu > 0,
                let percent = number(record, "intervalCPUPercentOneCore"), percent.isFinite && percent >= 0 { measuredCPU = true }
+            if ["started", "periodic", "naturalEnd", "resourcesAfterCleanup", "resourcesAfterIODrain"].contains(record["label"] as? String ?? "") {
+                statusSamples += 1
+                let persistence = record["persistence"] as? [String: Any] ?? [:]
+                statusNamesIsolated = statusNamesIsolated && persistence["statusItemPresent"] as? Bool == true &&
+                    persistence["statusAutosaveName"] as? String == autosaveName &&
+                    persistence["statusAutosaveMode"] as? String == "sessionUniqueName" &&
+                    persistence["statusAutosaveIsolated"] as? Bool == true && persistence["standardDefaultsRedirected"] as? Bool == false
+            }
         }
         checks["soakSmokePeriodicNativeProcessMeasurementsExist"] = periodic >= 2 && measuredRSS && measuredCPU
         checks["soakSmokeNaturalSnapshotPrecedesCleanup"] = naturalLine != nil && cleanupLine != nil && naturalLine! < cleanupLine!
+        checks["soakSmokeActualStatusNameIsolatedThroughoutRecordedLifetime"] = statusSamples >= periodic + 3 && statusNamesIsolated
         return checks
     }
 

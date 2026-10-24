@@ -35,7 +35,7 @@ final class DesktopView: NSView {
         CATransaction.begin(); CATransaction.setDisableActions(true)
         propRenderer.update(propSnapshot,on:root,desktopRect:desktopRect)
         fixedPerchRenderer.update(controller.engine.fixedPerchSnapshot(),world:controller.engine.world,on:root,desktopRect:desktopRect)
-        habitatRenderer.update(controller.engine.habitatSnapshot(),on:root,desktopRect:desktopRect)
+        habitatRenderer.update(controller.engine.habitatSnapshot(),nests:controller.engine.nestSnapshot(),on:root,desktopRect:desktopRect)
         while sprites.count > snapshot.count { sprites.removeLast().removeFromSuperlayer() }
         while sprites.count < snapshot.count {
             let container = CALayer()
@@ -89,7 +89,7 @@ final class DesktopView: NSView {
         // Keep the physical sibling order consistent with zPosition too.
         // Software layer captures do not implement all CA compositing rules;
         // a newly appended rear basin must never paint over an existing bird.
-        if propSnapshot.contains(where:{$0.kind == .leafToken || $0.kind == .insect}) || controller.engine.habitatSnapshot().contains(where:{$0.kind == .bath}) {
+        if propSnapshot.contains(where:{$0.kind == .leafToken || $0.kind == .insect || $0.kind == .twigToken}) || controller.engine.habitatSnapshot().contains(where:{$0.kind == .bath || $0.kind == .nest}) {
             root.sublayers=(root.sublayers ?? []).enumerated().sorted {a,b in
                 a.element.zPosition==b.element.zPosition ? a.offset<b.offset:a.element.zPosition<b.element.zPosition
             }.map(\.element)
@@ -280,6 +280,7 @@ final class DesktopController: NSObject {
         engine.handle(.cancelBathPlacement)
         engine.handle(.cancelCarryLeafPlacement)
         engine.handle(.cancelInsectCatchPreview)
+        engine.handle(.cancelNestPlacement)
         engine.handle(.cancelAmbient(.screensChanged))
         panels.forEach { $0.orderOut(nil) }; panels.removeAll(); views.removeAll()
         for screen in NSScreen.screens {
@@ -338,6 +339,7 @@ final class DesktopController: NSObject {
         settingsWindow?.refreshLeafCarryControls()
         settingsWindow?.refreshInsectCatchControls()
         settingsWindow?.refreshVisitorGiftControls()
+        settingsWindow?.refreshNestControls()
     }
     func tick() {
         let now = ProcessInfo.processInfo.systemUptime

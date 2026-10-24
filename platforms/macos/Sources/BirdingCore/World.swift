@@ -1,7 +1,7 @@
 import Foundation
 import CoreGraphics
 
-public enum HabitatSurfaceKind:String,Codable {case fixedPerch,foodTray,bath}
+public enum HabitatSurfaceKind:String,Codable {case fixedPerch,foodTray,bath,nest}
 
 public struct Surface: Equatable {
     public let id: UInt32

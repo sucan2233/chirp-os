@@ -1,6 +1,6 @@
 # M6h 隔离真实墙钟长跑：实现记录与待验收项
 
-记录日期：2026-10-24。**与M7a合批第三轮Release构建89.63s、strict签名通过；首次真实30秒smoke退出0，离线检查16/16通过。仅确认本次smoke，不代表M6h整阶段通过：2h观察、8h运行、其他退出入口和硬件验收仍未执行。** 用户文件隔离哈希证据有限，不能标为全通过。M6g冻结候选第六轮原生275/275已通过，主会已本地提交文档`392e39a`；不再沿用此前待解锁状态。这不替代M6h长跑或M7a验收。
+记录日期：2026-10-24。**与M7a合批第三轮Release构建89.63s、strict签名通过；首次真实30秒smoke退出0，离线检查16/16通过。仅确认本次smoke，不代表M6h整阶段通过：2h观察、8h运行、其他退出入口和硬件验收仍未执行。** 用户文件隔离哈希证据有限，不能标为全通过。后续状态栏 autosave 隔离修订已写源码，尚未构建或运行；旧16项结果不覆盖此次新增检查。M6g冻结候选第六轮原生275/275已通过，主会已本地提交文档`392e39a`；不再沿用此前待解锁状态。这不替代M6h长跑或M7a验收。
 
 ## 实现范围与接线
 
@@ -8,7 +8,7 @@
 
 - `DesktopSoakSession(output: URL, duration: Double, birds: Int) throws`；公开 `desktop`，以及 `start() throws`、幂等 `finish(reason:)`、`prepareForTermination() -> NSApplication.TerminateReply`。
 - main解析 `--soak-desktop <绝对新目录>`、`--soak-duration 30|7200|28800`、`--soak-birds 1...50`（默认12），并强持有session。soak分支在普通desktop启动、更新安装健康确认和updater创建之前返回。
-- Desktop提供 `isolatedSession`，所有种群偏好读写使用注入的 `preferences`，隔离模式跳过旧域迁移及新鸟提示。session提供无ServiceManagement读写的 `LoginItemManaging` 实现；不注册/注销登录项。还在start前注入无autosaveName的状态栏项，避免生产`ChirpOS.Main`自动保存位置/可见性污染用户偏好。
+- Desktop提供 `isolatedSession`，所有种群偏好读写使用注入的 `preferences`，隔离模式跳过旧域迁移及新鸟提示。session提供无ServiceManagement读写的 `LoginItemManaging` 实现；不注册/注销登录项。start前注入状态栏项，并立即明确指定 `ChirpOS.Soak.<本次UUID>`，不使用生产名称 `ChirpOS.Main`。这不是禁用 autosave：AppKit 的默认应用偏好域另作记录与清理检查，详见下文修订。
 - Desktop的 `tickObserver: ((Double, Double) -> Void)?` 在生产tick末尾传 `(uptime, rawDT)`，其中rawDT未经过0.05s裁剪。session保留原有回调链；tick里只做时间和tick缺口计数，较重的图层和进程采样每10秒进行。
 - Engine公开原有 `eventObserver: ((BehaviorEvent) -> Void)?`，session保留原有observer链并逐事件写盘。另提供只读 `giftReceiverReservationCount`，返回runtime当前接收枝预约数量；不得让观测改变随机流或模拟顺序。
 - `applicationShouldTerminate` 返回 `soakSession?.prepareForTermination() ?? .terminateNow`。已有finished状态返回terminateNow；其余状态先启动清理并返回terminateLater，等待异步IO后由session回复终止。
@@ -20,13 +20,13 @@
 
 输出目录必须新建或为空；`session.claim`以排他创建防止两个实例共用目录。非空目录和已有证据拒绝覆盖。全部五个持久化路径都在输出目录内：`settings.json`、`legacy.json`、`visitors.json`、`journal.json`、`gifts.json`。legacy保持不存在，绝不导入用户文件。无发现时journal、无自动授权时gifts可以不存在，报告记录实际存在性，不生成伪造的“已用账本”。
 
-首次启动从bundled BirdSettings默认值写入隔离settings，创建随机独立UserDefaults域，只写该域语言和数量上下限。session在 `desktop.start()` 前注入全部路径，并显式启用真实visitors/journal/gifts persistence；访客稳定namespace必须初始化成功才继续。结束保存隔离偏好快照后移除本次UserDefaults域。源码审计通过：上述接线未发现访问用户settings、草稿、访客、观察手册或礼物账本的路径；这与实际用户文件前后哈希验证是不同层次的证据，后者限制见下节。
+首次启动从bundled BirdSettings默认值写入隔离settings，创建随机独立UserDefaults域，controller 的语言和数量上下限读写使用该域。注入 suite 不会重定向 AppKit 自身的 `UserDefaults.standard`。session在 `desktop.start()` 前注入全部路径，并显式启用真实visitors/journal/gifts persistence；访客稳定namespace必须初始化成功才继续。结束保存隔离偏好快照后移除本次UserDefaults域，并单独审计默认应用域。源码审计通过：上述五文件接线未发现访问用户settings、草稿、访客、观察手册或礼物账本的路径；这与实际用户文件前后哈希验证是不同层次的证据，后者限制见下节。
 
 使用普通DesktopController初始化，不指定验证seed、不注入fixture鸟、不补鸟、不构造伪窗口宿主。保留真实生产timer、窗口采样、鼠标输入、种群到达、ambient与autonomous路由。固定上下限只设置目标数量，居民由原种群调度自然进入。默认关闭的功能仍关闭；未在本次真实运行发生的行为不因此获得覆盖。控制窗是本进程窗口，依照生产窗口采样规则不充当鸟的宿主。
 
 ## 证据与时长口径
 
-`manifest.json`记录输出/五个隔离路径、独立域、binary路径及流式SHA-256、bundle版本、OS、PID、实际engine seed、模拟版本和请求时长。不读取窗口标题或记录桌面截图。
+`manifest.json`记录输出/五个隔离路径、独立域、状态栏唯一名称、默认应用偏好域、`preferenceIsolationVersion=1`、binary路径及流式SHA-256、bundle版本、OS、PID、实际engine seed、模拟版本和请求时长。不读取窗口标题或记录桌面截图。
 
 `telemetry.jsonl`每10秒追加一条，另记起点、自然终点、清理后及通知：
 
@@ -47,7 +47,7 @@
 3. 刷新真实图层，先记录资源清理后状态；动画主体/道具层应为零。可保留静态背景层，最终关窗后再检查全部图层归零。
 4. 在session拥有的ledger串行队列后排barrier，等之前已开始的持久化事务结束及主队列迟到回调处理。取消不退款；晚到授权不会复活已清理的core request。
 5. 捕获不可变访客档案，在稳定visitors锁下按现有CAS持久化；不受周期flush重试节流导致退出漏保存。journal走既有终止flush。失败落盘，不伪称成功。
-6. 保存最终资源与事件，恢复原observer链，关闭控制窗/测试overlay，移除状态项和隔离偏好域，写summary后才允许退出。重复finish不再次取消或累计。
+6. 保存最终资源与事件，恢复原observer链，关闭控制窗/测试overlay，移除状态项和隔离偏好域。仅清理默认应用域中包含本次唯一状态栏名称的键，并记录清理前后差异；不覆盖整个默认域，不恢复用户或并发实例的修改。写 `preference-isolation.json` 和summary后才允许退出。重复finish不再次取消或累计。
 
 ## 首次真实30秒smoke实际结果
 
@@ -73,6 +73,18 @@ manifest记录二进制为 `dist/ChirpOS.app/Contents/MacOS/Birding`，版本0.6
 
 本次manifest五个持久化路径均落在独立输出目录，preferences为独立suite，源码隔离审计通过；真实文件隔离哈希证据仍有限。另，summary两份状态中的 `statusAutosaveDisabled=false`，离线16项未单独验证该字段，不能把16/16扩展成状态栏偏好无写入的动态证明。
 
+## 状态栏与默认偏好隔离修订（源码完成，待统一验证）
+
+本机 SDK `NSStatusItem.h` 明确 `autosaveName` 为 `null_resettable`：未指定时自动选名，设为 nil 会重置自动名并清除保存信息。因此旧注释“无名称即不保存”以及 `statusAutosaveDisabled:(name==nil)` 的判据不成立；上述历史报告原样保留，不追加通过结论。
+
+当前源码为每次运行生成一个 UUID：controller suite 为 `dev.birding.desktop.soak.<UUID>`，状态栏名称为 `ChirpOS.Soak.<UUID>`。创建状态项后、生产 `makeMenu` 之前赋值，并在生产 start 返回后检查实际名称一致。运行采样如实记录 `statusItemPresent`、`statusAutosaveName`、`statusAutosaveMode=sessionUniqueName`、`statusAutosaveIsolated`；`standardDefaultsRedirected=false` 明确 AppKit 默认域没有被 suite 重定向，不再输出误导性的 disabled 判据。
+
+结束时先记录移除前实际名称，再移除状态项；只删除默认应用域中包含本次 UUID 名称的键。`preference-isolation.json` 记录本次名称、默认应用域、清理前后变化的键名、已删除/残留的会话键、生产名称及语言/种群偏好是否变化、suite 是否移除，并与 summary 内同一份记录对应。不会导出用户偏好值。任何清理后默认应用域差异、残留或名称不符都会令 `preferenceIsolationSucceeded` 和 `cleanupSucceeded` 失败并保留错误，不回写原快照来取得通过。
+
+新离线检查保留原16项，另增加六项：隔离报告与manifest/summary一致；名称含合法且与suite相同的UUID；只清理本次键且无残留；默认应用域及生产偏好未变；suite移除及隔离清理成功；所有生命周期采样的实际状态项名称保持隔离。旧报告缺少本次证据，不能被新版检查补授状态栏隔离通过。
+
+此审计只比较本进程启动前与清理后的默认**应用域**快照，不保证全局偏好域或进程退出后的磁盘状态。并发旧实例若改变同域键，也会报告差异；不能由此归因于 soak，更不能覆盖该变化。后续真实smoke还需审阅这些新字段；本次只完成源码、静态核对和文档，未构建、运行离线检查或触发系统UI事件。2h/8h与硬件验收缺口不变。
+
 ## 运行方式与尚待执行项
 
 以下为运行方式；首次30秒已按上述证据完成，2h/8h仍未运行。每次必须使用全新绝对输出目录，直接启动二进制以保留其真实参数与终止路径：
@@ -89,6 +101,7 @@ manifest记录二进制为 `dist/ChirpOS.app/Contents/MacOS/Birding`，版本0.6
 | --- | --- | --- |
 | 与M7a合批构建/签名 | 第三轮Release 89.63s、strict签名通过 | 本次结果不代表M7a整阶段验收 |
 | 30秒真实桌面smoke及离线检查 | 首次退出0、16/16通过 | `.build/m6h-smoke-initial`中的manifest/JSONL/summary/verification |
+| 状态栏UUID名称与默认应用偏好隔离修订 | 源码已完成，未构建或运行 | 新smoke的 `preference-isolation.json`、实际名称采样与新版离线六项检查；旧16/16不覆盖 |
 | 控制窗关闭、菜单Quit、外部应用终止、启动失败清理 | 未运行 | 各自独立目录与幂等/零资源证据 |
 | 用户数据与草稿隔离 | 独立持久路径与源码审计通过；实际文件哈希证据有限，非全通过 | settings未变，visitors/observations变化，旧安装PID 13106同时运行，变化不可归因；需可区分写入来源的证据，不得为验证读取或改写草稿 |
 | 真实2h人工观察 | 未运行 | 解锁桌面、人工起止/观察记录；锁屏和不在场时段不能计算为观察 |
@@ -104,3 +117,9 @@ manifest记录二进制为 `dist/ChirpOS.app/Contents/MacOS/Birding`，版本0.6
 第二次独立30秒真实运行`.build/m6h-smoke-isolation`退出0，离线16/16再次通过。紧邻启动/结束快照`.build/m7a-delivery/user-data-narrow-smoke.json`仍显示用户visitors/observations变化，settings/species/gifts的存在性和哈希不变；旧安装版全程并行运行，因此不能用此比对独立归因文件写入者，文件哈希全不变项仍不授予通过。会话manifest记录独立五路径，代码在启动持久化前注入这些路径；不修改用户文件来取得测试通过。
 
 复用首轮非空输出目录的启动按预期退出1，并逐文件SHA256确认既有证据完全未被覆盖；结果`.build/m6h-reject-existing.json`。这仅验证拒绝非空路径，不等价于启动中途失败的完整收尾验收。
+
+## 状态栏隔离修正后的真实30秒复验
+
+第四轮M7b/c候选（SHA256 `7d3b5931971cd52d0aab5aa52abeee89f4419d6190ac834e0c260d07baaffcb6`）运行`.build/m6h-smoke-status-isolation`，退出0、实际墙钟30.109228秒，新增偏好检查后的离线22/22通过。每次UUID autosaveName在整个记录生命周期保持一致；结束后隔离suite已移除，本次状态栏键无残留，默认应用域与受保护生产偏好键的进程内前后快照没有差异，cleanupSucceeded=true且errors为空。原始证据为该目录的`manifest.json`、`telemetry.jsonl`、`preference-isolation.json`、`summary.json`及`verification.json`。
+
+本轮用于验证已修正的名称隔离与清理，没有再次通过用户文件哈希碰运气消除此前归因限制；没有证明所有用户文件无写入、退出后磁盘状态或全局defaults隔离。桌面工具仍报告锁定，此次30秒工具运行不计入2h人工观察，不构成8h或M6h/M7d整阶段验收。

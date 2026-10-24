@@ -1,0 +1,240 @@
+{
+  "version": 1,
+  "simulationVersion": 18,
+  "seed": "3701",
+  "settings": {
+    "schemaVersion": 1,
+    "catalog": {
+      "species": [
+        {
+          "id": "spottedDove",
+          "name": "珠颈斑鸠",
+          "englishName": "Spotted Dove",
+          "adultLengthCM": 31,
+          "weight": 15536,
+          "weightBasis": "上海2017–2023观鸟研究表2：15536只次",
+          "speed": 0.92,
+          "flapFPS": 36,
+          "perchMin": 40,
+          "perchMax": 84
+        }
+      ]
+    },
+    "probabilities": {
+      "entries": [
+        {
+          "id": "spottedDove",
+          "points": 10000,
+          "locked": false
+        }
+      ]
+    },
+    "perchDefaultsVersion": 1,
+    "nestBuildingEnabled": true,
+    "socialInteractions": false,
+    "perchActions": false,
+    "passiveAttentionEnabled": false,
+    "pointerVisits": false,
+    "flockPasses": false,
+    "ambientLeafPlayEnabled": false,
+    "ambientFrequency": "high"
+  },
+  "initialWorld": {
+    "screens": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 2400,
+        "height": 2200
+      }
+    ],
+    "displays": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 2400,
+        "height": 2200
+      }
+    ],
+    "displayIDs": [
+      "nest-display-0"
+    ],
+    "surfaces": [
+      {
+        "id": 3701,
+        "pid": 42,
+        "rect": {
+          "x": 200,
+          "y": 1700,
+          "width": 2000,
+          "height": 180
+        },
+        "layer": 0,
+        "isGround": false
+      }
+    ],
+    "scale": 1,
+    "pointer": {
+      "x": 20,
+      "y": 20
+    },
+    "buttonsDown": false,
+    "nestArtAvailable": true,
+    "availableFrames": {
+      "spottedDove": [
+        "stand",
+        "blink",
+        "land0",
+        "land1",
+        "land2",
+        "fly0",
+        "fly1",
+        "fly2",
+        "fly3",
+        "fly4",
+        "fly5",
+        "fly6",
+        "fly7",
+        "carryLook",
+        "carryLower",
+        "carryGrip",
+        "carryPlace",
+        "nestPlace",
+        "nestAdjust0",
+        "nestAdjust1",
+        "nestSettle"
+      ]
+    }
+  },
+  "fixtureBirds": [
+    {
+      "species": "spottedDove",
+      "host": 3701,
+      "fraction": 0.16075156576200417,
+      "perchDuration": 600,
+      "facingRight": true
+    }
+  ],
+  "inputs": [
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 303,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "placeNest",
+        "point": {
+          "x": 1400,
+          "y": 1700
+        }
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "nestMaterialCarry",
+        "source": "user"
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 15,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": true
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 60,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pause",
+        "flag": false
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 1200,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "nestMaterialCarry",
+        "source": "preview"
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 6,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "pointerClick"
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 360,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    },
+    {
+      "kind": "command",
+      "command": {
+        "name": "removeNest"
+      }
+    },
+    {
+      "kind": "advance",
+      "elapsed": 0.03333333333333333,
+      "repeatCount": 68,
+      "options": {
+        "population": false,
+        "ambient": false,
+        "routing": false
+      }
+    }
+  ]
+}

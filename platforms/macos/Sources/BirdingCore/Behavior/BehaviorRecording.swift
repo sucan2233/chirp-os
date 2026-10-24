@@ -33,6 +33,7 @@ public struct RecordedWorld:Codable,Equatable {
     public var screens,displays:[RecordedRect]
     public var displayIDs:[String]?
     public var fixedPerchArtAvailable:Bool?
+    public var nestArtAvailable:Bool?
     public var insectArtAvailable:Bool?
     public var leafCarryArtAvailable:Bool?
     public var bathArtAvailable:Bool?
@@ -43,7 +44,7 @@ public struct RecordedWorld:Codable,Equatable {
     public var localMinuteOfDay:Int?
     public var availableFrames:[String:[String]]?
     public init(_ world:BehaviorWorld) {
-        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable;foodTrayArtAvailable=world.foodTrayArtAvailable;bathArtAvailable=world.bathArtAvailable;leafCarryArtAvailable=world.leafCarryArtAvailable;insectArtAvailable=world.insectArtAvailable
+        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable;foodTrayArtAvailable=world.foodTrayArtAvailable;bathArtAvailable=world.bathArtAvailable;leafCarryArtAvailable=world.leafCarryArtAvailable;insectArtAvailable=world.insectArtAvailable;nestArtAvailable=world.nestArtAvailable
         surfaces=world.surfaces.map(RecordedSurface.init);scale=Double(world.scale);pointer=RecordedPoint(world.pointer)
         buttonsDown=world.buttonsDown;localMinuteOfDay=world.localMinuteOfDay
         availableFrames=Dictionary(uniqueKeysWithValues:world.availableFrames.map{($0.key.rawValue,$0.value.sorted())})
@@ -65,7 +66,7 @@ public struct RecordedWorld:Codable,Equatable {
         return BehaviorWorld(screens:screens.map(\.value),displays:displays.map(\.value),surfaces:surfaces.map(\.value),
             scale:scale,pointer:pointer.value,buttonsDown:buttonsDown,
             availableFrames:Dictionary(uniqueKeysWithValues:frames.map{(SpeciesID(rawValue:$0.key)!,Set($0.value))}),
-            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true,foodTrayArtAvailable:foodTrayArtAvailable ?? true,bathArtAvailable:bathArtAvailable ?? true,leafCarryArtAvailable:leafCarryArtAvailable ?? true,insectArtAvailable:insectArtAvailable ?? true)
+            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true,foodTrayArtAvailable:foodTrayArtAvailable ?? true,bathArtAvailable:bathArtAvailable ?? true,leafCarryArtAvailable:leafCarryArtAvailable ?? true,insectArtAvailable:insectArtAvailable ?? true,nestArtAvailable:nestArtAvailable ?? true)
     }
 }
 public struct RecordedSimulationOptions:Codable,Equatable {
@@ -96,6 +97,12 @@ public struct RecordedCommand:Codable {
         case .cancelCarryLeafPlacement:name="cancelCarryLeafPlacement"
         case .removeCarryLeaf:name="removeCarryLeaf"
         case .leafCarry(let value):name="leafCarry";source=value.rawValue
+        case .placeNest(let value):name="placeNest";point=RecordedPoint(value)
+        case .placeNestAfter(let value):name="placeNestAfter";delay=max(0,min(10,value.isFinite ? value:3))
+        case .cancelNestPlacement:name="cancelNestPlacement"
+        case .removeNest:name="removeNest"
+        case .nestMaterialCarry(let value):name="nestMaterialCarry";source=value.rawValue
+        case .nestBuild(let value):name="nestBuild";source=value.rawValue
         case .courtshipDisplay(let value):name="courtshipDisplay";source=value.rawValue
         case .visitorGift(let value):name="visitorGift";source=value.rawValue
         case .cancelVisitorGiftRequest:name="cancelVisitorGiftRequest"
@@ -152,6 +159,12 @@ public struct RecordedCommand:Codable {
         case "cancelCarryLeafPlacement":return .cancelCarryLeafPlacement
         case "removeCarryLeaf":return .removeCarryLeaf
         case "leafCarry":return .leafCarry(try origin())
+        case "placeNest":guard let point,point.valid else {throw bad()};return .placeNest(at:point.value)
+        case "placeNestAfter":return .placeNestAfter(try wait())
+        case "cancelNestPlacement":return .cancelNestPlacement
+        case "removeNest":return .removeNest
+        case "nestMaterialCarry":return .nestMaterialCarry(try origin())
+        case "nestBuild":return .nestBuild(try origin())
         case "courtshipDisplay":return .courtshipDisplay(try origin())
         case "visitorGift":return .visitorGift(try origin())
         case "cancelVisitorGiftRequest":return .cancelVisitorGiftRequest
@@ -276,6 +289,45 @@ public struct RecordedHabitatObjectState:Codable,Equatable {
         retiring=object.retiring;remainingLifetime=object.remainingLifetime
     }
 }
+/// Named-coordinate ledger evidence, including the exact atomic commit identities.
+public struct RecordedNestMaterialState:Codable,Equatable {
+    public var id:String,slot:Int,state:String,owner:String?,reservedByRun:String?,reservedBird:String?
+    public var position:RecordedPoint,rotation:Double,mirrored:Bool,opacity:Double,fadeRemaining:Double
+    public var pickupRunID:String?,deliveryRunID:String?,arrangementRunID:String?
+    public init(_ material:NestMaterialSnapshot) {
+        id=String(material.id.rawValue);slot=material.slot;state=material.state.rawValue
+        owner=material.owner.map{String($0.rawValue)};reservedByRun=material.reservedByRun.map{String($0.rawValue)}
+        reservedBird=material.reservedBird.map{String($0.rawValue)}
+        position=RecordedPoint(material.position);rotation=Double(material.rotation);mirrored=material.mirrored
+        opacity=material.opacity;fadeRemaining=material.fadeRemaining
+        pickupRunID=material.pickupRunID.map{String($0.rawValue)}
+        deliveryRunID=material.deliveryRunID.map{String($0.rawValue)}
+        arrangementRunID=material.arrangementRunID.map{String($0.rawValue)}
+    }
+}
+public struct RecordedNestState:Codable,Equatable {
+    public var id:String,surfaceID:UInt32,rect:RecordedRect,trayRect:RecordedRect,foot:RecordedPoint,trayFoot:RecordedPoint
+    public var parentHostID:UInt32,parentHostPID:Int32,parentFraction:Double,parentIsGround:Bool,parentGroundScale:Double
+    public var scale:Double,blockers:[RecordedRect],remainingLifetime:Double,retiring:Bool,retirementAge:Double?
+    public var progress:Int,completed:Bool,canContinue:Bool
+    public var reservationMaterialID:String?,reservationRunID:String?,reservationBirdID:String?,reservationPurpose:String?
+    public var materials:[RecordedNestMaterialState]
+    public init(_ nest:NestSnapshot) {
+        id=String(nest.id.rawValue);surfaceID=nest.surfaceID;rect=RecordedRect(nest.rect);trayRect=RecordedRect(nest.trayRect)
+        foot=RecordedPoint(nest.foot);trayFoot=RecordedPoint(nest.trayFoot)
+        parentHostID=nest.parentAnchor.hostID;parentHostPID=nest.parentAnchor.hostPID
+        parentFraction=Double(nest.parentAnchor.fraction);parentIsGround=nest.parentAnchor.isGround
+        parentGroundScale=Double(nest.parentAnchor.groundScale);scale=Double(nest.scale)
+        blockers=nest.blockers.map(RecordedRect.init);remainingLifetime=nest.remainingLifetime
+        retiring=nest.retiring;retirementAge=nest.retirementAge;progress=nest.progress
+        completed=nest.completed;canContinue=nest.canContinue
+        reservationMaterialID=nest.reservation.map{String($0.materialID.rawValue)}
+        reservationRunID=nest.reservation.map{String($0.runID.rawValue)}
+        reservationBirdID=nest.reservation.map{String($0.birdID.rawValue)}
+        reservationPurpose=nest.reservation?.purpose.rawValue
+        materials=nest.materials.map(RecordedNestMaterialState.init)
+    }
+}
 public struct RecordedCarriedObjectState:Codable,Equatable {
     public var id:String,kind:String,state:String,owner:String?,reservedByRun:String?
     public var hostID:UInt32,hostPID:Int32,fraction:Double,isGround:Bool,groundScale:Double
@@ -346,6 +398,9 @@ public struct BehaviorReplayReport:Codable,Equatable {
     public var hasInsectCatchPreview:Bool?
     public var insectPreviewRemaining:Double?
     public var insectPreviewSpecies:String?
+    public var nests:[RecordedNestState]?
+    public var nestCooldownRemaining:Double?
+    public var hasNestPlacement:Bool?
     public var courtshipCooldownRemaining:Double?
     public var insectCooldownRemaining:Double?
     public var hasCarryLeafPlacement:Bool?
@@ -374,12 +429,17 @@ public struct BehaviorReplayReport:Codable,Equatable {
         lastInsectContact=engine.lastInsectContact.map(RecordedInsectContact.init)
         insectMissedTargetCount=engine.insectMissedTargetCount;hasInsectCatchPreview=engine.hasInsectCatchPreview
         insectPreviewRemaining=engine.insectPreviewRemaining;insectPreviewSpecies=engine.insectPreviewSpecies?.rawValue
+        let nestValues=engine.nestSnapshot()
+        nests=nestValues.isEmpty ? nil:nestValues.map(RecordedNestState.init)
+        hasNestPlacement=engine.hasNestPlacement ? true:nil
+        nestCooldownRemaining=engine.scheduler.nestCooldownRemaining>0 ? engine.scheduler.nestCooldownRemaining:nil
         courtshipCooldownRemaining=engine.scheduler.courtshipCooldownRemaining>0 ? engine.scheduler.courtshipCooldownRemaining:nil
         insectCooldownRemaining=engine.scheduler.insectCooldownRemaining
         if let focus=engine.sceneFocus {
             switch focus.target {
             case .bath(let id):sceneFocusKind="bath";sceneFocusID=String(id.rawValue)
             case .leaf(let id):sceneFocusKind="leaf";sceneFocusID=String(id.rawValue)
+            case .nest(let id):sceneFocusKind="nest";sceneFocusID=String(id.rawValue)
             }
         }
         schedulerRemaining=engine.scheduler.remaining;sceneCooldownRemaining=engine.scheduler.sceneCooldownRemaining
@@ -403,7 +463,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=17,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=18,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

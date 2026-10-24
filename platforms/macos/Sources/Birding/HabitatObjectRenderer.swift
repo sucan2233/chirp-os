@@ -46,8 +46,18 @@ final class HabitatObjectRenderer {
         BathArt.image().width==128 && BathArt.image().height==40 &&
             BathGeometry.splashFrameNames.allSatisfy{BathArt.splashImage($0) != nil}
     }
+    static var nestArtAvailable:Bool {
+        NestArt.image().width==144 && NestArt.image().height==48 &&
+            NestArt.trayImage().width==32 && NestArt.trayImage().height==16 &&
+            NestArt.twigImage().width==16 && NestArt.twigImage().height==16 &&
+            (1...3).allSatisfy {progress in
+                guard let image=NestArt.overlayImage(progress:progress) else {return false}
+                return image.width==144 && image.height==48
+            }
+    }
     private var objects:[UInt64:CALayer]=[:]
     private var baths:[UInt64:(rear:CALayer,front:CALayer)]=[:]
+    private var nests:[UInt64:(platform:CALayer,tray:CALayer,progress:CALayer)]=[:]
 
     /// Preserve window occlusion in one renderable mask. A mask with its own
     /// mask can disappear during native layer composition; subtract both holes
@@ -74,8 +84,9 @@ final class HabitatObjectRenderer {
         mask.path=visible.subtracting(waterHole).subtracting(feetHole)
     }
 
-    func update(_ snapshot:[HabitatObjectRenderState],on root:CALayer,desktopRect:CGRect) {
+    func update(_ snapshot:[HabitatObjectRenderState],nests:[NestSnapshot]=[],on root:CALayer,desktopRect:CGRect) {
         updateBaths(snapshot.filter{$0.kind == .bath},on:root,desktopRect:desktopRect)
+        updateNests(nests,on:root,desktopRect:desktopRect)
         let trays=snapshot.filter{$0.kind == .foodTray}
         let live=Set(trays.map{$0.id.rawValue})
         for id in Array(objects.keys) where !live.contains(id) {objects.removeValue(forKey:id)?.removeFromSuperlayer()}
@@ -106,6 +117,41 @@ final class HabitatObjectRenderer {
         }
     }
 
+    private func updateNests(_ snapshot:[NestSnapshot],on root:CALayer,desktopRect:CGRect) {
+        let live=Set(snapshot.map{$0.id.rawValue})
+        for id in Array(nests.keys) where !live.contains(id) {
+            if let layers=nests.removeValue(forKey:id) {
+                for layer in [layers.platform,layers.tray,layers.progress] {layer.removeFromSuperlayer()}
+            }
+        }
+        for nest in snapshot {
+            let layers:(platform:CALayer,tray:CALayer,progress:CALayer)
+            if let existing=nests[nest.id.rawValue] {layers=existing}
+            else {
+                func make(_ part:String,_ z:CGFloat)->CALayer {
+                    let layer=CALayer();layer.name="habitat-nest-\(part)-\(nest.id.rawValue)";layer.zPosition=z
+                    let texture=CALayer();texture.magnificationFilter = .nearest;texture.minificationFilter = .nearest
+                    layer.addSublayer(texture);layer.mask=CAShapeLayer();root.addSublayer(layer);return layer
+                }
+                layers=(make("platform",-0.5),make("tray",-0.5),make("progress",-0.25))
+                nests[nest.id.rawValue]=layers
+            }
+            for (layer,rect,image) in [(layers.platform,nest.rect,Optional(NestArt.image())),
+                (layers.tray,nest.trayRect,Optional(NestArt.trayImage())),
+                (layers.progress,nest.rect,NestArt.overlayImage(progress:nest.progress))] {
+                let pieces=Geometry.visiblePieces(rect,blockers:nest.blockers)
+                layer.isHidden = !Self.nestArtAvailable || image==nil || !rect.intersects(desktopRect) || pieces.isEmpty
+                layer.sublayers![0].contents=image
+                guard !layer.isHidden else {continue}
+                layer.frame=rect.offsetBy(dx:-desktopRect.minX,dy:-desktopRect.minY)
+                layer.sublayers![0].frame=CGRect(origin:.zero,size:rect.size)
+                let path=CGMutablePath()
+                for piece in pieces {path.addRect(piece.offsetBy(dx:-rect.minX,dy:-rect.minY))}
+                let mask=layer.mask as! CAShapeLayer;mask.frame=layer.bounds
+                mask.path=path;mask.fillColor=NSColor.black.cgColor
+            }
+        }
+    }
     private func updateBaths(_ snapshot:[HabitatObjectRenderState],on root:CALayer,desktopRect:CGRect) {
         let live=Set(snapshot.map{$0.id.rawValue})
         for id in Array(baths.keys) where !live.contains(id) {

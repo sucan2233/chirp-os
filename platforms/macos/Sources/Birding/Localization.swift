@@ -10,6 +10,7 @@ enum AppLanguage: String {
         switch kind {
         case .foodTray:return text("临时食盘","Temporary food tray")
         case .bath:return text("浴盆","Bath")
+        case .nest:return text("巢台","Nest platform")
         }
     }
     /// Keep settings help and preview requirements in the product permission order.
@@ -27,6 +28,7 @@ enum AppLanguage: String {
     var insectCatchSupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.insectCatch)+text("。",".")}
     var visitorGiftSupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.visitorGift)+text("。",".")}
     var courtshipSupport:String {text("支持鸟种：","Supported species: ")+supportedSpeciesNames(for:.courtshipDisplay)+text("。",".")}
+    var nestSupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.nestMaterialCarry)+text("。",".")}
     var courtshipRequirement:String {
         text("请让两只已有","Let two existing ")+supportedSpeciesNames(for:.courtshipDisplay)+text("居民在同一普通顶部边缘或地面停稳，安静至少10秒，并把鼠标移远。",
             " residents settle on the same normal top or ground edge for at least 10 calm seconds; move the pointer away.")

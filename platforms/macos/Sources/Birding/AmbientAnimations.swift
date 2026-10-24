@@ -15,6 +15,7 @@ extension DesktopController {
         world.bathArtAvailable=HabitatObjectRenderer.bathArtAvailable
         world.leafCarryArtAvailable=ScenePropRenderer.leafCarryArtAvailable
         world.insectArtAvailable=ScenePropRenderer.insectArtAvailable
+        world.nestArtAvailable=HabitatObjectRenderer.nestArtAvailable
         engine.updateWorld(world,sampleDT:sampleDT)
         reconcileGiftAuthorization()
     }
@@ -30,7 +31,20 @@ extension DesktopController {
     }
     func consumeBehaviorEvents() {
         for event in engine.events where event.sequence>lastBehaviorEvent {
-            if event.kind == .visitorGift {
+            if event.kind == .nestMaterialCarry || event.kind == .nestBuild {
+                let build=event.kind == .nestBuild
+                switch event.type {
+                case .completed:
+                    settingsWindow?.message.stringValue=build ?
+                        t("已整理一根枝条并安全离开；本次筑巢记录一次。","One twig arranged and the bird departed safely; one building step recorded."):
+                        t("一根巢材已送达且小鸟安全离开；本次运材记录一次。","One twig delivered and the bird departed safely; one delivery recorded.")
+                case .failed,.cancelled,.rejected,.previewResult:
+                    if let reason=event.reason {settingsWindow?.message.stringValue=settingsWindow?.nestMessage(reason,build:build) ?? behaviorMessage(reason)}
+                    else if event.type == .previewResult {settingsWindow?.message.stringValue=t("巢台与三根材料已放置；请移开鼠标后预览。","Nest platform and three materials placed; move the pointer away before previewing.")}
+                default:break
+                }
+                settingsWindow?.refreshNestControls();settingsWindow?.refreshBathControls();settingsWindow?.refreshFoodTrayControls()
+            } else if event.kind == .visitorGift {
                 switch event.type {
                 case .completed:
                     settingsWindow?.message.stringValue=event.source == .preview ?

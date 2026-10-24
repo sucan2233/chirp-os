@@ -226,6 +226,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -469,6 +491,25 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -484,7 +525,8 @@
       "restPose",
       "takeoffPose",
       "bathing",
-      "carryingLeaf"
+      "carryingLeaf",
+      "carryingNestMaterial"
     ],
     "missingPoseFrames" : [
 
@@ -724,6 +766,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -942,10 +1006,7 @@
         "contentSupported" : false,
         "kind" : "leafCarry",
         "missingFrames" : [
-          "carryGrip",
-          "carryLook",
-          "carryLower",
-          "carryPlace"
+
         ],
         "productAllowed" : false
       },
@@ -963,16 +1024,29 @@
         "contentSupported" : false,
         "kind" : "visitorGift",
         "missingFrames" : [
-          "carryGrip",
-          "carryLook",
-          "carryLower",
-          "carryPlace"
+
         ],
         "productAllowed" : false
       },
       {
         "contentSupported" : true,
         "kind" : "courtshipDisplay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "nestBuild",
         "missingFrames" : [
 
         ],
@@ -991,7 +1065,10 @@
       "alertPose",
       "restPose",
       "takeoffPose",
-      "courtship"
+      "carryingLeaf",
+      "courtship",
+      "carryingNestMaterial",
+      "buildingNest"
     ],
     "missingPoseFrames" : [
 
@@ -1235,6 +1312,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -1493,6 +1592,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -1754,6 +1875,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -1997,6 +2140,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -2257,6 +2422,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -2500,6 +2687,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -2747,6 +2956,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -2990,6 +3221,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -3237,6 +3490,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3480,6 +3755,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -3727,6 +4024,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3972,6 +4291,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4211,6 +4552,25 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4224,7 +4584,8 @@
       "alertPose",
       "restPose",
       "takeoffPose",
-      "carryingLeaf"
+      "carryingLeaf",
+      "carryingNestMaterial"
     ],
     "missingPoseFrames" : [
 
@@ -4468,6 +4829,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -4715,6 +5098,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4951,6 +5356,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -5213,6 +5640,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -5458,6 +5907,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -5696,6 +6167,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -5957,6 +6450,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -6200,6 +6715,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -6447,6 +6984,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -6690,6 +7249,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -6937,6 +7518,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7182,6 +7785,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7423,6 +8048,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -7671,6 +8318,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7914,6 +8583,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -8161,6 +8852,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -8404,6 +9117,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -8651,6 +9386,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -8894,6 +9651,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -9141,6 +9920,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -9384,6 +10185,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -9644,6 +10467,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -9887,6 +10732,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -10134,6 +11001,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -10377,6 +11266,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -10624,6 +11535,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -10867,6 +11800,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }
@@ -11114,6 +12069,28 @@
           "courtRaise"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -11357,6 +12334,28 @@
           "courtBowRecover",
           "courtObserve",
           "courtRaise"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestMaterialCarry",
+        "missingFrames" : [
+          "carryGrip",
+          "carryLook",
+          "carryLower",
+          "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "nestBuild",
+        "missingFrames" : [
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestPlace",
+          "nestSettle"
         ],
         "productAllowed" : false
       }

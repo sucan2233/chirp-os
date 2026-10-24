@@ -167,6 +167,37 @@ public struct PoseClip:Codable,Equatable {
     public static func catchBeakAnchor(species:SpeciesID,frame:String) -> Anchor? {
         CatchPoseAnchors.anchor(species:species,frame:frame)
     }
+    /// Nest art has independent permission and anchors; providing the same four
+    /// frame names never grants ordinary leafCarry to the dove.
+    public static func nestBeakAnchor(species:SpeciesID,frame:String)->Anchor? {
+        NestPoseAnchors.anchor(species:species,frame:frame)
+    }
+    public static func nestMaterialPickup(species:SpeciesID)->Self? {
+        guard SpeciesBehaviorProfile.profile(for:species).allows(.nestMaterialCarry) else {return nil}
+        return nestClip(species:species,id:"nestMaterialCarry.pickup",
+            names:["carryLook","carryLower","carryGrip","carryLook"],times:[0.4,0.3,0.2,0.3])
+    }
+    public static func nestMaterialPlace(species:SpeciesID)->Self? {
+        guard SpeciesBehaviorProfile.profile(for:species).allows(.nestMaterialCarry) else {return nil}
+        return nestClip(species:species,id:"nestMaterialCarry.place",names:["carryPlace","carryLook"],times:[0.4,0.3])
+    }
+    /// One independent build visit. The executor consumes a delivered material
+    /// after settle at age1.9, before the .3s raised empty-bill recovery.
+    public static func nestBuild(species:SpeciesID)->Self? {
+        guard SpeciesBehaviorProfile.profile(for:species).allows(.nestBuild) else {return nil}
+        return nestClip(species:species,id:"nestBuild",
+            names:["nestPlace","nestAdjust0","nestAdjust1","nestAdjust0","nestAdjust1","nestSettle","nestPlace"],
+            times:[0.3,0.3,0.3,0.3,0.3,0.4,0.3])
+    }
+    private static func nestClip(species:SpeciesID,id:String,names:[String],times:[Double])->Self? {
+        guard NestArtGeometry.species.contains(species),names.count==times.count else {return nil}
+        var frames=[Frame]()
+        for (name,time) in zip(names,times) {
+            guard let anchor=nestBeakAnchor(species:species,frame:name) else {return nil}
+            frames.append(Frame(name:name,duration:time,beak:anchor))
+        }
+        return Self(id:"\(species.rawValue).\(id)",frames:frames)
+    }
     public static func carryBeakAnchor(species:SpeciesID,frame:String) -> Anchor? {
         CarryPoseAnchors.anchor(species:species,frame:frame)
     }
@@ -175,6 +206,7 @@ public struct PoseClip:Codable,Equatable {
     }
     /// Logical canvas anchors track the editable species drawing, never bitmap size.
     public static func beakAnchor(species:SpeciesID,frame:String) -> Anchor {
+        if let anchor=NestPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=CourtshipPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=CatchPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=CarryPoseAnchors.anchor(species:species,frame:frame) {return anchor}

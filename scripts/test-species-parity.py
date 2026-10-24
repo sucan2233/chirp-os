@@ -44,6 +44,8 @@ expected_extras['barnSwallow'] += ['catchOpen', 'catchClose', 'catchRecover']
 expected_extras['yellowRumpedFlycatcher'] = ['catchOpen', 'catchClose', 'catchRecover']
 courtship_frames = ['courtRaise', 'courtBow0', 'courtBow1', 'courtBowRecover', 'courtObserve']
 expected_extras['spottedDove'] += courtship_frames
+nest_build_frames = ['nestPlace', 'nestAdjust0', 'nestAdjust1', 'nestSettle']
+expected_extras['spottedDove'] += carry_frames + nest_build_frames
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
     assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'
@@ -77,8 +79,12 @@ for frame, expected in (('carryGrip', [40, 39]), ('carryPlace', [42, 23])):
     assert len(anchor) == 2 and all(abs(a - b) < 1e-9 for a, b in zip(anchor, expected)), f'Wrong magpie contact anchor: {frame}'
 
 dove = metadata['spottedDove']
-assert len(specific['spottedDove']) == 53 and specific['spottedDove'][48:] == courtship_frames, 'Dove courtship must follow its unchanged historical 48'
-assert set(dove['clips']) == {'watch', 'alert', 'rest', 'takeoffPreparation', 'courtshipInitiator', 'courtshipObserver'}
+historical_dove = frames + feeding_frames + pose_frames + courtship_frames
+assert len(historical_dove) == 53 and specific['spottedDove'][:53] == historical_dove, 'Dove nesting changed the historical 53 prefix'
+assert len(specific['spottedDove']) == 61 and specific['spottedDove'][53:] == carry_frames + nest_build_frames, 'Dove must append exactly eight nest poses'
+assert specific['spottedDove'][48:53] == courtship_frames, 'Courtship no longer follows the historical 48'
+assert set(dove['clips']) == {'watch', 'alert', 'rest', 'takeoffPreparation', 'courtshipInitiator', 'courtshipObserver',
+                            'nestMaterialPickup', 'nestMaterialPlace', 'nestBuild'}
 assert set(dove['courtshipBeakAnchors']) == set(courtship_frames + ['stand'])
 for frame, expected in zip(courtship_frames, ([39.5, 13], [41, 24], [41.5, 30], [40, 19], [38.5, 16])):
     for key in ('beakAnchors', 'courtshipBeakAnchors'):
@@ -100,6 +106,34 @@ for row in support:
     if row['species'] != 'spottedDove':
         assert not next(b for b in row['behaviors'] if b['kind'] == 'courtshipDisplay')['productAllowed'], 'Courtship scope expanded'
 
+nest_targets = ([40, 19], [40, 31], [40, 39], [40, 39], [40, 26], [40, 39], [41, 39], [40, 39])
+assert set(dove['nestBeakAnchors']) == set(carry_frames + nest_build_frames + transport_frames), 'Nest transport or arrange bills incomplete'
+for frame, target in zip(carry_frames + nest_build_frames, nest_targets):
+    for key in ('nestBeakAnchors', 'beakAnchors'):
+        actual = dove[key][frame]
+        assert len(actual) == 2 and all(abs(a - b) < 1e-9 for a, b in zip(actual, target)), f'Wrong nest contact: {frame}'
+nest_sequences = {
+    'nestMaterialPickup': (['carryLook', 'carryLower', 'carryGrip', 'carryLook'], [0.4, 0.3, 0.2, 0.3]),
+    'nestMaterialPlace': (['carryPlace', 'carryLook'], [0.4, 0.3]),
+    'nestBuild': (['nestPlace', 'nestAdjust0', 'nestAdjust1', 'nestAdjust0', 'nestAdjust1', 'nestSettle', 'nestPlace'],
+                  [0.3, 0.3, 0.3, 0.3, 0.3, 0.4, 0.3]),
+}
+for key, (names, durations) in nest_sequences.items():
+    clip = dove['clips'][key]
+    assert [f['name'] for f in clip['frames']] == names and [f['duration'] for f in clip['frames']] == durations
+    assert clip['foot'] == {'x': 29, 'y': 39} and clip['maximumLoops'] == 1 and clip['recovery'] == 'currentEngineState'
+    for frame in clip['frames']:
+        assert all(abs(frame['beak'][axis] - dove['nestBeakAnchors'][frame['name']][index]) < 1e-9
+                   for index, axis in enumerate(('x', 'y'))), f'Clip bill drift: {key}'
+for row in support:
+    for kind in ('nestMaterialCarry', 'nestBuild'):
+        behavior = next(b for b in row['behaviors'] if b['kind'] == kind)
+        allowed = row['species'] == 'spottedDove'
+        assert behavior['productAllowed'] == allowed and behavior['contentSupported'] == allowed, 'Nest scope or content differs'
+        if allowed:
+            assert not behavior['missingFrames']
+assert not next(b for b in dove_support['behaviors'] if b['kind'] == 'leafCarry')['productAllowed'], 'Nest art granted ordinary leaf carry'
+
 prop_manifest = json.loads((ROOT / 'shared/art/props/manifest.json').read_text())
 leaf = prop_manifest['leafToken']
 assert leaf['file'] == 'leafToken.png' and leaf['logicalSize'] == [16, 16], 'Gift must reuse the existing leaf'
@@ -113,6 +147,29 @@ assert insect.get('collisionRadius') == 3 and insect.get('scale') == 'worldScale
 assert abs(insect.get('frameDuration', 0) - 1 / 12) < 1e-12, 'Insect phase timing differs'
 assert insect.get('lifetime') == 12 and insect.get('maximumInstances') == 1, 'Insect lifetime/capacity differs'
 assert all((ROOT / 'shared/art/props' / name).is_file() for name in insect['files'])
+twig = prop_manifest['twigToken']
+assert twig['file'] == 'twigToken.png' and twig['logicalSize'] == [16, 16]
+assert twig['gripAnchor'] == [3, 12] and twig['surfaceAnchor'] == [8, 12] and twig['scale'] == 'worldScale'
+assert twig['contactRotation'] == 0 and twig['maximumInkY'] == 12
+polygon = twig['polygon']
+assert min(p[0] for p in polygon) == 0 and max(p[0] for p in polygon) == 16 and max(p[1] for p in polygon) == 12
+assert sorted(map(tuple, polygon)) == sorted((16 - x, y) for x, y in polygon), 'Twig grips are not silhouette-symmetric'
+nest = prop_manifest['nestPlatform']
+tray = prop_manifest['nestMaterialTray']
+progress = prop_manifest['nestProgress']
+assert nest['logicalSize'] == [144, 48] and nest['contactAnchor'] == [72, 24] and nest['contactY'] == 24
+assert nest['materialPoints'] == [[60, 24], [72, 24], [84, 24]] and nest['maximumVisitors'] == 1
+assert nest['initialMaterials'] == 3 and nest['lifetime'] == 900
+assert tray['logicalSize'] == [32, 16] and tray['contactAnchor'] == [16, 12] and tray['contactY'] == 12
+assert tray['materialPoints'] == [[8, 12], [16, 12], [24, 12]] and tray['bakedMaterials'] == 0
+assert tray['horizontalOffset'] == 120 and tray['placementOrder'] == ['left', 'right']
+assert progress['files'] == ['nestOverlay1.png', 'nestOverlay2.png', 'nestOverlay3.png'] and progress['zeroUsesBase'] is True
+assert progress['logicalSize'] == [144, 48] and progress['contactY'] == 24 and progress['looseTwigsBaked'] is False
+expected_props = {'bathBasin.png', 'leafToken.png', 'twigToken.png', 'nestPlatform.png', 'nestMaterialTray.png'}
+expected_props.update(f'splash{i}.png' for i in range(4))
+expected_props.update(insect['files'])
+expected_props.update(progress['files'])
+assert len(expected_props) == 16 and {p.name for p in (ROOT / 'shared/art/props').glob('*.png')} == expected_props, 'Prop asset budget differs'
 assert all((ROOT / 'shared/art' / f'{id}.png').is_file() for id in ids)
 print(f'PASS: {len(ids)} matching species schedules and {len(frames)} shared frame names')
 

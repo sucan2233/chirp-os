@@ -41,6 +41,7 @@ enum M6ContentVerification {
         try checkCatchArt(into:&checks,evidence:&evidence,folder:output)
         try VisitorGiftArtVerification.run(into:&checks,folder:output)
         try CourtshipArtVerification.run(into:&checks,folder:output)
+        try NestArtVerification.run(into:&checks,folder:output)
         let fixture=try Fixture(folder:output)
         defer {fixture.close()}
         try checkSettings(fixture,into:&checks,folder:output)
@@ -131,7 +132,9 @@ enum M6ContentVerification {
             let catchFrames=[SpeciesID.barnSwallow,.yellowRumpedFlycatcher].contains(id) ? CatchArtGeometry.frameNames:[]
             let prior=old+extra+peek+bath+carry+catchFrames
             let actual=BirdArt.names(for:id)
-            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=actual==prior+court &&
+            let nestCarry=id == .spottedDove ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]
+            let nestBuild=id == .spottedDove ? ["nestPlace","nestAdjust0","nestAdjust1","nestSettle"]:[]
+            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=actual==prior+court+nestCarry+nestBuild &&
                 Array(actual.prefix(prior.count))==prior &&
                 SpeciesBehaviorProfile.profile(for:id).poseFrameNames==extra
             checks["m6cPeekRequiredFrames-"+id.rawValue]=Set(profile.requiredFrames(for:.edgePeek)) ==

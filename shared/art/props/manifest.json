@@ -67,7 +67,192 @@
       12
     ]
   },
+  "nestMaterialTray" : {
+    "bakedMaterials" : 0,
+    "contactAnchor" : [
+      16,
+      12
+    ],
+    "contactY" : 12,
+    "file" : "nestMaterialTray.png",
+    "horizontalOffset" : 120,
+    "logicalSize" : [
+      32,
+      16
+    ],
+    "materialPoints" : [
+      [
+        8,
+        12
+      ],
+      [
+        16,
+        12
+      ],
+      [
+        24,
+        12
+      ]
+    ],
+    "placementOrder" : [
+      "left",
+      "right"
+    ],
+    "scale" : "worldScale"
+  },
+  "nestPlatform" : {
+    "contactAnchor" : [
+      72,
+      24
+    ],
+    "contactY" : 24,
+    "file" : "nestPlatform.png",
+    "initialMaterials" : 3,
+    "lifetime" : 900,
+    "logicalSize" : [
+      144,
+      48
+    ],
+    "materialPoints" : [
+      [
+        60,
+        24
+      ],
+      [
+        72,
+        24
+      ],
+      [
+        84,
+        24
+      ]
+    ],
+    "maximumVisitors" : 1,
+    "scale" : "worldScale"
+  },
+  "nestProgress" : {
+    "commit" : "one delivered twig after settle, before raised recovery",
+    "contactY" : 24,
+    "files" : [
+      "nestOverlay1.png",
+      "nestOverlay2.png",
+      "nestOverlay3.png"
+    ],
+    "logicalSize" : [
+      144,
+      48
+    ],
+    "looseTwigsBaked" : false,
+    "scale" : "worldScale",
+    "stages" : [
+      1,
+      2,
+      3
+    ],
+    "zeroUsesBase" : true
+  },
   "schemaVersion" : 1,
+  "twigToken" : {
+    "contactRotation" : 0,
+    "file" : "twigToken.png",
+    "gripAnchor" : [
+      3,
+      12
+    ],
+    "logicalSize" : [
+      16,
+      16
+    ],
+    "maximumInkY" : 12,
+    "polygon" : [
+      [
+        0,
+        10
+      ],
+      [
+        3,
+        10
+      ],
+      [
+        3,
+        7
+      ],
+      [
+        5,
+        7
+      ],
+      [
+        5,
+        8
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        6,
+        10
+      ],
+      [
+        7,
+        10
+      ],
+      [
+        7,
+        6
+      ],
+      [
+        9,
+        6
+      ],
+      [
+        9,
+        10
+      ],
+      [
+        10,
+        10
+      ],
+      [
+        10,
+        8
+      ],
+      [
+        11,
+        8
+      ],
+      [
+        11,
+        7
+      ],
+      [
+        13,
+        7
+      ],
+      [
+        13,
+        10
+      ],
+      [
+        16,
+        10
+      ],
+      [
+        16,
+        12
+      ],
+      [
+        0,
+        12
+      ]
+    ],
+    "scale" : "worldScale",
+    "surfaceAnchor" : [
+      8,
+      12
+    ],
+    "transform" : "mirror anchor-relative x before rotation"
+  },
   "waterSplash" : {
     "anchor" : [
       12,

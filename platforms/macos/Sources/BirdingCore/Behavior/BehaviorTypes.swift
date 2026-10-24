@@ -14,7 +14,8 @@ public enum BirdRole: String {case resident, transient}
 /// Animation roles only; these do not encode sex or a persistent pair.
 public enum CourtshipRole:String,CaseIterable {case initiator,observer}
 public enum BehaviorKind: String, Codable {
-    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase, travelTogether, allopreening, fixedPerchVisit, foodTrayVisit, bathVisit, leafCarry, insectCatch, visitorGift, courtshipDisplay
+    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase, travelTogether, allopreening, fixedPerchVisit, foodTrayVisit, bathVisit, leafCarry, insectCatch, visitorGift, courtshipDisplay, nestMaterialCarry, nestBuild
+    var isNestActivity:Bool {self == .nestMaterialCarry || self == .nestBuild}
     var isPerchActivity:Bool {[Self.rest,.preen,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek].contains(self)}
     var isSocial:Bool {[Self.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase,.travelTogether,.allopreening,.courtshipDisplay].contains(self)}
 }
@@ -41,6 +42,12 @@ public enum BehaviorResult: Equatable {
     public var accepted: Bool {if case .rejected = self {return false};return true}
 }
 public enum EngineCommand {
+    case placeNest(at:CGPoint)
+    case placeNestAfter(Double)
+    case cancelNestPlacement
+    case removeNest
+    case nestMaterialCarry(BehaviorSource)
+    case nestBuild(BehaviorSource)
     case courtshipDisplay(BehaviorSource)
     case visitorGift(BehaviorSource)
     case cancelVisitorGiftRequest
@@ -99,6 +106,7 @@ public struct BehaviorWorld {
     public var displayIDs:[String]
     /// Platforms opt out when the real perch sprite cannot be loaded.
     public var fixedPerchArtAvailable:Bool
+    public var nestArtAvailable:Bool
     public var insectArtAvailable:Bool
     public var leafCarryArtAvailable:Bool
     public var bathArtAvailable:Bool
@@ -112,8 +120,9 @@ public struct BehaviorWorld {
     /// Optional poses require real renderer frames; an empty manifest opts out.
     public var availableFrames: [SpeciesID:Set<String>]
     public init(screens:[CGRect]=[],displays:[CGRect]=[],surfaces:[Surface]=[],scale:CGFloat=1,
-                pointer:CGPoint = .zero,buttonsDown:Bool=false,availableFrames:[SpeciesID:Set<String>]=[:],localMinuteOfDay:Int?=nil,displayIDs:[String]=[],fixedPerchArtAvailable:Bool=true,foodTrayArtAvailable:Bool=true,bathArtAvailable:Bool=true,leafCarryArtAvailable:Bool=true,insectArtAvailable:Bool=true) {
+                pointer:CGPoint = .zero,buttonsDown:Bool=false,availableFrames:[SpeciesID:Set<String>]=[:],localMinuteOfDay:Int?=nil,displayIDs:[String]=[],fixedPerchArtAvailable:Bool=true,foodTrayArtAvailable:Bool=true,bathArtAvailable:Bool=true,leafCarryArtAvailable:Bool=true,insectArtAvailable:Bool=true,nestArtAvailable:Bool=true) {
         self.screens=screens;self.displays=displays;self.surfaces=surfaces;self.displayIDs=displayIDs;self.fixedPerchArtAvailable=fixedPerchArtAvailable;self.foodTrayArtAvailable=foodTrayArtAvailable;self.bathArtAvailable=bathArtAvailable;self.leafCarryArtAvailable=leafCarryArtAvailable;self.insectArtAvailable=insectArtAvailable
+        self.nestArtAvailable=nestArtAvailable
         self.scale=scale;self.pointer=pointer;self.buttonsDown=buttonsDown;self.availableFrames=availableFrames
         self.localMinuteOfDay=localMinuteOfDay.flatMap{(0..<1440).contains($0) ? $0:nil}
     }

@@ -32,14 +32,25 @@ extension BirdArt {
                 // is decided by the core's continuous interception sweep.
                 tracks.append(clip)
             }
+            if let pickup=PoseClip.nestMaterialPickup(species:species),let place=PoseClip.nestMaterialPlace(species:species),
+               let fly=PoseClip.nestBeakAnchor(species:species,frame:"fly1"),
+               let glide=PoseClip.nestBeakAnchor(species:species,frame:"glide1") {
+                let flight=[PoseClip.Frame(name:"fly1",duration:0.25,beak:fly),
+                            PoseClip.Frame(name:"glide1",duration:0.25,beak:glide)]
+                if let clip=PoseClip(id:"\(species.rawValue).nestMaterial.preview",frames:pickup.frames+flight+place.frames) {tracks.append(clip)}
+            }
+            if let build=PoseClip.nestBuild(species:species) {tracks.append(build)}
             tracks=tracks.filter{clip in clip.frames.allSatisfy{art.frames[$0.name] != nil}}
             let courtInitiator=PoseClip.courtship(species:species,role:.initiator)
             let courtObserver=PoseClip.courtship(species:species,role:.observer)
             let courtPair=courtInitiator != nil && courtObserver != nil &&
                 [courtInitiator,courtObserver].compactMap{$0}.allSatisfy{clip in clip.requiredFrames.allSatisfy{art.frames[$0] != nil}}
             guard !tracks.isEmpty else {continue}
+            let nesting=profile.allows(.nestMaterialCarry) || profile.allows(.nestBuild)
             for scale:CGFloat in [0.5,1,2] {for right in [true,false] {
-                let size=scale*bird.relativeScale,cell=max(140,Int(ceil(48*size))+32)
+                let size=scale*bird.relativeScale,baseCell=max(140,Int(ceil(48*size))+32)
+                let cell=nesting ? max(baseCell,Int(ceil(144*scale))+64):baseCell
+                let footY=CGFloat(cell-6)-(nesting ? 24*scale:0)
                 // Full facing-union sprite spacing plus the specified twelve
                 // desktop points. The pair adds a cell, never a new GIF name.
                 let pairGap=58*size+12,pairWidth=courtPair ? max(cell,Int(ceil(pairGap+58*size))+32):0
@@ -60,10 +71,30 @@ extension BirdArt {
                     for (i,clip) in tracks.enumerated() {
                         let age=time.truncatingRemainder(dividingBy:clip.duration+0.35)
                         let frame=clip.sample(at:age)?.name ?? "stand"
-                        let foot=CGPoint(x:CGFloat(i*cell+cell/2),y:CGFloat(cell-6))
+                        let isNest=clip.id=="\(species.rawValue).nestMaterial.preview" || clip.id=="\(species.rawValue).nestBuild"
+                        let center=CGFloat(i*cell+cell/2),direction:CGFloat=right ? 1:-1
+                        let foot=CGPoint(x:center-(isNest ? (5*scale+11*size)*direction:0),y:footY)
                         context.setStrokeColor(NSColor.gray.withAlphaComponent(0.4).cgColor)
                         context.move(to:CGPoint(x:CGFloat(i*cell+8),y:foot.y));context.addLine(to:CGPoint(x:CGFloat((i+1)*cell-8),y:foot.y));context.strokePath()
+                        if clip.id=="\(species.rawValue).nestBuild" {
+                            let contact=CGPoint(x:center,y:foot.y)
+                            drawNestPreviewAsset(NestArt.image(),at:contact,anchor:NestArtGeometry.nestAnchor,scale:scale,in:context)
+                            if let overlay=NestArt.overlayImage(progress:age<1.9 ? 1:2) {
+                                drawNestPreviewAsset(overlay,at:contact,anchor:NestArtGeometry.nestAnchor,scale:scale,in:context)
+                            }
+                        }
                         art.draw(name:frame,at:foot,scale:size,right:right,context:context)
+                        if isNest,let ground=PoseClip.nestBeakAnchor(species:species,frame:"carryGrip") {
+                            let carrying=clip.id=="\(species.rawValue).nestMaterial.preview"
+                            let attached=carrying && age>=0.7 && age<2.1
+                            let visible=carrying || age<1.9
+                            let bill:PoseClip.Anchor?=attached ? PoseClip.nestBeakAnchor(species:species,frame:frame):ground
+                            if visible,let bill=bill {
+                                let point=bill.world(foot:foot,scale:size,facingRight:right)
+                                drawNestPreviewAsset(NestArt.twigImage(),at:point,anchor:TwigGeometry.grip,
+                                    scale:scale,right:right,in:context)
+                            }
+                        }
                         // Presentation-only prop: independent world scale, not
                         // baked into a bird frame or scaled with its body size.
                         if clip.id=="\(species.rawValue).visitorGift.preview",age>=0.7,age<1.7,let leaf=giftLeaf,
@@ -82,7 +113,7 @@ extension BirdArt {
                     if courtPair,let initiator=courtInitiator,let observer=courtObserver {
                         let age=time.truncatingRemainder(dividingBy:initiator.duration+0.35)
                         let center=CGFloat(cell*tracks.count)+CGFloat(pairWidth)/2
-                        let left=CGPoint(x:center-pairGap/2,y:CGFloat(cell-6)),rightFoot=CGPoint(x:center+pairGap/2,y:CGFloat(cell-6))
+                        let left=CGPoint(x:center-pairGap/2,y:footY),rightFoot=CGPoint(x:center+pairGap/2,y:footY)
                         let initiatingFoot=right ? left:rightFoot,observingFoot=right ? rightFoot:left
                         context.setStrokeColor(NSColor.gray.withAlphaComponent(0.4).cgColor)
                         context.move(to:CGPoint(x:CGFloat(cell*tracks.count+8),y:left.y))
@@ -99,5 +130,14 @@ extension BirdArt {
                 guard CGImageDestinationFinalize(destination) else {throw NSError(domain:"PosePreviewExport",code:2)}
             }}
         }
+    }
+    /// Pose illustration only: no real transport route, stock mutation or run
+    /// completion is implied by these independently looping source panels.
+    private static func drawNestPreviewAsset(_ image:CGImage,at point:CGPoint,anchor:CGPoint,
+                                              scale:CGFloat,right:Bool=true,in c:CGContext) {
+        c.saveGState();c.translateBy(x:point.x,y:point.y);c.scaleBy(x:right ? scale:-scale,y:scale)
+        c.translateBy(x:-anchor.x,y:-anchor.y)
+        c.translateBy(x:0,y:CGFloat(image.height));c.scaleBy(x:1,y:-1)
+        c.draw(image,in:CGRect(x:0,y:0,width:image.width,height:image.height));c.restoreGState()
     }
 }

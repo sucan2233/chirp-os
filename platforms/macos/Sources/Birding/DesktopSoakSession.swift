@@ -19,6 +19,10 @@ final class DesktopSoakSession: NSObject, NSWindowDelegate {
     let requestedBirds: Int
     let desktop: DesktopController
     let preferencesDomain: String
+    let statusAutosaveName: String
+    let standardPreferencesDomain: String
+    private let standardPreferencesBefore: [String: Any]
+    private var statusAutosaveConfigured = false
     private(set) var isFinished = false
     /// Verification can retain the process after cleanup; CLI keeps this true.
     var terminateOnFinish = true
@@ -92,7 +96,14 @@ final class DesktopSoakSession: NSObject, NSWindowDelegate {
         self.output = canonical
         self.duration = duration
         self.requestedBirds = birds
-        preferencesDomain = "dev.birding.desktop.soak." + UUID().uuidString
+        let sessionID = UUID().uuidString
+        preferencesDomain = "dev.birding.desktop.soak." + sessionID
+        statusAutosaveName = "ChirpOS.Soak." + sessionID
+        guard let applicationDomain = Bundle.main.bundleIdentifier, !applicationDomain.isEmpty else {
+            throw SessionError.invalid("a bundle identifier is required to audit AppKit's default preferences")
+        }
+        standardPreferencesDomain = applicationDomain
+        standardPreferencesBefore = UserDefaults.standard.persistentDomain(forName: applicationDomain) ?? [:]
         guard let preferences = UserDefaults(suiteName: preferencesDomain) else {
             throw SessionError.invalid("cannot create isolated defaults domain")
         }
@@ -155,12 +166,16 @@ final class DesktopSoakSession: NSObject, NSWindowDelegate {
             observersInstalled = true
             phase = .running
             installNotifications()
-            // makeMenu only assigns the shared autosaveName when it creates a
-            // status item. Supply a non-autosaving item before that path.
+            // autosaveName is null_resettable: nil chooses an automatic name,
+            // rather than disabling persistence. AppKit uses standard defaults,
+            // so give this item a session-only identity before makeMenu runs.
             desktop.status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+            desktop.status.autosaveName = statusAutosaveName
+            statusAutosaveConfigured = desktop.status.autosaveName == statusAutosaveName && statusAutosaveName != "ChirpOS.Main"
             desktop.status.isVisible = true
             desktop.start()
-            guard desktop.visitorMemoryPersistence?.giftNamespaceAvailable == true,
+            guard statusAutosaveConfigured, desktop.status.autosaveName == statusAutosaveName,
+                  desktop.visitorMemoryPersistence?.giftNamespaceAvailable == true,
                   desktop.visitorMemoryPersistence?.writesEnabled == true,
                   desktop.observationPersistence?.enabled == true,
                   desktop.observationPersistence?.writesDisabled == false,
@@ -287,11 +302,16 @@ final class DesktopSoakSession: NSObject, NSWindowDelegate {
         }
         for panel in desktop.panels { panel.contentView = nil; panel.close() }
         desktop.views.removeAll(); desktop.panels.removeAll()
+        let statusNameAtRemoval = desktop.status?.autosaveName
         if let status = desktop.status { NSStatusBar.system.removeStatusItem(status); desktop.status = nil }
         control?.delegate = nil; control?.close(); control = nil; statusLabel = nil
         let preferences = desktop.preferences.persistentDomain(forName: preferencesDomain) ?? [:]
         do { try writeJSON(preferences, name: "preferences.json") } catch { noteFailure(error) }
         desktop.preferences.removePersistentDomain(forName: preferencesDomain)
+        let isolation = finishPreferenceIsolation(statusNameAtRemoval: statusNameAtRemoval)
+        let preferencesIsolated = isolation["isolationSucceeded"] as? Bool == true
+        if !preferencesIsolated { noteFailure(SessionError.invalid("preference isolation failed; see preference-isolation.json")) }
+        do { try writeJSON(isolation, name: "preference-isolation.json") } catch { noteFailure(error) }
         do {
             try sampleSink?.append(cleanupState)
             try eventSink?.close(); try sampleSink?.close()
@@ -315,9 +335,10 @@ final class DesktopSoakSession: NSObject, NSWindowDelegate {
             "windowsClosed": windowsClosed, "layersAfterClose": layerCounts(),
             "timerStopped": desktop.timer == nil, "mouseMonitorsStopped": desktop.globalMouseMonitor == nil && desktop.localMouseMonitor == nil,
             "visitorFlushSucceeded": finalVisitorFlush, "journalFlushSucceeded": finalJournalFlush,
+            "preferenceIsolationSucceeded": preferencesIsolated, "preferencesIsolation": isolation,
             "filesPresent": persistencePresence(), "peakRSSBytes": peakRSS,
             "resourcePeaks": resourcePeaks, "errors": failures,
-            "cleanupSucceeded": zeroResources && zeroDynamicLayers && windowsClosed && finalVisitorFlush && finalJournalFlush && failures.isEmpty
+            "cleanupSucceeded": zeroResources && zeroDynamicLayers && windowsClosed && finalVisitorFlush && finalJournalFlush && preferencesIsolated && failures.isEmpty
         ]
         do { try writeJSON(summary, name: "summary.json") }
         catch { noteFailure(error); fputs("Desktop soak summary could not be saved: \(error)\n", stderr) }
@@ -408,6 +429,8 @@ final class DesktopSoakSession: NSObject, NSWindowDelegate {
             "transients": e.passingCount, "pendingBirds": e.pendingCount, "runs": e.activeRunCount,
             "leases": e.leasedBirdCount, "landingReservations": e.reservedLandingCount,
             "habitatReservations": e.habitatReservationCount, "giftReceiverReservations": e.giftReceiverReservationCount,
+            "nests": e.nestSnapshot().count, "nestMaterials": e.nestSnapshot().reduce(0) {$0+$1.materials.count},
+            "pendingNestPlacement": e.hasNestPlacement ? 1 : 0,
             "props": e.scenePropCount, "habitats": e.habitatSnapshot().count,
             "carriedObjects": e.carriedObjectSnapshot().count, "insects": e.insectSnapshot() == nil ? 0 : 1,
             "pendingPointer": e.hasPointerPreview ? 1 : 0, "pendingLeaf": e.hasLeafPreview ? 1 : 0,
@@ -446,7 +469,45 @@ final class DesktopSoakSession: NSObject, NSWindowDelegate {
          "journalSuccessfulSaves": desktop.observationPersistence?.successfulSaves ?? 0,
          "giftLedgerEnabled": desktop.giftLedgerPersistence?.enabled ?? false,
          "giftLedgerDenial": desktop.giftLedgerPersistence?.blockingDenial?.rawValue ?? "",
-         "statusAutosaveDisabled": desktop.status?.autosaveName == nil]
+         "statusItemPresent": desktop.status != nil,
+         "statusAutosaveName": desktop.status?.autosaveName as Any? ?? NSNull(),
+         "statusAutosaveMode": "sessionUniqueName",
+         "statusAutosaveIsolated": desktop.status != nil && desktop.status?.autosaveName == statusAutosaveName && statusAutosaveName != "ChirpOS.Main",
+         "standardDefaultsRedirected": false]
+    }
+    /// The injected suite covers controller preferences, not AppKit. Only keys
+    /// bearing our UUID name are ours to delete; never restore the whole domain
+    /// over changes made by another running instance. Report any difference.
+    private func finishPreferenceIsolation(statusNameAtRemoval: String?) -> [String: Any] {
+        let defaults = UserDefaults.standard
+        let beforeCleanup = defaults.persistentDomain(forName: standardPreferencesDomain) ?? [:]
+        let sessionKeys = beforeCleanup.keys.filter { $0.contains(statusAutosaveName) }.sorted()
+        for key in sessionKeys { defaults.removeObject(forKey: key) }
+        let afterCleanup = defaults.persistentDomain(forName: standardPreferencesDomain) ?? [:]
+        let remaining = afterCleanup.keys.filter { $0.contains(statusAutosaveName) }.sorted()
+        let changes = Self.changedPreferenceKeys(standardPreferencesBefore, afterCleanup)
+        let protectedChanges = changes.filter {
+            ["appLanguage", "populationLower", "populationUpper"].contains($0) || $0.contains("ChirpOS.Main")
+        }
+        let suiteRemoved = desktop.preferences.persistentDomain(forName: preferencesDomain)?.isEmpty != false
+        let nameMatches = statusAutosaveConfigured && statusNameAtRemoval == statusAutosaveName && statusAutosaveName != "ChirpOS.Main"
+        return ["schemaVersion": 1, "standardPreferencesDomain": standardPreferencesDomain,
+            "standardDefaultsRedirected": false, "statusAutosaveMode": "sessionUniqueName",
+            "expectedStatusAutosaveName": statusAutosaveName, "statusAutosaveNameAtRemoval": statusNameAtRemoval as Any? ?? NSNull(),
+            "statusAutosaveConfigured": statusAutosaveConfigured, "statusAutosaveMatchesAtRemoval": nameMatches,
+            "sessionAutosaveKeysRemoved": sessionKeys, "sessionAutosaveKeysRemaining": remaining,
+            "defaultApplicationDomainChangedKeysBeforeCleanup": Self.changedPreferenceKeys(standardPreferencesBefore, beforeCleanup),
+            "defaultApplicationDomainChangedKeysAfterCleanup": changes, "defaultApplicationDomainUnchanged": changes.isEmpty,
+            "protectedProductionPreferenceKeysChanged": protectedChanges, "productionPreferenceKeysUnchanged": protectedChanges.isEmpty,
+            "isolatedPreferencesDomainRemoved": suiteRemoved,
+            "isolationSucceeded": nameMatches && suiteRemoved && remaining.isEmpty && changes.isEmpty,
+            "scope": "In-process default application-domain snapshots; no global-domain, post-exit disk or concurrent-writer attribution guarantee."]
+    }
+    private static func changedPreferenceKeys(_ before: [String: Any], _ after: [String: Any]) -> [String] {
+        Set(before.keys).union(after.keys).filter { key in
+            guard let a = before[key], let b = after[key] else { return true }
+            return !NSDictionary(dictionary: ["value": a]).isEqual(to: ["value": b])
+        }.sorted()
     }
     private func persistencePresence() -> [String: Bool] {
         Dictionary(uniqueKeysWithValues: ["settings.json", "legacy.json", "visitors.json", "journal.json", "gifts.json"].map {
@@ -519,6 +580,9 @@ final class DesktopSoakSession: NSObject, NSWindowDelegate {
         let manifest: [String: Any] = ["schemaVersion": 1, "createdUTC": ISO8601DateFormatter().string(from: startDate),
             "output": output.path, "durationSeconds": duration, "birds": requestedBirds,
             "preferencesDomain": preferencesDomain, "bundlePath": Bundle.main.bundleURL.path,
+            "preferenceIsolationVersion": 1, "statusAutosaveName": statusAutosaveName,
+            "statusAutosaveMode": "sessionUniqueName", "standardPreferencesDomain": standardPreferencesDomain,
+            "standardDefaultsRedirected": false,
             "binaryPath": executable.path, "binarySHA256": try Self.sha256(executable),
             "bundleVersion": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown",
             "shortVersion": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",

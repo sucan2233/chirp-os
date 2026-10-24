@@ -2,12 +2,14 @@ import Foundation
 
 /// A typed reference to an existing scene entity, never another clock.
 public struct SceneFocus:Equatable {
-    public enum Target:Equatable {case bath(HabitatObjectID),leaf(ScenePropID)}
+    public enum Target:Equatable {case bath(HabitatObjectID),leaf(ScenePropID),nest(HabitatObjectID)}
     public let target:Target
     public init(target:Target) {self.target=target}
     public init(objectID:HabitatObjectID) {target = .bath(objectID)}
     public init(leafID:ScenePropID) {target = .leaf(leafID)}
-    public var objectID:HabitatObjectID? {if case .bath(let id)=target {return id};return nil}
+    public init(nestID:HabitatObjectID) {target = .nest(nestID)}
+    public var objectID:HabitatObjectID? {switch target {case .bath(let id),.nest(let id):return id;case .leaf:return nil}}
+    public var nestID:HabitatObjectID? {if case .nest(let id)=target {return id};return nil}
     public var leafID:ScenePropID? {if case .leaf(let id)=target {return id};return nil}
 }
 
@@ -19,6 +21,7 @@ public enum SceneRandomSalt {
     public static let insectCatch:UInt64=0x494E534543544354
     public static let leafCarry:UInt64=0x4C45414643415252
     public static let visitorGift:UInt64=0x5649534954474946
+    public static let nest:UInt64=0x4E45535443415252
     public static let courtship:UInt64=0x434F555254534850
 }
 

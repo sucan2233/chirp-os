@@ -67,6 +67,9 @@ enum ExpandedVerification {
             try autoreleasepool {try GiftVerification.run(into:&checks,folder:folder)}
             try autoreleasepool {try CourtshipArtVerification.run(into:&checks,folder:folder)}
             try autoreleasepool {try CourtshipVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try NestArtVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try NestMaterialVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try NestBuildVerification.run(into:&checks,folder:folder)}
             try M6ContentVerification.run(into:&checks,folder:folder)
             try ArrivalRenderingVerification.run(into:&checks,folder:folder)
             window.orderOut(nil)

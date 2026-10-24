@@ -175,12 +175,12 @@ final class PerchActivityPlanner {
         if kind == .alert {
             return rhythm.disturbance>=0.2 ? (1.2-traits.boldness)*(0.8+0.4*traits.activity):0
         }
-        if rhythm.disturbance>=0.35 && (kind == .rest || kind == .preen || kind.isSocial || kind == .leafPlay || kind == .watch || kind == .edgePeek || kind == .fixedPerchVisit || kind == .foodTrayVisit || kind == .bathVisit || kind == .leafCarry || kind == .insectCatch || kind == .visitorGift) {return 0}
+        if rhythm.disturbance>=0.35 && (kind == .rest || kind == .preen || kind.isSocial || kind == .leafPlay || kind == .watch || kind == .edgePeek || kind == .fixedPerchVisit || kind == .foodTrayVisit || kind == .bathVisit || kind == .leafCarry || kind == .insectCatch || kind == .visitorGift || kind.isNestActivity) {return 0}
         if kind.isSocial {return (0.4+1.2*traits.sociability)*(0.8+0.4*traits.boldness)}
         switch kind {
         case .rest:return 1.2-0.4*traits.activity
         case .preen:return (0.6+0.8*traits.boldness)*(0.9+0.2*traits.curiosity)
-        case .leafPlay,.leafCarry,.insectCatch,.visitorGift:return (0.3+1.4*traits.curiosity)*(0.6+0.8*traits.activity)*(0.7+0.6*traits.boldness)
+        case .leafPlay,.leafCarry,.insectCatch,.visitorGift,.nestMaterialCarry,.nestBuild:return (0.3+1.4*traits.curiosity)*(0.6+0.8*traits.activity)*(0.7+0.6*traits.boldness)
         case .watch:return (0.4+1.2*traits.curiosity)*(1+0.2*rhythm.familiarity)
         case .fixedPerchVisit,.foodTrayVisit,.bathVisit:return (0.5+traits.curiosity)*(0.7+0.6*traits.boldness)*(1+0.2*rhythm.familiarity)
         case .edgePeek:return (0.3+traits.curiosity)*(0.7+0.6*traits.boldness)
@@ -214,7 +214,7 @@ final class PerchActivityPlanner {
         let duration=BehaviorDefinitions.definition(for:kind).cooldown
         guard duration>0 else {return}
         // Social opportunities share one recovery period across all variants.
-        let kinds:[BehaviorKind]=kind == .courtshipDisplay ? [kind]:
+        let kinds:[BehaviorKind]=kind.isNestActivity ? [.nestMaterialCarry,.nestBuild]:kind == .courtshipDisplay ? [kind]:
             (kind.isSocial ? [.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase,.travelTogether,.allopreening]:[kind])
         for cooled in kinds {rhythm.cooldowns[cooled]=max(duration,rhythm.cooldowns[cooled] ?? 0)}
     }

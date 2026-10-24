@@ -116,6 +116,7 @@ public struct BirdSettings: Codable {
     public var visitorMemoryEnabled = true
     public var visitorGiftsEnabled = false
     public var courtshipEnabled = true
+    public var nestBuildingEnabled = true
     public var fixedPerchesEnabled = true
     public var fixedPerches: [FixedPerchAnchor] = []
     public var insectCatchEnabled = true
@@ -137,7 +138,7 @@ public struct BirdSettings: Codable {
         case passiveAttentionEnabled,ambientLeafPlayEnabled,sideHopEnabled,takeoffPreparationEnabled
         case visitorMemoryEnabled,activityRhythm,edgePeekEnabled,chaseEnabled,travelTogetherEnabled,allopreeningEnabled
         case fixedPerchesEnabled,fixedPerches
-        case foodTrayEnabled,bathEnabled,leafCarryEnabled,insectCatchEnabled,visitorGiftsEnabled,courtshipEnabled
+        case foodTrayEnabled,bathEnabled,leafCarryEnabled,insectCatchEnabled,visitorGiftsEnabled,courtshipEnabled,nestBuildingEnabled
     }
     private static func validateSchemaVersion(in values:KeyedDecodingContainer<CodingKeys>) throws {
         // Absence alone denotes version 0; null and malformed values are not legacy versions.
@@ -179,6 +180,7 @@ public struct BirdSettings: Codable {
         visitorMemoryEnabled=try values.decodeIfPresent(Bool.self,forKey:.visitorMemoryEnabled) ?? true
         visitorGiftsEnabled=try values.decodeIfPresent(Bool.self,forKey:.visitorGiftsEnabled) ?? false
         courtshipEnabled=try values.decodeIfPresent(Bool.self,forKey:.courtshipEnabled) ?? true
+        nestBuildingEnabled=try values.decodeIfPresent(Bool.self,forKey:.nestBuildingEnabled) ?? true
         fixedPerchesEnabled=try values.decodeIfPresent(Bool.self,forKey:.fixedPerchesEnabled) ?? true
         insectCatchEnabled=try values.decodeIfPresent(Bool.self,forKey:.insectCatchEnabled) ?? true
         leafCarryEnabled=try values.decodeIfPresent(Bool.self,forKey:.leafCarryEnabled) ?? true

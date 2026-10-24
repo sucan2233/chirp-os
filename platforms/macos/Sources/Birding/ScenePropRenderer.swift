@@ -25,10 +25,12 @@ final class ScenePropRenderer {
                 container.addSublayer(texture);container.mask=CAShapeLayer()
                 root.addSublayer(container);props[prop.id]=container
             }
-            // Carry leaves use the engine's exact transformed AABB and raw
-            // grip anchor. The original moving leaf retains its old envelope.
+            // Anchored props retain their raw artwork size. In particular a
+            // twig's rect encloses only polygon ink, not its 16×16 canvas: use
+            // that rect for the container/mask, never to stretch the texture.
             let splash=prop.kind == .waterSplash
-            let carry=prop.kind == .leafToken
+            let twig=prop.kind == .twigToken
+            let carry=prop.kind == .leafToken || twig
             let insect=prop.kind == .insect
             let anchored=splash || carry || insect
             let side=anchored ? prop.size:prop.size*sqrt(2.0)
@@ -46,7 +48,8 @@ final class ScenePropRenderer {
             // Mirror in raw artwork coordinates about anchor, then rotate.
             let c=cos(prop.rotation),s=sin(prop.rotation),m:CGFloat=(carry || insect) && prop.mirrored ? -1:1
             texture.setAffineTransform(CGAffineTransform(a:c*m,b:s*m,c:-s,d:c,tx:0,ty:0))
-            texture.contents=insect ? InsectArt.image(prop.frameName):(carry ? CarryArt.leafImage():(splash ? BathArt.splashImage(prop.frameName):leafTexture))
+            if twig {texture.contents=NestArt.twigImage()}
+            else {texture.contents=insect ? InsectArt.image(prop.frameName):(carry ? CarryArt.leafImage():(splash ? BathArt.splashImage(prop.frameName):leafTexture))}
             container.isHidden = container.isHidden || texture.contents==nil
             let path=CGMutablePath()
             for piece in pieces {path.addRect(piece.offsetBy(dx:-rect.minX,dy:-rect.minY))}

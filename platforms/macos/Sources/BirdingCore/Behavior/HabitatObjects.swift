@@ -8,7 +8,7 @@ public struct HabitatObjectID:Hashable,Codable,Comparable {
     public init(_ value:UInt64) {rawValue=value}
     public static func < (a:Self,b:Self)->Bool {a.rawValue<b.rawValue}
 }
-public enum HabitatObjectKind:String,Codable {case foodTray,bath}
+public enum HabitatObjectKind:String,Codable {case foodTray,bath,nest}
 public struct HabitatObjectRenderState {
     public let id:HabitatObjectID
     public let kind:HabitatObjectKind
@@ -22,20 +22,22 @@ public struct HabitatObjectRenderState {
 struct HabitatObject {
     let id:HabitatObjectID
     let kind:HabitatObjectKind
-    let rect:CGRect
+    var rect:CGRect
     let display:CGRect
     let screens:[CGRect]
     let displays:[CGRect]
     let scale:CGFloat
-    let surface:Surface
+    var surface:Surface
     var remainingUses:Int
     var remainingLifetime:Double
     var retirementAge:Double?=nil
     var retirementReason:BehaviorReason?=nil
     var completedVisitRuns:Set<UInt64>=[]
-    var retiring:Bool {retirementReason != nil || remainingUses<=0 || remainingLifetime<=0}
+    var nest:NestState?=nil
+    var retiring:Bool {retirementReason != nil || (kind != .nest && remainingUses<=0) || remainingLifetime<=0}
     var foot:CGPoint {
-        kind == .bath ? BathGeometry.foot(in:rect,scale:scale):CGPoint(x:rect.midX,y:rect.minY)
+        if kind == .nest {return CGPoint(x:rect.midX,y:rect.minY+NestGeometry.contactY*scale)}
+        return kind == .bath ? BathGeometry.foot(in:rect,scale:scale):CGPoint(x:rect.midX,y:rect.minY)
     }
 }
 final class HabitatObjectStore {
@@ -45,6 +47,8 @@ final class HabitatObjectStore {
     static let foodPortions=3
     static let bathLifetime=300.0
     static let bathVisits=3
+    static let nestLifetime=900.0
+    static let nestSurfaceID:UInt32=0xFE000003
     static let retirementLimit=2.0
     var retiringIDs:[HabitatObjectID] {objects.keys.sorted().filter{objects[$0]?.retiring == true}}
     var removalDueIDs:[HabitatObjectID] {
@@ -74,6 +78,54 @@ final class HabitatObjectStore {
     }
     static let surfaceID:UInt32=0xFE000001
     static let bathSurfaceID:UInt32=0xFE000002
+    func placeNest(at point:CGPoint,materialIDs:[ScenePropID],in engine:BehaviorEngine)->BehaviorResult {
+        let world=engine.world,scale=world.scale
+        guard !engine.paused else {return .rejected(.paused)}
+        guard engine.settings.nestBuildingEnabled else {return .rejected(.disabled)}
+        guard world.nestArtAvailable else {return .rejected(.missingFrames)}
+        guard !world.buttonsDown else {return .rejected(.userInput)}
+        guard objects.isEmpty else {return .rejected(.busy)}
+        guard materialIDs.count==3,Set(materialIDs).count==3,materialIDs.allSatisfy({$0.rawValue>0}),
+              !materialIDs.contains(where:{engine.runtime.propIDs.contains($0) || engine.carriedObjects.objects[$0] != nil}),
+              !engine.propSnapshot().contains(where:{materialIDs.contains($0.id)}),
+              !world.surfaces.contains(where:{$0.id==Self.nestSurfaceID}) else {return .rejected(.busy)}
+        guard scale.isFinite,scale>0 else {return .rejected(.noSpace)}
+        let birdScale=scale*CGFloat(engine.settings.catalog.profile(.spottedDove).relativeScale)
+        let groundScale=max(birdScale,(NestGeometry.size.height-NestGeometry.contactY)*scale/9)
+        guard let anchor=SurfaceAnchor.placement(at:point,in:world,groundScale:groundScale),
+              let host=anchor.host(in:world),let foot=anchor.point(in:world) else {return .rejected(.noSpace)}
+        let rect=NestGeometry.rect(foot:foot,scale:scale)
+        for side in [-1,1] {
+            let tray=NestGeometry.trayRect(foot:foot,scale:scale,side:side)
+            let area=NestGeometry.clearance(nest:rect,tray:tray,worldScale:scale,birdScale:birdScale)
+            guard let display=world.displays.first(where:{$0.contains(area)}),
+                  NestGeometry.supported(foot:foot,nest:rect,tray:tray,host:host,world:world,display:display),
+                  let support=NestGeometry.supportSurfaceRect(foot:foot,nest:rect,tray:tray,host:host,
+                      worldScale:scale,birdScale:birdScale),
+                  !Geometry.blockers(on:host,surfaces:world.surfaces).contains(where:{$0.rect.intersects(area)}),
+                  !engine.fixedPerchSnapshot().contains(where:{$0.rect.insetBy(dx:-50*scale,dy:-80*scale).intersects(area)}),
+                  !engine.birds.contains(where:{engine.bounds(of:$0).intersects(area)}),
+                  !engine.runtime.landingReservations.contains(where:{$0.footprint(in:engine)?.intersects(area) ?? true}),
+                  !engine.propSnapshot().contains(where:{$0.opacity>0 && $0.rect.intersects(area)}) else {continue}
+            // 材料盘与巢台共用接触线、同一个habitat单鸟预约；不是额外场景或普通落点。
+            let surface=Surface(id:Self.nestSurfaceID,pid:Int32.min+21,
+                rect:support,habitatKind:.nest)
+            let blockers=Geometry.blockers(on:host,surfaces:world.surfaces).map(\.rect)
+            let materials=materialIDs.sorted().enumerated().map {slot,id in
+                NestMaterial(id:id,slot:slot,cached:NestGeometry.render(id:id,
+                    position:NestGeometry.trayMaterialPoint(slot:slot,rect:tray,scale:scale)!,worldScale:scale,
+                    anchor:TwigGeometry.surface,blockers:blockers))
+            }
+            let id=HabitatObjectID(nextID);nextID+=1
+            let nest=NestState(parentAnchor:anchor,traySide:side,displayIDs:world.displayIDs,
+                host:host,trayRect:tray,materials:materials)
+            objects[id]=HabitatObject(id:id,kind:.nest,rect:rect,display:display,screens:world.screens,
+                displays:world.displays,scale:scale,surface:surface,remainingUses:3,
+                remainingLifetime:Self.nestLifetime,nest:nest)
+            return .accepted
+        }
+        return .rejected(.noSpace)
+    }
     /// The supplied point is the stable slot foot, not the asset's top edge.
     func placeBath(at point:CGPoint,in engine:BehaviorEngine) -> BehaviorResult {
         let world=engine.world,scale=world.scale
@@ -102,7 +154,11 @@ final class HabitatObjectStore {
     }
     func beginRetirement(_ id:HabitatObjectID,reason:BehaviorReason) {
         guard var object=objects[id] else {return}
-        if object.retirementReason==nil {object.retirementReason=reason}
+        if object.retirementReason==nil {
+            object.retirementReason=reason
+            object.nest?.retire()
+            if let nest=object.nest {object.remainingUses=nest.available}
+        }
         if object.retirementAge==nil {object.retirementAge=0}
         objects[id]=object
     }
@@ -124,25 +180,36 @@ final class HabitatObjectStore {
         guard dt.isFinite,dt>0 else {return}
         for id in objects.keys.sorted() {
             guard var object=objects[id] else {continue}
+            object.nest?.advance(dt)
             let previousLifetime=object.remainingLifetime
             object.remainingLifetime=max(0,previousLifetime-dt)
             if object.retiring {
                 // A newly expired lifetime contributes only the portion of this
                 // step after expiry; an already-retiring object uses all of dt.
-                let elapsed=object.retirementAge==nil && previousLifetime>0 && object.remainingUses>0
+                let elapsed=object.retirementAge==nil && previousLifetime>0 && (object.kind == .nest || object.remainingUses>0)
                     ? max(0,dt-previousLifetime):dt
                 object.retirementAge=(object.retirementAge ?? 0)+elapsed
-                if object.retirementReason==nil {object.retirementReason = .removed}
+                if object.retirementReason==nil {
+                    object.retirementReason = .removed
+                    object.nest?.retire(elapsed:elapsed)
+                    if let nest=object.nest {object.remainingUses=nest.available}
+                }
             }
             objects[id]=object
         }
     }
     func remove(_ id:HabitatObjectID) {objects.removeValue(forKey:id)}
+    /// 新巢事务用局部副本校验，只有整个四元身份与提交条件成立才写回。
+    @discardableResult func withNest(_ id:HabitatObjectID,_ body:(inout HabitatObject,inout NestState)->Bool) -> Bool {
+        guard var object=objects[id],object.kind == .nest,var nest=object.nest else {return false}
+        guard body(&object,&nest) else {return false}
+        object.nest=nest;object.remainingUses=nest.available;objects[id]=object;return true
+    }
     func snapshot(in engine:BehaviorEngine)->[HabitatObjectRenderState] {
         objects.keys.sorted().compactMap {id in
             guard let object=objects[id] else {return nil}
             return HabitatObjectRenderState(id:id,kind:object.kind,rect:object.rect,
-                blockers:Geometry.blockers(on:object.surface,surfaces:engine.world.surfaces).map(\.rect),
+                blockers:Geometry.blockers(on:object.nest?.host ?? object.surface,surfaces:engine.world.surfaces).map(\.rect),
                 remainingUses:object.remainingUses,retiring:object.retiring,remainingLifetime:object.remainingLifetime)
         }
     }

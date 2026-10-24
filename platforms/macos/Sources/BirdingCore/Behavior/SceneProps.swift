@@ -9,7 +9,7 @@ public struct ScenePropID:Hashable,Comparable,Codable {
     public init(_ value:UInt64) {rawValue=value}
     public static func < (lhs:Self,rhs:Self) -> Bool {lhs.rawValue<rhs.rawValue}
 }
-public enum ScenePropKind:String {case leaf,waterSplash,leafToken,insect}
+public enum ScenePropKind:String {case leaf,waterSplash,leafToken,insect,twigToken}
 
 /// Quartz coordinates, like BirdRenderState. Props do not participate in mouse
 /// hit testing; explicit commands control their lifetime.
@@ -25,6 +25,10 @@ public struct ScenePropRenderState {
     public var anchor:CGPoint = CGPoint(x:0.5,y:0.5)
     public var mirrored:Bool = false
     public var rect:CGRect {
+        if kind == .twigToken {
+            return TwigGeometry.bounds(position:position,anchor:CGPoint(x:anchor.x*16,y:anchor.y*16),
+                worldScale:size/16,facingRight:!mirrored,rotation:rotation) ?? .null
+        }
         guard kind == .leafToken else {return CGRect(x:position.x-size*anchor.x,y:position.y-size*anchor.y,width:size,height:size)}
         let points=[CGPoint.zero,CGPoint(x:size,y:0),CGPoint(x:size,y:size),CGPoint(x:0,y:size)].map {point -> CGPoint in
             let x=(point.x-size*anchor.x)*(mirrored ? -1:1),y=point.y-size*anchor.y

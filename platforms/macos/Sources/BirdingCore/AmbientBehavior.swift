@@ -12,7 +12,7 @@ public enum AmbientFrequency: String, Codable, CaseIterable {
     }
 }
 
-public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID), leafCarry(ScenePropID), insectCatch, visitorGift, courtshipDisplay }
+public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID), leafCarry(ScenePropID), insectCatch, visitorGift, courtshipDisplay, nestVisit(HabitatObjectID) }
 
 /// One simulation clock for encounters. Missed opportunities are discarded,
 /// so busy periods, sleep and pause never build up a queue of animations.
@@ -28,6 +28,9 @@ public struct AmbientScheduler {
     public private(set) var courtshipCooldownRemaining=0.0
     public var canAttemptCourtship:Bool {courtshipCooldownRemaining<=0 && userInputRemaining<=0}
     public mutating func didFinishCourtship() {courtshipCooldownRemaining=max(courtshipCooldownRemaining,300)}
+    public private(set) var nestCooldownRemaining=0.0
+    public var canAttemptNest:Bool {nestCooldownRemaining<=0 && userInputRemaining<=0}
+    public mutating func didFinishNest() {nestCooldownRemaining=max(nestCooldownRemaining,15)}
     private var pointerAnchor: CGPoint?
     private var frequency:AmbientFrequency = .low
     private var sceneRandomState:UInt64
@@ -62,7 +65,7 @@ public struct AmbientScheduler {
         endFocus(frequency:frequency);return true
     }
     public func canAttemptScene(_ focus:SceneFocus) -> Bool {
-        sceneFocus==focus && sceneCooldownRemaining<=0 && userInputRemaining<=0
+        sceneFocus==focus && (focus.nestID != nil ? nestCooldownRemaining<=0:sceneCooldownRemaining<=0) && userInputRemaining<=0
     }
     public func canAttemptScene(_ objectID:HabitatObjectID) -> Bool {canAttemptScene(SceneFocus(objectID:objectID))}
     public mutating func didFinishScene() {sceneCooldownRemaining=max(sceneCooldownRemaining,20)}
@@ -84,6 +87,7 @@ public struct AmbientScheduler {
         userInputRemaining=max(0,userInputRemaining-step)
         insectCooldownRemaining=max(0,insectCooldownRemaining-step)
         courtshipCooldownRemaining=max(0,courtshipCooldownRemaining-step)
+        nestCooldownRemaining=max(0,nestCooldownRemaining-step)
         if buttonsDown {suppress(reason:.userInput)}
         if buttonsDown || pointerAnchor == nil || Geometry.distance(pointer, pointerAnchor!) > 6 {
             pointerAnchor = pointer; stationaryTime = 0
@@ -106,6 +110,7 @@ public struct AmbientScheduler {
                 switch focus.target {
                 case .bath(let id):return .bathVisit(id)
                 case .leaf(let id):return .leafCarry(id)
+                case .nest(let id):return .nestVisit(id)
                 }
             }
         } else {
