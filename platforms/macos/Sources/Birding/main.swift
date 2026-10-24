@@ -101,9 +101,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let folder=URL(fileURLWithPath:path)
                 try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
                 var checks:[String:Bool]=[:]
-                try InsectCatchArtVerification.run(into:&checks,folder:folder)
-                try InsectCatchVerification.run(into:&checks,folder:folder)
-                try InsectCatchSettingsVerification.run(into:&checks,folder:folder)
+                try autoreleasepool {try InsectCatchArtVerification.run(into:&checks,folder:folder)}
+                try autoreleasepool {try InsectCatchVerification.run(into:&checks,folder:folder)}
+                try autoreleasepool {try FlycatcherInsectCatchVerification.run(into:&checks,folder:folder)}
+                try autoreleasepool {try InsectCatchSettingsVerification.run(into:&checks,folder:folder)}
                 let passed=checks.values.allSatisfy{$0}
                 saveJSON(["passed":passed,"checks":checks],to:folder.appendingPathComponent("report.json"))
                 print("Insect catch: \(passed ? "PASS":"FAIL") — \(checks.count) checks")

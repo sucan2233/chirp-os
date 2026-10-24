@@ -12,7 +12,7 @@ extension BirdArt {
     }
     static var poseMetadata:[String:Any] {
         var result:[String:Any]=[:]
-        for species in SpeciesBehaviorProfile.poseSpecies {
+        for species in Self.poseExportSpecies {
             let profile=SpeciesBehaviorProfile.profile(for:species)
             var clips:[String:Any]=[:]
             for (kind,duration):(BehaviorKind,Double) in [(.watch,2),(.alert,1.5),(.rest,4),(.takeoffPreparation,0.45)] {

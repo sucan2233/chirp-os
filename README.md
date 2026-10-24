@@ -36,13 +36,14 @@
 - macOS 开发版可放置浅水浴盆，供麻雀与白头鹎偶尔试水、拍翼洗澡并甩水离开。浴盆保留最多 5 分钟或 3 次完整访问，与食盘共用一个场景位置；暂停会冻结寿命与动作，完成返程落稳后才记入观察手册。
 - macOS 开发版支持独立的“放置叶片 / 清除 / 预览携带”：已有麻雀可飞来拾起静止叶片，短途携带后放下；叶片待拾取最多 180 秒，放下后显示 8 秒。暂停冻结动作与寿命，放下并恢复结束才记入观察手册；与原有动态落叶追随分别开关。
 - macOS 开发版支持家燕空中捕虫：复用正在普通飞行的居民，拦截独立昆虫后合喙恢复并继续原目标。预览最多等待 10 秒自然起飞；暂停冻结动作，真实捕获并恢复后才记入观察手册。
+- macOS 开发版已实现白眉姬鹟从普通窗口或地面栖点出击捕虫并尝试返回原脚位；原点失效时寻找安全落点，捕获且最终落稳才记入观察手册。本阶段验收通过，不新增固定小栖木资格。
 - 夜鹭会长时间守望、伸颈、抖毛，偶尔“挤洗手液”；大斑啄木鸟会沿窗口侧边停靠、啄击。
 - 菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
 - macOS 开发版新增“观察手册”：行为完成后按鸟种记录首次／最近时间和次数，分别标明自动、手动与预览。支持搜索和来源筛选，数据保存在本地；发现新行为不会弹窗。
 - 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
 - 支持中英文切换、暂停动画和随系统启动。
 
-开发进度（2026-10-24）：M6f.1 家燕捕虫阶段验收通过，随本阶段记录本地提交、未安装；用户当前安装版仍为 M6a/b。核心 860、原生鸟类 3156、设置 1782 项通过，51 份完整回放、旧 16 份报告回归、46 鸟旧像素/索引、72 GIF 及三轮 18 次同机性能检查通过；累计新增 147 张鸟体姿态、10 张道具，剩余 20/6 张。下一阶段为 M6f.2 白眉姬鹟出击返回捕虫，M6/M7 整体尚未完成；2h/8h、物理多屏及真实睡眠唤醒仍未验收。见 [M6f.1 验收记录](docs/M6F1-ACCEPTANCE.md)。
+开发进度（2026-10-24）：M6f.2白眉姬鹟出击返回捕虫阶段验收通过，随本阶段记录本地提交、未安装，用户当前安装版仍为M6a/b。本批Release/严格签名、原生鸟类3322项、设置1820项、模拟v15的54份完整回放、旧17份报告完全一致、46鸟旧像素/索引、78 GIF及18次性能检查通过；核心证据为第三轮完整876项中其余875项通过（142.466s）＋第四轮白眉16项全通过（6.981s），不代表单次876全绿。累计已验证150张新增鸟体/10张道具，剩17/6张；下一阶段为M6g。M6/M7整体、2h/8h、物理多屏及真实睡眠唤醒仍未验收。见 [M6f.2验收记录](docs/M6F2-ACCEPTANCE.md)。
 
 ### 鸟种 / Bird species
 
@@ -131,6 +132,7 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - macOS development builds offer a shallow bath for Eurasian Tree Sparrows and Light-vented Bulbuls. Birds may test the water, splash, shake, and return safely. The bath lasts up to five minutes or three completed visits and shares one scene slot with the food tray. Pausing freezes its lifetime and animation; visits count only after the bird returns and lands.
 - macOS development builds add separate Place leaf, Clear, and Preview carrying controls. An existing Eurasian Tree Sparrow can pick up a stationary leaf, carry it a short distance, and put it down. Leaves wait up to 180 seconds and remain visible for eight seconds after placement. Pause freezes both motion and lifetime; the journal counts a visit only after placement and recovery finish. This has its own switch, separate from following a falling leaf.
 - macOS development builds let an existing Barn Swallow intercept an insect during ordinary flight, close its bill, and resume its original destination. Preview waits up to ten seconds for natural flight. Pause freezes the action; the journal counts only a real capture followed by recovery.
+- macOS development builds also implement Yellow-rumped Flycatcher sorties from ordinary window or ground perches, attempting to return to the original foot position or a safe alternative. The journal counts only a capture followed by a settled landing. This stage passed acceptance and adds no fixed-perch eligibility.
 - macOS encounters: a small bird may circle a stationary pointer at a safe distance when there is room; moving or clicking ends the visit. Loose flocks of 3–5 birds of one species can also pass across the upper screen without affecting resident counts.
 - Bird Settings → Interaction has separate encounter switches, Low/Medium/High frequency, and previews. Low (default) attempts one of the encounters every 3–6 minutes, skipping unsuitable opportunities. Pause and sleep do not accumulate events.
 - Night herons watch, stretch, shake and occasionally leave a fleeting dropping; woodpeckers cling to and peck window sides.
@@ -139,7 +141,7 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - Hourly update checks download and verify new releases in the background. A notification opens release notes and installation confirmation; a red dot and menu entry remain if you postpone.
 - Chinese and English menus, animation pause, and launch at login.
 
-Development status (2026-10-24): M6f.1 Barn Swallow insect catching passed stage acceptance, to be recorded with this stage's local commit; it is not installed, and the installed development app remains M6a/b. All 860 core tests, 3,156 native bird checks, 1,782 settings checks, 51 full replays, regression comparisons for 16 older reports and all 46 bird atlases, 72 GIFs, and 18 performance runs across three rounds passed. Added assets total 147 bird poses and ten props, with 20 poses and six props remaining. Next is M6f.2 Yellow-rumped Flycatcher sorties and returns; the overall M6/M7 goal remains open. Two-hour observation, eight-hour soak, physical multi-monitor, and real sleep/wake acceptance remain pending. See the [M6f.1 acceptance record](docs/M6F1-ACCEPTANCE.md).
+Development status (2026-10-24): M6f.2 Yellow-rumped Flycatcher sorties and returns passed stage acceptance, committed locally with this stage record and not installed. The installed development app remains M6a/b. Release/signature, 3,322 native bird checks, 1,820 settings checks, 54 full simulation-v15 replays, exact comparisons of 17 older reports, all 46 legacy bird atlases/indices, 78 GIFs, and 18 performance runs passed. Core evidence combines the other 875 passing tests from the full 876-test third round (142.466s) with all 16 flycatcher tests passing in the fourth targeted round (6.981s); no single all-green 876-test run is claimed. Verified additions total 150 bird poses and ten props, with 17 poses and six props remaining. M6g follows this stage; the overall M6/M7 goal, two-hour observation, eight-hour soak, physical multi-monitor, and real sleep/wake acceptance remain open. See the [M6f.2 acceptance record](docs/M6F2-ACCEPTANCE.md).
 
 ### Get started
 

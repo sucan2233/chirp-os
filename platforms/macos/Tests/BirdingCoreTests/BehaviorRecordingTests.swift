@@ -86,17 +86,17 @@ final class BehaviorRecordingTests:XCTestCase {
             XCTAssertThrowsError(try BehaviorInputLog.decode(JSONSerialization.data(withJSONObject:object)))
         }
     }
-    func testM6fOneRecordsVersionFourteenAndRejectsPriorSimulationSemantics() throws {
+    func testM6fTwoRecordsVersionFifteenAndRejectsPriorSimulationSemantics() throws {
         let e=fixture();e.bringInBird();advance(e,1)
         let current=try e.recordedInputs()
         XCTAssertEqual(BehaviorInputLog.currentVersion,1)
-        XCTAssertEqual(BehaviorInputLog.engineVersion,14)
-        XCTAssertEqual(current.simulationVersion,14)
-        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,14)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,15)
+        XCTAssertEqual(current.simulationVersion,15)
+        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,15)
 
         // Exercise the compatibility boundary with a well-formed old envelope.
         // Never promote its version and replay it under the newly expanded lists.
-        for version in [10,11,12,13] {
+        for version in [10,11,12,13,14] {
         var old=current;old.simulationVersion=version
         let data=try BehaviorInputLog.encoder().encode(old)
         XCTAssertEqual(old.expected,current.expected)
@@ -242,10 +242,10 @@ final class BehaviorRecordingTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let folder=root.appendingPathComponent("shared/behavior-fixtures/v1")
         let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="json"}.sorted{$0.path<$1.path}
-        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json","food-tray.json","bath.json","leaf-carry.json","insect-catch.json"])
+        XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json","food-tray.json","bath.json","leaf-carry.json","insect-catch.json","flycatcher-insect-catch.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
-            XCTAssertEqual(log.simulationVersion,14,file.lastPathComponent)
+            XCTAssertEqual(log.simulationVersion,15,file.lastPathComponent)
             if let expected=log.expected {XCTAssertEqual(reference,expected,file.lastPathComponent)}
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
             XCTAssertEqual(try log.replay(callbackHz:120),reference,file.lastPathComponent)

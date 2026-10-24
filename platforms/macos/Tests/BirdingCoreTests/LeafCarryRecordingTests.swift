@@ -67,7 +67,7 @@ final class LeafCarryRecordingTests:XCTestCase {
         advance(0.5);e.handle(.pause(true));advance(3)
         XCTAssertTrue(e.hasCarryLeafPlacement);XCTAssertTrue(e.propSnapshot().isEmpty)
         var log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(BehaviorInputLog.engineVersion,14);XCTAssertEqual(log.simulationVersion,14)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,15);XCTAssertEqual(log.simulationVersion,15)
         XCTAssertNotNil(log.expected)
         for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),log.expected)}
         e.handle(.pause(false));advance(1.6)
@@ -148,7 +148,7 @@ final class LeafCarryRecordingTests:XCTestCase {
         let root=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let log=try BehaviorInputLog.load(from:root.appendingPathComponent("shared/behavior-fixtures/v1/leaf-carry.json"))
-        XCTAssertNil(log.expected);XCTAssertEqual(log.simulationVersion,14)
+        XCTAssertNil(log.expected);XCTAssertEqual(log.simulationVersion,15)
         func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
             var input=log;input.inputs=Array(log.inputs.prefix(count));return try input.replay(callbackHz:hz)
         }

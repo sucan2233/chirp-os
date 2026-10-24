@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "simulationVersion": 15,
+  "seed": "2101",
+  "settings": {
+    "schemaVersion": 1,
+    "catalog": {
+      "species": [
+        {
+          "id": "yellowRumpedFlycatcher",
+          "name": "白眉姬鹟",
+          "englishName": "Yellow-rumped Flycatcher",
+          "adultLengthCM": 13,
+          "weight": 1200,
+          "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate",
+          "speed": 1.2,
+          "flapFPS": 47.6,
+          "perchMin": 20,
+          "perchMax": 44
+        },
+        {
+          "id": "spottedDove",
+          "name": "珠颈斑鸠",
+          "englishName": "Spotted Dove",
+          "adultLengthCM": 31,
+          "weight": 15536,
+          "weightBasis": "上海2017–2023观鸟研究表2：15536只次",
+          "speed": 0.92,
+          "flapFPS": 36,
+          "perchMin": 40,
+          "perchMax": 84
+        }
+      ]
+    },
+    "probabilities": {
+      "entries": [
+        { "id": "yellowRumpedFlycatcher", "points": 10000, "locked": false },
+        { "id": "spottedDove", "points": 0, "locked": false }
+      ]
+    },
+    "perchDefaultsVersion": 1,
+    "perchActions": false,
+    "passiveAttentionEnabled": false,
+    "pointerVisits": false,
+    "flockPasses": false,
+    "socialInteractions": false,
+    "ambientLeafPlayEnabled": false,
+    "insectCatchEnabled": true
+  },
+  "initialWorld": {
+    "screens": [{ "x": 0, "y": 0, "width": 2400, "height": 2000 }],
+    "displays": [{ "x": 0, "y": 0, "width": 2400, "height": 2000 }],
+    "surfaces": [{
+      "id": 2101, "pid": 42, "layer": 0, "isGround": false,
+      "rect": { "x": 200, "y": 1650, "width": 2000, "height": 180 }
+    }],
+    "scale": 1,
+    "pointer": { "x": 20, "y": 20 },
+    "buttonsDown": false,
+    "insectArtAvailable": true,
+    "availableFrames": {
+      "yellowRumpedFlycatcher": [
+        "stand", "blink", "fly0", "fly1", "fly2", "fly3", "fly4", "fly5", "fly6", "fly7",
+        "land0", "land1", "land2", "glide0", "glide1", "glide2", "bank0", "bank1", "bank2", "bound",
+        "catchOpen", "catchClose", "catchRecover"
+      ]
+    }
+  },
+  "fixtureBirds": [{
+    "species": "yellowRumpedFlycatcher", "host": 2101, "fraction": 0.15,
+    "perchDuration": 600, "facingRight": true
+  }],
+  "inputs": [
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 60,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "insectCatch", "species": "yellowRumpedFlycatcher", "source": "preview" } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 3,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "pause", "flag": true } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 120,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "pause", "flag": false } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 1500,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "insectCatch", "species": "yellowRumpedFlycatcher", "source": "preview" } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 3,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "pause", "flag": true } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 60,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "pointerClick" } },
+    { "kind": "command", "command": { "name": "pause", "flag": false } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 780,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "clearInsect" } },
+    { "kind": "command", "command": { "name": "clearCurrentScene" } }
+  ]
+}

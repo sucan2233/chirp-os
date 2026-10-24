@@ -233,7 +233,7 @@ public final class BehaviorEngine {
         refreshFixedPerches(previous:previousPerches)
         refreshHabitatObjects()
         refreshCarriedObjects(sampleDT:sampleDT)
-        refreshInsects()
+        refreshInsects(sampleDT:sampleDT)
         if !value.leafCarryArtAvailable {pendingCarryLeafPlacement=nil}
         if !value.buttonsDown {clickHandled=false}
         // Contact scenes use fixed anchors. Release them against the new world
@@ -682,8 +682,40 @@ public final class BehaviorEngine {
         SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch) &&
             settings.probabilities.entries.contains{$0.id==species && $0.points>0}
     }
+    /// Species share one entity, opportunity and resolver pipeline, while each
+    /// plan retains its own admission, flight and completion contract.
+    private enum InsectCandidate {
+        case swallow(InsectCatchPlan)
+        case flycatcher(FlycatcherInsectCatchPlan)
+        var birdID:BirdID {
+            switch self {
+            case .swallow(let plan):return plan.id
+            case .flycatcher(let plan):return plan.id
+            }
+        }
+        func execution(insectID:ScenePropID) -> BehaviorExecution {
+            switch self {
+            case .swallow(let plan):return InsectCatchExecution(plan:plan,insectID:insectID)
+            case .flycatcher(let plan):return FlycatcherInsectCatchExecution(plan:plan,insectID:insectID)
+            }
+        }
+        func replacingTrajectory(_ value:InsectTrajectory) -> Self? {
+            switch self {
+            case .swallow(let plan):return plan.replacingTrajectory(value).map(Self.swallow)
+            case .flycatcher(let plan):return plan.replacingTrajectory(value).map(Self.flycatcher)
+            }
+        }
+    }
+    private func insectCandidates(species:SpeciesID,source:BehaviorSource) -> [InsectCandidate] {
+        switch species {
+        case .barnSwallow:return InsectCatchPlan.candidates(in:self,species:species,source:source).map(InsectCandidate.swallow)
+        case .yellowRumpedFlycatcher:return FlycatcherInsectCatchPlan.candidates(in:self,species:species,source:source).map(InsectCandidate.flycatcher)
+        default:return []
+        }
+    }
     private func canAwaitInsectFlight(_ bird:Bird) -> Bool {
         guard let id=id(of:bird),let owner=runtime.owners[id] else {return true}
+        guard bird.profile.id == .barnSwallow else {return false}
         // Natural takeoff preparation is part of the departure being awaited.
         // Keep its lease intact; candidate selection still requires no owner.
         return runtime.runs[owner].map{$0.source == .automatic && $0.execution.kind == .takeoffPreparation} ?? false
@@ -704,9 +736,9 @@ public final class BehaviorEngine {
         if residents.allSatisfy({!canAwaitInsectFlight($0)}) {return .busy}
         return nil
     }
-    private func startInsectCatch(_ plan:InsectCatchPlan,source:BehaviorSource) -> BehaviorResult {
+    private func startInsectCatch(_ plan:InsectCandidate,source:BehaviorSource) -> BehaviorResult {
         let insectID=ScenePropID(nextPropID)
-        let result=runtime.start(InsectCatchExecution(plan:plan,insectID:insectID),source:source,in:self)
+        let result=runtime.start(plan.execution(insectID:insectID),source:source,in:self)
         if case .started=result {nextPropID+=1;scheduler.suppress()}
         return result
     }
@@ -714,16 +746,24 @@ public final class BehaviorEngine {
         guard pendingInsectPreview==nil else {return reject(.insectCatch,source,.busy)}
         if let reason=insectAdmissionReason(species:species,source:source) {return reject(.insectCatch,source,reason)}
         if source == .automatic,!scheduler.canAttemptInsectCatch {return reject(.insectCatch,source,.busy)}
-        let candidates=InsectCatchPlan.candidates(in:self,species:species,source:source)
+        let candidates=insectCandidates(species:species,source:source)
         if let plan=insectRandom.element(candidates) {
             let result=startInsectCatch(plan,source:source)
             if case .rejected(let reason)=result {return reject(.insectCatch,source,reason)}
             return result
         }
         let available=birds.filter{$0.profile.id==species && role(of:$0) == .resident && !$0.isDeparting && canAwaitInsectFlight($0)}
-        if source == .preview,available.contains(where:{$0.airborneFlight==nil}) {
+        if species == .barnSwallow,source == .preview,available.contains(where:{$0.airborneFlight==nil}) {
             pendingInsectPreview=PendingInsectPreview(species:species,remaining:10)
             return .scheduled
+        }
+        if species == .yellowRumpedFlycatcher {
+            let settled=available.contains {bird in
+                bird.state == .perched && bird.edge == .top && !bird.needsDestination &&
+                    world.surfaces.contains {$0.id==bird.hostID && $0.pid==bird.hostPID &&
+                        !$0.isHabitat && ($0.isGround || $0.layer==0)}
+            }
+            return reject(.insectCatch,source,settled ? .noSpace:.unavailableBird)
         }
         return reject(.insectCatch,source,available.contains(where:{$0.airborneFlight != nil}) ? .noSpace:.unavailableBird)
     }
@@ -735,7 +775,7 @@ public final class BehaviorEngine {
         inputRecorder?.log.failure="immutable insect trajectory fixture is not a recordable production command"
         guard pendingInsectPreview==nil else {return reject(.insectCatch,.preview,.busy)}
         if let reason=insectAdmissionReason(species:species,source:.preview) {return reject(.insectCatch,.preview,reason)}
-        guard let original=insectRandom.element(InsectCatchPlan.candidates(in:self,species:species,source:.preview)),
+        guard let original=insectRandom.element(insectCandidates(species:species,source:.preview)),
               let plan=original.replacingTrajectory(trajectory) else {return reject(.insectCatch,.preview,.noSpace)}
         let result=startInsectCatch(plan,source:.preview)
         if case .rejected(let reason)=result {return reject(.insectCatch,.preview,reason)}
@@ -745,7 +785,7 @@ public final class BehaviorEngine {
         guard var pending=pendingInsectPreview else {return}
         if let reason=insectAdmissionReason(species:pending.species,source:.preview) {cancelInsectPreview(reason);return}
         // No random draw, lease, entity or forced takeoff while waiting.
-        let candidates=InsectCatchPlan.candidates(in:self,species:pending.species,source:.preview)
+        let candidates=insectCandidates(species:pending.species,source:.preview)
         if let plan=insectRandom.element(candidates) {
             pendingInsectPreview=nil
             let result=startInsectCatch(plan,source:.preview)
@@ -759,10 +799,12 @@ public final class BehaviorEngine {
     private func requestAutomaticInsectCatch() {
         guard pendingInsectPreview==nil,scheduler.sceneFocus==nil,scheduler.canAttemptInsectCatch else {return}
         // A disabled or unqualified fixed 8% opportunity remains empty.
-        let candidates=SpeciesBehaviorProfile.species(for:.insectCatch).flatMap {species -> [InsectCatchPlan] in
+        let candidates=SpeciesBehaviorProfile.species(for:.insectCatch).flatMap {species -> [InsectCandidate] in
             guard insectAdmissionReason(species:species,source:.automatic)==nil else {return []}
-            return InsectCatchPlan.candidates(in:self,species:species,source:.automatic)
-        }
+            return insectCandidates(species:species,source:.automatic)
+        }.enumerated().sorted {a,b in
+            a.element.birdID==b.element.birdID ? a.offset<b.offset:a.element.birdID<b.element.birdID
+        }.map(\.element)
         if let plan=insectRandom.element(candidates) {_=startInsectCatch(plan,source:.automatic)}
     }
     private func cancelInsectPreview(_ reason:BehaviorReason) {
@@ -775,7 +817,7 @@ public final class BehaviorEngine {
         runtime.cancel(where:{$0.kind == .insectCatch},reason:reason,in:self)
         insects.clear()
     }
-    private func refreshInsects() {
+    private func refreshInsects(sampleDT:Double?=nil) {
         if !insects.synchronize(in:self) {
             runtime.cancel(where:{$0.kind == .insectCatch},reason:.targetInvalid,in:self)
         }
@@ -784,8 +826,8 @@ public final class BehaviorEngine {
             cancelInsectPreview(.missingFrames)
         }
         for runID in runtime.runs.keys.sorted() {
-            guard let execution=runtime.runs[runID]?.execution as? InsectCatchExecution else {continue}
-            if let result=execution.reconcileWorld(in:self) {runtime.finish(runID,result:result,in:self)}
+            guard let execution=runtime.runs[runID]?.execution as? InsectCatchMotionExecution else {continue}
+            if let result=execution.reconcileWorld(in:self,sampleDT:sampleDT) {runtime.finish(runID,result:result,in:self)}
         }
     }
     private func placeCarryLeaf(at point:CGPoint)->BehaviorResult {
@@ -1266,7 +1308,12 @@ public final class BehaviorEngine {
                 }
             }
         }
-        if !paused {advanceInsectPreview(dt)}
+        if !paused {
+            advanceInsectPreview(dt)
+            // Other birds can invalidate a return between world samples.
+            // Give the scene its safe replan before generic lease validation.
+            if runtime.runs.values.contains(where:{$0.execution.kind == .insectCatch}) {refreshInsects()}
+        }
         let insectStep=paused ? nil:insects.makeStep(dt)
         // Resolve input cancellations and pending spawns before integrating motion.
         runtime.advance(dt,in:self)
@@ -1282,7 +1329,7 @@ public final class BehaviorEngine {
         if !paused {
             var contact:InsectContact?
             var completions:[(BehaviorRunID,BehaviorCompletion)]=[]
-            if let run=insectRun,let execution=run.execution as? InsectCatchExecution {
+            if let run=insectRun,let execution=run.execution as? InsectCatchMotionExecution {
                 let result=execution.resolveMotion(insectStep,in:self)
                 contact=result.contact
                 if let completion=result.completion {completions.append((run.id,completion))}

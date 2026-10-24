@@ -2,7 +2,7 @@ import XCTest
 @testable import BirdingCore
 
 final class SpeciesBehaviorProfileTests:XCTestCase {
-    // Literal M6f.1 authorization, independent of the implementation. Existing
+    // Literal M6f.2 authorization, independent of the implementation. Existing
     // entries retain their relative order; only the approved species are added.
     private let dedicated:[(BehaviorKind,[SpeciesID])] = [
         (.edgePeek,[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel,.lightVentedBulbul,.magpieRobin]),
@@ -13,7 +13,7 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         (.foodTrayVisit,[.treeSparrow,.spottedDove]),
         (.bathVisit,[.treeSparrow,.lightVentedBulbul]),
         (.leafCarry,[.treeSparrow]),
-        (.insectCatch,[.barnSwallow])
+        (.insectCatch,[.barnSwallow,.yellowRumpedFlycatcher])
     ]
     private let flock:[SpeciesID] = [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,
         .lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]

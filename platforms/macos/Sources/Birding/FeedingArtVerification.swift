@@ -101,7 +101,8 @@ enum FeedingArtVerification {
                 ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]
             let carry=id == .treeSparrow ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]
             let preCatch=prior+bath+carry
-            let catchFrames=id == .barnSwallow ? ["catchOpen","catchClose","catchRecover"]:[]
+            let catchFrames=[SpeciesID.barnSwallow,.yellowRumpedFlycatcher].contains(id)
+                ? ["catchOpen","catchClose","catchRecover"]:[]
             let actual=BirdArt.names(for:id)
             manifestOK = manifestOK && BirdArt.names.count==34 && actual==preCatch+catchFrames &&
                 Array(actual.prefix(preCatch.count))==preCatch &&

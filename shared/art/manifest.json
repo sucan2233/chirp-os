@@ -3157,6 +3157,145 @@
           ]
         ]
       }
+    },
+    "yellowRumpedFlycatcher" : {
+      "beakAnchors" : {
+        "catchClose" : [
+          42.546661078230834,
+          21.023346855158138
+        ],
+        "catchOpen" : [
+          43.212447947908615,
+          18.4487514577878
+        ],
+        "catchRecover" : [
+          41.413995467050647,
+          20.699680046930734
+        ]
+      },
+      "clips" : {
+        "insectCatchRecovery" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 42.546661078230834,
+                "y" : 21.023346855158138
+              },
+              "duration" : 0.17999999999999999,
+              "name" : "catchClose"
+            },
+            {
+              "beak" : {
+                "x" : 41.413995467050647,
+                "y" : 20.699680046930734
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "catchRecover"
+            }
+          ],
+          "id" : "yellowRumpedFlycatcher.insectCatch.recovery",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        }
+      },
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
+      "transportBeakAnchors" : {
+        "bank0" : [
+          42.249311484731344,
+          19.634750953079447
+        ],
+        "bank1" : [
+          42.517283872446647,
+          20.712021712068779
+        ],
+        "bank2" : [
+          42.709252611615128,
+          21.805396987046837
+        ],
+        "bound" : [
+          42.812581628181277,
+          22.751335812916853
+        ],
+        "catchClose" : [
+          42.546661078230834,
+          21.023346855158138
+        ],
+        "catchOpen" : [
+          43.212447947908615,
+          18.4487514577878
+        ],
+        "catchRecover" : [
+          41.413995467050647,
+          20.699680046930734
+        ],
+        "fly0" : [
+          42.799304571927244,
+          22.59327506474121
+        ],
+        "fly1" : [
+          42.75,
+          21.82
+        ],
+        "fly2" : [
+          42.642227064546219,
+          20.992071732707384
+        ],
+        "fly3" : [
+          42.60892617179811,
+          21.178949882870562
+        ],
+        "fly4" : [
+          42.695520141226616,
+          21.948281818487288
+        ],
+        "fly5" : [
+          42.763012276563636,
+          22.777566374438127
+        ],
+        "fly6" : [
+          42.812581628181277,
+          22.751335812916853
+        ],
+        "fly7" : [
+          42.846383637456711,
+          22.868175978986027
+        ],
+        "glide0" : [
+          42.517283872446647,
+          20.712021712068779
+        ],
+        "glide1" : [
+          42.517283872446647,
+          20.712021712068779
+        ],
+        "glide2" : [
+          42.517283872446647,
+          20.712021712068779
+        ],
+        "land0" : [
+          40.5,
+          19
+        ],
+        "land1" : [
+          40.5,
+          19
+        ],
+        "land2" : [
+          40.5,
+          19
+        ],
+        "stand" : [
+          40.5,
+          19
+        ]
+      },
+      "waterContactAnchors" : {
+
+      }
     }
   },
   "poseClock" : "owningBehaviorSimulationAge",
@@ -3761,6 +3900,45 @@
       "carryLower",
       "carryGrip",
       "carryPlace"
+    ],
+    "yellowRumpedFlycatcher" : [
+      "stand",
+      "breathe",
+      "blink",
+      "preen0",
+      "preen1",
+      "land0",
+      "land1",
+      "land2",
+      "fly0",
+      "fly1",
+      "fly2",
+      "fly3",
+      "fly4",
+      "fly5",
+      "fly6",
+      "fly7",
+      "idle0",
+      "idle1",
+      "idle2",
+      "stretch",
+      "shake",
+      "poop0",
+      "poop1",
+      "cling0",
+      "cling1",
+      "peck0",
+      "peck1",
+      "glide0",
+      "glide1",
+      "glide2",
+      "bank0",
+      "bank1",
+      "bank2",
+      "bound",
+      "catchOpen",
+      "catchClose",
+      "catchRecover"
     ]
   }
 }

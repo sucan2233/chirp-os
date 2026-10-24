@@ -7,11 +7,11 @@ extension BirdArt {
     /// owning execution; the short stand interval illustrates current-state release.
     static func exportPosePreviews(to folder:URL) throws {
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
-        for species in SpeciesBehaviorProfile.poseSpecies {
+        for species in Self.poseExportSpecies {
             let art=BirdArt(species:species),profile=SpeciesBehaviorProfile.profile(for:species)
             let bird=SpeciesCatalog.standard.profile(species)
-            var tracks:[PoseClip]=[(BehaviorKind.watch,2.0),(.alert,1.5),(.rest,4),(.takeoffPreparation,0.45)].map {
-                profile.poseClip(for:$0.0,duration:$0.1,lookingFar:true)!
+            var tracks:[PoseClip]=[(BehaviorKind.watch,2.0),(.alert,1.5),(.rest,4),(.takeoffPreparation,0.45)].compactMap {
+                profile.poseClip(for:$0.0,duration:$0.1,lookingFar:true)
             }
             if let peek=PoseClip.edgePeek(species:species) {tracks.append(peek)}
             if let bath=PoseClip.bath(species:species) {tracks.append(bath)}
@@ -25,6 +25,8 @@ extension BirdArt {
                 // is decided by the core's continuous interception sweep.
                 tracks.append(clip)
             }
+            tracks=tracks.filter{clip in clip.frames.allSatisfy{art.frames[$0.name] != nil}}
+            guard !tracks.isEmpty else {continue}
             for scale:CGFloat in [0.5,1,2] {for right in [true,false] {
                 let size=scale*bird.relativeScale,cell=max(140,Int(ceil(48*size))+32)
                 let width=cell*tracks.count,height=cell+42

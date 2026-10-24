@@ -333,7 +333,7 @@ enum InsectCatchVerification {
             evidence.append(["interrupt":action,"hitOriginal":hit,"clicked":clicked,"reason":ends.first?.reason?.rawValue ?? "none"])
         }
     }
-    private static func fullyEnteredAge(_ t:InsectTrajectory)->Double? {
+    static func fullyEnteredAge(_ t:InsectTrajectory)->Double? {
         let interior=t.display.insetBy(dx:8*t.worldScale,dy:8*t.worldScale)
         guard !interior.isEmpty else {return nil}
         for (a,b) in zip(t.waypoints,t.waypoints.dropFirst()) {
@@ -347,7 +347,7 @@ enum InsectCatchVerification {
             if valid,lo<=hi {return a.time+(b.time-a.time)*lo}
         };return nil
     }
-    private static func writeGIF(_ frames:[URL],times:[Double],to url:URL) throws {
+    static func writeGIF(_ frames:[URL],times:[Double],to url:URL) throws {
         guard !frames.isEmpty,frames.count==times.count,
               let destination=CGImageDestinationCreateWithURL(url as CFURL,"com.compuserve.gif" as CFString,frames.count,nil) else {
             throw failure("Cannot allocate actual-layer approach GIF")
@@ -363,7 +363,7 @@ enum InsectCatchVerification {
         }
         guard CGImageDestinationFinalize(destination) else {throw failure("Cannot write actual-layer approach GIF")}
     }
-    private static func layerMatches(_ prop:ScenePropRenderState,layer:CALayer,view:DesktopView)->Bool {
+    static func layerMatches(_ prop:ScenePropRenderState,layer:CALayer,view:DesktopView)->Bool {
         if !prop.rect.intersects(view.desktopRect) {return layer.isHidden}
         guard !layer.isHidden,let root=view.layer,let texture=layer.sublayers?.first,let mask=layer.mask as? CAShapeLayer else {return false}
         let anchor=texture.convert(CGPoint(x:prop.size*prop.anchor.x,y:prop.size*prop.anchor.y),to:root)
@@ -372,7 +372,7 @@ enum InsectCatchVerification {
             Geometry.distance(anchor,CGPoint(x:prop.position.x-view.desktopRect.minX,y:prop.position.y-view.desktopRect.minY))<1e-5 &&
             (texture.contents as AnyObject?) === InsectArt.image(prop.frameName) && mask.path != nil && mask.mask==nil
     }
-    private static func visiblePoint(_ state:BirdRenderState,in d:DesktopController)->CGPoint? {
+    static func visiblePoint(_ state:BirdRenderState,in d:DesktopController)->CGPoint? {
         guard let art=d.arts[state.species] else {return nil}
         for y in 0..<48 {for x in 0..<48 where art.contains(frame:state.frameName,x:x,y:y) {
             let p=CGPoint(x:state.rect.minX+(state.facingRight ? CGFloat(x)+0.5:47.5-CGFloat(x))*state.scale,
@@ -380,7 +380,7 @@ enum InsectCatchVerification {
             if d.bird(at:p) != nil {return p}
         }};return nil
     }
-    private struct Capture {let context:CGContext,crop:CGRect}
+    struct Capture {let context:CGContext,crop:CGRect}
     private static func capture(_ view:DesktopView,around rect:CGRect) throws -> Capture {
         let local=rect.offsetBy(dx:-view.desktopRect.minX,dy:-view.desktopRect.minY).intersection(view.bounds).integral
         guard !local.isEmpty,let root=view.layer,let context=CGContext(data:nil,width:Int(local.width),height:Int(local.height),bitsPerComponent:8,bytesPerRow:0,
@@ -389,10 +389,10 @@ enum InsectCatchVerification {
         context.translateBy(x:0,y:local.height);context.scaleBy(x:1,y:-1);context.translateBy(x:-local.minX,y:-local.minY);root.render(in:context)
         return Capture(context:context,crop:local.offsetBy(dx:view.desktopRect.minX,dy:view.desktopRect.minY))
     }
-    private static func snapshot(_ view:DesktopView,around rect:CGRect,to url:URL) throws -> Capture {
+    static func snapshot(_ view:DesktopView,around rect:CGRect,to url:URL) throws -> Capture {
         let actual=try capture(view,around:rect);try BathVerification.writePNG(actual.context,to:url);return actual
     }
-    private static func contribution(_ view:DesktopView,layer:CALayer,actual:Capture,region:CGRect) throws -> Int {
+    static func contribution(_ view:DesktopView,layer:CALayer,actual:Capture,region:CGRect) throws -> Int {
         CATransaction.begin();CATransaction.setDisableActions(true)
         let hidden=layer.isHidden;layer.isHidden=true;defer {layer.isHidden=hidden;CATransaction.commit()}
         let baseline=try capture(view,around:actual.crop)
@@ -406,7 +406,7 @@ enum InsectCatchVerification {
             if (0..<4).contains(where:{shown.bytes[i+$0] != without.bytes[j+$0]}) {count+=1}
         }};return count
     }
-    private static func segmentDistance(_ p:CGPoint,_ a:CGPoint,_ b:CGPoint)->CGFloat {
+    static func segmentDistance(_ p:CGPoint,_ a:CGPoint,_ b:CGPoint)->CGFloat {
         let dx=b.x-a.x,dy=b.y-a.y,n=dx*dx+dy*dy
         let t=n>0 ? min(1,max(0,((p.x-a.x)*dx+(p.y-a.y)*dy)/n)):0
         return Geometry.distance(p,CGPoint(x:a.x+t*dx,y:a.y+t*dy))

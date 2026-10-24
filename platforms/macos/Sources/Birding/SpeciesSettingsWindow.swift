@@ -84,6 +84,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var leafCarryStatus:NSTextField!
     var insectCatchButton:NSButton!
     var previewInsectCatchButton:NSButton!
+    var previewFlycatcherInsectCatchButton:NSButton!
     var cancelInsectCatchPreviewButton:NSButton!
     var clearInsectButton:NSButton!
     var insectCatchStatus:NSTextField!
@@ -769,19 +770,21 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         }
     }
     private func buildInsectCatch(in view:NSView) {
-        label(t("家燕空中捕虫","Barn Swallow insect catching"),NSRect(x:20,y:6450,width:710,height:30),in:view,size:20).identifier=NSUserInterfaceItemIdentifier("insectCatchSectionTitle")
+        label(t("空中捕虫","Insect catching"),NSRect(x:20,y:6450,width:710,height:30),in:view,size:20).identifier=NSUserInterfaceItemIdentifier("insectCatchSectionTitle")
         insectCatchButton=NSButton(checkboxWithTitle:t("开启捕虫互动","Enable insect catching"),target:self,action:#selector(insectCatchSettingsChanged))
         insectCatchButton.frame=NSRect(x:20,y:6492,width:710,height:26);insectCatchButton.state=draft.insectCatchEnabled ? .on:.off
         insectCatchButton.identifier=NSUserInterfaceItemIdentifier("insectCatchEnabled");insectCatchButton.setAccessibilityLabel(insectCatchButton.title);view.addSubview(insectCatchButton)
         previewInsectCatchButton=button(t("预览家燕捕虫","Preview Barn Swallow catching"),#selector(previewInsectCatch),NSRect(x:20,y:6538,width:350,height:32),in:view)
         clearInsectButton=button(t("清除昆虫","Clear insect"),#selector(clearInsect),NSRect(x:390,y:6538,width:340,height:32),in:view)
         cancelInsectCatchPreviewButton=button(t("取消等待中的捕虫预览","Cancel waiting catch preview"),#selector(cancelInsectCatchPreviewClicked),NSRect(x:20,y:6584,width:350,height:32),in:view)
+        previewFlycatcherInsectCatchButton=button(language.flycatcherCatchPreviewTitle,#selector(previewFlycatcherInsectCatch),NSRect(x:390,y:6584,width:340,height:32),in:view)
         for (control,id) in [(previewInsectCatchButton!,"previewBarnSwallowInsectCatch"),(clearInsectButton!,"clearInsect"),
-                             (cancelInsectCatchPreviewButton!,"cancelInsectCatchPreview")] {
+                             (cancelInsectCatchPreviewButton!,"cancelInsectCatchPreview"),
+                             (previewFlycatcherInsectCatchButton!,"previewYellowRumpedFlycatcherInsectCatch")] {
             control.identifier=NSUserInterfaceItemIdentifier(id);control.setAccessibilityLabel(control.title)
         }
-        label(language.insectCatchSupport+t("\n默认开启，保存后生效；预览读取已保存开关。只选择已有、独立飞行中的居民家燕；否则最多等待 10 秒自然起飞，暂停不计时。不会生成、传送小鸟或强制起飞。\n\n全局一只四帧昆虫，从屏幕外进入，寿命 12 秒，不追随真实鼠标。家燕仅尝试一次拦截，喙真正接触才捕获，随后继续原飞行目标；原目标失效时寻找安全落点。\n\n点击小鸟仍立即换位；未被捕获的虫沿原路线继续剩余寿命。保存关闭捕虫会清除等待与昆虫。暂停冻结等待、飞行和虫寿命。关闭、取消、保存或重建设置只取消等待，不丢其他草稿。\n\n捕获并安全恢复后才记入观察手册；未捕获、超时和取消不计数。",
-            "\nOn by default; save to apply. Preview uses saved settings and an existing resident Barn Swallow in ordinary flight, or waits up to 10 unpaused seconds for natural takeoff. No spawning, teleporting or forced takeoff.\n\nOne four-frame insect enters from outside the display and lasts 12 seconds, without following the pointer. The bird makes one interception attempt. Only real bill contact captures it; the bird then resumes its original destination or a safe fallback.\n\nClicks still relocate immediately. An uncaught insect continues its original route for its remaining lifetime. Saving the switch off clears waiting and insects. Pause freezes waiting, flight and insect age. Closing, cancelling, saving or rebuilding Settings cancels waiting without losing other drafts.\n\nOnly capture followed by safe recovery is recorded. Misses, timeouts and cancellations do not count."),NSRect(x:20,y:6630,width:710,height:246),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("insectCatchHelp")
+        label(language.insectCatchSupport+t("\n默认开启，保存后生效。家燕预览选择已有普通飞行居民，否则最多等 10 秒自然起飞（暂停不计时）。白眉姬鹟从已有普通窗口顶部或地面停栖居民直接尝试，不等待自然飞行；固定树枝不适用。不会生成或传送小鸟。\n\n全局共用一只四帧昆虫，从屏外进入，寿命 12 秒，不跟随鼠标。真实喙接触才捕获。家燕恢复原飞行目标；白眉姬鹟必须返回有效脚位并停稳才完成，原点失效则寻找安全落点。\n\n点击小鸟仍立即换位；未捕获的虫继续原路线。保存关闭会清除等待和昆虫。暂停冻结动作与虫寿命。关闭、取消、保存或重建设置取消等待，保留其他草稿。\n\n仅捕获并安全恢复后记入观察手册，预览单独计数。失手安全返回后报告未捕获，不计数；超时或取消也不计数。",
+            "\nOn by default; save to apply. Barn Swallow preview uses an existing resident in ordinary flight, or waits up to 10 unpaused seconds for natural takeoff. Flycatcher preview attempts directly from an existing resident settled on a normal window top or ground edge; fixed branches are ineligible. No birds are spawned or teleported.\n\nBoth share one four-frame insect entering from offscreen, lasting 12 seconds without following the pointer. Capture requires real bill contact. Swallows resume their destination. Flycatchers must return to a valid foot point and settle; an invalid origin requires a safe fallback.\n\nClicks still relocate. Uncaught insects continue their route. Saving off clears waiting and insects. Pause freezes motion and insect age. Closing, cancelling, saving or rebuilding Settings cancels waiting and preserves other drafts.\n\nOnly capture with safe recovery is recorded, with previews counted separately. A miss is reported after safe return. Misses, timeouts and cancellations do not count."),NSRect(x:20,y:6630,width:710,height:246),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("insectCatchHelp")
         insectCatchStatus=label("",NSRect(x:20,y:6892,width:710,height:76),in:view,size:12)
         insectCatchStatus.identifier=NSUserInterfaceItemIdentifier("insectCatchStatus");insectCatchStatus.setAccessibilityLabel(t("捕虫状态","Insect catching status"))
         refreshInsectCatchControls()
@@ -793,9 +796,10 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         let active=desktop.birds.contains{desktop.engine.behavior(of:$0) == .insectCatch}
         let insect=desktop.engine.propSnapshot().contains{$0.kind == .insect}
         previewInsectCatchButton.isEnabled = !pending
+        previewFlycatcherInsectCatchButton.isEnabled = !pending
         cancelInsectCatchPreviewButton.isEnabled=pending;clearInsectButton.isEnabled=pending || insect || active
         if pending {insectCatchStatus.stringValue=t("等待现有家燕自然进入普通飞行，最多 10 秒；暂停时停止计时，尚未生成昆虫。","Waiting up to 10 unpaused seconds for an existing Barn Swallow to fly naturally; no insect has been created.")}
-        else if active {insectCatchStatus.stringValue=t("家燕正在拦截或恢复飞行；仅捕获并安全恢复后计数。","The Barn Swallow is intercepting or recovering; only capture with safe recovery counts.")}
+        else if active {insectCatchStatus.stringValue=t("正在拦截或安全返回；白眉姬鹟须停稳，家燕恢复原飞行后才计数。","Intercepting or returning safely. Flycatchers must settle; swallows must resume safe flight before counting.")}
         else if insect {insectCatchStatus.stringValue=t("未被捕获的昆虫将沿原路线退出，也可清除。","The uncaught insect will leave along its original route; Clear removes it.")}
         else {insectCatchStatus.stringValue=language.insectCatchSupport}
     }
@@ -816,6 +820,13 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         }
         refreshInsectCatchControls();refreshBathControls()
     }
+    @objc func previewFlycatcherInsectCatch() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.insectCatch(species:.yellowRumpedFlycatcher,source:.preview))
+        if case .rejected(let reason)=result {message.stringValue=insectCatchMessage(reason,species:.yellowRumpedFlycatcher)}
+        else {message.stringValue=t("正在预览白眉姬鹟捕虫：从停栖处起飞，真实接触后返回并停稳。","Previewing flycatcher catching: take off from its perch, make real contact, then return and settle.")}
+        refreshInsectCatchControls();refreshBathControls()
+    }
     func cancelInsectCatchPreview() {
         if desktop.engine.hasInsectCatchPreview {desktop.engine.handle(.cancelInsectCatchPreview)}
         ownsInsectCatchPreview=false;refreshInsectCatchControls()
@@ -829,14 +840,23 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         ownsInsectCatchPreview=false;refreshInsectCatchControls();refreshBathControls()
         message.stringValue=t("已清除昆虫并取消等待中的捕虫预览。","Insect cleared and waiting catch preview cancelled.")
     }
-    func insectCatchMessage(_ reason:BehaviorReason)->String {
+    func insectCatchMessage(_ reason:BehaviorReason,species:SpeciesID = .barnSwallow)->String {
         switch reason {
         case .disabled,.settingsChanged:return t("请先保存并开启捕虫互动。","Save and enable insect catching first.")
-        case .noSpecies,.missingBird,.unavailableBird:return t("请启用家燕并保存，等待已有居民自然飞行；不会生成或强制起飞。 ","Enable Barn Swallow and save, then wait for an existing resident’s natural flight. No spawning or forced takeoff. ")+language.insectCatchSupport
+        case .noSpecies,.missingBird,.unavailableBird:
+            if species == .yellowRumpedFlycatcher {return language.flycatcherCatchRequirement+" "+language.insectCatchSupport}
+            return t("请启用家燕并保存，等待已有居民自然飞行；不会生成或强制起飞。 ","Enable Barn Swallow and save, then wait for an existing resident’s natural flight. No spawning or forced takeoff. ")+language.insectCatchSupport
         case .missingFrames:return t("捕虫姿态、昆虫四帧或飞行喙锚不完整。","Catching poses, four insect frames or flight bill anchors are incomplete. ")+language.insectCatchSupport
-        case .timedOut:return t("已等待 10 秒（暂停不计时），没有可用的普通飞行家燕；请稍后重试。","No eligible Barn Swallow entered ordinary flight within 10 unpaused seconds. Try again later.")
-        case .missedTarget:return t("本次未捕获昆虫，已安全恢复；未记入观察手册。","The insect was not caught. The bird recovered safely; no journal entry was added.")
-        case .noSpace,.targetInvalid:return t("昆虫入场、连续拦截或恢复路线空间不足，请等待更开阔的普通飞行。","Not enough room for insect entry, a continuous interception or recovery. Wait for a clearer ordinary flight.")
+        case .timedOut:return species == .yellowRumpedFlycatcher ?
+            t("白眉姬鹟捕虫已超时结束，未记入观察手册。","The flycatcher attempt timed out; no journal entry was added."):
+            t("已等待 10 秒（暂停不计时），没有可用的普通飞行家燕；请稍后重试。","No eligible Barn Swallow entered ordinary flight within 10 unpaused seconds. Try again later.")
+        case .missedTarget:return species == .yellowRumpedFlycatcher ?
+            t("本次未捕获昆虫，白眉姬鹟已安全返回并停稳；未记入观察手册。","The insect was not caught. The flycatcher returned safely and settled; no journal entry was added."):
+            t("本次未捕获昆虫，已安全恢复；未记入观察手册。","The insect was not caught. The bird recovered safely; no journal entry was added.")
+        case .noSpace,.targetInvalid:
+            return species == .yellowRumpedFlycatcher ?
+                t("起飞、拦截或返回空间不足。请等待白眉姬鹟在更开阔的普通窗口顶部或地面停稳；固定树枝不适用。","Not enough room for takeoff, interception or return. Wait for the flycatcher to settle on a clearer normal window top or ground edge; fixed branches are ineligible."):
+                t("昆虫入场、连续拦截或恢复路线空间不足，请等待更开阔的普通飞行。","Not enough room for insect entry, a continuous interception or recovery. Wait for a clearer ordinary flight.")
         case .busy:return t("请等待当前场景、昆虫或预览结束后再试。","Wait for the current scene, insect or preview to finish, then retry.")
         case .pointerNearby,.pointerMoved:return t("请把鼠标移离小鸟和拦截路线后再试。","Move the pointer away from the bird and interception route, then retry.")
         default:return desktop.behaviorMessage(reason)

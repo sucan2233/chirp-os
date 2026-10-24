@@ -5,42 +5,20 @@ import BirdingCore
 /// captures actual engine journeys through DesktopView's production layers.
 enum InsectCatchArtVerification {
     static func run(into checks:inout [String:Bool],folder:URL) throws {
-        let art=BirdArt(species:.barnSwallow),names=CatchArtGeometry.frameNames
-        let old=try art.frames.filter{!names.contains($0.key)}.values.map{try BathArtVerification.Raster($0).pixels}
-        var distinct=Set<Data>(),rows=[[CGImage]](),evidence=[[String:Any]]()
-        checks["insectCatchArtOnlyDeliveredSwallow"]=SpeciesBehaviorProfile.species(for:.insectCatch)==[.barnSwallow] &&
-            Set(names).isSubset(of:SpeciesBehaviorProfile.profile(for:.barnSwallow).requiredFrames(for:.insectCatch)) &&
-            !SpeciesBehaviorProfile.profile(for:.yellowRumpedFlycatcher).allows(.insectCatch)
-        for name in names {
-            guard let image=art.frames[name],let source=DetailedBirdArt.catchImage(name,species:.barnSwallow),
-                  let bill=DetailedBirdArt.catchBillAnchor(name,species:.barnSwallow),
-                  let anchor=PoseClip.catchBeakAnchor(species:.barnSwallow,frame:name) else {throw failure("Missing swallow source: "+name)}
-            let pixels=try BathArtVerification.Raster(image),original=try BathArtVerification.Raster(source)
-            let error=hypot(bill.x-CGFloat(anchor.x),bill.y-CGFloat(anchor.y))
-            checks["insectCatchArt-"+name+"IndependentProductionSource"]=pixels.pixels==original.pixels &&
-                distinct.insert(pixels.pixels).inserted && !old.contains(pixels.pixels)
-            checks["insectCatchArt-"+name+"BillMatchesDrawing"]=error<1e-5 &&
-                anchor.mirrored(facingRight:false)==PoseClip.Anchor(48-Double(bill.x),Double(bill.y))
-            var layers=[image]
-            for part:DetailedBirdArt.FoundationPosePart in [.body,.feet,.headNeck,.bill] {
-                guard let layer=DetailedBirdArt.catchImage(name,species:.barnSwallow,part:part) else {throw failure("Missing catch semantic layer")}
-                layers.append(layer)
+        let ids:[SpeciesID]=[.barnSwallow,.yellowRumpedFlycatcher],names=CatchArtGeometry.frameNames
+        checks["insectCatchArtOnlyDeliveredSwallowAndFlycatcher"]=SpeciesBehaviorProfile.species(for:.insectCatch)==ids &&
+            CatchArtGeometry.species==ids && ids.allSatisfy {
+                Set(names).isSubset(of:SpeciesBehaviorProfile.profile(for:$0).requiredFrames(for:.insectCatch))
             }
-            let body=try BathArtVerification.Raster(layers[1])
-            let semanticLayersHaveAlpha=try layers.dropFirst().allSatisfy{try BathArtVerification.Raster($0).hasAlpha}
-            checks["insectCatchArt-"+name+"CompleteWingCanvasAndSemanticLayers"]=boundaryAlpha(body)==0 &&
-                semanticLayersHaveAlpha &&
-                image.width==art.frames["stand"]?.width && image.height==art.frames["stand"]?.height
-            rows.append(layers);evidence.append(["frame":name,"billAnchorError":error,"bodyBoundaryAlpha":boundaryAlpha(body)])
-        }
-        for name in TransportArtGeometry.frameNames {
-            guard let source=DetailedBirdArt.catchBillAnchor(name,species:.barnSwallow),
-                  let anchor=PoseClip.catchBeakAnchor(species:.barnSwallow,frame:name),art.frames[name] != nil else {throw failure("Missing catch transport anchor: "+name)}
-            checks["insectCatchArtTransport-"+name+"BillMatchesSource"]=hypot(source.x-CGFloat(anchor.x),source.y-CGFloat(anchor.y))<1e-5
-        }
-        let recovery=PoseClip.insectCatchRecovery(species:.barnSwallow)
-        checks["insectCatchArtRecoveryClosesThenRecovers"]=recovery?.frames.map(\.name)==["catchClose","catchRecover"] &&
-            abs((recovery?.duration ?? 0)-0.48)<1e-8 && recovery?.foot==PoseClip.footAnchor
+        var evidence=[[String:Any]]()
+        for id in ids {evidence += try checkSpecies(id,into:&checks,folder:folder)}
+        let metadata=BirdArt.poseMetadata[SpeciesID.yellowRumpedFlycatcher.rawValue] as? [String:Any] ?? [:]
+        let clips=metadata["clips"] as? [String:Any] ?? [:]
+        let anchors=metadata["transportBeakAnchors"] as? [String:[Double]] ?? [:]
+        checks["flycatcherCatchArtMetadataOnlyCatchWithTwentyTwoAnchors"]=Set(clips.keys)==Set(["insectCatchRecovery"]) &&
+            Set(anchors.keys)==Set(TransportArtGeometry.frameNames+names) &&
+            SpeciesBehaviorProfile.profile(for:.yellowRumpedFlycatcher).poseFrameNames.isEmpty &&
+            BirdArt.poseExportSpecies==SpeciesBehaviorProfile.poseSpecies+[.yellowRumpedFlycatcher]
         var insects=Set<Data>()
         for name in InsectArt.frameNames {
             guard let image=InsectArt.image(name) else {throw failure("Missing insect frame: "+name)}
@@ -51,14 +29,59 @@ enum InsectCatchArtVerification {
         checks["insectCatchArtFrozenWorldGeometry"]=InsectArt.logicalSize==CGSize(width:16,height:16) &&
             InsectArt.anchor==CGPoint(x:8,y:8) && InsectArt.collisionRadius==3 &&
             InsectTrajectory.logicalSize==16 && InsectTrajectory.lifetime==12 && InsectArt.frameNames==["insect0","insect1","insect2","insect3"]
-        for right in [true,false] {try sheet(rows,right:right,to:folder.appendingPathComponent("insect-catch-source-"+(right ? "right":"left")+".png"))}
         saveJSON(["frames":evidence,"scope":"Unmasked editable source only; real contact, recovery and layer composition are verified by the native runtime verifier."],to:folder.appendingPathComponent("insect-catch-art-evidence.json"))
+    }
+
+    private static func checkSpecies(_ id:SpeciesID,into checks:inout [String:Bool],folder:URL) throws -> [[String:Any]] {
+        let art=BirdArt(species:id),names=CatchArtGeometry.frameNames
+        let prefix=id == .barnSwallow ? "insectCatchArt":"flycatcherCatchArt"
+        let old=try art.frames.filter{!names.contains($0.key)}.values.map{try BathArtVerification.Raster($0).pixels}
+        var distinct=Set<Data>(),rows=[[CGImage]](),evidence=[[String:Any]]()
+        for name in names {
+            guard let image=art.frames[name],let source=DetailedBirdArt.catchImage(name,species:id),
+                  let bill=DetailedBirdArt.catchBillAnchor(name,species:id),
+                  let anchor=PoseClip.catchBeakAnchor(species:id,frame:name) else {throw failure("Missing catch source: "+id.rawValue+" / "+name)}
+            let pixels=try BathArtVerification.Raster(image),original=try BathArtVerification.Raster(source)
+            let error=hypot(bill.x-CGFloat(anchor.x),bill.y-CGFloat(anchor.y))
+            checks[prefix+"-"+name+"IndependentProductionSource"]=pixels.pixels==original.pixels &&
+                distinct.insert(pixels.pixels).inserted && !old.contains(pixels.pixels)
+            checks[prefix+"-"+name+"BillMatchesDrawing"]=error<1e-5 &&
+                anchor.mirrored(facingRight:false)==PoseClip.Anchor(48-Double(bill.x),Double(bill.y))
+            var layers=[image]
+            for part:DetailedBirdArt.FoundationPosePart in [.body,.feet,.headNeck,.bill] {
+                guard let layer=DetailedBirdArt.catchImage(name,species:id,part:part) else {throw failure("Missing catch semantic layer")}
+                layers.append(layer)
+            }
+            let body=try BathArtVerification.Raster(layers[1])
+            let semanticLayersHaveAlpha=try layers.dropFirst().allSatisfy{try BathArtVerification.Raster($0).hasAlpha}
+            checks[prefix+"-"+name+"CompleteWingCanvasAndSemanticLayers"]=boundaryAlpha(body)==0 &&
+                semanticLayersHaveAlpha &&
+                image.width==art.frames["stand"]?.width && image.height==art.frames["stand"]?.height
+            let billPixels=try BathArtVerification.Raster(layers[4]),unit=48/CGFloat(image.width)
+            checks[prefix+"-"+name+"ActualBillAlphaNearTip"]=(0..<billPixels.height).contains {y in
+                (0..<billPixels.width).contains {x in
+                    billPixels.alpha(x,y)>0 && hypot((CGFloat(x)+0.5)*unit-bill.x,(CGFloat(y)+0.5)*unit-bill.y)<=1.5*unit
+                }
+            }
+            rows.append(layers);evidence.append(["species":id.rawValue,"frame":name,"billAnchorError":error,"bodyBoundaryAlpha":boundaryAlpha(body)])
+        }
+        for name in TransportArtGeometry.frameNames {
+            guard let source=DetailedBirdArt.catchBillAnchor(name,species:id),
+                  let anchor=PoseClip.catchBeakAnchor(species:id,frame:name),art.frames[name] != nil else {throw failure("Missing catch transport anchor: "+name)}
+            checks[prefix+"Transport-"+name+"BillMatchesSource"]=hypot(source.x-CGFloat(anchor.x),source.y-CGFloat(anchor.y))<1e-5
+        }
+        let recovery=PoseClip.insectCatchRecovery(species:id)
+        checks[prefix+"RecoveryClosesThenRecovers"]=recovery?.frames.map(\.name)==["catchClose","catchRecover"] &&
+            abs((recovery?.duration ?? 0)-0.48)<1e-8 && recovery?.foot==PoseClip.footAnchor
+        let filePrefix=id == .barnSwallow ? "":id.rawValue+"-"
+        for right in [true,false] {try sheet(rows,species:id,right:right,to:folder.appendingPathComponent(filePrefix+"insect-catch-source-"+(right ? "right":"left")+".png"))}
+        return evidence
     }
     private static func boundaryAlpha(_ r:BathArtVerification.Raster)->Int {
         (0..<r.width).filter{r.alpha($0,0)>0 || r.alpha($0,r.height-1)>0}.count +
             (1..<(r.height-1)).filter{r.alpha(0,$0)>0 || r.alpha(r.width-1,$0)>0}.count
     }
-    private static func sheet(_ rows:[[CGImage]],right:Bool,to url:URL) throws {
+    private static func sheet(_ rows:[[CGImage]],species:SpeciesID,right:Bool,to url:URL) throws {
         guard let context=CGContext(data:nil,width:1040,height:730,bitsPerComponent:8,bytesPerRow:0,
             space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue) else {throw failure("Cannot allocate catch source sheet")}
         context.setFillColor(NSColor(calibratedWhite:0.12,alpha:1).cgColor);context.fill(CGRect(x:0,y:0,width:1040,height:730))
@@ -68,7 +91,8 @@ enum InsectCatchArtVerification {
             (text as NSString).draw(at:CGPoint(x:x,y:y),withAttributes:[.font:NSFont.monospacedSystemFont(ofSize:11,weight:.regular),.foregroundColor:NSColor.white])
             NSGraphicsContext.restoreGraphicsState()
         }
-        label("Barn Swallow / raw source, body, feet, head-neck, bill / "+(right ? "right":"left"),15,12)
+        let title=species == .barnSwallow ? "Barn Swallow":"Yellow-rumped Flycatcher"
+        label(title+" / raw source, body, feet, head-neck, bill / "+(right ? "right":"left"),15,12)
         for (row,layers) in rows.enumerated() {
             label(CatchArtGeometry.frameNames[row],10,CGFloat(65+row*175))
             for (column,image) in layers.enumerated() {

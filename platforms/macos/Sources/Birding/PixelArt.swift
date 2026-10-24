@@ -54,6 +54,12 @@ final class BirdArt {
     static let carryNames = SpeciesBehaviorProfile.carryFrameNames
     static let bathNames = SpeciesBehaviorProfile.bathFrameNames
     static let peekNames = SpeciesBehaviorProfile.peekFrameNames
+    /// Export catch-only species without granting the twelve-species base pack.
+    /// Keep all historical preview rows first, appending only new species.
+    static var poseExportSpecies:[SpeciesID] {
+        let base=SpeciesBehaviorProfile.poseSpecies
+        return base+SpeciesBehaviorProfile.species(for:.insectCatch).filter{!base.contains($0)}
+    }
     static func names(for species:SpeciesID) -> [String] {
         names + (SpeciesBehaviorProfile.profile(for:species).allows(.allopreening) ? allopreeningNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.foodTrayVisit) ? feedingNames : []) +

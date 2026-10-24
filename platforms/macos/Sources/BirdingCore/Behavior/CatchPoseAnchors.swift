@@ -1,7 +1,7 @@
 import Foundation
 import CoreGraphics
 
-/// Source-derived beak geometry for M6f.1. The caller mirrors with x -> 48-x
+/// Source-derived swallow/flycatcher beak geometry. The caller mirrors x -> 48-x
 /// through PoseClip.Anchor.world; no world/species scale is baked into this API.
 enum CatchPoseAnchors {
     static func anchor(species:SpeciesID,frame:String)->PoseClip.Anchor? {

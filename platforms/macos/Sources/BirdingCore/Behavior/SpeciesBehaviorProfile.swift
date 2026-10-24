@@ -15,7 +15,7 @@ public struct SpeciesBehaviorProfile {
         .foodTrayVisit:[.treeSparrow,.spottedDove],
         .bathVisit:[.treeSparrow,.lightVentedBulbul],
         .leafCarry:[.treeSparrow],
-        .insectCatch:[.barnSwallow]
+        .insectCatch:[.barnSwallow,.yellowRumpedFlycatcher]
     ]
     public static let ambientFlockSpecies:[SpeciesID] = [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,
         .lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]

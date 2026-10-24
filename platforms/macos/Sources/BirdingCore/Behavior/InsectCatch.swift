@@ -248,7 +248,7 @@ enum InsectCatchJourney {
     }
 }
 
-final class InsectCatchExecution:BehaviorExecution {
+final class InsectCatchExecution:InsectCatchMotionExecution {
     let plan:InsectCatchPlan
     let insectID:ScenePropID
     let kind:BehaviorKind = .insectCatch

@@ -39,6 +39,7 @@ for bird in ('treeSparrow', 'lightVentedBulbul'):
     expected_extras[bird] += ['bathInspect', 'bathTouch', 'bathLower', 'bath0', 'bath1', 'bath2', 'bathRise']
 expected_extras['treeSparrow'] += ['carryLook', 'carryLower', 'carryGrip', 'carryPlace']
 expected_extras['barnSwallow'] += ['catchOpen', 'catchClose', 'catchRecover']
+expected_extras['yellowRumpedFlycatcher'] = ['catchOpen', 'catchClose', 'catchRecover']
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
     assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'
@@ -48,6 +49,15 @@ assert {row['species'] for row in support} == ids, 'Missing species support audi
 for row in support:
     assert not row['missingPoseFrames'], f"Incomplete enhanced pose pack: {row['species']}"
     assert set(row['poseFrames']).issubset(specific.get(row['species'], frames)), 'Support audit differs from atlas'
+flycatcher = next(row for row in support if row['species'] == 'yellowRumpedFlycatcher')
+assert flycatcher['poseFrames'] == [], 'Catch-only flycatcher was added to the base pose pack'
+assert len(specific['yellowRumpedFlycatcher']) == 37, 'Flycatcher must append exactly three frames after the common 34'
+metadata = manifest['poseClips']
+assert set(metadata) == set(expected_extras), 'Pose/catch metadata omits a delivered species or expands scope'
+assert set(metadata['yellowRumpedFlycatcher']['clips']) == {'insectCatchRecovery'}, 'Flycatcher exported unprovided clips'
+transport_frames = [f'fly{i}' for i in range(8)] + [f'land{i}' for i in range(3)] + [f'glide{i}' for i in range(3)] + [f'bank{i}' for i in range(3)] + ['bound', 'stand']
+for bird in ('barnSwallow', 'yellowRumpedFlycatcher'):
+    assert set(metadata[bird]['transportBeakAnchors']) == set(transport_frames + expected_extras['yellowRumpedFlycatcher']), f'Incomplete catch beak geometry: {bird}'
 
 prop_manifest = json.loads((ROOT / 'shared/art/props/manifest.json').read_text())
 insect = prop_manifest.get('insect', {})

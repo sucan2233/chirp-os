@@ -3,7 +3,7 @@
 这些 JSON 是引擎输入，采用 Quartz 桌面坐标（向右为 x 正方向，向下为 y 正方向）。它们不依赖 AppKit、窗口标题、桌面截图或用户配置，供 macOS 与后续 Windows 核心运行同一场景。
 
 - `version`：文件格式版本；未知版本拒绝，不能忽略无法理解的事件。
-- `simulationVersion`：M6f.1当前为14，新增昆虫实体、捕虫命令与连续真实喙接触结果。旧生产录制版本1–13明确拒绝；请在相应旧提交重放或重新录制，不能直接改版本标签。旧16份仓库手写夹具保留原输入和独立断言，仅迁移版本；新增第17份 `insect-catch.json`。17夹具在30/60/120Hz的51份完整报告一致。另有旧16夹具60Hz报告去7新增字段后与M6e一致的回归证据，不替代新捕虫语义验收，也不从当前实现反向生成expected。第16份仍为 `leaf-carry.json`，v13的历史结果见下文M6e。
+- `simulationVersion`：M6f.2当前为15，新增白眉姬鹟出击返回捕虫语义。旧生产录制版本1–14明确拒绝；请在相应旧提交重放或重新录制，不能直接改版本标签。旧17份仓库手写夹具保留原输入和独立断言，仅迁移版本；新增第18份`flycatcher-insect-catch.json`。18夹具在30/60/120Hz的54份完整报告一致，旧17夹具60Hz报告不剔除字段与M6f.1完全一致；不从当前实现反向生成expected。第16份仍为`leaf-carry.json`，第17份仍为`insect-catch.json`，v13/v14历史结果见下文。
 - `seed`、鸟/运行/道具/栖息地对象 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
 - `settings`：完整配置或合法的旧格式配置；按 BirdSettings schema 迁移。
 - `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟；可选 `flightOrigin` 让鸟从该坐标开始普通直达飞行，仍需 `advance` 输入才能移动和产生速度。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。
@@ -60,8 +60,11 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 # 第16份场景：静止叶片携带；使用已统一验证的构建，无需为文档另行构建
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/leaf-carry.json --replay-hz 120 --replay-output .build/leaf-carry-report.json
 
-# 第17份场景：家燕捕虫、暂停/取消及真实捕获恢复（模拟v14）
+# 第17份场景：家燕捕虫、暂停/取消及真实捕获恢复（当前模拟v15）
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/insect-catch.json --replay-hz 120 --replay-output .build/insect-catch-report.json
+
+# 第18份场景：白眉姬鹟栖点出击、暂停/返回及取消后独立虫继续（模拟v15）
+dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/flycatcher-insect-catch.json --replay-hz 120 --replay-output .build/flycatcher-insect-catch-report.json
 ```
 
 当前 macOS 测试把同一输入序列分别拆成至多 1/30、1/60、1/120 秒的回调，比较完整报告；保留输入发生边界，不跨 world/command 合并时间。这验证回调分段稳定性，不宣称恢复录制时没有采到的鼠标轨迹。不同采样率的真实移动轨迹另由 PassiveEcologyTests 验证。Windows 解析器与原生验收尚待迁移，当前文件通过不代表跨端已经对齐。
@@ -106,7 +109,7 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 
 最终证据：826核心测试通过；第二轮48完整回放见 `.build/m6e-replays-second.log` 与 `.build/m6e-replays/`。旧15报告回归见 `.build/m6e-delivery/legacy-replay-comparison.json`，比较时仅去除 `carriedObjects/hasCarryLeafPlacement/sceneFocusKind/prop.mirrored`。阶段已验证交付、随本阶段记录本地提交、未安装，详见 [M6e验收](../../docs/M6E-ACCEPTANCE.md)；不代表Windows迁移、物理多屏或真实长期桌面验收。
 
-## M6f.1 家燕捕虫（当前模拟版本14）
+## M6f.1 家燕捕虫（历史模拟版本14）
 
 | command.name | 必填 payload | 行为 |
 | --- | --- | --- |
@@ -120,4 +123,12 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 
 v14报告增加 `insect`、`lastInsectContact`、`insectMissedTargetCount`、`hasInsectCatchPreview`、`insectPreviewRemaining`、`insectPreviewSpecies`、`insectCooldownRemaining`。第17夹具保留独立断言，逐输入前缀覆盖暂停、点击取消、原虫继续、清虫、第二次真实接触及回原目标落稳；另有成功/错过的跨率分段报告和24/64居民实际工作负载。
 
-阶段验收通过：860核心/3156原生鸟/1782设置、51完整报告、旧16份去上述7字段兼容、三轮18次性能通过。最终回放在 `.build/m6f1-replays/`，初轮保留 `.build/m6f1-replays-initial/`，旧比较在 `.build/m6f1-delivery/legacy-replay-comparison.json`。随本阶段记录本地提交、未安装；首轮失败与完整边界见 [M6f.1验收](../../docs/M6F1-ACCEPTANCE.md)。下一阶段M6f.2白眉姬鹟尚未开放，Windows与真实长期/物理硬件验收不由这些报告替代。
+阶段验收通过：860核心/3156原生鸟/1782设置、51完整报告、旧16份去上述7字段兼容、三轮18次性能通过。最终回放在 `.build/m6f1-replays/`，初轮保留 `.build/m6f1-replays-initial/`，旧比较在 `.build/m6f1-delivery/legacy-replay-comparison.json`。随本阶段记录本地提交、未安装；首轮失败与完整边界见 [M6f.1验收](../../docs/M6F1-ACCEPTANCE.md)。白眉姬鹟的后续交付见下节，Windows与真实长期/物理硬件验收不由这些报告替代。
+
+## M6f.2 白眉姬鹟出击返回（当前模拟版本15）
+
+`insectCatch`的species现支持`barnSwallow`与`yellowRumpedFlycatcher`，来源仍为user/preview/automatic，取消与清虫命令保持。白眉预览直接招募已有合法普通窗口顶部/地面停栖居民，不等待普通飞行、不补鸟，不新增固定小栖木资格；预约原脚位，出击80–220逻辑点、拦截段≤3s、run≤25s。真实捕获后合喙恢复并尝试返回原脚位，原点失效从实际脚位寻找安全落点，最终落稳才completed；错过或取消不入册。两鸟共用原8%机会、单虫及单run，既有暂停/清理规则保持，无新时钟。
+
+第18夹具覆盖暂停、真实返回、再次出击及暂停点击取消后原虫继续，保留独立语义断言。模拟v15的54完整报告跨率一致：`.build/m6f2-replays.log`；旧17份报告不剔字段与M6f.1完全一致：`.build/m6f2-delivery/legacy-replay-comparison.json`。以上重放命令已随统一验收执行，文档收尾未重复运行。
+
+M6f.2阶段验收通过：第三轮完整876项中其余875项通过（142.466s），第四轮`swift test --filter FlycatcherInsectCatch`的16项全通过（6.981s），覆盖修正的1项及其余白眉回归，不宣称单次876全绿。24/64居民各实际完成2次捕获与1次取消；Release/严格签名、3322原生鸟、1820设置、46鸟旧像素/索引、恰增3鸟帧无新道具、parity、78 GIF/7800帧/loop0及18次性能通过。累计150鸟体/10道具，剩17/6；随本阶段记录本地提交、未安装，用户安装版仍M6a/b。前三轮测试失败、1ULP同夹具复现与≤4ULP断言修正见[M6f.2验收](../../docs/M6F2-ACCEPTANCE.md)，生产代码未因这些修正改变。下一阶段M6g；物理多屏/热插拔、真实睡眠唤醒、2h/8h及长期内存/能耗仍未验收。

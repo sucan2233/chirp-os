@@ -25,6 +25,11 @@ enum AppLanguage: String {
     var poseSupportReference:String {text("以上专用鸟种","the pose species listed above")}
     var leafCarrySupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.leafCarry)+text("。",".")}
     var insectCatchSupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.insectCatch)+text("。",".")}
+    var flycatcherCatchPreviewTitle:String {text("预览","Preview ")+name(.yellowRumpedFlycatcher)+text("捕虫"," catch")}
+    var flycatcherCatchRequirement:String {
+        text("请启用白眉姬鹟并保存，等待已有居民在普通窗口顶部或地面停稳；固定树枝不适用，不等待自然飞行。",
+             "Enable and save the flycatcher. Use a resident settled on a normal window top or ground edge; fixed branches are ineligible.")
+    }
     func name(_ id:SpeciesID) -> String {
         if let p = SpeciesCatalog.standard.species.first(where: { $0.id == id }), let en = p.englishName { return text(p.name,en) }
         switch id {

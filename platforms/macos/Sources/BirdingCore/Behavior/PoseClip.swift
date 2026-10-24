@@ -110,14 +110,15 @@ public struct PoseClip:Codable,Equatable {
                 Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
             })
     }
-    /// A caught insect is already gone. These two poses finish while the
-    /// existing motion integrator restores the saved ordinary flight.
+    /// A caught insect is already gone. The execution decides whether its
+    /// recovery requires an ordinary flight handoff or an actual settled return.
     public static func insectCatchRecovery(species:SpeciesID) -> Self? {
-        guard SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch) else {return nil}
+        guard SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch),
+              let close=catchBeakAnchor(species:species,frame:"catchClose"),
+              let recover=catchBeakAnchor(species:species,frame:"catchRecover") else {return nil}
         return Self(id:"\(species.rawValue).insectCatch.recovery",
-            frames:zip(["catchClose","catchRecover"],[0.18,0.30]).map {
-                Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
-            })
+            frames:[Frame(name:"catchClose",duration:0.18,beak:close),
+                    Frame(name:"catchRecover",duration:0.30,beak:recover)])
     }
     public static func catchBeakAnchor(species:SpeciesID,frame:String) -> Anchor? {
         CatchPoseAnchors.anchor(species:species,frame:frame)

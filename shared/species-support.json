@@ -6740,14 +6740,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "insectCatch",
         "missingFrames" : [
-          "catchClose",
-          "catchOpen",
-          "catchRecover"
+
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       }
     ],
     "capabilities" : [
@@ -6756,7 +6754,8 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "insectCatching"
     ],
     "missingPoseFrames" : [
 

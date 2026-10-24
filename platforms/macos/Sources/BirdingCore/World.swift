@@ -569,6 +569,37 @@ public final class Bird {
         motionRevision &+= 1
         return true
     }
+    /// A scene owner may abandon a lost destination for another ordinary host.
+    /// The caller preflights its reservation and envelope. This narrow handoff
+    /// preserves actual feet, measured velocity and wing phase, including while
+    /// paused; only Bird.tick advances the replacement route.
+    @discardableResult
+    func replaceCoordinatedFlight(_ route:CoordinatedFlightRoute,on host:Surface,fraction:CGFloat,
+                                  spriteScale:CGFloat,expectedRevision:UInt64) -> Bool {
+        guard let old=coordinatedMotion,old.tracksHost,!isDeparting,!destinationInvalidated,
+              motionRevision==expectedRevision,spriteScale==old.scale,edge == .top,
+              !host.isHabitat,host.isGround || host.layer==0,
+              fraction.isFinite,(0...1).contains(fraction),
+              Geometry.distance(position,route.position(at:0))<0.001,
+              Geometry.distance(Geometry.foot(on:host,fraction:fraction,edge:.top,scale:spriteScale),
+                                route.position(at:route.duration))<0.001 else {return false}
+        let speed=Double(Geometry.distance(.zero,flightVelocity))
+        guard speed.isFinite,abs(route.speed(at:0)-speed)<0.1 else {return false}
+        if speed>0.001 {
+            let next=route.position(at:min(0.001,route.duration)),length=Geometry.distance(position,next)
+            guard length>0 else {return false}
+            let incoming=CGPoint(x:(next.x-position.x)/length*speed,y:(next.y-position.y)/length*speed)
+            guard Geometry.distance(incoming,flightVelocity)<=max(2,speed*0.01) else {return false}
+        }
+        wingPhase+=flightAge;flightAge=0;flightDuration=route.duration
+        origin=position;target=route.position(at:route.duration);plannedTarget=target
+        hostID=host.id;hostPID=host.pid;self.fraction=fraction;depthID=nil;previousHost=nil
+        coordinatedMotion=CoordinatedMotion(route:route,host:host,scale:spriteScale,delay:0,tracksHost:true)
+        cruiseSpeed=route.legs.map{$0.timing.peakSpeed}.max() ?? 1
+        state = .flying;stateTime=0;isGliding=false
+        motionRevision &+= 1
+        return true
+    }
     /// Perched/landing tracking changes only pending metadata. Bird.tick applies
     /// a bounded translation, so world samples and paused reads never move feet.
     @discardableResult

@@ -2,19 +2,19 @@ import XCTest
 @testable import BirdingCore
 
 final class InsectCatchContractTests:XCTestCase {
-    func testM6fOneAuthorizesOnlyBarnSwallowAndRequiresTheWholeCatchPackage() throws {
+    func testM6fTwoAuthorizesOnlySwallowAndFlycatcherAndRequiresTheWholeCatchPackage() throws {
         let catchFrames:Set<String>=["catchOpen","catchClose","catchRecover"]
         let required=catchFrames.union(["stand","land0","land1","land2"]).union((0..<8).map{"fly\($0)"})
         XCTAssertEqual(SpeciesBehaviorProfile.catchFrameNames,["catchOpen","catchClose","catchRecover"])
-        XCTAssertEqual(SpeciesBehaviorProfile.species(for:.insectCatch),[.barnSwallow])
+        XCTAssertEqual(SpeciesBehaviorProfile.species(for:.insectCatch),[.barnSwallow,.yellowRumpedFlycatcher])
         XCTAssertEqual(BirdCapability.insectCatching.requiredFrames,catchFrames)
         XCTAssertEqual(BehaviorDefinitions.definition(for:.insectCatch).requiredFrames,required)
-        XCTAssertFalse(SpeciesBehaviorProfile.profile(for:.yellowRumpedFlycatcher).allows(.insectCatch),
-            "M6f.2 permission must not leak into the swallow batch")
+        XCTAssertTrue(SpeciesBehaviorProfile.profile(for:.yellowRumpedFlycatcher).allows(.insectCatch))
+        XCTAssertFalse(SpeciesBehaviorProfile.profile(for:.yellowRumpedFlycatcher).allows(.fixedPerchVisit))
         for species in SpeciesID.allCases {
             let row=try XCTUnwrap(SpeciesSupportAudit(species:species,availableFrames:required).behaviors.first{$0.kind == .insectCatch})
-            XCTAssertEqual(row.productAllowed,species == .barnSwallow)
-            XCTAssertEqual(row.contentSupported,species == .barnSwallow)
+            XCTAssertEqual(row.productAllowed,[SpeciesID.barnSwallow,.yellowRumpedFlycatcher].contains(species))
+            XCTAssertEqual(row.contentSupported,[SpeciesID.barnSwallow,.yellowRumpedFlycatcher].contains(species))
             XCTAssertTrue(row.missingFrames.isEmpty)
             for missing in required {
                 let partial=SpeciesSupportAudit(species:species,availableFrames:required.subtracting([missing]))
@@ -67,7 +67,13 @@ final class InsectCatchContractTests:XCTestCase {
         XCTAssertEqual(clip.duration,0.48,accuracy:1e-12);XCTAssertEqual(clip.maximumLoops,1)
         XCTAssertEqual(clip.sample(at:0)?.name,"catchClose")
         XCTAssertEqual(clip.sample(at:0.18)?.name,"catchRecover");XCTAssertNil(clip.sample(at:0.48))
-        XCTAssertNil(PoseClip.insectCatchRecovery(species:.yellowRumpedFlycatcher))
+        let flycatcher=try XCTUnwrap(PoseClip.insectCatchRecovery(species:.yellowRumpedFlycatcher))
+        XCTAssertEqual(flycatcher.frames.map(\.name),["catchClose","catchRecover"])
+        XCTAssertEqual(flycatcher.frames.map(\.duration),[0.18,0.30])
+        XCTAssertEqual(flycatcher.duration,0.48,accuracy:1e-12)
+        XCTAssertEqual(flycatcher.sample(at:0)?.name,"catchClose")
+        XCTAssertEqual(flycatcher.sample(at:0.18)?.name,"catchRecover")
+        XCTAssertNil(flycatcher.sample(at:0.48))
         let frames=Set(["stand","catchOpen","catchClose","catchRecover","land0","land1","land2"])
             .union((0..<8).map{"fly\($0)"})
         for frame in frames {
@@ -84,6 +90,17 @@ final class InsectCatchContractTests:XCTestCase {
         }
         for frame in CatchArtGeometry.insectFrameNames {XCTAssertNotNil(CatchArtGeometry.insectPose(frame:frame))}
         XCTAssertNil(CatchArtGeometry.insectPose(frame:"insect4"))
-        XCTAssertNil(PoseClip.catchBeakAnchor(species:.yellowRumpedFlycatcher,frame:"catchOpen"))
+        for frame in frames {
+            let anchor=try XCTUnwrap(PoseClip.catchBeakAnchor(species:.yellowRumpedFlycatcher,frame:frame),frame)
+            XCTAssertTrue(anchor.x.isFinite && anchor.y.isFinite)
+            for scale:CGFloat in [0.5,1,2] {
+                let foot=CGPoint(x:-200,y:-300)
+                let right=anchor.world(foot:foot,scale:scale,facingRight:true)
+                let left=anchor.world(foot:foot,scale:scale,facingRight:false)
+                XCTAssertEqual(right.x+left.x,-400,accuracy:1e-9)
+                XCTAssertEqual(right.y,left.y,accuracy:1e-9)
+            }
+        }
+        XCTAssertNil(PoseClip.catchBeakAnchor(species:.treeSparrow,frame:"catchOpen"))
     }
 }

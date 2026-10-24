@@ -86,7 +86,9 @@ enum DetailedBirdArt {
         case .eurasianWoodcock: return Shape(width: 22, height: 13, headWidth: 8, headHeight: 7, headY: 20, tailX: 12, tailY: 33)
         case .blackDrongo: return Shape(width: 16, height: 12, headWidth: 7, headHeight: 6, headY: 14, tailX: 2, tailY: 44)
         case .chinesePondHeron: return Shape(width: 16, height: 10, headWidth: 7, headHeight: 5, headY: 13, tailX: 12, tailY: 31)
-        case .yellowRumpedFlycatcher: return Shape(width: 16, height: 11, headWidth: 8, headHeight: 7, headY: 15, tailX: 10, tailY: 40)
+        case .yellowRumpedFlycatcher: return Shape(width: 16, height: 11,
+            headWidth: CatchArtGeometry.flycatcherHeadWidth, headHeight: CatchArtGeometry.flycatcherHeadHeight,
+            headY: CatchArtGeometry.flycatcherHeadY, tailX: 10, tailY: 40)
         case .yellowBrowedWarbler: return Shape(width: 17, height: 10, headWidth: 7, headHeight: 6, headY: 16, tailX: 9, tailY: 38)
         case .greatTit: return Shape(width: 17, height: 13, headWidth: 8.5, headHeight: 8, headY: 14, tailX: 8, tailY: 41)
         case .commonMoorhen: return Shape(width: 22, height: 12, headWidth: 7, headHeight: 7, headY: 17, tailX: 12, tailY: 30)
@@ -1844,6 +1846,7 @@ extension DetailedBirdArt {
     static func catchImage(_ frame:String,species id:SpeciesID,
                            part:FoundationPosePart?=nil)->CGImage? {
         guard let p=CatchArtGeometry.pose(species:id,frame:frame) else {return nil}
+        if id == .yellowRumpedFlycatcher {return flycatcherCatchImage(frame,pose:p,part:part)}
         let density=SpeciesCatalog.standard.profile(id).relativeScale
         let c=BirdPainter(size:max(48,Int((48*density).rounded())))
         let b=p.body,x=Double(b.minX),y=Double(b.minY),w=Double(b.width),h=Double(b.height)
@@ -1925,5 +1928,90 @@ extension DetailedBirdArt {
             let end=CGPoint(x:root.x+(tip.x-root.x)*0.88,y:root.y+(tip.y-root.y)*0.88)
             c.line([(Double(start.x),Double(start.y)),(Double(end.x),Double(end.y))],far ? "slate":"navy",width:0.6)
         }
+    }
+
+    /// M6f.2 independent male flycatcher. The existing swallow drawer above
+    /// retains its painter order, palette and every authored path unchanged.
+    private static func flycatcherCatchImage(_ frame:String,pose p:CatchArtGeometry.Pose,
+                                            part:FoundationPosePart?)->CGImage {
+        let density=SpeciesCatalog.standard.profile(.yellowRumpedFlycatcher).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let b=p.body,x=Double(b.minX),y=Double(b.minY),w=Double(b.width),h=Double(b.height)
+        let open=frame == "catchOpen",recover=frame == "catchRecover"
+        if part == nil || part == .feet {
+            for xx in [26.0,28.5] {
+                let joint=y+h-1.1
+                c.line([(xx+0.5,joint-0.9),(xx-0.3,joint+0.5),(xx-1.6,joint+0.7)],"brown",width:0.65)
+                c.line([(xx-0.3,joint+0.5),(xx-0.8,joint+1.2)],"umber",width:0.5)
+            }
+        }
+        if part == nil || part == .body {
+            flycatcherCatchWing(c,p.farWing,far:true)
+            let tx=Double(p.tail.x),ty=Double(p.tail.y)
+            // A broad, short fan with pale feather edges, never a fork.
+            c.poly([(x+4,y+2),(tx,ty-2.1),(tx-1.2,ty-0.3),(tx,ty+2.1),
+                    (tx+3.1,ty+2.9),(x+5,y+h-0.8)],"black",outline:true)
+            c.line([(tx,ty+1.8),(tx+3,ty+2.4),(x+3,y+h-1)],"silver",width:0.65)
+            c.line([(x+3,y+3),(tx+0.7,ty-0.8)],"slate",width:0.6)
+            c.oval(x,y,w,h,"black",outline:true)
+            c.oval(x+w*0.39,y+1.7,w*0.60,h-1.9,"yellow")
+            c.poly([(x+w*0.56,y+h-2),(x+w-1,y+h-3),(x+w-1.5,y+h-0.5),
+                    (x+w*0.46,y+h-0.4)],"cream")
+            flycatcherCatchWing(c,p.nearWing,far:false)
+            // The yellow rump stays separate from the yellow underside even
+            // when the near wing covers part of the back during the downbeat.
+            c.poly([(x+0.2,y+1.8),(x+3.3,y+0.4),(x+5.2,y+1.6),
+                    (x+3.7,y+3.5),(x+0.5,y+3.6)],"yellow")
+            c.line([(x+0.6,y+1.9),(x+3.2,y+1.1)],"cream",width:0.6)
+        }
+        if part == nil || part == .headNeck {
+            let nape=p.headPoint(-p.headWidth*0.34,0.4)
+            let chin=p.headPoint(p.headWidth*0.30,2.3)
+            c.poly([(x+w*0.58,y+0.5),(nape.x,nape.y),(chin.x,chin.y),
+                    (x+w-0.6,y+h*0.72)],"yellow")
+            c.poly([(x+w*0.57,y+0.5),(nape.x,nape.y),(nape.x+1,nape.y+1.3),
+                    (x+w*0.67,y+3.2)],"black")
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.pitch))
+            let hw=p.headWidth,hh=p.headHeight
+            c.oval(-hw/2,-hh/2,hw,hh,"black",outline:true)
+            c.ctx.saveGState();c.ctx.addEllipse(in:CGRect(x:-hw/2,y:-hh/2,width:hw,height:hh));c.ctx.clip()
+            c.poly([(0.2,0.9),(hw/2,0.4),(hw/2,hh/2),(-0.8,hh/2)],"yellow")
+            // White brow above the eye, not a white eye-ring or swallow mask.
+            c.line([(-3.2,-1.3),(-0.3,-2.0),(3,-1.6)],"white",width:0.9)
+            c.line([(-2.5,-0.4),(0.8,-0.8)],"slate",width:0.5)
+            c.oval(1.1,-0.9,1.1,1.1,"eye");c.oval(1.5,-0.9,0.4,0.4,"white")
+            if recover {c.line([(0.5,1.9),(2.3,1.8)],"buff",width:0.5)}
+            c.ctx.restoreGState();c.ctx.restoreGState()
+        }
+        if part == nil || part == .bill {
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.pitch))
+            if open {
+                c.poly([(p.billRoot-0.2,0.7),(p.billRoot+p.billLength-0.3,1.1),
+                        (p.billRoot+p.billLength-0.5,1.2+p.gape),(p.billRoot-0.2,1.8)],"buff")
+            }
+            // The same filled upper-tip vertex drives the capture resolver.
+            c.poly(p.upperBill.map{(Double($0.x),Double($0.y))},"dark")
+            c.poly(p.lowerBill.map{(Double($0.x),Double($0.y))},"dark")
+            if open {c.line([(p.billRoot+0.2,1.2),(p.billRoot+1.3,1.7)],"yellow",width:0.45)}
+            c.ctx.restoreGState()
+        }
+        return c.image
+    }
+
+    private static func flycatcherCatchWing(_ c:BirdPainter,_ vertices:[CGPoint],far:Bool) {
+        let root=CGPoint(x:far ? 29:25,y:24)
+        c.poly(vertices.map{(Double($0.x),Double($0.y))},far ? "dark":"black",outline:true)
+        // Insets, feather shafts and the wing patch lie inside the authored
+        // fan. Convex combinations keep strokes within its canvas margin.
+        let inner=vertices.map {v in (Double(root.x+(v.x-root.x)*0.80),Double(root.y+(v.y-root.y)*0.80))}
+        c.poly(inner,far ? "black":"dark")
+        for tip in vertices.dropFirst().prefix(5) {
+            c.line([(Double(root.x+(tip.x-root.x)*0.32),Double(root.y+(tip.y-root.y)*0.32)),
+                    (Double(root.x+(tip.x-root.x)*0.87),Double(root.y+(tip.y-root.y)*0.87))],"slate",width:0.55)
+        }
+        let patch=vertices.dropFirst().prefix(4).map {v in
+            (Double(root.x+(v.x-root.x)*0.47),Double(root.y+(v.y-root.y)*0.47))
+        }
+        c.poly([(Double(root.x)-1,Double(root.y)+0.6)]+patch+[(Double(root.x)+0.8,Double(root.y)+1.2)],"white")
     }
 }

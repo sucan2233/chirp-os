@@ -52,23 +52,45 @@ enum InsectCatchSettingsVerification {
             !d.engine.hasInsectCatchPreview && d.engine.insectSnapshot()==nil && d.engine.activeRunCount==0 &&
             d.birds.first === bird && bird.position==origin && bird.motionRevision==revision
         try d.applySettings(fixtureSettings)
+        guard let host=d.surfaces.first,
+              let flycatcherIndex=fixtureSettings.probabilities.entries.firstIndex(where:{$0.id == .yellowRumpedFlycatcher}) else {throw failure("Missing flycatcher fixture")}
+        let flycatcher=Bird(position:.zero,fraction:0.5,profile:d.catalog.profile(.yellowRumpedFlycatcher),random:{0.5})
+        flycatcher.perch(on:host,spriteScale:d.spriteScale(for:flycatcher));flycatcher.perchDuration=600
+        let flycatcherOrigin=flycatcher.position,flycatcherRevision=flycatcher.motionRevision
+        d.birds=[flycatcher];d.syncWorld(buttonsDown:false)
+        var disabledFlycatcher=fixtureSettings;disabledFlycatcher.probabilities.adjust(at:flycatcherIndex,to:0)
+        try d.applySettings(disabledFlycatcher);w.previewFlycatcherInsectCatchButton.performClick(nil)
+        checks["insectCatchSettingsSavedZeroProbabilityRejectsExistingFlycatcher"]=d.engine.events.last?.reason == .noSpecies &&
+            !d.engine.hasInsectCatchPreview && d.engine.activeRunCount==0 && d.engine.insectSnapshot()==nil &&
+            flycatcher.position==flycatcherOrigin && flycatcher.motionRevision==flycatcherRevision
+        try d.applySettings(fixtureSettings);d.birds=[bird];d.syncWorld(buttonsDown:false)
         for language:AppLanguage in [.chinese,.english] {
             d.language=language;w.relocalize()
             let key="insectCatchSettings-"+language.rawValue+"-"
-            let controls=[w.insectCatchButton!,w.previewInsectCatchButton!,w.cancelInsectCatchPreviewButton!,w.clearInsectButton!]
+            let controls=[w.insectCatchButton!,w.previewInsectCatchButton!,w.previewFlycatcherInsectCatchButton!,w.cancelInsectCatchPreviewButton!,w.clearInsectButton!]
             checks[key+"AccessibleNativeControls"]=controls.allSatisfy {
                 $0.target === w && $0.action != nil && $0.identifier != nil && $0.accessibilityLabel()==$0.title &&
                 $0.superview?.bounds.contains($0.frame)==true && $0.intrinsicContentSize.width<=$0.frame.width
             }
             guard let view=w.insectCatchButton.superview,
                   let help=view.subviews.first(where:{$0.identifier?.rawValue=="insectCatchHelp"}) as? NSTextField else {throw failure("Missing insect help")}
-            checks[key+"OnlyDeliveredSwallowPreview"]=SpeciesBehaviorProfile.species(for:.insectCatch)==[.barnSwallow] &&
-                controls.filter{$0.identifier?.rawValue.hasPrefix("preview")==true}.count==1 &&
+            checks[key+"BothDeliveredSpeciesHaveSeparatePreviews"]=SpeciesBehaviorProfile.species(for:.insectCatch)==[.barnSwallow,.yellowRumpedFlycatcher] &&
+                controls.filter{$0.identifier?.rawValue.hasPrefix("preview")==true}.count==2 &&
                 w.previewInsectCatchButton.identifier?.rawValue=="previewBarnSwallowInsectCatch" &&
-                !view.subviews.contains{$0.identifier?.rawValue.localizedCaseInsensitiveContains("flycatcher")==true}
+                w.previewFlycatcherInsectCatchButton.identifier?.rawValue=="previewYellowRumpedFlycatcherInsectCatch" &&
+                w.previewFlycatcherInsectCatchButton.title.contains(language.name(.yellowRumpedFlycatcher)) &&
+                !SpeciesBehaviorProfile.species(for:.fixedPerchVisit).contains(.yellowRumpedFlycatcher)
             checks[key+"SingleSourceSpeciesAndWrappedHelpFits"]=help.stringValue.contains(language.insectCatchSupport) &&
                 help.cell?.wraps==true && help.cell?.usesSingleLineMode==false &&
                 (help.cell?.cellSize(forBounds:CGRect(x:0,y:0,width:help.frame.width,height:10000)).height ?? .infinity)<=help.frame.height
+            let flycatcherSequence=d.engine.events.last?.sequence ?? 0
+            w.previewFlycatcherInsectCatchButton.performClick(nil)
+            checks[key+"MissingFlycatcherRejectsImmediatelyWithoutFlightWait"]=d.engine.events.last?.reason == .noSpecies &&
+                (d.engine.events.last?.sequence ?? 0)>flycatcherSequence && !d.engine.hasInsectCatchPreview &&
+                d.engine.insectPreviewRemaining==nil && d.engine.activeRunCount==0 && insects(d).isEmpty &&
+                bird.state == .perched && bird.position==origin &&
+                w.message.stringValue==w.insectCatchMessage(.noSpecies,species:.yellowRumpedFlycatcher) &&
+                EdgePeekSettingsVerification.messageIsFullyVisible(w.message)
             w.insectCatchButton.performClick(nil)
             checks[key+"ToggleOnlyEditsDraft"] = !w.draft.insectCatchEnabled && d.settings.insectCatchEnabled
             w.insectCatchButton.performClick(nil)
@@ -93,6 +115,8 @@ enum InsectCatchSettingsVerification {
                                          .noSpace,.targetInvalid,.pointerNearby,.timedOut,.missedTarget,.userInput] {
                 w.message.stringValue=w.insectCatchMessage(reason)
                 checks[key+"ReasonFits-"+reason.rawValue]=EdgePeekSettingsVerification.messageIsFullyVisible(w.message)
+                w.message.stringValue=w.insectCatchMessage(reason,species:.yellowRumpedFlycatcher)
+                checks[key+"FlycatcherReasonFits-"+reason.rawValue]=EdgePeekSettingsVerification.messageIsFullyVisible(w.message)
             }
             let actions:[(String,()->Void)]=[("cancel",{w.cancelInsectCatchPreviewButton.performClick(nil)}),
                 ("clear",{w.clearInsectButton.performClick(nil)}),("relocalize",{w.relocalize()}),("build",{w.build()})]
@@ -117,6 +141,9 @@ enum InsectCatchSettingsVerification {
             off.hoverDelay==0.43 && off.pointerFollowEnabled && off.fixedPerches==perches
         w.insectCatchButton.performClick(nil);w.previewInsectCatchButton.performClick(nil)
         checks["insectCatchSettingsPreviewReadsSavedSwitch"]=w.draft.insectCatchEnabled && !d.engine.hasInsectCatchPreview && d.engine.events.last?.reason == .disabled
+        w.previewFlycatcherInsectCatchButton.performClick(nil)
+        checks["insectCatchSettingsFlycatcherReadsSameSavedSwitch"]=w.draft.insectCatchEnabled &&
+            !d.engine.hasInsectCatchPreview && d.engine.insectSnapshot()==nil && d.engine.events.last?.reason == .disabled
         w.save()
         let lifecycle:[(String,()->Void)]=[("save",{w.save()}),("reset",{w.resetDefaults()}),
             ("close",{w.window?.performClose(nil)}),("cancel",{w.cancel()})]
@@ -135,21 +162,30 @@ enum InsectCatchSettingsVerification {
     }
     private static func journal(_ d:DesktopController,into checks:inout [String:Bool],folder:URL) throws {
         let now=Date(timeIntervalSince1970:1_700_000_000)
-        for (index,source) in [BehaviorSource.automatic,.preview,.user].enumerated() {
-            _=d.observationJournal.observe(BehaviorObservation(sequence:UInt64(index+1),simulationTime:Double(index),kind:.insectCatch,
-                source:source,species:[.barnSwallow],runID:UInt64(index+1)),at:now)
+        for (speciesIndex,species) in [SpeciesID.barnSwallow,.yellowRumpedFlycatcher].enumerated() {
+            for (index,source) in [BehaviorSource.automatic,.preview,.user].enumerated() {
+                let sequence=UInt64(speciesIndex*3+index+1)
+                _=d.observationJournal.observe(BehaviorObservation(sequence:sequence,simulationTime:Double(sequence),kind:.insectCatch,
+                    source:source,species:[species],runID:sequence),at:now)
+            }
         }
         let w=ObservationJournalWindow(desktop:d);w.showWindow(nil);defer {w.window?.close()}
         for language:AppLanguage in [.chinese,.english] {
             d.language=language;w.relocalize();w.sourceFilter.selectedSegment=0
             for query in ["insectCatch","捕虫","Insect Catching"] {
                 w.searchField.stringValue=query;w.searchChanged(nil)
-                checks["insectCatchSettingsJournalSearch-"+language.rawValue+"-"+query]=w.renderedEntries.count==1 &&
-                    w.renderedEntries.first?.behavior=="insectCatch" && w.behaviorName("insectCatch")==language.text("捕虫","Insect Catching")
+                checks["insectCatchSettingsJournalSearch-"+language.rawValue+"-"+query]=w.renderedEntries.count==2 &&
+                    Set(w.renderedEntries.map(\.species))==Set([SpeciesID.barnSwallow,.yellowRumpedFlycatcher]) &&
+                    w.renderedEntries.allSatisfy{$0.behavior=="insectCatch"} && w.behaviorName("insectCatch")==language.text("捕虫","Insect Catching")
             }
-            let entry=w.renderedEntries.first
-            checks["insectCatchSettingsJournalSourceCounts-"+language.rawValue]=entry?.automaticCount==1 && entry?.previewCount==1 && entry?.userCount==1
+            checks["insectCatchSettingsJournalSourceCounts-"+language.rawValue]=w.renderedEntries.count==2 &&
+                w.renderedEntries.allSatisfy{$0.automaticCount==1 && $0.previewCount==1 && $0.userCount==1}
             try SettingsVerification.snapshot(w.window!,to:folder.appendingPathComponent("insect-catch-journal-"+language.rawValue+".png"))
+            for query in [SpeciesID.yellowRumpedFlycatcher.rawValue,AppLanguage.chinese.name(.yellowRumpedFlycatcher),AppLanguage.english.name(.yellowRumpedFlycatcher)] {
+                w.searchField.stringValue=query;w.searchChanged(nil)
+                checks["insectCatchSettingsFlycatcherJournalSearch-"+language.rawValue+"-"+query]=w.renderedEntries.count==1 &&
+                    w.renderedEntries.first?.species == .yellowRumpedFlycatcher
+            }
         }
     }
     private static func waiting(_ d:DesktopController)->Bool {d.engine.hasInsectCatchPreview && d.engine.activeRunCount==0 && insects(d).isEmpty}
