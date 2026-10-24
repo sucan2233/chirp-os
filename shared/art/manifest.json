@@ -2383,6 +2383,26 @@
           40.959800999999999,
           12.599348000000001
         ],
+        "courtBow0" : [
+          41,
+          24
+        ],
+        "courtBow1" : [
+          41.5,
+          30
+        ],
+        "courtBowRecover" : [
+          40,
+          19
+        ],
+        "courtObserve" : [
+          38.5,
+          15.999999999999998
+        ],
+        "courtRaise" : [
+          39.5,
+          13
+        ],
         "lookFar" : [
           40.490250000000003,
           14.378386000000001
@@ -2445,6 +2465,148 @@
             }
           ],
           "id" : "spottedDove.alert",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "courtshipInitiator" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 40.5,
+                "y" : 17.5
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "stand"
+            },
+            {
+              "beak" : {
+                "x" : 39.5,
+                "y" : 13
+              },
+              "duration" : 0.5,
+              "name" : "courtRaise"
+            },
+            {
+              "beak" : {
+                "x" : 41,
+                "y" : 24
+              },
+              "duration" : 0.34999999999999998,
+              "name" : "courtBow0"
+            },
+            {
+              "beak" : {
+                "x" : 41.5,
+                "y" : 30
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "courtBow1"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 19
+              },
+              "duration" : 0.25,
+              "name" : "courtBowRecover"
+            },
+            {
+              "beak" : {
+                "x" : 41,
+                "y" : 24
+              },
+              "duration" : 0.34999999999999998,
+              "name" : "courtBow0"
+            },
+            {
+              "beak" : {
+                "x" : 41.5,
+                "y" : 30
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "courtBow1"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 19
+              },
+              "duration" : 0.25,
+              "name" : "courtBowRecover"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 19
+              },
+              "duration" : 0.5,
+              "name" : "courtBowRecover"
+            },
+            {
+              "beak" : {
+                "x" : 40,
+                "y" : 19
+              },
+              "duration" : 0.59999999999999998,
+              "name" : "courtBowRecover"
+            }
+          ],
+          "id" : "spottedDove.courtshipDisplay.initiator",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "courtshipObserver" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 40.5,
+                "y" : 17.5
+              },
+              "duration" : 0.40000000000000002,
+              "name" : "stand"
+            },
+            {
+              "beak" : {
+                "x" : 40.5,
+                "y" : 17.5
+              },
+              "duration" : 0.5,
+              "name" : "stand"
+            },
+            {
+              "beak" : {
+                "x" : 40.5,
+                "y" : 17.5
+              },
+              "duration" : 2,
+              "name" : "stand"
+            },
+            {
+              "beak" : {
+                "x" : 38.5,
+                "y" : 15.999999999999998
+              },
+              "duration" : 0.5,
+              "name" : "courtObserve"
+            },
+            {
+              "beak" : {
+                "x" : 40.5,
+                "y" : 17.5
+              },
+              "duration" : 0.59999999999999998,
+              "name" : "stand"
+            }
+          ],
+          "id" : "spottedDove.courtshipDisplay.observer",
           "maximumLoops" : 1,
           "recovery" : "currentEngineState"
         },
@@ -2546,7 +2708,33 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
+      "courtshipBeakAnchors" : {
+        "courtBow0" : [
+          41,
+          24
+        ],
+        "courtBow1" : [
+          41.5,
+          30
+        ],
+        "courtBowRecover" : [
+          40,
+          19
+        ],
+        "courtObserve" : [
+          38.5,
+          15.999999999999998
+        ],
+        "courtRaise" : [
+          39.5,
+          13
+        ],
+        "stand" : [
+          40.5,
+          17.5
+        ]
+      },
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact; courtshipDisplay both roles sample shared run age 4.0s: face 0.4, raise 0.5, two bows 1.0 each (0.35\/0.40\/0.25), observe 0.5, recover 0.6; facing and mutual clearance are execution-owned",
       "transportBeakAnchors" : {
 
       },
@@ -3469,7 +3657,7 @@
   },
   "poseClock" : "owningBehaviorSimulationAge",
   "schemaVersion" : 2,
-  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt}.swift",
+  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt}.swift; platforms\/macos\/Sources\/BirdingCore\/Behavior\/CourtshipArtGeometry.swift",
   "speciesFrames" : {
     "azureWingedMagpie" : [
       "stand",
@@ -3959,7 +4147,12 @@
       "restTuck",
       "restWake",
       "takeoffCrouch",
-      "takeoffPush"
+      "takeoffPush",
+      "courtRaise",
+      "courtBow0",
+      "courtBow1",
+      "courtBowRecover",
+      "courtObserve"
     ],
     "swinhoesWhiteEye" : [
       "stand",

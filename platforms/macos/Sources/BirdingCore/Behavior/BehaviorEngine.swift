@@ -13,6 +13,7 @@ public final class BehaviorEngine {
     let habitatObjects=HabitatObjectStore()
     let carriedObjects=CarriedObjectStore()
     let insects=InsectStore()
+    private let courtshipRandom:EngineRandom
     private let giftRandom:EngineRandom
     private struct PendingGift {
         let request:GiftAuthorizationRequest
@@ -54,7 +55,9 @@ public final class BehaviorEngine {
     private var pendingFoodTrayPlacement:Double?
     private let foodRandom:EngineRandom
     private let inputRecorder:BehaviorInputRecorder?
-    var eventObserver:((BehaviorEvent)->Void)?
+    /// Synchronous event stream for bounded telemetry; observers must not issue
+    /// engine commands or advance simulation from inside this callback.
+    public var eventObserver:((BehaviorEvent)->Void)?
     /// Outbound discovery values. Hosts serialize delivery with engine commands;
     /// observers must not issue simulation commands from inside this callback.
     public var observationObserver:((BehaviorObservation)->Void)?
@@ -104,6 +107,7 @@ public final class BehaviorEngine {
         self.insectRandom=EngineRandom(seed:seed ^ SceneRandomSalt.insectCatch)
         self.leafCarryRandom=EngineRandom(seed:seed ^ SceneRandomSalt.leafCarry)
         self.giftRandom=EngineRandom(seed:seed ^ SceneRandomSalt.visitorGift)
+        self.courtshipRandom=EngineRandom(seed:seed ^ SceneRandomSalt.courtship)
         self.foodRandom=EngineRandom(seed:seed ^ 0x464F4F4454524159)
         self.habitatRandom=EngineRandom(seed:seed ^ 0x5045524348524E47)
         self.socialRandom=EngineRandom(seed:seed ^ 0x534F4349414C524E)
@@ -164,6 +168,7 @@ public final class BehaviorEngine {
     public var hasFoodTrayPlacement:Bool {pendingFoodTrayPlacement != nil}
     public var habitatReservationCount:Int {runtime.habitatReservations.count}
     public func habitatSnapshot()->[HabitatObjectRenderState] {habitatObjects.snapshot(in:self)}
+    public var giftReceiverReservationCount:Int {runtime.giftReceiverReservations.count}
     public var scenePropCount:Int {runtime.propIDs.union(carriedObjects.objects.keys).union(insects.current.map{[$0.id]} ?? []).count}
     public func propSnapshot() -> [ScenePropRenderState] {
         (runtime.propSnapshots(in:self)+carriedObjects.snapshot(in:self)+insects.snapshot(in:self)).sorted{$0.id<$1.id}
@@ -280,7 +285,7 @@ public final class BehaviorEngine {
         if !value.buttonsDown {clickHandled=false}
         // Contact scenes use fixed anchors. Release them against the new world
         // before host tracking can translate a perched partner or an active hop.
-        runtime.validate(in:self,where:{$0.kind == .allopreening})
+        runtime.validate(in:self,where:{$0.kind == .allopreening || $0.kind == .courtshipDisplay})
         if let sampleDT {for bird in birds {bird.updateHost(surfaces:world.surfaces,sampleDT:sampleDT,spriteScale:spriteScale(for:bird))}}
         runtime.validate(in:self)
     }
@@ -338,6 +343,9 @@ public final class BehaviorEngine {
         if !value.passiveAttentionEnabled {
             runtime.cancel(where:{$0.kind == .watch || $0.kind == .alert},reason:.settingsChanged,in:self)
             resetPerception()
+        }
+        if !value.courtshipEnabled || !value.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0}) {
+            runtime.cancel(where:{$0.kind == .courtshipDisplay},reason:.settingsChanged,in:self)
         }
         if !value.allopreeningEnabled {runtime.cancel(where:{$0.kind == .allopreening},reason:.settingsChanged,in:self)}
         if !value.socialInteractions {
@@ -408,6 +416,7 @@ public final class BehaviorEngine {
         case .removeFoodTray:
             pendingFoodTrayPlacement=nil;removeHabitatObjects(reason:.removed,ids:habitatIDs(.foodTray));return .accepted
         case .fixedPerchVisit(let source):return requestFixedPerchVisit(source:source)
+        case .courtshipDisplay(let source):return requestCourtship(source:source)
         case .allopreening(let source):return requestAllopreening(source:source)
         case .travelTogether(let source):return requestTravelTogether(source:source)
         case .chase(let source):return requestChase(source:source)
@@ -875,6 +884,7 @@ public final class BehaviorEngine {
         carriedObjects.clearVisitorGifts(in:self,immediate:true)
         registeredGiftToken=nil
     }
+    func recoverFromCourtship(_ id:BirdID) {recoverFromInsectCatch(id)}
     func recoverFromVisitorGift(_ id:BirdID) {recoverFromInsectCatch(id)}
     private func insectSpeciesEnabled(_ species:SpeciesID) -> Bool {
         SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch) &&
@@ -1280,6 +1290,31 @@ public final class BehaviorEngine {
         else if case .rejected(let reason)=result {return reject(.fixedPerchVisit,source,reason)}
         return result
     }
+    private func startCourtship(_ plan:CourtshipDisplayPlan,source:BehaviorSource) -> BehaviorResult {
+        let result=runtime.start(CourtshipDisplayExecution(plan:plan),source:source,in:self)
+        if result.accepted {
+            scheduler.suppress()
+            for id in plan.participants {perchPlanner.suppress(id)}
+        }
+        return result
+    }
+    private func requestCourtship(source:BehaviorSource) -> BehaviorResult {
+        guard !paused else {return reject(.courtshipDisplay,source,.paused)}
+        guard BehaviorDefinitions.definition(for:.courtshipDisplay).isEnabled(settings:settings,source:source) else {return reject(.courtshipDisplay,source,.disabled)}
+        guard settings.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0}) else {return reject(.courtshipDisplay,source,.noSpecies)}
+        guard !encounterUnavailable,scheduledEncounter==nil else {return reject(.courtshipDisplay,source,.busy)}
+        guard !world.buttonsDown else {return reject(.courtshipDisplay,source,.userInput)}
+        guard source != .automatic || scheduler.canAttemptCourtship else {return reject(.courtshipDisplay,source,.busy)}
+        let residents=birds.filter{role(of:$0) == .resident && !$0.isDeparting && $0.profile.id == .spottedDove}
+        guard residents.count>=2 else {return reject(.courtshipDisplay,source,.noCompanion)}
+        guard CourtshipDisplayPlan.requiredFrames.isSubset(of:world.availableFrames[.spottedDove] ?? []) else {return reject(.courtshipDisplay,source,.missingFrames)}
+        guard let plan=courtshipRandom.element(CourtshipDisplayPlan.candidates(in:self,source:source)) else {
+            return reject(.courtshipDisplay,source,.noSpace)
+        }
+        let result=startCourtship(plan,source:source)
+        if case .rejected(let reason)=result {return reject(.courtshipDisplay,source,reason)}
+        return result
+    }
     private func requestAllopreening(source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.allopreening,source,.paused)}
         guard BehaviorDefinitions.definition(for:.allopreening).isEnabled(settings:settings,source:source) else {return reject(.allopreening,source,.disabled)}
@@ -1573,7 +1608,7 @@ public final class BehaviorEngine {
         }
         let encounterRate=ActivityRhythmPolicy.ambientRate(mode:settings.activityRhythm,minute:world.localMinuteOfDay)
         if !paused,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
-            pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,socialEnabled:settings.socialInteractions,leafEnabled:settings.leafPlayEnabled && settings.ambientLeafPlayEnabled,insectEnabled:settings.insectCatchEnabled,giftEnabled:settings.visitorGiftsEnabled && settings.visitorMemoryEnabled,frequency:settings.ambientFrequency,
+            pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,socialEnabled:settings.socialInteractions,leafEnabled:settings.leafPlayEnabled && settings.ambientLeafPlayEnabled,insectEnabled:settings.insectCatchEnabled,giftEnabled:settings.visitorGiftsEnabled && settings.visitorMemoryEnabled,courtshipEnabled:settings.courtshipEnabled,frequency:settings.ambientFrequency,
             busy:encounterUnavailable || scheduledEncounter != nil || hasInsectCatchPreview,cadenceRate:ambientEnabled ? encounterRate:0,leafRandom:ecologyRandom.unit,random:random.unit) {
             switch event {
             case .pointerVisit:_=requestPointer(.automatic)
@@ -1582,6 +1617,12 @@ public final class BehaviorEngine {
             case .leafPlay:requestAutomaticLeaf()
             case .visitorGift:_=requestVisitorGift(source:.automatic)
             case .insectCatch:requestAutomaticInsectCatch()
+            case .courtshipDisplay:
+                // No eligible pair discards this one opportunity without consuming
+                // existing random streams or emitting a rejected ambient command.
+                if scheduler.canAttemptCourtship,let plan=courtshipRandom.element(CourtshipDisplayPlan.candidates(in:self)) {
+                    _=startCourtship(plan,source:.automatic)
+                }
             case .leafCarry(let object):
                 if scheduler.sceneFocus?.leafID==object {_=requestLeafCarry(source:.automatic)}
             case .bathVisit(let object):

@@ -1,0 +1,106 @@
+# M6h 隔离真实墙钟长跑：实现记录与待验收项
+
+记录日期：2026-10-24。**与M7a合批第三轮Release构建89.63s、strict签名通过；首次真实30秒smoke退出0，离线检查16/16通过。仅确认本次smoke，不代表M6h整阶段通过：2h观察、8h运行、其他退出入口和硬件验收仍未执行。** 用户文件隔离哈希证据有限，不能标为全通过。M6g冻结候选第六轮原生275/275已通过，主会已本地提交文档`392e39a`；不再沿用此前待解锁状态。这不替代M6h长跑或M7a验收。
+
+## 实现范围与接线
+
+本实现拥有 `platforms/macos/Sources/Birding/DesktopSoakSession.swift`、独立 `SoakVerification.swift` 与本文件。Desktop/main/Core的接线由主会负责，未在这些文件内替代生产timer或直接调用 `engine.advance`。
+
+- `DesktopSoakSession(output: URL, duration: Double, birds: Int) throws`；公开 `desktop`，以及 `start() throws`、幂等 `finish(reason:)`、`prepareForTermination() -> NSApplication.TerminateReply`。
+- main解析 `--soak-desktop <绝对新目录>`、`--soak-duration 30|7200|28800`、`--soak-birds 1...50`（默认12），并强持有session。soak分支在普通desktop启动、更新安装健康确认和updater创建之前返回。
+- Desktop提供 `isolatedSession`，所有种群偏好读写使用注入的 `preferences`，隔离模式跳过旧域迁移及新鸟提示。session提供无ServiceManagement读写的 `LoginItemManaging` 实现；不注册/注销登录项。还在start前注入无autosaveName的状态栏项，避免生产`ChirpOS.Main`自动保存位置/可见性污染用户偏好。
+- Desktop的 `tickObserver: ((Double, Double) -> Void)?` 在生产tick末尾传 `(uptime, rawDT)`，其中rawDT未经过0.05s裁剪。session保留原有回调链；tick里只做时间和tick缺口计数，较重的图层和进程采样每10秒进行。
+- Engine公开原有 `eventObserver: ((BehaviorEvent) -> Void)?`，session保留原有observer链并逐事件写盘。另提供只读 `giftReceiverReservationCount`，返回runtime当前接收枝预约数量；不得让观测改变随机流或模拟顺序。
+- `applicationShouldTerminate` 返回 `soakSession?.prepareForTermination() ?? .terminateNow`。已有finished状态返回terminateNow；其余状态先启动清理并返回terminateLater，等待异步IO后由session回复终止。
+- `applicationShouldHandleReopen` 对soak先返回 `soakSession.handleReopen()`；运行中只展示控制窗，收尾中拒绝重开窗口，防止异步flush期间重新建立状态项或设置输入。
+- `applicationWillTerminate` 对soak调用 `finish(reason: "applicationTermination")` 后直接return，避免普通退出再次取消/持久化。隔离模式 `Desktop.quit()` 直接请求 `NSApp.terminate`，不能提前取消，否则无法保存自然终态。
+- `start()` 途中失败会启动相同清理。main catch打印错误；已持有session时不能立即exit截断IO，初始化尚未产生session时才可直接失败退出。
+
+## 数据隔离与真实运行
+
+输出目录必须新建或为空；`session.claim`以排他创建防止两个实例共用目录。非空目录和已有证据拒绝覆盖。全部五个持久化路径都在输出目录内：`settings.json`、`legacy.json`、`visitors.json`、`journal.json`、`gifts.json`。legacy保持不存在，绝不导入用户文件。无发现时journal、无自动授权时gifts可以不存在，报告记录实际存在性，不生成伪造的“已用账本”。
+
+首次启动从bundled BirdSettings默认值写入隔离settings，创建随机独立UserDefaults域，只写该域语言和数量上下限。session在 `desktop.start()` 前注入全部路径，并显式启用真实visitors/journal/gifts persistence；访客稳定namespace必须初始化成功才继续。结束保存隔离偏好快照后移除本次UserDefaults域。源码审计通过：上述接线未发现访问用户settings、草稿、访客、观察手册或礼物账本的路径；这与实际用户文件前后哈希验证是不同层次的证据，后者限制见下节。
+
+使用普通DesktopController初始化，不指定验证seed、不注入fixture鸟、不补鸟、不构造伪窗口宿主。保留真实生产timer、窗口采样、鼠标输入、种群到达、ambient与autonomous路由。固定上下限只设置目标数量，居民由原种群调度自然进入。默认关闭的功能仍关闭；未在本次真实运行发生的行为不因此获得覆盖。控制窗是本进程窗口，依照生产窗口采样规则不充当鸟的宿主。
+
+## 证据与时长口径
+
+`manifest.json`记录输出/五个隔离路径、独立域、binary路径及流式SHA-256、bundle版本、OS、PID、实际engine seed、模拟版本和请求时长。不读取窗口标题或记录桌面截图。
+
+`telemetry.jsonl`每10秒追加一条，另记起点、自然终点、清理后及通知：
+
+- 连续墙钟（包含sleep）、awake uptime、模拟时间、暂停状态及采样暂停墙钟、sleep/wake次数与时间、锁屏/未知状态及累计时间。暂停、sleep、锁屏可重叠，不能把这些数直接相加当总时长。锁状态来自session字典与通知；不可读时保留unknown，不能推断为未锁屏，更不能推断有人观察。
+- 当前RSS字节、进程累计user+system CPU、session CPU增量、区间CPU%。一个核为100%；分母为含sleep的连续墙钟，sleep期间可稀释百分比，报告同时给出sleep信息。RSS为采样值及采样峰值，不是泄漏证明或系统energy验收。
+- tick数量、未裁剪间隔峰值、超过50ms/250ms/1s/10s次数、距最后tick时间。sleep/wake通知单独记录，生产wake重置timer不被伪称为连续运行。
+- run、租约、落点/栖息地/接收枝预约、鸟/待入场鸟、道具/携带叶/虫、场景焦点、各类pending与gift token/platform attempt；图层/遮罩/动画计数及持久化状态。
+
+`events.jsonl`记录每一条行为事件及sequence、模拟时间、墙钟偏移、natural/cleanup阶段、kind/source/reason/run/参与者ID；不使用256环回读。计数按有限枚举组合累计，事件流最多64KiB缓冲，到限写出且10秒同步。摘要对sequence缺口计数；IO失败终止运行并保留错误，不能静默丢事件。磁盘证据随事件数增长，内存不保存全量事件列表。
+
+`summary.json`保存清理前自然状态、清理后状态、累计事件及计数、采样RSS峰值、采样资源峰值、持久化flush/窗口/图层释放结果和错误。`wallDurationReached`只说明请求墙钟达到，`awakeDurationReached`另列。`manualTwoHourObservation`始终明确需要独立人工记录；8h仅可显示“时长达到，待审证据”，不会自动授予阶段验收。
+
+## 结束与持久化顺序
+
+1. 保存自然终态与累计时间，先于任何取消命令。
+2. 为防等待IO期间wake/鼠标/菜单重入，立即冻结本session的timer与监听，再取消gift pending、shutdown取消全部run、clearProps、逐只通过公开remove命令移除剩余鸟。绝不注入空fixture冒充清理。
+关闭本session设置窗口及其延时捕获、图鉴计时器，禁用状态栏/应用菜单，防止异步收尾期间再输入；这些关闭产生的取消仍计入cleanup事件。
+3. 刷新真实图层，先记录资源清理后状态；动画主体/道具层应为零。可保留静态背景层，最终关窗后再检查全部图层归零。
+4. 在session拥有的ledger串行队列后排barrier，等之前已开始的持久化事务结束及主队列迟到回调处理。取消不退款；晚到授权不会复活已清理的core request。
+5. 捕获不可变访客档案，在稳定visitors锁下按现有CAS持久化；不受周期flush重试节流导致退出漏保存。journal走既有终止flush。失败落盘，不伪称成功。
+6. 保存最终资源与事件，恢复原observer链，关闭控制窗/测试overlay，移除状态项和隔离偏好域，写summary后才允许退出。重复finish不再次取消或累计。
+
+## 首次真实30秒smoke实际结果
+
+主会报告第三轮Release构建耗时 **89.63s**、strict签名通过。本次真实运行输出为 `.build/m6h-smoke-initial`，进程退出码 **0**；只读核对该目录 `manifest.json`、`summary.json`、`telemetry.jsonl` 与 `verification.json`，离线结果为 **16/16通过**。本次文档更新未重新构建或执行任何测试。
+
+manifest记录二进制为 `dist/ChirpOS.app/Contents/MacOS/Birding`，版本0.6.0（60）、simulationVersion 17、PID **63271**；SHA-256为 `ce7e23f099134f974cc92fb4129d4d2f0e6ad850170ac51b1bc978a13e342020`。请求30秒、目标12只；实际自然到达8只，未为达到目标补鸟。
+
+| 指标 | 实际证据 |
+| --- | --- |
+| 结束原因与时长 | `durationReached`；清理前墙钟 **30.103703791668522s**，awake uptime **30.103703708329704s**；两项durationReached均为true |
+| 模拟与生产tick | 模拟 **29.999999999999577s**；**1799**次tick；最大rawDT **0.034653208334930241s**；超过50ms/250ms/1s/10s均为0 |
+| CPU | 自然终态进程累计 **1.328893s**、session增量 **1.173420s**；IO排空后分别为 **1.333399s / 1.177926s**。三个约10秒periodic区间CPU为 **3.486571% / 3.350565% / 4.260636%**（单核100%） |
+| CPU口径限制 | naturalEnd及afterCleanup的相邻短间隔CPU字段分别为 **91.802561% / 107.102172%**；这是紧邻采样间的百分比，不能当作整个30秒平均CPU |
+| RSS | 自然终态 **168,673,280 bytes**；采样峰值 **169,279,488 bytes**（本次IO排空后值）；仅是短时采样，不构成长期泄漏结论 |
+| 自然状态与资源峰值 | 到达8、离开0；自然终态8居民/8活跃访客，run与租约均0；采样run峰值1、租约峰值1，居民/活跃访客峰值8 |
+| 全量事件 | 共 **14**条、sequence缺口 **0**；自然终态已观察6条，清理再产生8条birdRemoved。分类：preen started 3、completed 2、cancelled/userInput 1，birdRemoved/removed 8；全部为automatic来源 |
+| 清理 | IO排空后所有resourceCounts均0；`zeroResources`、`zeroDynamicLayersAfterRefresh`、`cleanupSucceeded`均true。刷新后剩2个静态层，关窗后total/masks/dynamicContainers/animations全部0 |
+| 退出与flush | windowsClosed、timerStopped、mouseMonitorsStopped、visitorFlushSucceeded、journalFlushSucceeded均true；errors为空 |
+| 实际文件 | settings/visitors/journal存在；legacy/gifts不存在。未发生自动礼物授权，不能据此声称真实礼物事务已被本次smoke覆盖 |
+| 环境与观察限制 | 1个display、2个surface；暂停与sleep时间均0，sleep/wake次数均0。locked为null，unknownLockWallSeconds **30.103703791668522s**；不能将knownLocked=0解读为已解锁或有人观察 |
+
+用户文件哈希证据为 `.build/m7a-delivery/user-data-after-smoke.json`：`settings.json`前后相同；`species.json`与`gifts.json`前后均不存在；`visitors.json`与`observations.json`哈希发生变化，报告明确 `unchanged=false`。主会记录旧安装app **PID 13106** 在此期间一直运行；现有前后哈希不能将变化归因于smoke，也不能据此认定由旧app造成，更不能写成“用户文件hash全通过”。未读取或改写用户草稿来补证。
+
+本次manifest五个持久化路径均落在独立输出目录，preferences为独立suite，源码隔离审计通过；真实文件隔离哈希证据仍有限。另，summary两份状态中的 `statusAutosaveDisabled=false`，离线16项未单独验证该字段，不能把16/16扩展成状态栏偏好无写入的动态证明。
+
+## 运行方式与尚待执行项
+
+以下为运行方式；首次30秒已按上述证据完成，2h/8h仍未运行。每次必须使用全新绝对输出目录，直接启动二进制以保留其真实参数与终止路径：
+
+```sh
+"<候选.app>/Contents/MacOS/Birding" --soak-desktop /absolute/new/m6h-smoke --soak-duration 30 --soak-birds 12
+"<候选.app>/Contents/MacOS/Birding" --soak-desktop /absolute/new/m6h-observe-2h --soak-duration 7200 --soak-birds 12
+"<候选.app>/Contents/MacOS/Birding" --soak-desktop /absolute/new/m6h-soak-8h --soak-duration 28800 --soak-birds 12
+```
+
+主会已提供离线入口 `--verify-soak-smoke <folder> [--verify-soak-output <report.json>]`，位于NSApplication创建前。`SoakVerification.inspectCompletedSmoke(at:)` 是独立离线检查源码，不会启动应用或推进引擎；对真实30秒报告检查目录隔离、生产调度、真实CPU/RSS、事件全量计数、自然状态早于清理、零资源、flush和窗口释放。首次调用16/16通过，结果为 `.build/m6h-smoke-initial/verification.json`。其通过仅属于smoke，不能替代长跑或独立的用户文件隔离取证。
+
+| 项目 | 当前状态 | 后续所需证据 |
+| --- | --- | --- |
+| 与M7a合批构建/签名 | 第三轮Release 89.63s、strict签名通过 | 本次结果不代表M7a整阶段验收 |
+| 30秒真实桌面smoke及离线检查 | 首次退出0、16/16通过 | `.build/m6h-smoke-initial`中的manifest/JSONL/summary/verification |
+| 控制窗关闭、菜单Quit、外部应用终止、启动失败清理 | 未运行 | 各自独立目录与幂等/零资源证据 |
+| 用户数据与草稿隔离 | 独立持久路径与源码审计通过；实际文件哈希证据有限，非全通过 | settings未变，visitors/observations变化，旧安装PID 13106同时运行，变化不可归因；需可区分写入来源的证据，不得为验证读取或改写草稿 |
+| 真实2h人工观察 | 未运行 | 解锁桌面、人工起止/观察记录；锁屏和不在场时段不能计算为观察 |
+| 真实8h运行 | 未运行 | 不加速连续实际运行、暂停/sleep/tick缺口、CPU/RSS趋势、自然及清理状态审阅 |
+| 物理多屏/热插拔 | 未验收，需要用户硬件 | 实际设备操作和恢复证据，虚拟screens不替代 |
+| 系统sleep/wake | 未验收，需要用户真实操作 | 实际通知、时序与恢复状态；不能用调用sleeping/waking冒充 |
+| 长期泄漏/能耗 | 未验收 | RSS/CPU趋势用于定位；需补充实际工具/环境证据，不能仅据零计数定论 |
+
+本文件记录支持能力、首次smoke实际结果与待执行项；所有既有失败、硬件缺口和未安装状态仍保留。checkpoint不代表M6h或M7a整阶段通过；30秒自动到时退出不替代关闭控制窗、菜单Quit、系统退出、真实2h观察或8h运行。
+
+## 补充隔离窗口与拒绝覆盖检查
+
+第二次独立30秒真实运行`.build/m6h-smoke-isolation`退出0，离线16/16再次通过。紧邻启动/结束快照`.build/m7a-delivery/user-data-narrow-smoke.json`仍显示用户visitors/observations变化，settings/species/gifts的存在性和哈希不变；旧安装版全程并行运行，因此不能用此比对独立归因文件写入者，文件哈希全不变项仍不授予通过。会话manifest记录独立五路径，代码在启动持久化前注入这些路径；不修改用户文件来取得测试通过。
+
+复用首轮非空输出目录的启动按预期退出1，并逐文件SHA256确认既有证据完全未被覆盖；结果`.build/m6h-reject-existing.json`。这仅验证拒绝非空路径，不等价于启动中途失败的完整收尾验收。

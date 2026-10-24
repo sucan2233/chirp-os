@@ -43,9 +43,9 @@
 - 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
 - 支持中英文切换、暂停动画和随系统启动。
 
-开发进度（2026-10-24）：M6g灰喜鹊熟客赠叶已实现，默认关闭；阶段验收通过、未安装，用户当前安装版仍为M6a/b。第五轮Release/严格签名、核心第二轮定向49/49、settings第二轮1955/1955、模拟v16的57份完整跨率回放、旧18份报告不剔字段完全一致、46鸟旧像素/索引、素材art、parity、78 GIF及18次性能对照通过。冻结候选第六轮赠礼验收275/275通过，覆盖三缩放双向、点击落稳、自动授权和持久化。累计已验证154张新增鸟体/10张道具，剩13/6张。首轮920核心测试的79项失败（5 unexpected、6方法）、birds3433/3437及settings1954/1955记录保留，不宣称单次920全绿。见 [M6g验收记录](docs/M6G-ACCEPTANCE.md)及此前的 [M6f.2验收记录](docs/M6F2-ACCEPTANCE.md)。
+开发进度（2026-10-24）：M7a珠颈斑鸠求偶已实现：两只现有居民在同一合法普通边缘完成4秒展示，默认开启并受社交总开关控制。Release/严格签名、求偶专项250/250、完整原生鸟3615/3615、设置2052/2052、定向核心32/32通过；60份完整跨率回放及旧19份完整报告一致，46鸟旧像素/索引、78 GIF/7800帧通过。累计已验证159张新增鸟体与10张道具，剩8/6张用于运巢材与筑巢。本批18次性能对照通过；首轮952核心测试中一个夹具的7项失败及后续修订历史保留，不声称单次952全绿。见 [M7a验收](docs/M7A-ACCEPTANCE.md)与[M6g验收](docs/M6G-ACCEPTANCE.md)。
 
-M6g未安装候选保存在`.build/m6g-delivery/ChirpOS Dev M6g candidate.app`；此前checkpoint只记录实现；第六轮补验后M6g阶段通过。M6h隔离真实墙钟长跑与M7a正在实施；M6/M7整体、2h/8h、物理多屏及真实睡眠唤醒仍未验收，核心加速性能结果不能替代这些验收。
+用户安装版仍为M6a/b，后续候选尚未安装。M6h隔离真实桌面工具的30秒smoke及16项离线检查通过；这不替代2h人工观察、8h长跑、物理多屏或真实睡眠唤醒。M6/M7整体继续实施，详见[实施进度](docs/IMPLEMENTATION-PROGRESS.md)与[M6h记录](docs/M6H-ACCEPTANCE.md)。
 
 ### 鸟种 / Bird species
 
@@ -143,9 +143,9 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - Hourly update checks download and verify new releases in the background. A notification opens release notes and installation confirmation; a red dot and menu entry remain if you postpone.
 - Chinese and English menus, animation pause, and launch at login.
 
-Development status (2026-10-24): M6g fictional leaf gifts from returning Azure-winged Magpies are implemented and default off. Stage acceptance has passed; the candidate is not installed, and the installed development app remains M6a/b. The fifth Release build and strict signature check, the second targeted core run (49/49), second settings run (1,955/1,955), 57 full simulation-v16 replays across rates, exact comparisons of 18 older reports without removing fields, all 46 legacy bird atlases/indices, art checks, parity, 78 GIFs, and 18 performance runs passed. The sixth gift acceptance run passed all 275 checks, including three scales in both directions, click recovery, automatic authorization and persistence. Verified additions total 154 bird poses and ten props, with 13 poses and six props remaining. Initial failures remain recorded: 79 failures across six core methods, including five unexpected failures, in the 920-test run; birds 3,433/3,437; settings 1,954/1,955. No single all-green 920-test run is claimed. See the [M6g acceptance record](docs/M6G-ACCEPTANCE.md) and earlier [M6f.2 record](docs/M6F2-ACCEPTANCE.md).
+Development status (2026-10-24): M7a Spotted Dove courtship is implemented: two existing residents perform a four-second display on the same eligible ordinary edge. It defaults on under the social master switch. Release/signature checks, all 250 courtship checks, 3,615 bird checks, 2,052 settings checks, and 32 targeted core tests passed. All 60 full replay reports agree across rates; 19 older reports match the M6g baseline without removing fields. Legacy pixels/indices for all 46 species and 78 GIFs/7,800 frames passed. Verified additions total 159 bird poses and ten props; eight poses and six props remain for nest delivery/building. All 18 performance comparison runs passed. Initial failures and fixture corrections remain documented; no single all-green 952-test run is claimed. See the [M7a acceptance record](docs/M7A-ACCEPTANCE.md).
 
-The uninstalled M6g candidate is saved at `.build/m6g-delivery/ChirpOS Dev M6g candidate.app`. The earlier checkpoint captured implementation; the sixth rerun closes M6g stage acceptance. M6h isolated wall-clock soak support and M7a are in progress; overall M6/M7, two-hour observation, eight-hour soak, physical multi-monitor, and real sleep/wake acceptance remain open. Accelerated core performance comparisons do not substitute for these checks.
+The installed development app remains M6a/b; later candidates are not installed. The isolated production desktop completed a real 30-second smoke and all 16 offline checks. Two-hour human observation, eight-hour soak, physical multi-monitor and real sleep/wake acceptance remain open. Overall M6/M7 work continues; see the [progress record](docs/IMPLEMENTATION-PROGRESS.md) and [M6h evidence](docs/M6H-ACCEPTANCE.md).
 
 ### Get started
 

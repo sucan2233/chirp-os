@@ -3,7 +3,7 @@
 这些 JSON 是引擎输入，采用 Quartz 桌面坐标（向右为 x 正方向，向下为 y 正方向）。它们不依赖 AppKit、窗口标题、桌面截图或用户配置，供 macOS 与后续 Windows 核心运行同一场景。
 
 - `version`：文件格式版本；未知版本拒绝，不能忽略无法理解的事件。
-- `simulationVersion`：M6g当前为16，新增熟客赠叶与外部授权输入语义；文件格式`version`仍为1。旧真实生产录制版本1–15明确拒绝，请在相应旧提交重放或重新录制，不能直接改版本标签。旧18份仓库手写夹具迁移版本，保留原输入及独立断言；新增第19份`visitor-gift.json`。19夹具在30/60/120Hz的57份完整报告一致，旧18夹具60Hz报告不剔除字段与M6f.2基线`3bad0e7`完全一致；不从当前实现反向生成expected。第16/17/18份仍分别为`leaf-carry.json`、`insect-catch.json`、`flycatcher-insect-catch.json`，历史版本结果见下文。
+- `simulationVersion`：M7a当前为17，新增珠颈斑鸠求偶展示语义；文件格式`version`仍为1。旧真实生产录制版本1–16明确拒绝，请在相应旧提交重放或重新录制，不能直接改版本标签。旧19份仓库手写夹具仅迁移16→17，保留原输入及独立断言；新增第20份`courtship-display.json`，不从当前实现反向生成expected。本批尚待统一构建与验证；M6g历史57份完整报告及旧18份兼容结果见下文。
 - `seed`、鸟/运行/道具/栖息地对象 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
 - `settings`：完整配置或合法的旧格式配置；按 BirdSettings schema 迁移。
 - `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟；可选 `flightOrigin` 让鸟从该坐标开始普通直达飞行，仍需 `advance` 输入才能移动和产生速度。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。
@@ -60,14 +60,17 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 # 第16份场景：静止叶片携带；使用已统一验证的构建，无需为文档另行构建
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/leaf-carry.json --replay-hz 120 --replay-output .build/leaf-carry-report.json
 
-# 第17份场景：家燕捕虫、暂停/取消及真实捕获恢复（当前模拟v16）
+# 第17份场景：家燕捕虫、暂停/取消及真实捕获恢复（当前模拟v17）
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/insect-catch.json --replay-hz 120 --replay-output .build/insect-catch-report.json
 
-# 第18份场景：白眉姬鹟栖点出击、暂停/返回及取消后独立虫继续（当前模拟v16）
+# 第18份场景：白眉姬鹟栖点出击、暂停/返回及取消后独立虫继续（当前模拟v17）
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/flycatcher-insect-catch.json --replay-hz 120 --replay-output .build/flycatcher-insect-catch-report.json
 
-# 第19份场景：熟客赠叶及已记录的授权输入（当前模拟v16，不访问真实额度账本）
+# 第19份场景：熟客赠叶及已记录的授权输入（当前模拟v17，不访问真实额度账本）
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/visitor-gift.json --replay-hz 120 --replay-output .build/visitor-gift-report.json
+
+# 第20份场景：双鸟求偶展示、暂停/完成及暂停移除全组取消（待统一验证）
+dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/courtship-display.json --replay-hz 120 --replay-output .build/courtship-display-report.json
 ```
 
 当前 macOS 测试把同一输入序列分别拆成至多 1/30、1/60、1/120 秒的回调，比较完整报告；保留输入发生边界，不跨 world/command 合并时间。这验证回调分段稳定性，不宣称恢复录制时没有采到的鼠标轨迹。不同采样率的真实移动轨迹另由 PassiveEcologyTests 验证。Windows 解析器与原生验收尚待迁移，当前文件通过不代表跨端已经对齐。
@@ -136,12 +139,18 @@ v14报告增加 `insect`、`lastInsectContact`、`insectMissedTargetCount`、`ha
 
 M6f.2阶段验收通过：第三轮完整876项中其余875项通过（142.466s），第四轮`swift test --filter FlycatcherInsectCatch`的16项全通过（6.981s），覆盖修正的1项及其余白眉回归，不宣称单次876全绿。24/64居民各实际完成2次捕获与1次取消；Release/严格签名、3322原生鸟、1820设置、46鸟旧像素/索引、恰增3鸟帧无新道具、parity、78 GIF/7800帧/loop0及18次性能通过。该阶段累计150鸟体/10道具，剩17/6；随本阶段记录本地提交、未安装，用户安装版仍M6a/b。前三轮测试失败、1ULP同夹具复现与≤4ULP断言修正见[M6f.2验收](../../docs/M6F2-ACCEPTANCE.md)，生产代码未因这些修正改变。当时下一阶段为M6g，当前进度见下节；物理多屏/热插拔、真实睡眠唤醒、2h/8h及长期内存/能耗仍未验收。
 
-## M6g 熟客赠叶（当前模拟版本16）
+## M6g 熟客赠叶（历史模拟版本16）
 
 第19份`visitor-gift.json`使用`initialVisitorMemory`和按序记录的`giftAuthorization`输入，重放授权结果及其绑定，不调用真实持久额度账本、不读取重放机器的墙钟或用户档案。该手写夹具没有`expected`，语义由独立测试断言检查，不能用当前输出补生成通过标准。生产录制继续保存实际外部授权结果，未来或旧模拟版本不静默升级。
 
 报告中的礼物专项状态采用可选字段：未启用、未产生相关状态时保持历史输出形状，不为兼容比较删除字段。57份跨率完整报告通过，证据`.build/m6g-replays/summary.json`及`.build/m6g-replays-second.log`；旧18份完整报告与`3bad0e7`一致，`.build/m6g-delivery/legacy-replay-comparison.json`的`ignoredNewFields=[]`。
 
-M6g已实现，核心第二轮定向49/49（含全部6项首轮失败方法的修订及24/64实际礼物压力）、settings第二轮1955/1955、素材及18次性能通过。首轮920核心测试的79项失败（5 unexpected、6方法）、birds3433/3437、settings1954/1955历史均保留，不宣称单次920全绿。累计已验证154鸟体帧/10道具，剩13/6；46旧鸟像素/索引不变，parity及78 GIF/7800帧通过。native第二轮仅0.5×/1×双向四条journey36/36通过，2×及新增点击落稳待解锁；整批原生未通过、未安装。settings证据`.build/m6g-settings-second/report.json`，完整范围见[M6g验收记录](../../docs/M6G-ACCEPTANCE.md)。
+M6g已验收通过、未安装：冻结候选第六轮`.build/m6g-gift-sixth/report.json`为275/275通过（art63、native77、settings106、持久化29），覆盖三个缩放双向六旅程、点击后真实完成及合法落脚；此前待解锁的2×及点击补验已关闭。核心第二轮定向49/49（含全部6项首轮失败方法的修订及24/64实际礼物压力）、settings第二轮1955/1955、素材及18次性能通过。首轮920核心测试的79项失败（5 unexpected、6方法）、birds3433/3437、settings1954/1955及中间部分补验历史均保留；第六轮没有重跑完整birds3437或核心920，不宣称单次全量全绿。累计已验证154鸟体帧/10道具，剩13/6；46旧鸟像素/索引不变，parity及78 GIF/7800帧通过。完整范围见[M6g验收记录](../../docs/M6G-ACCEPTANCE.md)。
 
-本地checkpoint提交不表示M6g阶段完成；M6h隔离真实墙钟长跑与M7a可继续独立实施。18次同机加速核心性能对照不能代替2h/8h、原生渲染长期内存/能耗、物理多屏或真实睡眠验收。
+M6h隔离真实墙钟长跑与M7a继续独立实施。18次同机加速核心性能对照不能代替2h/8h、原生渲染长期内存/能耗、物理多屏或真实睡眠验收。
+
+## M7a 求偶展示（当前模拟版本17，待统一验证）
+
+`courtshipDisplay`要求`source: user / preview / automatic`。`courtshipEnabled`缺省true并受`socialInteractions`控制；只招募两只真实已站稳且安静至少10秒的珠颈斑鸠居民。双方位于同一普通顶部或地面，全转身画布之间留12桌面点、鼠标离双方画布外扩80逻辑点区域；固定栖木不参与。4秒展示只保留临时initiator/observer角色，硬上限6秒，不生成配对或繁殖资源。
+
+第20夹具以手写输入覆盖完整完成、双方脚位不动、暂停冻结及暂停中移除任一参与者即全组取消。独立测试比较30/60/120Hz每个输入边界的完整报告，未添加`expected`。自动日常区间[0.08,0.12)使用同一机会，单鸟600秒、全局300秒冷却，暂停冻结、不补发。测试与夹具已落盘不代表本批已经编译或运行通过。

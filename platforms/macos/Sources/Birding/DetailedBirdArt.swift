@@ -109,13 +109,16 @@ enum DetailedBirdArt {
             headWidth: CarryArtGeometry.sparrowHeadWidth, headHeight: CarryArtGeometry.sparrowHeadHeight,
             headY: CarryArtGeometry.sparrowHeadY, tailX: 12, tailY: 39)
         case .lightVentedBulbul: return Shape(width: 19, height: 12, headWidth: 8, headHeight: 7, headY: 14, tailX: 7, tailY: 41)
-        case .spottedDove: return Shape(width: 23, height: 13, headWidth: 7, headHeight: 6, headY: 14, tailX: 6, tailY: 42)
+        case .spottedDove: return Shape(width: 23, height: 13,
+            headWidth: CourtshipArtGeometry.headWidth, headHeight: CourtshipArtGeometry.headHeight,
+            headY: CourtshipArtGeometry.headY, tailX: 6, tailY: 42)
         case .chineseBlackbird: return Shape(width: 21, height: 13, headWidth: 8, headHeight: 7, headY: 14, tailX: 7, tailY: 41)
         case .magpieRobin: return Shape(width: 17, height: 12, headWidth: 8, headHeight: 7, headY: 14, tailX: 6, tailY: 43)
         case .longTailedShrike: return Shape(width: 18, height: 12, headWidth: 8.5, headHeight: 7, headY: 13, tailX: 2, tailY: 45)
         }
     }
     static func make(_ frame:String,species id:SpeciesID)->CGImage {
+        if let image=courtshipImage(frame,species:id) {return image}
         if let image=catchImage(frame,species:id) {return image}
         if let image=carryImage(frame,species:id) {return image}
         if let image=bathImage(frame,species:id) {return image}
@@ -971,6 +974,7 @@ extension DetailedBirdArt {
     /// coordinates. Reflect with x -> 48-x, just like BirdRenderState. A tucked
     /// bill still has an anchor even though scapular feathers cover its tip.
     static func poseBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        if let anchor=courtshipBillAnchor(frame,species:id) {return anchor}
         if let anchor=catchBillAnchor(frame,species:id) {return anchor}
         if let anchor=carryBillAnchor(frame,species:id) {return anchor}
         if let anchor=transportBillAnchor(frame,species:id) {return anchor}
@@ -995,6 +999,7 @@ extension DetailedBirdArt {
 
     static func poseImage(_ frame:String,species id:SpeciesID,
                           part:FoundationPosePart?=nil)->CGImage? {
+        if let image=courtshipImage(frame,species:id,part:part) {return image}
         if let image=catchImage(frame,species:id,part:part) {return image}
         if let image=carryImage(frame,species:id,part:part) {return image}
         if let image=bathImage(frame,species:id,part:part) {return image}
@@ -2114,5 +2119,93 @@ extension DetailedBirdArt {
             (Double(root.x+(v.x-root.x)*0.47),Double(root.y+(v.y-root.y)*0.47))
         }
         c.poly([(Double(root.x)-1,Double(root.y)+0.6)]+patch+[(Double(root.x)+0.8,Double(root.y)+1.2)],"white")
+    }
+}
+
+// M7a: articulated terrestrial display, with no shared stand/idle raster.
+extension DetailedBirdArt {
+    static func courtshipBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        CourtshipArtGeometry.billAnchor(species:id,frame:frame)
+    }
+
+    /// Evidence swatch, not a delivered bird frame. The same painter resolves
+    /// sRGB palette colors into its DeviceRGB context; raw palette bytes need
+    /// not equal the resulting raster bytes on the current display profile.
+    static func courtshipCollarPaletteImage()->CGImage {
+        let c=BirdPainter(size:64)
+        c.poly([(0,0),(24,0),(24,48),(0,48)],"black")
+        c.poly([(24,0),(48,0),(48,48),(24,48)],"white")
+        return c.image
+    }
+
+    static func courtshipImage(_ frame:String,species id:SpeciesID,
+                               part:FoundationPosePart?=nil)->CGImage? {
+        guard let p=CourtshipArtGeometry.pose(species:id,frame:frame) else {return nil}
+        let density=SpeciesCatalog.standard.profile(id).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let w=Double(p.body.width),h=Double(p.body.height)
+        if part == nil || part == .body {
+            // Tail roots follow the tilted pelvis; each pose independently
+            // changes tail carriage instead of rotating the entire bird.
+            let root=p.bodyPoint(5,h*0.46),base=p.bodyPoint(10,h*0.78)
+            let tx=Double(p.tail.x),ty=Double(p.tail.y)
+            c.poly([(root.x,root.y),(base.x,base.y),(tx+5,ty+0.9),(tx,ty)],"brown",outline:true)
+            c.line([(root.x,root.y+0.9),(tx+1.2,ty)],"tan",width:0.8)
+            c.line([(tx+0.4,ty),(tx+4.8,ty+0.7)],"silver",width:1)
+            c.ctx.saveGState();c.ctx.translateBy(x:p.body.midX,y:p.body.midY)
+            c.ctx.rotate(by:CGFloat(p.bodyPitch));c.ctx.translateBy(x:-w/2,y:-h/2)
+            c.oval(0,0,w,h,"tan",outline:true)
+            c.oval(w*0.49,1.4,w*0.51-0.4,h-1.8,"pink")
+            c.oval(w*0.62,h*0.43,w*0.34,h*0.40,"cream")
+            // Folded wing and scalloped coverts follow the real torso matrix.
+            c.poly([(3,1),(9,0.7),(15,3.2),(12,h*0.69),(3,h-0.5),
+                    (1,h-0.8),(1.5,h*0.49)],"brown",outline:true)
+            c.poly([(4,1.6),(9,1.3),(12,3.3),(8,h*0.65),(3,h*0.74)],"tan")
+            for n in 0..<5 {
+                let x=3+Double(n)*1.6
+                c.line([(x+4,3.8),(max(1.8,x-0.6),h-1.2)],n%2 == 0 ? "tan":"umber",width:0.65)
+            }
+            for n in 0..<9 {
+                let x=3.8+Double(n%3)*2.3,y=1.8+Double(n/3)*1.7
+                c.line([(x,y),(x+0.8,y-0.35),(x+1.5,y+0.4)],"buff",width:0.65)
+            }
+            c.ctx.restoreGState()
+        }
+        if part == nil || part == .feet {
+            // Exact old stand operations. Torso/neck articulation never moves
+            // knees, toes or the reference foot used by engine and renderer.
+            for x in [27.0,31.0] {
+                c.line([(x-1,33),(x,35),(x-0.5,38.5)],"brown",width:1)
+                c.line([(x-2,39),(x,38.5),(x+2,39)],"brown")
+            }
+        }
+        if part == nil || part == .headNeck {
+            let neck=[p.neckPoint(0,0),p.neckPoint(1,0),p.neckPoint(1,1),p.neckPoint(0,1)]
+            c.poly(neck.map{(Double($0.x),Double($0.y))},"pink")
+            let nape=[p.neckPoint(0,0),p.neckPoint(1,0),p.neckPoint(1,0.17),p.neckPoint(0,0.22)]
+            c.poly(nape.map{(Double($0.x),Double($0.y))},"tan")
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.headPitch))
+            let hx = -p.headWidth/2,hy = -CourtshipArtGeometry.headHeight/2
+            c.oval(hx,hy,p.headWidth,CourtshipArtGeometry.headHeight,"gray",outline:true)
+            c.oval(hx+0.8,0.6,p.headWidth-1.2,2,"pink")
+            let ex=hx+p.headWidth*(p.observing ? 0.61:0.72),ey=hy+CourtshipArtGeometry.headHeight*0.38
+            c.oval(ex-0.25,ey-0.2,1.5,1.5,"buff")
+            c.oval(ex,ey,0.95,1.05,"eye");c.oval(ex+0.3,ey,0.35,0.35,"white")
+            if p.observing {c.line([(hx+0.3,-0.9),(hx+1.4,-1.3)],"silver",width:0.6)}
+            c.ctx.restoreGState()
+            // The collar overlaps the nape seam. Its five dots are mapped
+            // through the same neck surface, not fixed in canvas coordinates.
+            c.poly(p.collar.map{(Double($0.x),Double($0.y))},"black")
+            for point in p.collarSpots {
+                c.oval(Double(point.x)-0.36,Double(point.y)-0.36,0.72,0.72,"white")
+            }
+        }
+        if part == nil || part == .bill {
+            let root=p.billRoot,length=p.billLength
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.headPitch))
+            c.poly([(root,-0.7),(root+length,0.5),(root+length-1,1.2),(root,1.3)],"dark")
+            c.ctx.restoreGState()
+        }
+        return c.image
     }
 }

@@ -24,6 +24,18 @@ if let path=argument("--replay-behavior") {
         print("Behavior replay: PASS (\(log.inputs.count) inputs, \(report.events.count) events)");exit(0)
     } catch {fputs("Behavior replay: FAIL — \(error)\n",stderr);exit(1)}
 }
+if let path=argument("--verify-soak-smoke") {
+    do {
+        let checks=try SoakVerification.inspectCompletedSmoke(at:URL(fileURLWithPath:path))
+        let passed=checks.values.allSatisfy{$0}
+        if let output=argument("--verify-soak-output") {
+            try JSONSerialization.data(withJSONObject:["passed":passed,"checks":checks],options:[.prettyPrinted,.sortedKeys])
+                .write(to:URL(fileURLWithPath:output),options:.atomic)
+        }
+        print("Desktop soak smoke: \(passed ? "PASS":"FAIL") — \(checks.count) checks")
+        exit(passed ? 0:1)
+    } catch {fputs("Desktop soak inspection: \(error)\n",stderr);exit(1)}
+}
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
 if let path = argument("--export-pose-previews") {
@@ -56,7 +68,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var desktop: DesktopController?
     var fixture: FixtureController?
     var populationCheck: PopulationVerification?
+    var soakSession:DesktopSoakSession?
     func applicationDidFinishLaunching(_ notification:Notification) {
+        if let path=argument("--soak-desktop") {
+            do {
+                guard path.hasPrefix("/"),let duration=Double(argument("--soak-duration") ?? "7200"),
+                      let birds=Int(argument("--soak-birds") ?? "12") else {
+                    throw DesktopSoakSession.SessionError.invalid("invalid path, duration or population")
+                }
+                let session=try DesktopSoakSession(output:URL(fileURLWithPath:path),duration:duration,birds:birds)
+                soakSession=session;desktop=session.desktop
+                try session.start()
+            } catch {
+                fputs("\(error)\n",stderr)
+                if soakSession == nil {exit(1)}
+                // Idempotent even when start() already began cleanup.
+                soakSession?.finish(reason:"startupFailure")
+            }
+            return
+        }
         if let path = argument("--verify-updates") { UpdateVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-ground") { GroundVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-m6-content") {
@@ -128,6 +158,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 exit(passed ? 0:1)
             } catch {print(error);exit(1)}
         }
+        if let path = argument("--verify-courtship") {
+            do {
+                let folder=URL(fileURLWithPath:path)
+                try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+                var checks:[String:Bool]=[:]
+                try autoreleasepool {try CourtshipArtVerification.run(into:&checks,folder:folder)}
+                try autoreleasepool {try CourtshipVerification.run(into:&checks,folder:folder)}
+                try autoreleasepool {try CourtshipSettingsVerification.run(into:&checks,folder:folder)}
+                let passed=checks.values.allSatisfy{$0}
+                saveJSON(["passed":passed,"checks":checks],to:folder.appendingPathComponent("report.json"))
+                print("Courtship: \(passed ? "PASS":"FAIL") — \(checks.count) checks")
+                exit(passed ? 0:1)
+            } catch {print(error);exit(1)}
+        }
         if let path = argument("--verify-birds") { ExpandedVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-settings") { SettingsVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--fixture") {
@@ -151,8 +195,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
     }
+    func applicationShouldTerminate(_ sender:NSApplication) -> NSApplication.TerminateReply {
+        soakSession?.prepareForTermination() ?? .terminateNow
+    }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender:NSApplication) -> Bool { false }
     func applicationShouldHandleReopen(_ sender:NSApplication,hasVisibleWindows flag:Bool) -> Bool {
+        if let soakSession {return soakSession.handleReopen()}
         // Overlay windows are always visible, so the usual hasVisibleWindows
         // check would make a menu-bar-only app impossible to reopen reliably.
         desktop?.restoreStatusItem()
@@ -160,6 +208,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
     func applicationWillTerminate(_ notification:Notification) {
+        if let soakSession {soakSession.finish(reason:"applicationTermination");return}
         desktop?.cancelGiftAuthorization()
         desktop?.engine.handle(.cancelAmbient(.shutdown));desktop?.stopMouseMonitoring()
         desktop?.flushVisitorMemory()

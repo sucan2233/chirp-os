@@ -47,6 +47,9 @@ public struct PoseClip:Codable,Equatable {
     public var duration:Double {frames.reduce(0){$0+$1.duration}}
     public var requiredFrames:Set<String> {
         let names=Set(frames.map(\.name))
+        if !names.isDisjoint(with:CourtshipArtGeometry.frameNames) {
+            return names.union(CourtshipArtGeometry.frameNames)
+        }
         return names.contains("lookNear") || names.contains("lookFar") ? names.union(BirdCapability.observationPose.requiredFrames):names
     }
     public func sample(at age:Double) -> Frame? {
@@ -138,6 +141,29 @@ public struct PoseClip:Codable,Equatable {
             frames:[Frame(name:"catchClose",duration:0.18,beak:close),
                     Frame(name:"catchRecover",duration:0.30,beak:recover)])
     }
+    /// Both roles sample the same owning-run age. Facing is owned by the
+    /// execution; the observer turns only during 2.9...3.4s and then stands.
+    /// Either role requires the complete five-frame species pack.
+    public static func courtship(species:SpeciesID,role:CourtshipRole) -> Self? {
+        guard CourtshipArtGeometry.species.contains(species),
+              SpeciesBehaviorProfile.profile(for:species).allows(.courtshipDisplay) else {return nil}
+        let names:[String],times:[Double],roleName:String
+        switch role {
+        case .initiator:
+            names=["stand","courtRaise","courtBow0","courtBow1","courtBowRecover",
+                   "courtBow0","courtBow1","courtBowRecover","courtBowRecover","courtBowRecover"]
+            times=[0.4,0.5,0.35,0.40,0.25,0.35,0.40,0.25,0.5,0.6];roleName="initiator"
+        case .observer:
+            names=["stand","stand","stand","courtObserve","stand"]
+            times=[0.4,0.5,2,0.5,0.6];roleName="observer"
+        }
+        var frames=[Frame]()
+        for (name,time) in zip(names,times) {
+            guard let beak=CourtshipPoseAnchors.anchor(species:species,frame:name) else {return nil}
+            frames.append(Frame(name:name,duration:time,beak:beak))
+        }
+        return Self(id:"\(species.rawValue).courtshipDisplay.\(roleName)",frames:frames)
+    }
     public static func catchBeakAnchor(species:SpeciesID,frame:String) -> Anchor? {
         CatchPoseAnchors.anchor(species:species,frame:frame)
     }
@@ -149,6 +175,7 @@ public struct PoseClip:Codable,Equatable {
     }
     /// Logical canvas anchors track the editable species drawing, never bitmap size.
     public static func beakAnchor(species:SpeciesID,frame:String) -> Anchor {
+        if let anchor=CourtshipPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=CatchPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=CarryPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=BathPoseAnchors.anchor(species:species,frame:frame) {return anchor}

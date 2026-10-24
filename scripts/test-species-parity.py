@@ -42,6 +42,8 @@ for bird in ('treeSparrow', 'azureWingedMagpie'):
     expected_extras[bird] += carry_frames
 expected_extras['barnSwallow'] += ['catchOpen', 'catchClose', 'catchRecover']
 expected_extras['yellowRumpedFlycatcher'] = ['catchOpen', 'catchClose', 'catchRecover']
+courtship_frames = ['courtRaise', 'courtBow0', 'courtBow1', 'courtBowRecover', 'courtObserve']
+expected_extras['spottedDove'] += courtship_frames
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
     assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'
@@ -73,6 +75,30 @@ assert [frame['name'] for frame in release['frames']] == ['carryPlace'] and rele
 for frame, expected in (('carryGrip', [40, 39]), ('carryPlace', [42, 23])):
     anchor = magpie['transportBeakAnchors'][frame]
     assert len(anchor) == 2 and all(abs(a - b) < 1e-9 for a, b in zip(anchor, expected)), f'Wrong magpie contact anchor: {frame}'
+
+dove = metadata['spottedDove']
+assert len(specific['spottedDove']) == 53 and specific['spottedDove'][48:] == courtship_frames, 'Dove courtship must follow its unchanged historical 48'
+assert set(dove['clips']) == {'watch', 'alert', 'rest', 'takeoffPreparation', 'courtshipInitiator', 'courtshipObserver'}
+assert set(dove['courtshipBeakAnchors']) == set(courtship_frames + ['stand'])
+for frame, expected in zip(courtship_frames, ([39.5, 13], [41, 24], [41.5, 30], [40, 19], [38.5, 16])):
+    for key in ('beakAnchors', 'courtshipBeakAnchors'):
+        anchor = dove[key][frame]
+        assert len(anchor) == 2 and all(abs(a - b) < 1e-9 for a, b in zip(anchor, expected)), f'Wrong courtship bill: {frame}'
+initiator = dove['clips']['courtshipInitiator']
+observer = dove['clips']['courtshipObserver']
+assert [f['name'] for f in initiator['frames']] == ['stand', 'courtRaise'] + ['courtBow0', 'courtBow1', 'courtBowRecover'] * 2 + ['courtBowRecover'] * 2
+assert [f['duration'] for f in initiator['frames']] == [0.4, 0.5] + [0.35, 0.4, 0.25] * 2 + [0.5, 0.6]
+assert [f['name'] for f in observer['frames']] == ['stand', 'stand', 'stand', 'courtObserve', 'stand']
+assert [f['duration'] for f in observer['frames']] == [0.4, 0.5, 2, 0.5, 0.6]
+for role, clip in (('initiator', initiator), ('observer', observer)):
+    assert clip['id'] == f'spottedDove.courtshipDisplay.{role}' and clip['foot'] == {'x': 29, 'y': 39}
+    assert clip['maximumLoops'] == 1 and abs(sum(f['duration'] for f in clip['frames']) - 4) < 1e-9
+dove_support = next(row for row in support if row['species'] == 'spottedDove')
+courtship = next(row for row in dove_support['behaviors'] if row['kind'] == 'courtshipDisplay')
+assert courtship['productAllowed'] and courtship['contentSupported'] and not courtship['missingFrames']
+for row in support:
+    if row['species'] != 'spottedDove':
+        assert not next(b for b in row['behaviors'] if b['kind'] == 'courtshipDisplay')['productAllowed'], 'Courtship scope expanded'
 
 prop_manifest = json.loads((ROOT / 'shared/art/props/manifest.json').read_text())
 leaf = prop_manifest['leafToken']

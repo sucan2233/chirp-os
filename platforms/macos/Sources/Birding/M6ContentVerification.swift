@@ -40,6 +40,7 @@ enum M6ContentVerification {
         checkPermissions(into:&checks)
         try checkCatchArt(into:&checks,evidence:&evidence,folder:output)
         try VisitorGiftArtVerification.run(into:&checks,folder:output)
+        try CourtshipArtVerification.run(into:&checks,folder:output)
         let fixture=try Fixture(folder:output)
         defer {fixture.close()}
         try checkSettings(fixture,into:&checks,folder:output)
@@ -122,7 +123,16 @@ enum M6ContentVerification {
             let extra=species.contains(id) ? names:[]
             let peek=peekSpecies.contains(id) ? peekNames:[]
             let profile=SpeciesBehaviorProfile.profile(for:id)
-            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=BirdArt.names(for:id)==old+extra+peek+([SpeciesID.treeSparrow,.lightVentedBulbul].contains(id) ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]) + ([SpeciesID.treeSparrow,.azureWingedMagpie].contains(id) ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]) + ([SpeciesID.barnSwallow,.yellowRumpedFlycatcher].contains(id) ? CatchArtGeometry.frameNames:[]) &&
+            let court=id == .spottedDove ? ["courtRaise","courtBow0","courtBow1","courtBowRecover","courtObserve"]:[]
+            let bath=[SpeciesID.treeSparrow,.lightVentedBulbul].contains(id)
+                ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]
+            let carry=[SpeciesID.treeSparrow,.azureWingedMagpie].contains(id)
+                ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]
+            let catchFrames=[SpeciesID.barnSwallow,.yellowRumpedFlycatcher].contains(id) ? CatchArtGeometry.frameNames:[]
+            let prior=old+extra+peek+bath+carry+catchFrames
+            let actual=BirdArt.names(for:id)
+            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=actual==prior+court &&
+                Array(actual.prefix(prior.count))==prior &&
                 SpeciesBehaviorProfile.profile(for:id).poseFrameNames==extra
             checks["m6cPeekRequiredFrames-"+id.rawValue]=Set(profile.requiredFrames(for:.edgePeek)) ==
                 BehaviorDefinitions.definition(for:.edgePeek).requiredFrames.union(peek)

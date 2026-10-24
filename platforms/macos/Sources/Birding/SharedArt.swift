@@ -30,12 +30,12 @@ extension BirdArt {
             "waterSplash":["files":BathGeometry.splashFrameNames.map{$0+".png"},"logicalSize":[24,24],"anchor":[12,22],"frameDuration":0.1,"lifetime":0.4,"maximumInstances":6],"leafToken":["file":"leafToken.png","logicalSize":[16,16],"gripAnchor":[3,12],"surfaceAnchor":[10,12],"scale":"worldScale","availableLifetime":180,"placedLifetime":8,"fadeDuration":0.2,"giftLifetime":GiftReceiverGeometry.displayLifetime,"giftReceiverAnchor":"resolvedFixedPerch.foot","giftCarrierMayLand":false,"giftReleaseBeak":[Double(CarryArtGeometry.magpieReleaseBeak.x),Double(CarryArtGeometry.magpieReleaseBeak.y)]],"insect":insectMetadata,"clock":"singleEngineSimulationClock"]
         try JSONSerialization.data(withJSONObject:propMetadata,options:[.prettyPrinted,.sortedKeys]).write(to:props.appendingPathComponent("manifest.json"))
         try exportSupport(to:folder.appendingPathComponent("species-support.json"))
-        // Includes catch-only flycatcher and the existing magpie's carry clip,
+        // Includes catch-only flycatcher, magpie carry and both dove courtship roles,
         // without changing the atlas/prop schema or historical frame prefixes.
         let poseClips=Self.poseMetadata
         let metadata:[String:Any] = ["schemaVersion":2,"logicalFrameSize":48,"frameSizes":Dictionary(uniqueKeysWithValues:catalog.species.map{($0.id.rawValue,BirdArt(species:$0.id).frames["stand"]!.width)}),"footAnchor":[29,39],"frames":names,
                                     "speciesFrames":Dictionary(uniqueKeysWithValues:catalog.species.filter{Self.names(for:$0.id) != names}.map{($0.id.rawValue,Self.names(for:$0.id))}),
-                                    "poseClips":poseClips,"poseClock":"owningBehaviorSimulationAge","source":"platforms/macos/Sources/Birding/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt}.swift"]
+                                    "poseClips":poseClips,"poseClock":"owningBehaviorSimulationAge","source":"platforms/macos/Sources/Birding/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt}.swift; platforms/macos/Sources/BirdingCore/Behavior/CourtshipArtGeometry.swift"]
         try JSONSerialization.data(withJSONObject:metadata,options:[.prettyPrinted,.sortedKeys]).write(to:folder.appendingPathComponent("art/manifest.json"))
     }
 }

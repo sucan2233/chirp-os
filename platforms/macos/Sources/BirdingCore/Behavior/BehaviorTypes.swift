@@ -11,10 +11,12 @@ public struct BehaviorRunID: Hashable, Codable, Comparable {
     public static func < (lhs:Self,rhs:Self) -> Bool {lhs.rawValue<rhs.rawValue}
 }
 public enum BirdRole: String {case resident, transient}
+/// Animation roles only; these do not encode sex or a persistent pair.
+public enum CourtshipRole:String,CaseIterable {case initiator,observer}
 public enum BehaviorKind: String, Codable {
-    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase, travelTogether, allopreening, fixedPerchVisit, foodTrayVisit, bathVisit, leafCarry, insectCatch, visitorGift
+    case relocate, pointerVisit, flockPass, rest, preen, socialGreeting, sideBySide, giveWay, pairedTakeoff, leafPlay, watch, alert, sideHop, takeoffPreparation, edgePeek, chase, travelTogether, allopreening, fixedPerchVisit, foodTrayVisit, bathVisit, leafCarry, insectCatch, visitorGift, courtshipDisplay
     var isPerchActivity:Bool {[Self.rest,.preen,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek].contains(self)}
-    var isSocial:Bool {[Self.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase,.travelTogether,.allopreening].contains(self)}
+    var isSocial:Bool {[Self.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase,.travelTogether,.allopreening,.courtshipDisplay].contains(self)}
 }
 public enum BehaviorSource: String, Codable {case user, preview, automatic}
 public enum BehaviorReason: String {
@@ -39,6 +41,7 @@ public enum BehaviorResult: Equatable {
     public var accepted: Bool {if case .rejected = self {return false};return true}
 }
 public enum EngineCommand {
+    case courtshipDisplay(BehaviorSource)
     case visitorGift(BehaviorSource)
     case cancelVisitorGiftRequest
     case clearVisitorGift

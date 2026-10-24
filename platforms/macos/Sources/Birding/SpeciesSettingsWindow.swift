@@ -93,6 +93,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var cancelVisitorGiftRequestButton:NSButton!
     var clearVisitorGiftButton:NSButton!
     var visitorGiftStatus:NSTextField!
+    var courtshipButton:NSButton!
+    var previewCourtshipButton:NSButton!
     private weak var foodTrayEngine:BehaviorEngine?
     private var ownsFoodTrayPlacement=false
     private var ownsBathPlacement=false
@@ -192,7 +194,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:7580))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:8000))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -324,6 +326,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         buildLeafCarry(in:interactionView)
         buildInsectCatch(in:interactionView)
         buildVisitorGifts(in:interactionView)
+        buildCourtship(in:interactionView)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -939,6 +942,38 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         default:return desktop.behaviorMessage(reason)
         }
     }
+    private func buildCourtship(in view:NSView) {
+        label(t("求偶展示","Courtship display"),NSRect(x:20,y:7580,width:710,height:30),in:view,size:20).identifier=NSUserInterfaceItemIdentifier("courtshipSectionTitle")
+        courtshipButton=NSButton(checkboxWithTitle:t("开启求偶展示","Enable courtship displays"),target:self,action:#selector(ambientSettingsChanged))
+        courtshipButton.frame=NSRect(x:20,y:7622,width:710,height:26)
+        courtshipButton.state=draft.courtshipEnabled ? .on:.off;courtshipButton.isEnabled=draft.socialInteractions
+        courtshipButton.identifier=NSUserInterfaceItemIdentifier("courtshipEnabled")
+        courtshipButton.setAccessibilityLabel(courtshipButton.title);view.addSubview(courtshipButton)
+        label(language.courtshipSupport+t("\n取材于求偶展示的风格化片段：发起者抬身、缓慢鞠躬，观看者观察，双方恢复，全程4秒；脚位保持不动。角色只用于这次动画，不推断性别、永久配偶或繁殖成功。\n\n默认开启，受双鸟互动总开关控制；关闭总开关保留此项偏好，保存后生效。安静陪伴停止自动展示，仍可手动预览。",
+            "\nA stylized courtship fragment: one bird raises and bows, the other observes, then both recover over 4 seconds with fixed feet. Roles apply only to this animation; they imply no sex, permanent pairing or breeding success.\n\nOn by default, controlled by Two-bird interactions. Turning off the master preserves this preference; save to apply. Quiet companionship stops automatic displays; manual previews remain available."),NSRect(x:20,y:7660,width:710,height:132),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("courtshipHelp")
+        previewCourtshipButton=button(t("预览求偶展示","Preview courtship display"),#selector(previewCourtship),NSRect(x:20,y:7806,width:350,height:32),in:view)
+        previewCourtshipButton.identifier=NSUserInterfaceItemIdentifier("previewCourtship")
+        previewCourtshipButton.setAccessibilityLabel(previewCourtshipButton.title)
+        label(language.courtshipRequirement+t("\n预览读取已保存设置，不补鸟、不传送，不改变概率。普通窗口顶部和地面可用，固定小栖木与巢台不适用。点击任一方可立即换位；完整结束仅记一次求偶展示，预览与自然来源分开计数。",
+            "\nPreview uses saved settings without spawning, teleporting or changing probabilities. Normal window tops and ground edges are eligible; fixed branches and nest platforms are not. Click either bird to relocate immediately. Only a complete display is recorded once, with preview and natural sources counted separately."),NSRect(x:20,y:7852,width:710,height:100),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("courtshipPreviewHelp")
+    }
+    @objc func previewCourtship() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.courtshipDisplay(.preview))
+        if case .rejected(let reason)=result {message.stringValue=courtshipPreviewMessage(reason)}
+        else {message.stringValue=t("正在预览4秒求偶展示；只分配本次动画角色，不表示配对或繁殖成功。","Previewing a 4-second courtship display. Animation roles do not imply pairing or breeding success.")}
+    }
+    func courtshipPreviewMessage(_ reason:BehaviorReason)->String {
+        switch reason {
+        case .disabled,.settingsChanged:return t("请先保存并开启双鸟互动与求偶展示。","Save and enable Two-bird interactions and Courtship displays first.")
+        case .noSpecies:return t("请启用所需鸟种并保存，概率须大于0；预览只使用已有居民。 ","Enable the required species with a probability above zero and save; preview uses existing residents only. ")+language.courtshipSupport
+        case .noCompanion,.missingBird,.unavailableBird:return language.courtshipRequirement
+        case .noSpace,.targetInvalid:return t("双方转身、鞠躬或间隔空间不足；请等待更开阔且无遮挡的普通顶部边缘或地面，并移开鼠标。","Not enough clear room for both birds to turn and bow with a safe gap. Wait for a clearer normal top or ground edge and move the pointer away.")
+        case .missingFrames:return t("求偶展示五帧不完整，无法预览。 ","The five courtship frames are incomplete. ")+language.courtshipSupport
+        case .pointerNearby,.pointerMoved:return t("请把鼠标移离双方及展示区域后再试。","Move the pointer away from both birds and the display area, then retry.")
+        default:return desktop.behaviorMessage(reason)
+        }
+    }
     @objc func simulateUpdate() {
         let started=desktop.updater?.simulateUpdate() == true
         message.stringValue=started ? t("已显示模拟更新，可点击通知或菜单查看。","Simulated update ready; click the notification or menu to review."):t("更新器正在忙碌，请稍后重试。","The updater is busy; try again shortly.")
@@ -955,6 +990,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         travelTogetherButton.isEnabled=draft.socialInteractions
         draft.allopreeningEnabled=allopreeningButton.state == .on
         allopreeningButton.isEnabled=draft.socialInteractions
+        draft.courtshipEnabled=courtshipButton.state == .on
+        courtshipButton.isEnabled=draft.socialInteractions
         draft.ambientFrequency=AmbientFrequency.allCases[ambientFrequencyPopup.indexOfSelectedItem]
         message.stringValue=t("尚未保存","Unsaved changes")
     }
@@ -1230,6 +1267,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         travelTogetherButton.isEnabled=draft.socialInteractions
         draft.allopreeningEnabled=allopreeningButton.state == .on
         allopreeningButton.isEnabled=draft.socialInteractions
+        draft.courtshipEnabled=courtshipButton.state == .on
+        courtshipButton.isEnabled=draft.socialInteractions
         draft.leafPlayEnabled=leafPlayButton.state == .on
         draft.ambientLeafPlayEnabled=ambientLeafPlayButton.state == .on
         ambientLeafPlayButton.isEnabled=draft.leafPlayEnabled

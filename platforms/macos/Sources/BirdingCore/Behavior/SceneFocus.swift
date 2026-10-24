@@ -19,6 +19,7 @@ public enum SceneRandomSalt {
     public static let insectCatch:UInt64=0x494E534543544354
     public static let leafCarry:UInt64=0x4C45414643415252
     public static let visitorGift:UInt64=0x5649534954474946
+    public static let courtship:UInt64=0x434F555254534850
 }
 
 extension AmbientFrequency {

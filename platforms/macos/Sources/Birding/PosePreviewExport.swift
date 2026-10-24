@@ -33,10 +33,17 @@ extension BirdArt {
                 tracks.append(clip)
             }
             tracks=tracks.filter{clip in clip.frames.allSatisfy{art.frames[$0.name] != nil}}
+            let courtInitiator=PoseClip.courtship(species:species,role:.initiator)
+            let courtObserver=PoseClip.courtship(species:species,role:.observer)
+            let courtPair=courtInitiator != nil && courtObserver != nil &&
+                [courtInitiator,courtObserver].compactMap{$0}.allSatisfy{clip in clip.requiredFrames.allSatisfy{art.frames[$0] != nil}}
             guard !tracks.isEmpty else {continue}
             for scale:CGFloat in [0.5,1,2] {for right in [true,false] {
                 let size=scale*bird.relativeScale,cell=max(140,Int(ceil(48*size))+32)
-                let width=cell*tracks.count,height=cell+42
+                // Full facing-union sprite spacing plus the specified twelve
+                // desktop points. The pair adds a cell, never a new GIF name.
+                let pairGap=58*size+12,pairWidth=courtPair ? max(cell,Int(ceil(pairGap+58*size))+32):0
+                let width=cell*tracks.count+pairWidth,height=cell+42
                 let url=folder.appendingPathComponent("\(species.rawValue)-\(scale)x-\(right ? "right":"left")-loop.gif")
                 guard let destination=CGImageDestinationCreateWithURL(url as CFURL,"com.compuserve.gif" as CFString,100,nil) else {
                     throw NSError(domain:"PosePreviewExport",code:1)
@@ -70,6 +77,20 @@ extension BirdArt {
                         }
                         context.saveGState();context.translateBy(x:CGFloat(i*cell+8),y:CGFloat(height-10));context.scaleBy(x:1,y:-1)
                         ("\(clip.id.dropFirst(species.rawValue.count+1))\n\(frame)" as NSString).draw(at:.zero,withAttributes:[.font:NSFont.monospacedSystemFont(ofSize:10,weight:.regular),.foregroundColor:NSColor(calibratedWhite:0.2,alpha:1)])
+                        context.restoreGState()
+                    }
+                    if courtPair,let initiator=courtInitiator,let observer=courtObserver {
+                        let age=time.truncatingRemainder(dividingBy:initiator.duration+0.35)
+                        let center=CGFloat(cell*tracks.count)+CGFloat(pairWidth)/2
+                        let left=CGPoint(x:center-pairGap/2,y:CGFloat(cell-6)),rightFoot=CGPoint(x:center+pairGap/2,y:CGFloat(cell-6))
+                        let initiatingFoot=right ? left:rightFoot,observingFoot=right ? rightFoot:left
+                        context.setStrokeColor(NSColor.gray.withAlphaComponent(0.4).cgColor)
+                        context.move(to:CGPoint(x:CGFloat(cell*tracks.count+8),y:left.y))
+                        context.addLine(to:CGPoint(x:CGFloat(width-8),y:left.y));context.strokePath()
+                        art.draw(name:initiator.sample(at:age)?.name ?? "stand",at:initiatingFoot,scale:size,right:right,context:context)
+                        art.draw(name:observer.sample(at:age)?.name ?? "stand",at:observingFoot,scale:size,right:!right,context:context)
+                        context.saveGState();context.translateBy(x:CGFloat(cell*tracks.count+8),y:CGFloat(height-10));context.scaleBy(x:1,y:-1)
+                        ("courtshipDisplay / initiator + observer\n4.0s shared age / roles only" as NSString).draw(at:.zero,withAttributes:[.font:NSFont.monospacedSystemFont(ofSize:10,weight:.regular),.foregroundColor:NSColor(calibratedWhite:0.2,alpha:1)])
                         context.restoreGState()
                     }
                     NSGraphicsContext.restoreGraphicsState()

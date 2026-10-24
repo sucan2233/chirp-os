@@ -276,6 +276,7 @@ enum SettingsVerification {
             try autoreleasepool {try LeafCarrySettingsVerification.run(into:&checks,folder:folder)}
             try autoreleasepool {try InsectCatchSettingsVerification.run(into:&checks,folder:folder)}
             try autoreleasepool {try VisitorGiftSettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try CourtshipSettingsVerification.run(into:&checks,folder:folder)}
             ActivityRhythmClockVerification.run(into:&checks)
             try autoreleasepool {try VisitorMemoryPersistenceVerification.run(into:&checks,folder:folder)}
             try autoreleasepool {try GiftLedgerPersistenceVerification.run(into:&checks,folder:folder)}

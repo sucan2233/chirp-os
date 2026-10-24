@@ -214,6 +214,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -443,6 +455,18 @@
         "kind" : "visitorGift",
         "missingFrames" : [
 
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -686,6 +710,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -933,6 +969,14 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
       }
     ],
     "capabilities" : [
@@ -946,7 +990,8 @@
       "observationPose",
       "alertPose",
       "restPose",
-      "takeoffPose"
+      "takeoffPose",
+      "courtship"
     ],
     "missingPoseFrames" : [
 
@@ -1178,6 +1223,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -1424,6 +1481,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -1673,6 +1742,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -1904,6 +1985,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -2152,6 +2245,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -2383,6 +2488,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -2618,6 +2735,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -2849,6 +2978,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -3084,6 +3225,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3315,6 +3468,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -3550,6 +3715,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3783,6 +3960,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4010,6 +4199,18 @@
 
         ],
         "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4257,6 +4458,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4490,6 +4703,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4714,6 +4939,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -4964,6 +5201,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -5197,6 +5446,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -5423,6 +5684,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -5672,6 +5945,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -5903,6 +6188,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -6138,6 +6435,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -6369,6 +6678,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -6604,6 +6925,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -6837,6 +7170,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7066,6 +7411,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -7302,6 +7659,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7533,6 +7902,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -7768,6 +8149,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7999,6 +8392,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -8234,6 +8639,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -8465,6 +8882,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -8700,6 +9129,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -8931,6 +9372,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -9179,6 +9632,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -9410,6 +9875,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -9645,6 +10122,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -9876,6 +10365,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -10111,6 +10612,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -10342,6 +10855,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }
@@ -10577,6 +11102,18 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -10808,6 +11345,18 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "courtshipDisplay",
+        "missingFrames" : [
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "courtRaise"
         ],
         "productAllowed" : false
       }

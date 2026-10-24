@@ -26,6 +26,11 @@ enum AppLanguage: String {
     var leafCarrySupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.leafCarry)+text("。",".")}
     var insectCatchSupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.insectCatch)+text("。",".")}
     var visitorGiftSupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.visitorGift)+text("。",".")}
+    var courtshipSupport:String {text("支持鸟种：","Supported species: ")+supportedSpeciesNames(for:.courtshipDisplay)+text("。",".")}
+    var courtshipRequirement:String {
+        text("请让两只已有","Let two existing ")+supportedSpeciesNames(for:.courtshipDisplay)+text("居民在同一普通顶部边缘或地面停稳，安静至少10秒，并把鼠标移远。",
+            " residents settle on the same normal top or ground edge for at least 10 calm seconds; move the pointer away.")
+    }
     func giftAuthorizationMessage(_ reason:GiftAuthorizationDenial)->String {
         switch reason {
         case .invalidRequest:return text("礼物授权信息已失效，请重新预览；不会复用旧授权。","Gift authorization is no longer valid. Try again; old authorizations are never reused.")

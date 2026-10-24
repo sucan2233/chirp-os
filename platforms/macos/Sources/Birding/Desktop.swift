@@ -124,6 +124,7 @@ final class DesktopController: NSObject {
         set {engine.applySettings(newValue);reconcileGiftAuthorization()}
     }
     var catalog: SpeciesCatalog { settings.catalog }
+    var isolatedSession=false
     var preferences = UserDefaults.standard
     var isDevelopmentBuild:Bool {Bundle.main.object(forInfoDictionaryKey:"ChirpOSDevelopmentBuild") as? Bool == true}
     var language = AppLanguage.chinese
@@ -217,6 +218,8 @@ final class DesktopController: NSObject {
         get {engine.paused}
         set {if newValue {cancelGiftAuthorization()};engine.handle(.pause(newValue))}
     }
+    /// Read-only telemetry after the ordinary production tick; never drives simulation.
+    var tickObserver:((Double,Double)->Void)?
     var timer: Timer?
     var lastTick = ProcessInfo.processInfo.systemUptime
     var lastSample: Double = 0
@@ -240,20 +243,20 @@ final class DesktopController: NSObject {
     func start() {
         // Keep existing local preferences when first switching to the isolated
         // development bundle identity. Species settings already share one file.
-        if isDevelopmentBuild,let previous=preferences.persistentDomain(forName:"dev.birding.desktop") {
+        if !isolatedSession,isDevelopmentBuild,let previous=preferences.persistentDomain(forName:"dev.birding.desktop") {
             for key in ["appLanguage","populationLower","populationUpper"] where preferences.object(forKey:key) == nil {
                 if let value=previous[key] {preferences.set(value,forKey:key)}
             }
         }
         language = AppLanguage(rawValue:preferences.string(forKey:"appLanguage") ?? "zh") ?? .chinese
-        if let saved = PopulationRange(lower: UserDefaults.standard.integer(forKey:"populationLower"), upper: UserDefaults.standard.integer(forKey:"populationUpper")) {
+        if let saved = PopulationRange(lower: preferences.integer(forKey:"populationLower"), upper: preferences.integer(forKey:"populationUpper")) {
             population = Population(range:saved)
         }
         do { try loadSpeciesConfig() } catch { NSLog("Birding species configuration: %@; using bundled defaults",error.localizedDescription) }
         loadVisitorMemory()
         loadObservationJournal()
         makeMenu(); rebuildScreens(); startMouseMonitoring()
-        if !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {DispatchQueue.main.async { [weak self] in self?.promptNewSpecies() }}
+        if !isolatedSession && !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {DispatchQueue.main.async { [weak self] in self?.promptNewSpecies() }}
         sampleWindows(dt: 1.0/30)
         NotificationCenter.default.addObserver(self, selector: #selector(rebuildScreens), name: NSApplication.didChangeScreenParametersNotification, object: nil)
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(spaceChanged), name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
@@ -338,7 +341,9 @@ final class DesktopController: NSObject {
     }
     func tick() {
         let now = ProcessInfo.processInfo.systemUptime
-        let dt = min(0.05, max(0,now-lastTick)); lastTick = now
+        let rawDT=max(0,now-lastTick)
+        let dt = min(0.05, rawDT); lastTick = now
+        defer {tickObserver?(now,rawDT)}
         if now-lastSample >= 1.0/30 {
             sampleWindows(dt: lastSample>0 ? now-lastSample:1); lastSample = now
         }
@@ -478,8 +483,8 @@ final class DesktopController: NSObject {
     }
     func applyPopulationRange(_ range: PopulationRange) {
         population.setRange(range)
-        UserDefaults.standard.set(range.lower,forKey:"populationLower")
-        UserDefaults.standard.set(range.upper,forKey:"populationUpper")
+        preferences.set(range.lower,forKey:"populationLower")
+        preferences.set(range.upper,forKey:"populationUpper")
         refreshPopulationMenu()
     }
     @objc func selectPopulation(_ sender: NSMenuItem) { applyPopulationRange(populationPresets[sender.tag]) }
@@ -512,5 +517,8 @@ final class DesktopController: NSObject {
         let root = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
         NSWorkspace.shared.open(root.appendingPathComponent("README.md"))
     }
-    @objc func quit() { cancelGiftAuthorization();engine.handle(.cancelAmbient(.shutdown));stopMouseMonitoring();NSApp.terminate(nil) }
+    @objc func quit() {
+        if isolatedSession {NSApp.terminate(nil);return}
+        cancelGiftAuthorization();engine.handle(.cancelAmbient(.shutdown));stopMouseMonitoring();NSApp.terminate(nil)
+    }
 }

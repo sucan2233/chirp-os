@@ -8,7 +8,7 @@ final class VisitorGiftRecordingTests:XCTestCase {
         let root=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let log=try BehaviorInputLog.load(from:root.appendingPathComponent("shared/behavior-fixtures/v1/visitor-gift.json"))
-        XCTAssertEqual(log.simulationVersion,16);XCTAssertNil(log.expected)
+        XCTAssertEqual(log.simulationVersion,17);XCTAssertNil(log.expected)
         XCTAssertEqual(log.initialVisitorMemory?.seed,"73")
         XCTAssertEqual(log.initialVisitorMemory?.profiles.first?.visits,2)
         func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
@@ -106,7 +106,7 @@ final class VisitorGiftRecordingTests:XCTestCase {
         XCTAssertEqual(e.activeGiftAuthorizationCount,0);XCTAssertNil(e.giftAuthorizationRequest)
         XCTAssertTrue(e.carriedObjectSnapshot().isEmpty);XCTAssertTrue(e.runtime.giftReceiverReservations.isEmpty)
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(log.simulationVersion,16);XCTAssertNotNil(log.expected);XCTAssertNil(log.failure)
+        XCTAssertEqual(log.simulationVersion,17);XCTAssertNotNil(log.expected);XCTAssertNil(log.failure)
         XCTAssertNil(log.initialVisitorMemory,"Production bootstrapping is an actual visitorMemory input")
         XCTAssertEqual(log.inputs.filter{$0.kind=="visitorMemory"}.count,1)
         XCTAssertEqual(log.inputs.filter{$0.kind=="giftAuthorization"}.count,4)

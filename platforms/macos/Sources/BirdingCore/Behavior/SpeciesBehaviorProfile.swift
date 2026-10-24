@@ -5,7 +5,7 @@ import Foundation
 /// candidate sorting and random streams.
 public struct SpeciesBehaviorProfile {
     public let species:SpeciesID
-    public static let dedicatedKinds:[BehaviorKind] = [.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,.visitorGift]
+    public static let dedicatedKinds:[BehaviorKind] = [.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,.visitorGift,.courtshipDisplay]
     private static let permissions:[BehaviorKind:[SpeciesID]] = [
         .edgePeek:[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel,.lightVentedBulbul,.magpieRobin],
         .chase:[.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,.azureWingedMagpie,.blackCollaredStarling,.redWhiskeredBulbul],
@@ -16,7 +16,8 @@ public struct SpeciesBehaviorProfile {
         .bathVisit:[.treeSparrow,.lightVentedBulbul],
         .leafCarry:[.treeSparrow],
         .insectCatch:[.barnSwallow,.yellowRumpedFlycatcher],
-        .visitorGift:[.azureWingedMagpie]
+        .visitorGift:[.azureWingedMagpie],
+        .courtshipDisplay:[.spottedDove]
     ]
     public static let ambientFlockSpecies:[SpeciesID] = [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,
         .lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]
@@ -24,6 +25,7 @@ public struct SpeciesBehaviorProfile {
         .lightVentedBulbul,.redWhiskeredBulbul,.chineseBlackbird,.magpieRobin,.swinhoesWhiteEye,
         .azureWingedMagpie,.redBilledLeiothrix,.littleOwl]
     public static let catchFrameNames=["catchOpen","catchClose","catchRecover"]
+    public static let courtshipFrameNames=["courtRaise","courtBow0","courtBow1","courtBowRecover","courtObserve"]
     public static let carryFrameNames=["carryLook","carryLower","carryGrip","carryPlace"]
     public static let bathFrameNames=BathGeometry.frameNames
     public static let peekSpecies:[SpeciesID] = [.lightVentedBulbul,.magpieRobin]

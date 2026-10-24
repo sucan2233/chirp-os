@@ -214,7 +214,8 @@ final class PerchActivityPlanner {
         let duration=BehaviorDefinitions.definition(for:kind).cooldown
         guard duration>0 else {return}
         // Social opportunities share one recovery period across all variants.
-        let kinds:[BehaviorKind]=kind.isSocial ? [.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase,.travelTogether,.allopreening]:[kind]
+        let kinds:[BehaviorKind]=kind == .courtshipDisplay ? [kind]:
+            (kind.isSocial ? [.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase,.travelTogether,.allopreening]:[kind])
         for cooled in kinds {rhythm.cooldowns[cooled]=max(duration,rhythm.cooldowns[cooled] ?? 0)}
     }
     func plan(_ kind:PerchActionKind,for id:BirdID) -> PerchActionPlan? {

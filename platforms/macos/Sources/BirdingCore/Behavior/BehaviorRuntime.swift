@@ -167,6 +167,7 @@ final class BehaviorRuntime {
                 engine.poseMixer.release(pose,for:bird,bird:model)
             }
         }
+        if run.execution.kind == .courtshipDisplay {engine.scheduler.didFinishCourtship()}
         engine.releaseGiftAuthorization(run:id)
         runs.removeValue(forKey:id)
         for bird in run.execution.participants where owners[bird]==id {owners.removeValue(forKey:bird)}

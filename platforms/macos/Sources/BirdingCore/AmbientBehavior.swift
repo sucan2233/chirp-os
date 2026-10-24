@@ -12,7 +12,7 @@ public enum AmbientFrequency: String, Codable, CaseIterable {
     }
 }
 
-public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID), leafCarry(ScenePropID), insectCatch, visitorGift }
+public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID), leafCarry(ScenePropID), insectCatch, visitorGift, courtshipDisplay }
 
 /// One simulation clock for encounters. Missed opportunities are discarded,
 /// so busy periods, sleep and pause never build up a queue of animations.
@@ -25,6 +25,9 @@ public struct AmbientScheduler {
     public private(set) var insectCooldownRemaining=0.0
     public var canAttemptInsectCatch:Bool {insectCooldownRemaining<=0 && userInputRemaining<=0}
     public mutating func didFinishInsectCatch() {insectCooldownRemaining=max(insectCooldownRemaining,90)}
+    public private(set) var courtshipCooldownRemaining=0.0
+    public var canAttemptCourtship:Bool {courtshipCooldownRemaining<=0 && userInputRemaining<=0}
+    public mutating func didFinishCourtship() {courtshipCooldownRemaining=max(courtshipCooldownRemaining,300)}
     private var pointerAnchor: CGPoint?
     private var frequency:AmbientFrequency = .low
     private var sceneRandomState:UInt64
@@ -72,7 +75,7 @@ public struct AmbientScheduler {
     }
     public mutating func tick(_ dt: Double, pointer: CGPoint, buttonsDown: Bool,
                               pointerEnabled: Bool, flockEnabled: Bool, socialEnabled: Bool = false, leafEnabled: Bool = false,
-                              insectEnabled:Bool=false,giftEnabled:Bool=false,
+                              insectEnabled:Bool=false,giftEnabled:Bool=false,courtshipEnabled:Bool=false,
                               frequency: AmbientFrequency, busy: Bool, cadenceRate:Double=1, leafRandom: (() -> Double)? = nil,
                               random: () -> Double = { Double.random(in: 0..<1) }) -> AmbientEvent? {
         let step = min(0.1, max(0, dt))
@@ -80,6 +83,7 @@ public struct AmbientScheduler {
         sceneCooldownRemaining=max(0,sceneCooldownRemaining-step)
         userInputRemaining=max(0,userInputRemaining-step)
         insectCooldownRemaining=max(0,insectCooldownRemaining-step)
+        courtshipCooldownRemaining=max(0,courtshipCooldownRemaining-step)
         if buttonsDown {suppress(reason:.userInput)}
         if buttonsDown || pointerAnchor == nil || Geometry.distance(pointer, pointerAnchor!) > 6 {
             pointerAnchor = pointer; stationaryTime = 0
@@ -107,8 +111,7 @@ public struct AmbientScheduler {
         } else {
             let daily=sceneUnit()
             if daily<0.08 {return insectEnabled && canAttemptInsectCatch ? .insectCatch:nil}
-            // Courtship remains empty until its own delivery stage.
-            if daily<0.12 {return nil}
+            if daily<0.12 {return courtshipEnabled && socialEnabled && canAttemptCourtship ? .courtshipDisplay:nil}
             if daily<0.13 {return giftEnabled ? .visitorGift:nil}
         }
         // Reserve a small share of existing opportunities, never a second timer.

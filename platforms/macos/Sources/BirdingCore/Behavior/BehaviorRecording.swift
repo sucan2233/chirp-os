@@ -96,6 +96,7 @@ public struct RecordedCommand:Codable {
         case .cancelCarryLeafPlacement:name="cancelCarryLeafPlacement"
         case .removeCarryLeaf:name="removeCarryLeaf"
         case .leafCarry(let value):name="leafCarry";source=value.rawValue
+        case .courtshipDisplay(let value):name="courtshipDisplay";source=value.rawValue
         case .visitorGift(let value):name="visitorGift";source=value.rawValue
         case .cancelVisitorGiftRequest:name="cancelVisitorGiftRequest"
         case .clearVisitorGift:name="clearVisitorGift"
@@ -151,6 +152,7 @@ public struct RecordedCommand:Codable {
         case "cancelCarryLeafPlacement":return .cancelCarryLeafPlacement
         case "removeCarryLeaf":return .removeCarryLeaf
         case "leafCarry":return .leafCarry(try origin())
+        case "courtshipDisplay":return .courtshipDisplay(try origin())
         case "visitorGift":return .visitorGift(try origin())
         case "cancelVisitorGiftRequest":return .cancelVisitorGiftRequest
         case "clearVisitorGift":return .clearVisitorGift
@@ -344,6 +346,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
     public var hasInsectCatchPreview:Bool?
     public var insectPreviewRemaining:Double?
     public var insectPreviewSpecies:String?
+    public var courtshipCooldownRemaining:Double?
     public var insectCooldownRemaining:Double?
     public var hasCarryLeafPlacement:Bool?
     public var carriedObjects:[RecordedCarriedObjectState]?
@@ -371,6 +374,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
         lastInsectContact=engine.lastInsectContact.map(RecordedInsectContact.init)
         insectMissedTargetCount=engine.insectMissedTargetCount;hasInsectCatchPreview=engine.hasInsectCatchPreview
         insectPreviewRemaining=engine.insectPreviewRemaining;insectPreviewSpecies=engine.insectPreviewSpecies?.rawValue
+        courtshipCooldownRemaining=engine.scheduler.courtshipCooldownRemaining>0 ? engine.scheduler.courtshipCooldownRemaining:nil
         insectCooldownRemaining=engine.scheduler.insectCooldownRemaining
         if let focus=engine.sceneFocus {
             switch focus.target {
@@ -399,7 +403,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=16,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=17,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

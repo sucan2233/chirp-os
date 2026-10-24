@@ -2,7 +2,7 @@ import XCTest
 @testable import BirdingCore
 
 final class SpeciesBehaviorProfileTests:XCTestCase {
-    // Literal M6g authorization, independent of the implementation. Existing
+    // Literal M7a authorization, independent of the implementation. Existing
     // entries retain their relative order; only the approved species are added.
     private let dedicated:[(BehaviorKind,[SpeciesID])] = [
         (.edgePeek,[.treeSparrow,.chineseBlackbird,.hoopoe,.whimbrel,.lightVentedBulbul,.magpieRobin]),
@@ -14,7 +14,8 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         (.bathVisit,[.treeSparrow,.lightVentedBulbul]),
         (.leafCarry,[.treeSparrow]),
         (.insectCatch,[.barnSwallow,.yellowRumpedFlycatcher]),
-        (.visitorGift,[.azureWingedMagpie])
+        (.visitorGift,[.azureWingedMagpie]),
+        (.courtshipDisplay,[.spottedDove])
     ]
     private let flock:[SpeciesID] = [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,
         .lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]
@@ -129,7 +130,7 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
             "allopreenReceive0","allopreenReceive1","allopreenReceive2"]
         let bathFrames:Set<String>=["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise","shake"]
         let carryFrames:Set<String>=["carryLook","carryLower","carryGrip","carryPlace"]
-        let allFrames=commonFrames.union(contactFrames).union(poseFrames).union(peekFrames).union(bathFrames).union(carryFrames).union(["catchOpen","catchClose","catchRecover"])
+        let allFrames=commonFrames.union(contactFrames).union(poseFrames).union(peekFrames).union(bathFrames).union(carryFrames).union(["catchOpen","catchClose","catchRecover","courtRaise","courtBow0","courtBow1","courtBowRecover","courtObserve"])
         for species in SpeciesID.allCases {
             let audit=SpeciesSupportAudit(species:species,availableFrames:allFrames)
             XCTAssertEqual(audit.species,species)
