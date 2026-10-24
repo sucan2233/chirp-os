@@ -48,6 +48,7 @@ final class SceneEncounterTests:XCTestCase {
         let run=try started(e.handle(.bathVisit(.preview)))
         XCTAssertEqual(bird.position,before)
         let commands:[EngineCommand]=[.foodTrayVisit(.preview),.fixedPerchVisit(.preview),.bathVisit(.preview),.leafCarry(.preview),
+            .insectCatch(species:.barnSwallow,source:.preview),
             .flockPass(.preview),.pointerVisit(.preview),.chase(.preview),.travelTogether(.preview),
             .socialGreeting(.preview),.allopreening(.preview),.leafPlay(at:CGPoint(x:1400,y:500),source:.preview)]
         for command in commands {
@@ -55,8 +56,8 @@ final class SceneEncounterTests:XCTestCase {
             XCTAssertEqual(e.activeRunCount,1);XCTAssertEqual(e.leasedBirdCount,1)
             XCTAssertEqual(e.habitatReservationCount,1);XCTAssertEqual(e.reservedLandingCount,2)
         }
-        for kind:BehaviorKind in [.foodTrayVisit,.fixedPerchVisit,.bathVisit,.flockPass,.leafCarry] {
-            let probe=LeaseProbe(kind,encounter:kind == .bathVisit || kind == .flockPass || kind == .leafCarry)
+        for kind:BehaviorKind in [.foodTrayVisit,.fixedPerchVisit,.bathVisit,.flockPass,.leafCarry,.insectCatch] {
+            let probe=LeaseProbe(kind,encounter:kind == .bathVisit || kind == .flockPass || kind == .leafCarry || kind == .insectCatch)
             XCTAssertEqual(e.runtime.start(probe,source:.preview,in:e),.rejected(.busy))
         }
         e.runtime.cancel(run,reason:.sleep,in:e)
@@ -72,9 +73,10 @@ final class SceneEncounterTests:XCTestCase {
             XCTAssertEqual(bird.position,origin);XCTAssertFalse(e.ambientBusy)
             XCTAssertEqual(e.handle(.bathVisit(.preview)),.rejected(.busy))
             XCTAssertEqual(e.handle(.leafCarry(.preview)),.rejected(.busy))
+            XCTAssertEqual(e.handle(.insectCatch(species:.barnSwallow,source:.preview)),.rejected(.busy))
             // This bypasses public eligibility deliberately to prove runtime
             // ownership protects the old entry even from an independent actor.
-            for kind:BehaviorKind in [.bathVisit,.flockPass,.leafPlay,.leafCarry] {
+            for kind:BehaviorKind in [.bathVisit,.flockPass,.leafPlay,.leafCarry,.insectCatch] {
                 XCTAssertEqual(e.runtime.start(LeaseProbe(kind,encounter:true),source:.preview,in:e),.rejected(.busy))
             }
             XCTAssertEqual(e.activeRunCount,1)

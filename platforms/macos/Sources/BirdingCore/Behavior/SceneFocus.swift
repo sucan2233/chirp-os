@@ -16,6 +16,7 @@ public enum AmbientSuppressionReason {case interaction,userInput}
 public enum SceneRandomSalt {
     public static let scheduler:UInt64=0x5343454E45464F43
     public static let bath:UInt64=0x4241544856495349
+    public static let insectCatch:UInt64=0x494E534543544354
     public static let leafCarry:UInt64=0x4C45414643415252
 }
 

@@ -14,6 +14,7 @@ extension DesktopController {
         world.foodTrayArtAvailable=HabitatObjectRenderer.foodTrayArtAvailable
         world.bathArtAvailable=HabitatObjectRenderer.bathArtAvailable
         world.leafCarryArtAvailable=ScenePropRenderer.leafCarryArtAvailable
+        world.insectArtAvailable=ScenePropRenderer.insectArtAvailable
         engine.updateWorld(world,sampleDT:sampleDT)
     }
     func renderSnapshot() -> [BirdRenderState] {syncWorld();return engine.renderSnapshot()}
@@ -28,7 +29,19 @@ extension DesktopController {
     }
     func consumeBehaviorEvents() {
         for event in engine.events where event.sequence>lastBehaviorEvent {
-            if event.type == .previewResult {
+            if event.kind == .insectCatch,event.source == .preview {
+                switch event.type {
+                case .previewResult:
+                    settingsWindow?.message.stringValue=event.reason.map {settingsWindow?.insectCatchMessage($0) ?? behaviorMessage($0)} ??
+                        t("家燕捕虫预览已开始，将在真实接触后恢复原飞行目标。","Barn Swallow catch preview started; recovery follows real contact.")
+                case .completed:
+                    settingsWindow?.message.stringValue=t("家燕已捕获昆虫并安全恢复飞行，预览单独计数。","The Barn Swallow caught the insect and recovered safely; the preview is counted separately.")
+                case .failed,.cancelled:
+                    if let reason=event.reason {settingsWindow?.message.stringValue=settingsWindow?.insectCatchMessage(reason) ?? behaviorMessage(reason)}
+                default:break
+                }
+                settingsWindow?.refreshInsectCatchControls();settingsWindow?.refreshBathControls()
+            } else if event.type == .previewResult {
                 if event.kind == .foodTrayVisit {
                     settingsWindow?.message.stringValue=event.reason.map {reason in
                         settingsWindow?.foodTrayMessage(reason,placing:true) ?? behaviorMessage(reason)

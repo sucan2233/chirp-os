@@ -50,6 +50,7 @@ final class BirdArt {
                                    "allopreenReceive0","allopreenReceive1","allopreenReceive2"]
     static let feedingNames = ["feedLook","feedDown0","feedDown1","feedLift"]
     static let poseNames = PoseClip.frameNames
+    static let catchNames = SpeciesBehaviorProfile.catchFrameNames
     static let carryNames = SpeciesBehaviorProfile.carryFrameNames
     static let bathNames = SpeciesBehaviorProfile.bathFrameNames
     static let peekNames = SpeciesBehaviorProfile.peekFrameNames
@@ -59,7 +60,8 @@ final class BirdArt {
             SpeciesBehaviorProfile.profile(for:species).poseFrameNames +
             (SpeciesBehaviorProfile.peekSpecies.contains(species) ? peekNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.bathVisit) ? bathNames : []) +
-            (SpeciesBehaviorProfile.profile(for:species).allows(.leafCarry) ? carryNames : [])
+            (SpeciesBehaviorProfile.profile(for:species).allows(.leafCarry) ? carryNames : []) +
+            (SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch) ? catchNames : [])
     }
     let frames: [String: CGImage]
     let species: SpeciesID

@@ -17,6 +17,14 @@ extension BirdArt {
             if let bath=PoseClip.bath(species:species) {tracks.append(bath)}
             if let pickup=PoseClip.leafCarryPickup(species:species),let place=PoseClip.leafCarryPlace(species:species),
                let carry=PoseClip(id:"\(species.rawValue).leafCarry.preview",frames:pickup.frames+place.frames) {tracks.append(carry)}
+            if let recovery=PoseClip.insectCatchRecovery(species:species),
+               let clip=PoseClip(id:"\(species.rawValue).insectCatch.preview",
+                    frames:[PoseClip.Frame(name:"catchOpen",duration:0.24,
+                        beak:PoseClip.beakAnchor(species:species,frame:"catchOpen"))]+recovery.frames) {
+                // The .24s open hold illustrates art only; production contact
+                // is decided by the core's continuous interception sweep.
+                tracks.append(clip)
+            }
             for scale:CGFloat in [0.5,1,2] {for right in [true,false] {
                 let size=scale*bird.relativeScale,cell=max(140,Int(ceil(48*size))+32)
                 let width=cell*tracks.count,height=cell+42

@@ -38,6 +38,7 @@ for bird in ('lightVentedBulbul', 'magpieRobin'):
 for bird in ('treeSparrow', 'lightVentedBulbul'):
     expected_extras[bird] += ['bathInspect', 'bathTouch', 'bathLower', 'bath0', 'bath1', 'bath2', 'bathRise']
 expected_extras['treeSparrow'] += ['carryLook', 'carryLower', 'carryGrip', 'carryPlace']
+expected_extras['barnSwallow'] += ['catchOpen', 'catchClose', 'catchRecover']
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
     assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'
@@ -48,6 +49,14 @@ for row in support:
     assert not row['missingPoseFrames'], f"Incomplete enhanced pose pack: {row['species']}"
     assert set(row['poseFrames']).issubset(specific.get(row['species'], frames)), 'Support audit differs from atlas'
 
+prop_manifest = json.loads((ROOT / 'shared/art/props/manifest.json').read_text())
+insect = prop_manifest.get('insect', {})
+assert insect.get('files') == [f'insect{i}.png' for i in range(4)], 'Missing four insect phases'
+assert insect.get('logicalSize') == [16, 16] and insect.get('anchor') == [8, 8], 'Insect pivot/size differs from core'
+assert insect.get('collisionRadius') == 3 and insect.get('scale') == 'worldScale', 'Insect collision/scale differs'
+assert abs(insect.get('frameDuration', 0) - 1 / 12) < 1e-12, 'Insect phase timing differs'
+assert insect.get('lifetime') == 12 and insect.get('maximumInstances') == 1, 'Insect lifetime/capacity differs'
+assert all((ROOT / 'shared/art/props' / name).is_file() for name in insect['files'])
 assert all((ROOT / 'shared/art' / f'{id}.png').is_file() for id in ids)
 print(f'PASS: {len(ids)} matching species schedules and {len(frames)} shared frame names')
 

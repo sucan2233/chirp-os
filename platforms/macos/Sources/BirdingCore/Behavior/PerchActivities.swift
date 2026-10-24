@@ -175,12 +175,12 @@ final class PerchActivityPlanner {
         if kind == .alert {
             return rhythm.disturbance>=0.2 ? (1.2-traits.boldness)*(0.8+0.4*traits.activity):0
         }
-        if rhythm.disturbance>=0.35 && (kind == .rest || kind == .preen || kind.isSocial || kind == .leafPlay || kind == .watch || kind == .edgePeek || kind == .fixedPerchVisit || kind == .foodTrayVisit || kind == .bathVisit || kind == .leafCarry) {return 0}
+        if rhythm.disturbance>=0.35 && (kind == .rest || kind == .preen || kind.isSocial || kind == .leafPlay || kind == .watch || kind == .edgePeek || kind == .fixedPerchVisit || kind == .foodTrayVisit || kind == .bathVisit || kind == .leafCarry || kind == .insectCatch) {return 0}
         if kind.isSocial {return (0.4+1.2*traits.sociability)*(0.8+0.4*traits.boldness)}
         switch kind {
         case .rest:return 1.2-0.4*traits.activity
         case .preen:return (0.6+0.8*traits.boldness)*(0.9+0.2*traits.curiosity)
-        case .leafPlay,.leafCarry:return (0.3+1.4*traits.curiosity)*(0.6+0.8*traits.activity)*(0.7+0.6*traits.boldness)
+        case .leafPlay,.leafCarry,.insectCatch:return (0.3+1.4*traits.curiosity)*(0.6+0.8*traits.activity)*(0.7+0.6*traits.boldness)
         case .watch:return (0.4+1.2*traits.curiosity)*(1+0.2*rhythm.familiarity)
         case .fixedPerchVisit,.foodTrayVisit,.bathVisit:return (0.5+traits.curiosity)*(0.7+0.6*traits.boldness)*(1+0.2*rhythm.familiarity)
         case .edgePeek:return (0.3+traits.curiosity)*(0.7+0.6*traits.boldness)

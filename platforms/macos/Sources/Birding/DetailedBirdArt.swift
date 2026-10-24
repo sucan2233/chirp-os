@@ -74,7 +74,9 @@ enum DetailedBirdArt {
         case .azureWingedMagpie: return Shape(width: 17, height: 11, headWidth: 7.5, headHeight: 7, headY: 15, tailX: 2, tailY: 44)
         case .largeBilledCrow: return Shape(width: 22, height: 15, headWidth: 10, headHeight: 8, headY: 12, tailX: 8, tailY: 41)
         case .hoopoe: return Shape(width: 19, height: 11, headWidth: 7, headHeight: 6, headY: 15, tailX: 7, tailY: 39)
-        case .barnSwallow: return Shape(width: 18, height: 9, headWidth: 7, headHeight: 6, headY: 17, tailX: 2, tailY: 43)
+        case .barnSwallow: return Shape(width: 18, height: 9,
+            headWidth: CatchArtGeometry.swallowHeadWidth, headHeight: CatchArtGeometry.swallowHeadHeight,
+            headY: CatchArtGeometry.swallowHeadY, tailX: 2, tailY: 43)
         case .mallard: return Shape(width: 26, height: 12, headWidth: 8, headHeight: 8, headY: 18, tailX: 10, tailY: 32)
         case .asianKoel: return Shape(width: 18, height: 12, headWidth: 7.5, headHeight: 7, headY: 14, tailX: 2, tailY: 44)
         case .swinhoesWhiteEye: return Shape(width: 15, height: 12, headWidth: 8.5, headHeight: 8, headY: 16, tailX: 12, tailY: 39)
@@ -110,6 +112,7 @@ enum DetailedBirdArt {
         }
     }
     static func make(_ frame:String,species id:SpeciesID)->CGImage {
+        if let image=catchImage(frame,species:id) {return image}
         if let image=carryImage(frame,species:id) {return image}
         if let image=bathImage(frame,species:id) {return image}
         // M6b has its own anatomy; no existing stand/idle raster is reused.
@@ -964,6 +967,7 @@ extension DetailedBirdArt {
     /// coordinates. Reflect with x -> 48-x, just like BirdRenderState. A tucked
     /// bill still has an anchor even though scapular feathers cover its tip.
     static func poseBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        if let anchor=catchBillAnchor(frame,species:id) {return anchor}
         if let anchor=carryBillAnchor(frame,species:id) {return anchor}
         if let anchor=transportBillAnchor(frame,species:id) {return anchor}
         if let anchor=bathBillAnchor(frame,species:id) {return anchor}
@@ -987,6 +991,7 @@ extension DetailedBirdArt {
 
     static func poseImage(_ frame:String,species id:SpeciesID,
                           part:FoundationPosePart?=nil)->CGImage? {
+        if let image=catchImage(frame,species:id,part:part) {return image}
         if let image=carryImage(frame,species:id,part:part) {return image}
         if let image=bathImage(frame,species:id,part:part) {return image}
         if let image=m6cPoseImage(frame,species:id,part:part) {return image}
@@ -1825,5 +1830,100 @@ extension DetailedBirdArt {
         c.oval(ex,ey,1,1.1,"eye");c.oval(ex+0.35,ey,0.4,0.4,"white")
         if release {c.line([(x+4,y+6.8),(x+6,y+6.8)],"buff",width:0.55)}
         c.ctx.restoreGState()
+    }
+}
+
+
+// M6f.1: three independent airborne capture drawings. Wings, body carriage,
+// forked tail, head pitch and gape are authored anew; no old image is overpainted.
+extension DetailedBirdArt {
+    static func catchBillAnchor(_ frame:String,species id:SpeciesID)->CGPoint? {
+        CatchArtGeometry.billAnchor(species:id,frame:frame)
+    }
+
+    static func catchImage(_ frame:String,species id:SpeciesID,
+                           part:FoundationPosePart?=nil)->CGImage? {
+        guard let p=CatchArtGeometry.pose(species:id,frame:frame) else {return nil}
+        let density=SpeciesCatalog.standard.profile(id).relativeScale
+        let c=BirdPainter(size:max(48,Int((48*density).rounded())))
+        let b=p.body,x=Double(b.minX),y=Double(b.minY),w=Double(b.width),h=Double(b.height)
+        let open=frame == "catchOpen",recover=frame == "catchRecover"
+        if part == nil || part == .feet {
+            // Airborne claws are tucked rather than extended to a nonexistent
+            // support. The image reference/engine foot remains exactly (29,39).
+            for xx in [26.5,29.0] {
+                c.line([(xx+0.6,26.7),(xx-0.8,28),(xx-1.6,27.8)],"brown",width:0.65)
+                c.line([(xx-0.8,28),(xx-1.5,28.5)],"umber",width:0.5)
+            }
+        }
+        if part == nil || part == .body {
+            catchWing(c,p.farWing,far:true)
+            let tx=Double(p.tail.x),ty=Double(p.tail.y)
+            // Two long, pointed streamers and a deep open fork distinguish the
+            // swallow from the short rounded tails of the carry/bath species.
+            c.poly([(x+5,y+2),(tx,ty-2),(13.2,ty-0.2),(tx+0.7,ty+4.5),
+                    (x+6,y+h-0.3),(x+9,y+4)],"navy",outline:true)
+            c.line([(x+5,y+3),(tx+1,ty-1.3)],"blue",width:0.7)
+            c.line([(x+5,y+h-1),(tx+1.8,ty+3.5)],"blue",width:0.7)
+            c.poly([(12.6,ty-0.2),(9.5,ty-1.4),(11,ty-0.3),(9.8,ty+1.1)],"cream")
+            c.oval(x,y,w,h,"navy",outline:true)
+            c.oval(x+w*0.39,y+1.8,w*0.60,h-2.1,"cream")
+            c.poly([(x+w*0.42,y+1.2),(x+w-0.5,y+1),(x+w-1,y+3.2),
+                    (x+w*0.5,y+4.1)],"white")
+            c.line([(x+3,y+0.8),(x+9,y+0.4),(x+13,y+1.1)],"blue",width:0.9)
+            if recover {c.oval(x+w-4.8,y+1.8,2.8,2.2,"buff")}
+            catchWing(c,p.nearWing,far:false)
+        }
+        if part == nil || part == .headNeck {
+            let nape=p.headPoint(-CatchArtGeometry.swallowHeadWidth*0.34,0.5)
+            let chin=p.headPoint(CatchArtGeometry.swallowHeadWidth*0.28,2.4)
+            c.poly([(x+w*0.62,y+0.8),(nape.x,nape.y),(chin.x,chin.y),
+                    (x+w-1,y+h*0.72)],"cream")
+            c.poly([(x+w*0.62,y+0.8),(nape.x,nape.y),(nape.x+0.8,nape.y+1.2),
+                    (x+w*0.70,y+3)],"navy")
+            c.poly([(chin.x-0.8,chin.y-0.5),(chin.x+0.4,chin.y),
+                    (x+w-0.6,y+3.4),(x+w-3,y+3.8)],"rust")
+            c.line([(x+w-3.6,y+4.4),(x+w-0.7,y+4.0)],"navy",width:0.9)
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.pitch))
+            let hw=CatchArtGeometry.swallowHeadWidth,hh=CatchArtGeometry.swallowHeadHeight
+            c.oval(-hw/2,-hh/2,hw,hh,"navy",outline:true)
+            c.ctx.saveGState();c.ctx.addEllipse(in:CGRect(x:-hw/2,y:-hh/2,width:hw,height:hh));c.ctx.clip()
+            c.line([(-2.5,-1.4),(0,-2.2),(2,-1.7)],"blue",width:0.8)
+            c.poly([(1.1,-2),(3.4,-1.5),(3.7,0.2),(1.7,-0.1)],"rust")
+            c.poly([(-0.2,0.7),(3.5,0.2),(3.8,3.2),(0.3,3.2)],"rust")
+            c.line([(-0.1,2.7),(2.5,2.8)],"navy",width:0.65)
+            c.oval(1.1,-1.05,1.05,1.05,"eye");c.oval(1.45,-1.05,0.4,0.4,"white")
+            if recover {c.line([(0.8,1.5),(2.1,1.3)],"orange",width:0.5)}
+            c.ctx.restoreGState();c.ctx.restoreGState()
+        }
+        if part == nil || part == .bill {
+            c.ctx.saveGState();c.ctx.translateBy(x:p.head.x,y:p.head.y);c.ctx.rotate(by:CGFloat(p.pitch))
+            // Both mandibles are filled paths. The upper tip is exactly the
+            // source anchor, with no centered outline extending beyond it.
+            if open {
+                c.poly([(p.billRoot-0.2,0.6),(p.billRoot+p.billLength-0.1,1.2),
+                        (p.billRoot+p.billLength-0.4,3.4),(p.billRoot-0.3,1.8)],"rust")
+            }
+            c.poly(p.upperBill.map{(Double($0.x),Double($0.y))},"dark")
+            c.poly(p.lowerBill.map{(Double($0.x),Double($0.y))},"dark")
+            if open {c.line([(p.billRoot+0.1,1.1),(p.billRoot+1,1.8)],"orange",width:0.45)}
+            c.ctx.restoreGState()
+        }
+        return c.image
+    }
+
+    private static func catchWing(_ c:BirdPainter,_ vertices:[CGPoint],far:Bool) {
+        let points=vertices.map{(Double($0.x),Double($0.y))}
+        c.poly(points,far ? "dark":"navy",outline:true)
+        // Insets and feather shafts remain convex combinations of original
+        // vertices, so the complete stroke has the same safe canvas margin.
+        let root=CGPoint(x:far ? 29:25,y:24)
+        let inset=vertices.map {v in (Double(root.x+(v.x-root.x)*0.82),Double(root.y+(v.y-root.y)*0.82))}
+        c.poly(inset,far ? "navy":"blue")
+        for tip in vertices.dropFirst().prefix(4) {
+            let start=CGPoint(x:root.x+(tip.x-root.x)*0.30,y:root.y+(tip.y-root.y)*0.30)
+            let end=CGPoint(x:root.x+(tip.x-root.x)*0.88,y:root.y+(tip.y-root.y)*0.88)
+            c.line([(Double(start.x),Double(start.y)),(Double(end.x),Double(end.y))],far ? "slate":"navy",width:0.6)
+        }
     }
 }

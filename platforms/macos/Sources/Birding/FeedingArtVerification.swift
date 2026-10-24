@@ -95,12 +95,16 @@ enum FeedingArtVerification {
             let legacy=BirdArt.names+([SpeciesID.barnSwallow,.swinhoesWhiteEye].contains(id) ? BirdArt.allopreeningNames:[])
             let peek=SpeciesBehaviorProfile.peekSpecies.contains(id) ? BirdArt.peekNames:[]
             let prior=legacy+(species.contains(id) ? names:[])+SpeciesBehaviorProfile.profile(for:id).poseFrameNames+peek
-            // M6d appends only these authored frames for these two species;
-            // every pre-bath index, including feeding, must remain unchanged.
+            // Later authored packs append after feeding and enhanced poses;
+            // every earlier index must remain unchanged, including pre-catch.
             let bath=[SpeciesID.treeSparrow,.lightVentedBulbul].contains(id)
                 ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]
+            let carry=id == .treeSparrow ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]
+            let preCatch=prior+bath+carry
+            let catchFrames=id == .barnSwallow ? ["catchOpen","catchClose","catchRecover"]:[]
             let actual=BirdArt.names(for:id)
-            manifestOK = manifestOK && BirdArt.names.count==34 && actual==prior+bath+(id == .treeSparrow ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]) &&
+            manifestOK = manifestOK && BirdArt.names.count==34 && actual==preCatch+catchFrames &&
+                Array(actual.prefix(preCatch.count))==preCatch &&
                 Array(actual.prefix(prior.count))==prior &&
                 Array(actual.prefix(legacy.count))==legacy && Set(actual).count==actual.count
             supportedOnly = supportedOnly && Set(actual).intersection(names)==(species.contains(id) ? Set(names):Set<String>())

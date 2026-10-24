@@ -7,7 +7,7 @@ final class ObservationJournalTests:XCTestCase {
     private let date=Date(timeIntervalSince1970:1_790_000_000)
     private let kinds:[BehaviorKind]=[.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,.sideBySide,.giveWay,
         .pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,
-        .allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry]
+        .allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch]
 
     private func fixture(seed:UInt64=73,species:[SpeciesID]=[.treeSparrow]) -> BehaviorEngine {
         let engine=BehaviorEngine(seed:seed)

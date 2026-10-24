@@ -1,7 +1,8 @@
 import AppKit
 import BirdingCore
 
-/// M6a/b historical coverage plus M6c. The caller owns CLI registration/execution.
+/// M6a/b historical coverage, M6c, and M6f.1 catch/insect source art.
+/// The caller owns CLI registration/execution.
 /// Uses installed fixture birds, isolated defaults and production commands/layers;
 /// never starts DesktopController, loads preferences, schedules timers or saves settings.
 enum M6ContentVerification {
@@ -23,10 +24,11 @@ enum M6ContentVerification {
         var evidence=[[String:Any]](),allPosePixels=Set<Data>(),historicalPixels=Set<Data>(),peekPixels=Set<Data>()
         defer {
             let own=checks.filter{$0.key.hasPrefix("m6")}
-            saveJSON(["scope":"M6a/M6b historical checks retained; M6c twelve-species poses and two-species edge peeking",
+            saveJSON(["scope":"M6a/M6b historical checks retained; M6c twelve-species poses and two-species edge peeking; M6f.1 authored catch/insect art",
                       "historicalScope":["poseSpecies":m6bSpecies.map(\.rawValue),"independentPoseFrames":40,"commonFrames":34],
                       "currentScope":["poseSpecies":species.map(\.rawValue),"independentPoseFrames":120,
-                                      "peekSpecies":peekSpecies.map(\.rawValue),"peekFrames":6],
+                                      "peekSpecies":peekSpecies.map(\.rawValue),"peekFrames":6,
+                                      "catchSpecies":[SpeciesID.barnSwallow.rawValue],"catchFrames":3,"insectFrames":4],
                       "wingBoundaryScope":["enforcedPoseSpecies":m6cSpecies.map(\.rawValue),"poseFrames":80,
                                            "enforcedPeekSpecies":peekSpecies.map(\.rawValue),"peekFrames":6,
                                            "diagnosticOnlySpecies":m6bSpecies.map(\.rawValue),"diagnosticOnlyFrames":40],
@@ -35,6 +37,7 @@ enum M6ContentVerification {
                      to:output.appendingPathComponent("report.json"))
         }
         checkPermissions(into:&checks)
+        try checkCatchArt(into:&checks,evidence:&evidence,folder:output)
         let fixture=try Fixture(folder:output)
         defer {fixture.close()}
         try checkSettings(fixture,into:&checks,folder:output)
@@ -117,7 +120,7 @@ enum M6ContentVerification {
             let extra=species.contains(id) ? names:[]
             let peek=peekSpecies.contains(id) ? peekNames:[]
             let profile=SpeciesBehaviorProfile.profile(for:id)
-            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=BirdArt.names(for:id)==old+extra+peek+([SpeciesID.treeSparrow,.lightVentedBulbul].contains(id) ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]) + (id == .treeSparrow ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]) &&
+            checks["m6ManifestAppendsWithoutReordering-"+id.rawValue]=BirdArt.names(for:id)==old+extra+peek+([SpeciesID.treeSparrow,.lightVentedBulbul].contains(id) ? ["bathInspect","bathTouch","bathLower","bath0","bath1","bath2","bathRise"]:[]) + (id == .treeSparrow ? ["carryLook","carryLower","carryGrip","carryPlace"]:[]) + (id == .barnSwallow ? CatchArtGeometry.frameNames:[]) &&
                 SpeciesBehaviorProfile.profile(for:id).poseFrameNames==extra
             checks["m6cPeekRequiredFrames-"+id.rawValue]=Set(profile.requiredFrames(for:.edgePeek)) ==
                 BehaviorDefinitions.definition(for:.edgePeek).requiredFrames.union(peek)
@@ -222,6 +225,73 @@ enum M6ContentVerification {
         // contacting frame as a pass or changing its frozen source pixels.
         if wingBoundaryEnforced {checks[prefix+"WingsAndUpperBodyDoNotTouchCanvasBoundary"]=wings}
         try contactSheet(art,frameNames:frameNames,parts:parts,to:folder.appendingPathComponent(art.species.rawValue+(peeking ? "-peek":"")+"-contact-sheet.png"))
+    }
+
+    /// Authored-source and production-atlas checks only. Contact timing,
+    /// actual journeys and cancellation remain in the dedicated platform suite.
+    private static func checkCatchArt(into checks:inout [String:Bool],evidence:inout [[String:Any]],folder:URL) throws {
+        let art=BirdArt(species:.barnSwallow),names=CatchArtGeometry.frameNames
+        let legacy=try BirdArt.names(for:.barnSwallow).filter{!names.contains($0)}.map {try Raster(art.frames[$0]!).pixels}
+        var unique=Set<Data>(),parts=[[CGImage]]()
+        checks["m6f1CatchPermissionOnlyBarnSwallow"]=SpeciesBehaviorProfile.species(for:.insectCatch)==[.barnSwallow] &&
+            SpeciesBehaviorProfile.catchFrameNames==names && BirdArt.catchNames==names
+        checks["m6f1CatchReferenceFootUnchanged"]=CatchArtGeometry.footAnchor==CGPoint(x:29,y:39) &&
+            PoseClip.footAnchor==PoseClip.Anchor(29,39)
+        for name in names {
+            guard let image=art.frames[name],let source=DetailedBirdArt.catchImage(name,species:.barnSwallow),
+                  let p=CatchArtGeometry.pose(species:.barnSwallow,frame:name),
+                  let anchor=PoseClip.catchBeakAnchor(species:.barnSwallow,frame:name) else {throw failure("Missing catch source \(name)")}
+            let raster=try Raster(image),authored=try Raster(source)
+            var layers=[CGImage](),semantic=true
+            for part:DetailedBirdArt.FoundationPosePart in [.body,.feet,.headNeck,.bill] {
+                guard let layer=DetailedBirdArt.catchImage(name,species:.barnSwallow,part:part) else {throw failure("Missing catch semantic part")}
+                let pixels=try Raster(layer)
+                semantic = semantic && layer.width==image.width && layer.height==image.height && pixels.bytes.contains(where:{$0>0})
+                layers.append(layer)
+            }
+            let body=try Raster(layers[0]),neck=try Raster(layers[2])
+            let boundary=(0..<body.image.width).contains{body.alpha($0,0) || body.alpha($0,body.image.height-1)} ||
+                (0..<body.image.height).contains{body.alpha(0,$0) || body.alpha(body.image.width-1,$0)}
+            var neckAbove=true
+            for y in 0..<neck.image.height where CGFloat(y)*48/CGFloat(neck.image.height)>=39 {
+                for x in 0..<neck.image.width {neckAbove = neckAbove && !neck.alpha(x,y)}
+            }
+            let independent=unique.insert(raster.pixels).inserted && !legacy.contains(raster.pixels)
+            checks["m6f1CatchArt-"+name+"-IndependentNativeSourceAndFourParts"]=independent && semantic && raster.pixels==authored.pixels
+            checks["m6f1CatchArt-"+name+"-SameDensityAsLegacy"]=image.width==art.frames["stand"]!.width && image.height==art.frames["stand"]!.height
+            checks["m6f1CatchArt-"+name+"-WingMarginAndNeckAboveFootPlane"] = !boundary && neckAbove
+            checks["m6f1CatchArt-"+name+"-BeakAtActualUpperTip"]=abs(anchor.x-Double(p.billTip.x))<1e-9 && abs(anchor.y-Double(p.billTip.y))<1e-9
+            parts.append([image]+layers)
+            evidence.append(["species":"barnSwallow","frame":name,"nativeSize":[image.width,image.height],
+                "sourceBillAnchor":[p.billTip.x,p.billTip.y],"referenceFoot":[29,39],
+                "feet":"tucked in flight; reference anchor is not a ground-contact claim"])
+        }
+        checks["m6f1ThreeDistinctCatchPoses"]=unique.count==3
+        for name in TransportArtGeometry.frameNames {
+            let anchor=PoseClip.catchBeakAnchor(species:.barnSwallow,frame:name)
+            let source=DetailedBirdArt.catchBillAnchor(name,species:.barnSwallow)
+            checks["m6f1CatchTransportAnchor-"+name]=anchor != nil && source != nil &&
+                abs(CGFloat(anchor!.x)-source!.x)<1e-9 && abs(CGFloat(anchor!.y)-source!.y)<1e-9
+        }
+        checks["m6f1NoFutureFlycatcherArt"]=CatchArtGeometry.frameNames.allSatisfy {
+            DetailedBirdArt.catchImage($0,species:.yellowRumpedFlycatcher)==nil &&
+            PoseClip.catchBeakAnchor(species:.yellowRumpedFlycatcher,frame:$0)==nil
+        }
+        try contactSheet(art,frameNames:names,parts:parts,to:folder.appendingPathComponent("barnSwallow-catch-contact-sheet.png"))
+        for scale in scales {for right in [true,false] {try preview(art,frameNames:names,scale:scale,right:right,folder:folder)}}
+        var insects=Set<Data>()
+        for name in InsectArt.frameNames {
+            guard let image=InsectArt.image(name) else {throw failure("Missing insect \(name)")}
+            let pixels=try Raster(image),w=image.width,h=image.height
+            let margin=(0..<w).allSatisfy{!pixels.alpha($0,0) && !pixels.alpha($0,h-1)} &&
+                (0..<h).allSatisfy{!pixels.alpha(0,$0) && !pixels.alpha(w-1,$0)}
+            checks["m6f1InsectArt-"+name+"-IndependentTransparentCanvasAndFixedThorax"]=insects.insert(pixels.pixels).inserted &&
+                w==16 && h==16 && margin && pixels.alpha(8,8)
+        }
+        checks["m6f1InsectArtCoreGeometryContract"]=insects.count==4 && InsectArt.anchor==CGPoint(x:8,y:8) &&
+            InsectArt.collisionRadius==3 && InsectArt.logicalSize==CGSize(width:16,height:16) &&
+            InsectTrajectory.logicalSize==16 && InsectTrajectory.lifetime==CatchArtGeometry.insectLifetime &&
+            abs(InsectArt.frameDuration-1.0/12.0)<1e-12
     }
 
     private final class Fixture {
@@ -518,7 +588,7 @@ enum M6ContentVerification {
         let height=frameNames.count*150+80,context=try bitmap(width:1320,height:height)
         context.setFillColor(NSColor(calibratedWhite:0.12,alpha:1).cgColor)
         context.fill(CGRect(x:0,y:0,width:1320,height:height))
-        let stage=m6bSpecies.contains(art.species) ? "M6b historical":"M6c"
+        let stage=frameNames==CatchArtGeometry.frameNames ? "M6f.1 catch":(m6bSpecies.contains(art.species) ? "M6b historical":"M6c")
         label(art.species.rawValue+" / "+stage+" / actual sprite + authored semantic parts / 3x",x:20,y:22,in:context)
         let headings=["production","body (incl. overlays)","feet / toes","head + neck","bill"]
         for (column,title) in headings.enumerated() {label(title,x:260+CGFloat(column)*210-70,y:45,in:context)}
@@ -554,7 +624,7 @@ enum M6ContentVerification {
             context.setStrokeColor(NSColor.systemOrange.cgColor)
             context.strokeEllipse(in:CGRect(x:anchor.x-3,y:anchor.y-3,width:6,height:6))
         }
-        let track=frameNames==peekNames ? "-peek":""
+        let track=frameNames==CatchArtGeometry.frameNames ? "-catch":(frameNames==peekNames ? "-peek":"")
         try png(context,to:folder.appendingPathComponent("\(art.species.rawValue)\(track)-\(scale)x-\(right ? "right":"left")-preview.png"))
     }
     /// Crop the real DesktopView root, retaining its sprite transform, mask and

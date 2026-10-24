@@ -19,6 +19,28 @@
     "waterlineY" : 20
   },
   "clock" : "singleEngineSimulationClock",
+  "insect" : {
+    "anchor" : [
+      8,
+      8
+    ],
+    "collisionRadius" : 3,
+    "entry" : "complete canvas starts offscreen",
+    "files" : [
+      "insect0.png",
+      "insect1.png",
+      "insect2.png",
+      "insect3.png"
+    ],
+    "frameDuration" : 0.083333333333333329,
+    "lifetime" : 12,
+    "logicalSize" : [
+      16,
+      16
+    ],
+    "maximumInstances" : 1,
+    "scale" : "worldScale"
+  },
   "leafToken" : {
     "availableLifetime" : 180,
     "fadeDuration" : 0.20000000000000001,

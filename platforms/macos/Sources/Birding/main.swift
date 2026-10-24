@@ -96,6 +96,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 exit(passed ? 0:1)
             } catch {print(error);exit(1)}
         }
+        if let path = argument("--verify-insect-catch") {
+            do {
+                let folder=URL(fileURLWithPath:path)
+                try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+                var checks:[String:Bool]=[:]
+                try InsectCatchArtVerification.run(into:&checks,folder:folder)
+                try InsectCatchVerification.run(into:&checks,folder:folder)
+                try InsectCatchSettingsVerification.run(into:&checks,folder:folder)
+                let passed=checks.values.allSatisfy{$0}
+                saveJSON(["passed":passed,"checks":checks],to:folder.appendingPathComponent("report.json"))
+                print("Insect catch: \(passed ? "PASS":"FAIL") — \(checks.count) checks")
+                exit(passed ? 0:1)
+            } catch {print(error);exit(1)}
+        }
         if let path = argument("--verify-birds") { ExpandedVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-settings") { SettingsVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--fixture") {

@@ -266,7 +266,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
 
       },
@@ -287,6 +287,18 @@
         "alertRise" : [
           38.653767999999999,
           15.646376
+        ],
+        "catchClose" : [
+          41.160660804423337,
+          20.710913103660712
+        ],
+        "catchOpen" : [
+          41.818894737627836,
+          18.569483801956292
+        ],
+        "catchRecover" : [
+          39.918490938689168,
+          20.439483449989954
         ],
         "lookFar" : [
           38.183782000000001,
@@ -350,6 +362,33 @@
             }
           ],
           "id" : "barnSwallow.alert",
+          "maximumLoops" : 1,
+          "recovery" : "currentEngineState"
+        },
+        "insectCatchRecovery" : {
+          "foot" : {
+            "x" : 29,
+            "y" : 39
+          },
+          "frames" : [
+            {
+              "beak" : {
+                "x" : 41.160660804423337,
+                "y" : 20.710913103660712
+              },
+              "duration" : 0.17999999999999999,
+              "name" : "catchClose"
+            },
+            {
+              "beak" : {
+                "x" : 39.918490938689168,
+                "y" : 20.439483449989954
+              },
+              "duration" : 0.29999999999999999,
+              "name" : "catchRecover"
+            }
+          ],
+          "id" : "barnSwallow.insectCatch.recovery",
           "maximumLoops" : 1,
           "recovery" : "currentEngineState"
         },
@@ -451,9 +490,96 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
-
+        "bank0" : [
+          39.686619173516071,
+          19.5722360105608
+        ],
+        "bank1" : [
+          39.965240067133365,
+          20.470417871532128
+        ],
+        "bank2" : [
+          40.180357221469492,
+          21.385887623980746
+        ],
+        "bound" : [
+          40.313392346463331,
+          22.180938640635873
+        ],
+        "catchClose" : [
+          41.160660804423337,
+          20.710913103660712
+        ],
+        "catchOpen" : [
+          41.818894737627836,
+          18.569483801956292
+        ],
+        "catchRecover" : [
+          39.918490938689168,
+          20.439483449989954
+        ],
+        "fly0" : [
+          40.294536371974971,
+          22.047897888368897
+        ],
+        "fly1" : [
+          40.230000000000004,
+          21.349999999999998
+        ],
+        "fly2" : [
+          40.105447808692837,
+          20.62322080472704
+        ],
+        "fly3" : [
+          40.065277728116058,
+          20.860904925429217
+        ],
+        "fly4" : [
+          40.162556171083992,
+          21.554081963135552
+        ],
+        "fly5" : [
+          40.247838197180698,
+          22.282390294240194
+        ],
+        "fly6" : [
+          40.313392346463331,
+          22.180938640635873
+        ],
+        "fly7" : [
+          40.359101359865335,
+          22.247912428888281
+        ],
+        "glide0" : [
+          39.965240067133365,
+          20.470417871532128
+        ],
+        "glide1" : [
+          39.965240067133365,
+          20.470417871532128
+        ],
+        "glide2" : [
+          39.965240067133365,
+          20.470417871532128
+        ],
+        "land0" : [
+          38.700000000000003,
+          20.5
+        ],
+        "land1" : [
+          38.700000000000003,
+          20.5
+        ],
+        "land2" : [
+          38.700000000000003,
+          20.5
+        ],
+        "stand" : [
+          38.700000000000003,
+          20.5
+        ]
       },
       "waterContactAnchors" : {
 
@@ -636,7 +762,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
 
       },
@@ -1011,7 +1137,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
 
       },
@@ -1279,7 +1405,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
 
       },
@@ -1511,7 +1637,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
 
       },
@@ -1696,7 +1822,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
 
       },
@@ -1881,7 +2007,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
 
       },
@@ -2066,7 +2192,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
 
       },
@@ -2251,7 +2377,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
 
       },
@@ -2436,7 +2562,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
 
       },
@@ -2850,7 +2976,7 @@
           "recovery" : "currentEngineState"
         }
       },
-      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
+      "durationPolicy" : "watch\/alert\/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
       "transportBeakAnchors" : {
         "bank0" : [
           43.212695596878106,
@@ -3035,7 +3161,7 @@
   },
   "poseClock" : "owningBehaviorSimulationAge",
   "schemaVersion" : 2,
-  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt}.swift",
+  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt}.swift",
   "speciesFrames" : {
     "azureWingedMagpie" : [
       "stand",
@@ -3133,7 +3259,10 @@
       "restTuck",
       "restWake",
       "takeoffCrouch",
-      "takeoffPush"
+      "takeoffPush",
+      "catchOpen",
+      "catchClose",
+      "catchRecover"
     ],
     "chineseBlackbird" : [
       "stand",

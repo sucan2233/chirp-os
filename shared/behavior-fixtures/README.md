@@ -3,7 +3,7 @@
 这些 JSON 是引擎输入，采用 Quartz 桌面坐标（向右为 x 正方向，向下为 y 正方向）。它们不依赖 AppKit、窗口标题、桌面截图或用户配置，供 macOS 与后续 Windows 核心运行同一场景。
 
 - `version`：文件格式版本；未知版本拒绝，不能忽略无法理解的事件。
-- `simulationVersion`：M6e 当前为13，增加独立附着物、携带命令与场景焦点种类。旧生产录制版本1–12明确拒绝；请在相应旧提交重放或重新录制，不能直接改版本标签。旧15份仓库手写夹具保留原输入和独立断言，仅迁移版本；新增第16份 `leaf-carry.json`。16夹具在30/60/120Hz的48份完整报告一致。另有旧15夹具60Hz报告去除本批新增字段后与M6d一致的回归证据，不代表新附着语义已由旧报告验证，也不从当前实现反向生成expected。
+- `simulationVersion`：M6f.1当前为14，新增昆虫实体、捕虫命令与连续真实喙接触结果。旧生产录制版本1–13明确拒绝；请在相应旧提交重放或重新录制，不能直接改版本标签。旧16份仓库手写夹具保留原输入和独立断言，仅迁移版本；新增第17份 `insect-catch.json`。17夹具在30/60/120Hz的51份完整报告一致。另有旧16夹具60Hz报告去7新增字段后与M6e一致的回归证据，不替代新捕虫语义验收，也不从当前实现反向生成expected。第16份仍为 `leaf-carry.json`，v13的历史结果见下文M6e。
 - `seed`、鸟/运行/道具/栖息地对象 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
 - `settings`：完整配置或合法的旧格式配置；按 BirdSettings schema 迁移。
 - `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟；可选 `flightOrigin` 让鸟从该坐标开始普通直达飞行，仍需 `advance` 输入才能移动和产生速度。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。
@@ -59,6 +59,9 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 
 # 第16份场景：静止叶片携带；使用已统一验证的构建，无需为文档另行构建
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/leaf-carry.json --replay-hz 120 --replay-output .build/leaf-carry-report.json
+
+# 第17份场景：家燕捕虫、暂停/取消及真实捕获恢复（模拟v14）
+dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/insect-catch.json --replay-hz 120 --replay-output .build/insect-catch-report.json
 ```
 
 当前 macOS 测试把同一输入序列分别拆成至多 1/30、1/60、1/120 秒的回调，比较完整报告；保留输入发生边界，不跨 world/command 合并时间。这验证回调分段稳定性，不宣称恢复录制时没有采到的鼠标轨迹。不同采样率的真实移动轨迹另由 PassiveEcologyTests 验证。Windows 解析器与原生验收尚待迁移，当前文件通过不代表跨端已经对齐。
@@ -102,3 +105,19 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 版本13报告增加 `carriedObjects`（状态、owner/reservedByRun、宿主身份与比例、worldScale、朝向、剩余寿命）、`hasCarryLeafPlacement`、`sceneFocusKind`，以及 `props[].mirrored`；完整报告连同已有位置/锚/旋转共同对照。`leaf-carry.json`覆盖完整携带、暂停、放下后自然到期、第二次运行暂停删除、延时放置取消与场景清理；XCTest独立断言同一实体、唯一终态及零残留。
 
 最终证据：826核心测试通过；第二轮48完整回放见 `.build/m6e-replays-second.log` 与 `.build/m6e-replays/`。旧15报告回归见 `.build/m6e-delivery/legacy-replay-comparison.json`，比较时仅去除 `carriedObjects/hasCarryLeafPlacement/sceneFocusKind/prop.mirrored`。阶段已验证交付、随本阶段记录本地提交、未安装，详见 [M6e验收](../../docs/M6E-ACCEPTANCE.md)；不代表Windows迁移、物理多屏或真实长期桌面验收。
+
+## M6f.1 家燕捕虫（当前模拟版本14）
+
+| command.name | 必填 payload | 行为 |
+| --- | --- | --- |
+| `insectCatch` | `species: "barnSwallow"`、`source: user / preview / automatic` | 只复用已有普通飞行居民。preview可等待已有鸟自然起飞最多10s；不补鸟、传送或强制起飞。 |
+| `cancelInsectCatchPreview` | 无 | 取消尚未开始的等待；已启动run由既有取消/清理入口处理。 |
+| `clearInsect` | 无 | 清虫、取消捕虫run及待预览；暂停中也可清理。 |
+
+`settings.insectCatchEnabled`默认true，仅保存开关；关闭会立即清虫并取消等待/run。`world.insectArtAvailable`是每次world输入的独立完整快照，省略true，不继承旧false；鸟帧缺失仍拒绝。`clearCurrentScene`、`clearProps`均涵盖虫与捕虫等待/run；点击取消后虫保持同一ID、沿原路线运行剩余寿命，暂停冻结虫/阶段/等待/冷却。日常固定8%机会尝试捕虫，sceneFocus模式不尝试；独立随机流、无资格即丢弃，不新增timer。
+
+仅家燕catch三帧及19复用帧真实喙锚；虫16×16、中心(8,8)、碰撞半径3×worldScale、12fps、12s寿命、全局最多1只。整画布从屏外进入，完整可见到窗口至少0.8s，速度≤480×worldScale；contact候选1.2/2/2.8/3.6s、首段末端+0.25s，优先前侧斜入并保持鸟初速切线和原目标。连续真实喙resolver检测完整运动段，只有真实接触才移除虫；合喙0.18s/恢复0.30s并恢复原目标后才completed。错过则安全恢复后failed/missedTarget，不入册。
+
+v14报告增加 `insect`、`lastInsectContact`、`insectMissedTargetCount`、`hasInsectCatchPreview`、`insectPreviewRemaining`、`insectPreviewSpecies`、`insectCooldownRemaining`。第17夹具保留独立断言，逐输入前缀覆盖暂停、点击取消、原虫继续、清虫、第二次真实接触及回原目标落稳；另有成功/错过的跨率分段报告和24/64居民实际工作负载。
+
+阶段验收通过：860核心/3156原生鸟/1782设置、51完整报告、旧16份去上述7字段兼容、三轮18次性能通过。最终回放在 `.build/m6f1-replays/`，初轮保留 `.build/m6f1-replays-initial/`，旧比较在 `.build/m6f1-delivery/legacy-replay-comparison.json`。随本阶段记录本地提交、未安装；首轮失败与完整边界见 [M6f.1验收](../../docs/M6F1-ACCEPTANCE.md)。下一阶段M6f.2白眉姬鹟尚未开放，Windows与真实长期/物理硬件验收不由这些报告替代。

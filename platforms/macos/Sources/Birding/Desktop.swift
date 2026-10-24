@@ -89,7 +89,7 @@ final class DesktopView: NSView {
         // Keep the physical sibling order consistent with zPosition too.
         // Software layer captures do not implement all CA compositing rules;
         // a newly appended rear basin must never paint over an existing bird.
-        if propSnapshot.contains(where:{$0.kind == .leafToken}) || controller.engine.habitatSnapshot().contains(where:{$0.kind == .bath}) {
+        if propSnapshot.contains(where:{$0.kind == .leafToken || $0.kind == .insect}) || controller.engine.habitatSnapshot().contains(where:{$0.kind == .bath}) {
             root.sublayers=(root.sublayers ?? []).enumerated().sorted {a,b in
                 a.element.zPosition==b.element.zPosition ? a.offset<b.offset:a.element.zPosition<b.element.zPosition
             }.map(\.element)
@@ -106,7 +106,17 @@ final class DesktopController: NSObject {
     let art = BirdArt()
     let arts = Dictionary(uniqueKeysWithValues: SpeciesID.allCases.map { ($0, BirdArt(species:$0)) })
     lazy var frameCapabilities=arts.mapValues{Set($0.frames.keys)}
-    let engine=BehaviorEngine(recordInputs:CommandLine.arguments.contains("--record-behavior"))
+    let engine:BehaviorEngine
+    override init() {
+        engine=BehaviorEngine(recordInputs:CommandLine.arguments.contains("--record-behavior"))
+        super.init()
+    }
+    /// Isolated native fixtures keep ordinary routing and scheduler randomness
+    /// reproducible without changing the production controller's random seed.
+    init(verificationSeed:UInt64) {
+        engine=BehaviorEngine(seed:verificationSeed)
+        super.init()
+    }
     var settings:BirdSettings {
         get {engine.settings}
         set {engine.applySettings(newValue)}
@@ -255,6 +265,7 @@ final class DesktopController: NSObject {
         engine.handle(.cancelFoodTrayPlacement)
         engine.handle(.cancelBathPlacement)
         engine.handle(.cancelCarryLeafPlacement)
+        engine.handle(.cancelInsectCatchPreview)
         engine.handle(.cancelAmbient(.screensChanged))
         panels.forEach { $0.orderOut(nil) }; panels.removeAll(); views.removeAll()
         for screen in NSScreen.screens {
@@ -310,6 +321,7 @@ final class DesktopController: NSObject {
         settingsWindow?.refreshFoodTrayControls()
         settingsWindow?.refreshBathControls()
         settingsWindow?.refreshLeafCarryControls()
+        settingsWindow?.refreshInsectCatchControls()
     }
     func tick() {
         let now = ProcessInfo.processInfo.systemUptime

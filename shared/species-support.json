@@ -193,6 +193,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -406,6 +416,16 @@
 
         ],
         "productAllowed" : true
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -626,6 +646,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -850,6 +880,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -1078,6 +1118,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -1301,6 +1351,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -1529,6 +1589,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -1739,6 +1809,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -1966,6 +2046,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -2176,6 +2266,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -2390,6 +2490,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -2600,6 +2710,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -2814,6 +2934,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3024,6 +3154,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -3238,6 +3378,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3450,6 +3600,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -3660,6 +3820,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -3887,6 +4057,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4099,6 +4279,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4306,6 +4496,14 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : true,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+
+        ],
+        "productAllowed" : true
       }
     ],
     "capabilities" : [
@@ -4319,7 +4517,8 @@
       "observationPose",
       "alertPose",
       "restPose",
-      "takeoffPose"
+      "takeoffPose",
+      "insectCatching"
     ],
     "missingPoseFrames" : [
 
@@ -4530,6 +4729,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -4744,6 +4953,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -4949,6 +5168,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -5177,6 +5406,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -5387,6 +5626,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -5601,6 +5850,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -5811,6 +6070,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -6025,6 +6294,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -6235,6 +6514,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -6449,6 +6738,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -6659,6 +6958,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -6873,6 +7182,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7083,6 +7402,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -7297,6 +7626,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7507,6 +7846,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -7721,6 +8070,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -7933,6 +8292,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -8143,6 +8512,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -8370,6 +8749,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -8580,6 +8969,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -8794,6 +9193,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -9004,6 +9413,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -9218,6 +9637,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -9428,6 +9857,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }
@@ -9642,6 +10081,16 @@
           "carryPlace"
         ],
         "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
+        ],
+        "productAllowed" : false
       }
     ],
     "capabilities" : [
@@ -9852,6 +10301,16 @@
           "carryLook",
           "carryLower",
           "carryPlace"
+        ],
+        "productAllowed" : false
+      },
+      {
+        "contentSupported" : false,
+        "kind" : "insectCatch",
+        "missingFrames" : [
+          "catchClose",
+          "catchOpen",
+          "catchRecover"
         ],
         "productAllowed" : false
       }

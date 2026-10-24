@@ -33,6 +33,7 @@ public struct RecordedWorld:Codable,Equatable {
     public var screens,displays:[RecordedRect]
     public var displayIDs:[String]?
     public var fixedPerchArtAvailable:Bool?
+    public var insectArtAvailable:Bool?
     public var leafCarryArtAvailable:Bool?
     public var bathArtAvailable:Bool?
     public var foodTrayArtAvailable:Bool?
@@ -42,7 +43,7 @@ public struct RecordedWorld:Codable,Equatable {
     public var localMinuteOfDay:Int?
     public var availableFrames:[String:[String]]?
     public init(_ world:BehaviorWorld) {
-        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable;foodTrayArtAvailable=world.foodTrayArtAvailable;bathArtAvailable=world.bathArtAvailable;leafCarryArtAvailable=world.leafCarryArtAvailable
+        screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable;foodTrayArtAvailable=world.foodTrayArtAvailable;bathArtAvailable=world.bathArtAvailable;leafCarryArtAvailable=world.leafCarryArtAvailable;insectArtAvailable=world.insectArtAvailable
         surfaces=world.surfaces.map(RecordedSurface.init);scale=Double(world.scale);pointer=RecordedPoint(world.pointer)
         buttonsDown=world.buttonsDown;localMinuteOfDay=world.localMinuteOfDay
         availableFrames=Dictionary(uniqueKeysWithValues:world.availableFrames.map{($0.key.rawValue,$0.value.sorted())})
@@ -64,7 +65,7 @@ public struct RecordedWorld:Codable,Equatable {
         return BehaviorWorld(screens:screens.map(\.value),displays:displays.map(\.value),surfaces:surfaces.map(\.value),
             scale:scale,pointer:pointer.value,buttonsDown:buttonsDown,
             availableFrames:Dictionary(uniqueKeysWithValues:frames.map{(SpeciesID(rawValue:$0.key)!,Set($0.value))}),
-            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true,foodTrayArtAvailable:foodTrayArtAvailable ?? true,bathArtAvailable:bathArtAvailable ?? true,leafCarryArtAvailable:leafCarryArtAvailable ?? true)
+            localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true,foodTrayArtAvailable:foodTrayArtAvailable ?? true,bathArtAvailable:bathArtAvailable ?? true,leafCarryArtAvailable:leafCarryArtAvailable ?? true,insectArtAvailable:insectArtAvailable ?? true)
     }
 }
 public struct RecordedSimulationOptions:Codable,Equatable {
@@ -76,7 +77,7 @@ public struct RecordedSimulationOptions:Codable,Equatable {
 /// Explicit tagged payloads also make these files consumable by other platforms.
 public struct RecordedCommand:Codable {
     public var name:String
-    public var source:String?,action:String?,target:String?,reason:String?
+    public var source:String?,action:String?,target:String?,reason:String?,species:String?
     public var point:RecordedPoint?,delay:Double?,flag:Bool?
     public init(_ command:EngineCommand) {
         switch command {
@@ -87,6 +88,9 @@ public struct RecordedCommand:Codable {
         case .socialMotion(let kind,let value):name="socialMotion";action=kind.rawValue;source=value.rawValue
         case .perchAction(let kind,let value):name="perchAction";action=kind.rawValue;source=value.rawValue
         case .fixedPerchVisit(let value):name="fixedPerchVisit";source=value.rawValue
+        case .insectCatch(let birdSpecies,let value):name="insectCatch";species=birdSpecies.rawValue;source=value.rawValue
+        case .cancelInsectCatchPreview:name="cancelInsectCatchPreview"
+        case .clearInsect:name="clearInsect"
         case .placeCarryLeaf(let value):name="placeCarryLeaf";point=RecordedPoint(value)
         case .placeCarryLeafAfter(let value):name="placeCarryLeafAfter";delay=max(0,min(10,value.isFinite ? value:3))
         case .cancelCarryLeafPlacement:name="cancelCarryLeafPlacement"
@@ -136,6 +140,9 @@ public struct RecordedCommand:Codable {
         case "socialMotion":guard let action,let kind=SocialMotionKind(rawValue:action) else {throw bad()};return .socialMotion(kind,try origin())
         case "perchAction":guard let action,let kind=PerchActionKind(rawValue:action) else {throw bad()};return .perchAction(kind,try origin())
         case "fixedPerchVisit":return .fixedPerchVisit(try origin())
+        case "insectCatch":guard let species,let value=SpeciesID(rawValue:species) else {throw bad()};return .insectCatch(species:value,source:try origin())
+        case "cancelInsectCatchPreview":return .cancelInsectCatchPreview
+        case "clearInsect":return .clearInsect
         case "placeCarryLeaf":guard let point,point.valid else {throw bad()};return .placeCarryLeaf(at:point.value)
         case "placeCarryLeafAfter":return .placeCarryLeafAfter(try wait())
         case "cancelCarryLeafPlacement":return .cancelCarryLeafPlacement
@@ -273,6 +280,29 @@ public struct RecordedCarriedObjectState:Codable,Equatable {
         facingRight=object.facingRight;remainingLifetime=object.remainingLifetime
     }
 }
+public struct RecordedInsectState:Codable,Equatable {
+    public struct Waypoint:Codable,Equatable {
+        public var time:Double,position:RecordedPoint
+        init(_ value:InsectWaypoint) {time=value.time;position=RecordedPoint(value.position)}
+    }
+    public var id:String,age:Double,remainingLifetime:Double,position:RecordedPoint
+    public var waypoints:[Waypoint],display:RecordedRect,worldScale:Double
+    public var visibleFrom:Double,visibleUntil:Double,terminalAge:Double
+    init(_ insect:Insect) {
+        id=String(insect.id.rawValue);age=insect.age;remainingLifetime=insect.remainingLifetime
+        position=RecordedPoint(insect.position);waypoints=insect.trajectory.waypoints.map(Waypoint.init)
+        display=RecordedRect(insect.trajectory.display);worldScale=Double(insect.trajectory.worldScale)
+        visibleFrom=insect.trajectory.visibleFrom;visibleUntil=insect.trajectory.visibleUntil;terminalAge=insect.trajectory.terminalAge
+    }
+}
+public struct RecordedInsectContact:Codable,Equatable {
+    public var runID:String,birdID:String,insectID:String,time:Double,insectAge:Double
+    public var beakPosition:RecordedPoint,insectPosition:RecordedPoint
+    init(_ contact:InsectContact) {
+        runID=String(contact.runID.rawValue);birdID=String(contact.birdID.rawValue);insectID=String(contact.insectID.rawValue)
+        time=contact.time;insectAge=contact.insectAge;beakPosition=RecordedPoint(contact.beakPosition);insectPosition=RecordedPoint(contact.insectPosition)
+    }
+}
 public struct BehaviorReplayReport:Codable,Equatable {
     public var time:Double,paused:Bool,residents:Int,transients:Int,pending:Int,runs:Int,leases:Int,reservations:Int
     public var events:[RecordedEvent],birds:[RecordedBirdState],props:[RecordedPropState]
@@ -283,6 +313,13 @@ public struct BehaviorReplayReport:Codable,Equatable {
     public var hasBathPlacement:Bool?
     public var sceneFocusID:String?
     public var sceneFocusKind:String?
+    public var insect:RecordedInsectState?
+    public var lastInsectContact:RecordedInsectContact?
+    public var insectMissedTargetCount:Int?
+    public var hasInsectCatchPreview:Bool?
+    public var insectPreviewRemaining:Double?
+    public var insectPreviewSpecies:String?
+    public var insectCooldownRemaining:Double?
     public var hasCarryLeafPlacement:Bool?
     public var carriedObjects:[RecordedCarriedObjectState]?
     public var schedulerRemaining:Double?
@@ -298,6 +335,11 @@ public struct BehaviorReplayReport:Codable,Equatable {
         hasFoodTrayPlacement=engine.hasFoodTrayPlacement;habitatReservations=engine.habitatReservationCount
         hasBathPlacement=engine.hasBathPlacement;hasCarryLeafPlacement=engine.hasCarryLeafPlacement
         carriedObjects=engine.carriedObjectSnapshot().map(RecordedCarriedObjectState.init)
+        insect=engine.insectSnapshot().map(RecordedInsectState.init)
+        lastInsectContact=engine.lastInsectContact.map(RecordedInsectContact.init)
+        insectMissedTargetCount=engine.insectMissedTargetCount;hasInsectCatchPreview=engine.hasInsectCatchPreview
+        insectPreviewRemaining=engine.insectPreviewRemaining;insectPreviewSpecies=engine.insectPreviewSpecies?.rawValue
+        insectCooldownRemaining=engine.scheduler.insectCooldownRemaining
         if let focus=engine.sceneFocus {
             switch focus.target {
             case .bath(let id):sceneFocusKind="bath";sceneFocusID=String(id.rawValue)
@@ -314,7 +356,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=13,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=14,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

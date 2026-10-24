@@ -24,6 +24,7 @@ enum AppLanguage: String {
     /// repeating them inside the shorter preview and takeoff help controls.
     var poseSupportReference:String {text("以上专用鸟种","the pose species listed above")}
     var leafCarrySupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.leafCarry)+text("。",".")}
+    var insectCatchSupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.insectCatch)+text("。",".")}
     func name(_ id:SpeciesID) -> String {
         if let p = SpeciesCatalog.standard.species.first(where: { $0.id == id }), let en = p.englishName { return text(p.name,en) }
         switch id {

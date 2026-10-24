@@ -9,7 +9,7 @@ public struct ScenePropID:Hashable,Comparable {
     public init(_ value:UInt64) {rawValue=value}
     public static func < (lhs:Self,rhs:Self) -> Bool {lhs.rawValue<rhs.rawValue}
 }
-public enum ScenePropKind:String {case leaf,waterSplash,leafToken}
+public enum ScenePropKind:String {case leaf,waterSplash,leafToken,insect}
 
 /// Quartz coordinates, like BirdRenderState. Props do not participate in mouse
 /// hit testing; explicit commands control their lifetime.

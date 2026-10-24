@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "simulationVersion": 14,
+  "seed": "1901",
+  "settings": {
+    "schemaVersion": 1,
+    "catalog": {
+      "species": [
+        {
+          "id": "barnSwallow",
+          "name": "家燕",
+          "englishName": "Barn Swallow",
+          "adultLengthCM": 18,
+          "weight": 3500,
+          "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate",
+          "speed": 1.5,
+          "flapFPS": 48,
+          "perchMin": 12,
+          "perchMax": 32
+        },
+        {
+          "id": "spottedDove",
+          "name": "珠颈斑鸠",
+          "englishName": "Spotted Dove",
+          "adultLengthCM": 31,
+          "weight": 15536,
+          "weightBasis": "上海2017–2023观鸟研究表2：15536只次",
+          "speed": 0.92,
+          "flapFPS": 36,
+          "perchMin": 40,
+          "perchMax": 84
+        }
+      ]
+    },
+    "probabilities": {
+      "entries": [
+        { "id": "barnSwallow", "points": 10000, "locked": false },
+        { "id": "spottedDove", "points": 0, "locked": false }
+      ]
+    },
+    "perchDefaultsVersion": 1,
+    "perchActions": false,
+    "passiveAttentionEnabled": false,
+    "pointerVisits": false,
+    "flockPasses": false,
+    "socialInteractions": false,
+    "ambientLeafPlayEnabled": false,
+    "insectCatchEnabled": true
+  },
+  "initialWorld": {
+    "screens": [{ "x": 0, "y": 0, "width": 2400, "height": 2000 }],
+    "displays": [{ "x": 0, "y": 0, "width": 2400, "height": 2000 }],
+    "surfaces": [{
+      "id": 1901, "pid": 42, "layer": 0, "isGround": false,
+      "rect": { "x": 2000, "y": 1650, "width": 280, "height": 180 }
+    }],
+    "scale": 1,
+    "pointer": { "x": 20, "y": 20 },
+    "buttonsDown": false,
+    "insectArtAvailable": true,
+    "availableFrames": {
+      "barnSwallow": [
+        "stand", "blink", "fly0", "fly1", "fly2", "fly3", "fly4", "fly5", "fly6", "fly7",
+        "land0", "land1", "land2", "glide0", "glide1", "glide2", "bank0", "bank1", "bank2", "bound",
+        "catchOpen", "catchClose", "catchRecover"
+      ]
+    }
+  },
+  "fixtureBirds": [{
+    "species": "barnSwallow", "host": 1901, "fraction": 0.5,
+    "perchDuration": 600, "facingRight": true,
+    "flightOrigin": { "x": 220, "y": 1650 }
+  }],
+  "inputs": [
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 45,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "insectCatch", "species": "barnSwallow", "source": "preview" } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 3,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "pause", "flag": true } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 120,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "pause", "flag": false } },
+    { "kind": "command", "command": { "name": "pointerClick" } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 6,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "clearInsect" } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 15,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "insectCatch", "species": "barnSwallow", "source": "preview" } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 6,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "pause", "flag": true } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 60,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "pause", "flag": false } },
+    {
+      "kind": "advance", "elapsed": 0.016666666666666666, "repeatCount": 2100,
+      "options": { "population": false, "ambient": false, "routing": false }
+    },
+    { "kind": "command", "command": { "name": "cancelInsectCatchPreview" } },
+    { "kind": "command", "command": { "name": "clearCurrentScene" } }
+  ]
+}

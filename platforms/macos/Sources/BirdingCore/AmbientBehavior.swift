@@ -12,7 +12,7 @@ public enum AmbientFrequency: String, Codable, CaseIterable {
     }
 }
 
-public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID), leafCarry(ScenePropID) }
+public enum AmbientEvent: Equatable { case pointerVisit, flockPass, socialGreeting, leafPlay, bathVisit(HabitatObjectID), leafCarry(ScenePropID), insectCatch }
 
 /// One simulation clock for encounters. Missed opportunities are discarded,
 /// so busy periods, sleep and pause never build up a queue of animations.
@@ -22,6 +22,9 @@ public struct AmbientScheduler {
     public private(set) var sceneFocus:SceneFocus?
     public private(set) var sceneCooldownRemaining=0.0
     public private(set) var userInputRemaining=0.0
+    public private(set) var insectCooldownRemaining=0.0
+    public var canAttemptInsectCatch:Bool {insectCooldownRemaining<=0 && userInputRemaining<=0}
+    public mutating func didFinishInsectCatch() {insectCooldownRemaining=max(insectCooldownRemaining,90)}
     private var pointerAnchor: CGPoint?
     private var frequency:AmbientFrequency = .low
     private var sceneRandomState:UInt64
@@ -69,12 +72,14 @@ public struct AmbientScheduler {
     }
     public mutating func tick(_ dt: Double, pointer: CGPoint, buttonsDown: Bool,
                               pointerEnabled: Bool, flockEnabled: Bool, socialEnabled: Bool = false, leafEnabled: Bool = false,
+                              insectEnabled:Bool=false,
                               frequency: AmbientFrequency, busy: Bool, cadenceRate:Double=1, leafRandom: (() -> Double)? = nil,
                               random: () -> Double = { Double.random(in: 0..<1) }) -> AmbientEvent? {
         let step = min(0.1, max(0, dt))
         self.frequency=frequency
         sceneCooldownRemaining=max(0,sceneCooldownRemaining-step)
         userInputRemaining=max(0,userInputRemaining-step)
+        insectCooldownRemaining=max(0,insectCooldownRemaining-step)
         if buttonsDown {suppress(reason:.userInput)}
         if buttonsDown || pointerAnchor == nil || Geometry.distance(pointer, pointerAnchor!) > 6 {
             pointerAnchor = pointer; stationaryTime = 0
@@ -99,10 +104,12 @@ public struct AmbientScheduler {
                 case .leaf(let id):return .leafCarry(id)
                 }
             }
-        } else if sceneUnit()<0.13 {
-            // Frozen daily ranges: insect [0,.08), courtship [.08,.12), gift
-            // [.12,.13). Undelivered ranges remain empty, never redistributed.
-            return nil
+        } else {
+            let daily=sceneUnit()
+            if daily<0.08 {return insectEnabled && canAttemptInsectCatch ? .insectCatch:nil}
+            // Undelivered courtship [.08,.12) and gift [.12,.13) stay empty.
+            // A closed/failed insect opportunity never reaches the old selector.
+            if daily<0.13 {return nil}
         }
         // Reserve a small share of existing opportunities, never a second timer.
         // Failed leaf plans are discarded instead of falling through to another event.

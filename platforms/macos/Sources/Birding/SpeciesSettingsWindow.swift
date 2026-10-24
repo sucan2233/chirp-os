@@ -82,10 +82,16 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var removeCarryLeafButton:NSButton!
     var previewLeafCarryButton:NSButton!
     var leafCarryStatus:NSTextField!
+    var insectCatchButton:NSButton!
+    var previewInsectCatchButton:NSButton!
+    var cancelInsectCatchPreviewButton:NSButton!
+    var clearInsectButton:NSButton!
+    var insectCatchStatus:NSTextField!
     private weak var foodTrayEngine:BehaviorEngine?
     private var ownsFoodTrayPlacement=false
     private var ownsBathPlacement=false
     private var ownsCarryLeafPlacement=false
+    private var ownsInsectCatchPreview=false
     private(set) var selectedFixedPerchSlot=1
     private(set) var fixedPerchCaptureTimer:Timer?
     private(set) var fixedPerchCaptureRequest:UUID?
@@ -109,6 +115,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         if ownsFoodTrayPlacement,foodTrayEngine?.hasFoodTrayPlacement == true {foodTrayEngine?.handle(.cancelFoodTrayPlacement)}
         if ownsBathPlacement,foodTrayEngine?.hasBathPlacement == true {foodTrayEngine?.handle(.cancelBathPlacement)}
         if ownsCarryLeafPlacement,foodTrayEngine?.hasCarryLeafPlacement == true {foodTrayEngine?.handle(.cancelCarryLeafPlacement)}
+        if ownsInsectCatchPreview,foodTrayEngine?.hasInsectCatchPreview == true {foodTrayEngine?.handle(.cancelInsectCatchPreview)}
         NotificationCenter.default.removeObserver(self)
     }
     @discardableResult func label(_ text:String,_ rect:NSRect,in view:NSView,size:CGFloat = 13) -> NSTextField {
@@ -127,6 +134,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         cancelFoodTrayPlacement()
         cancelBathPlacement()
         cancelCarryLeafPlacement()
+        cancelInsectCatchPreview()
         let selected = tabs?.indexOfTabViewItem(tabs!.selectedTabViewItem!) ?? 0
         sliders=[]; fields=[]; locks=[]; detailFields=[]
         let root = SettingsContentView(frame:NSRect(x:0,y:0,width:840,height:690)); root.wantsLayer=true; window!.contentView = root
@@ -177,7 +185,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:6410))
+        let interactionView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:7020))
         let interaction=NSTabViewItem(identifier:"interaction");interaction.label=t("交互","Interaction");interaction.view=scroll(interactionView);tabs.addTabViewItem(interaction)
         label(t("名字显示","Bird names"),NSRect(x:20,y:20,width:710,height:30),in:interactionView,size:20)
         label(t("鼠标在小鸟身上停留多久后显示名字？","How long should the pointer hover before showing a bird’s name?"),NSRect(x:20,y:66,width:710,height:40),in:interactionView)
@@ -307,6 +315,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         buildFoodTray(in:interactionView)
         buildBath(in:interactionView)
         buildLeafCarry(in:interactionView)
+        buildInsectCatch(in:interactionView)
         let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
         let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
@@ -436,7 +445,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         refreshFixedPerchPlacementButton()
     }
     @objc private func fixedPerchWindowWillClose(_ notification:Notification) {
-        cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement()
+        cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement();cancelInsectCatchPreview()
     }
     @objc func previewFixedPerch() {
         desktop.syncWorld()
@@ -605,7 +614,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         placeBathButton.isEnabled = !pending
         cancelBathPlacementButton.isEnabled=pending
         removeBathButton.isEnabled=pending || bath != nil
-        clearCurrentSceneButton.isEnabled=pending || desktop.engine.hasFoodTrayPlacement || desktop.engine.hasCarryLeafPlacement || !objects.isEmpty || desktop.engine.scenePropCount>0
+        clearCurrentSceneButton.isEnabled=pending || desktop.engine.hasFoodTrayPlacement || desktop.engine.hasCarryLeafPlacement || desktop.engine.hasInsectCatchPreview || !objects.isEmpty || desktop.engine.scenePropCount>0
         previewBathButton.isEnabled=true
         if pending {bathStatus.stringValue=t("等待 3 秒采样鼠标位置；暂停冻结倒计时。","Waiting to sample the pointer after 3 seconds; pausing freezes the countdown.")}
         else if let bath {
@@ -645,7 +654,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     @objc func clearCurrentScene() {
         desktop.engine.handle(.clearCurrentScene);desktop.consumeBehaviorEvents()
         ownsBathPlacement=false;ownsFoodTrayPlacement=false;ownsCarryLeafPlacement=false
-        refreshBathControls();refreshFoodTrayControls();refreshLeafCarryControls()
+        refreshBathControls();refreshFoodTrayControls();refreshLeafCarryControls();refreshInsectCatchControls()
         message.stringValue=t("已清除当前临时场景并取消待放置操作；固定栖木保留。","Current temporary scene cleared and pending placement cancelled; fixed perches remain.")
     }
     @objc func previewBath() {
@@ -756,6 +765,80 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             t("已有叶片、场景互动或放置操作正在占用位置。请等待结束，或取消等待中的放置；如需替换叶片，请先清除叶片。","A leaf, scene interaction or placement is already active. Wait or cancel pending placement; clear the existing leaf only to replace it."):
             t("请等待当前场景互动或放置操作结束，再预览携带。","Wait for the current scene interaction or placement to finish before previewing carrying.")
         case .pointerNearby,.pointerMoved:return t("请把鼠标移离小鸟、叶片和携带路线后再试。","Move the pointer away from the bird, leaf and carrying route, then retry.")
+        default:return desktop.behaviorMessage(reason)
+        }
+    }
+    private func buildInsectCatch(in view:NSView) {
+        label(t("家燕空中捕虫","Barn Swallow insect catching"),NSRect(x:20,y:6450,width:710,height:30),in:view,size:20).identifier=NSUserInterfaceItemIdentifier("insectCatchSectionTitle")
+        insectCatchButton=NSButton(checkboxWithTitle:t("开启捕虫互动","Enable insect catching"),target:self,action:#selector(insectCatchSettingsChanged))
+        insectCatchButton.frame=NSRect(x:20,y:6492,width:710,height:26);insectCatchButton.state=draft.insectCatchEnabled ? .on:.off
+        insectCatchButton.identifier=NSUserInterfaceItemIdentifier("insectCatchEnabled");insectCatchButton.setAccessibilityLabel(insectCatchButton.title);view.addSubview(insectCatchButton)
+        previewInsectCatchButton=button(t("预览家燕捕虫","Preview Barn Swallow catching"),#selector(previewInsectCatch),NSRect(x:20,y:6538,width:350,height:32),in:view)
+        clearInsectButton=button(t("清除昆虫","Clear insect"),#selector(clearInsect),NSRect(x:390,y:6538,width:340,height:32),in:view)
+        cancelInsectCatchPreviewButton=button(t("取消等待中的捕虫预览","Cancel waiting catch preview"),#selector(cancelInsectCatchPreviewClicked),NSRect(x:20,y:6584,width:350,height:32),in:view)
+        for (control,id) in [(previewInsectCatchButton!,"previewBarnSwallowInsectCatch"),(clearInsectButton!,"clearInsect"),
+                             (cancelInsectCatchPreviewButton!,"cancelInsectCatchPreview")] {
+            control.identifier=NSUserInterfaceItemIdentifier(id);control.setAccessibilityLabel(control.title)
+        }
+        label(language.insectCatchSupport+t("\n默认开启，保存后生效；预览读取已保存开关。只选择已有、独立飞行中的居民家燕；否则最多等待 10 秒自然起飞，暂停不计时。不会生成、传送小鸟或强制起飞。\n\n全局一只四帧昆虫，从屏幕外进入，寿命 12 秒，不追随真实鼠标。家燕仅尝试一次拦截，喙真正接触才捕获，随后继续原飞行目标；原目标失效时寻找安全落点。\n\n点击小鸟仍立即换位；未被捕获的虫沿原路线继续剩余寿命。保存关闭捕虫会清除等待与昆虫。暂停冻结等待、飞行和虫寿命。关闭、取消、保存或重建设置只取消等待，不丢其他草稿。\n\n捕获并安全恢复后才记入观察手册；未捕获、超时和取消不计数。",
+            "\nOn by default; save to apply. Preview uses saved settings and an existing resident Barn Swallow in ordinary flight, or waits up to 10 unpaused seconds for natural takeoff. No spawning, teleporting or forced takeoff.\n\nOne four-frame insect enters from outside the display and lasts 12 seconds, without following the pointer. The bird makes one interception attempt. Only real bill contact captures it; the bird then resumes its original destination or a safe fallback.\n\nClicks still relocate immediately. An uncaught insect continues its original route for its remaining lifetime. Saving the switch off clears waiting and insects. Pause freezes waiting, flight and insect age. Closing, cancelling, saving or rebuilding Settings cancels waiting without losing other drafts.\n\nOnly capture followed by safe recovery is recorded. Misses, timeouts and cancellations do not count."),NSRect(x:20,y:6630,width:710,height:246),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("insectCatchHelp")
+        insectCatchStatus=label("",NSRect(x:20,y:6892,width:710,height:76),in:view,size:12)
+        insectCatchStatus.identifier=NSUserInterfaceItemIdentifier("insectCatchStatus");insectCatchStatus.setAccessibilityLabel(t("捕虫状态","Insect catching status"))
+        refreshInsectCatchControls()
+    }
+    func refreshInsectCatchControls() {
+        guard insectCatchStatus != nil else {return}
+        let pending=desktop.engine.hasInsectCatchPreview
+        if !pending {ownsInsectCatchPreview=false}
+        let active=desktop.birds.contains{desktop.engine.behavior(of:$0) == .insectCatch}
+        let insect=desktop.engine.propSnapshot().contains{$0.kind == .insect}
+        previewInsectCatchButton.isEnabled = !pending
+        cancelInsectCatchPreviewButton.isEnabled=pending;clearInsectButton.isEnabled=pending || insect || active
+        if pending {insectCatchStatus.stringValue=t("等待现有家燕自然进入普通飞行，最多 10 秒；暂停时停止计时，尚未生成昆虫。","Waiting up to 10 unpaused seconds for an existing Barn Swallow to fly naturally; no insect has been created.")}
+        else if active {insectCatchStatus.stringValue=t("家燕正在拦截或恢复飞行；仅捕获并安全恢复后计数。","The Barn Swallow is intercepting or recovering; only capture with safe recovery counts.")}
+        else if insect {insectCatchStatus.stringValue=t("未被捕获的昆虫将沿原路线退出，也可清除。","The uncaught insect will leave along its original route; Clear removes it.")}
+        else {insectCatchStatus.stringValue=language.insectCatchSupport}
+    }
+    @objc func insectCatchSettingsChanged() {
+        draft.insectCatchEnabled=insectCatchButton.state == .on
+        if !draft.insectCatchEnabled {cancelInsectCatchPreview()}
+        message.stringValue=t("尚未保存 · 捕虫开关保存后生效。","Unsaved · Save to apply insect catching.")
+    }
+    @objc func previewInsectCatch() {
+        desktop.syncWorld()
+        let result=desktop.engine.handle(.insectCatch(species:.barnSwallow,source:.preview))
+        if case .rejected(let reason)=result {message.stringValue=insectCatchMessage(reason)}
+        else {
+            ownsInsectCatchPreview=desktop.engine.hasInsectCatchPreview
+            message.stringValue=ownsInsectCatchPreview ?
+                t("等待现有家燕自然起飞，最多 10 秒（暂停不计时）；不会强制起飞。","Waiting up to 10 unpaused seconds for an existing Barn Swallow to take off naturally."):
+                t("正在预览家燕捕虫：真实接触后恢复原飞行目标。","Previewing Barn Swallow catching: real contact, then recovery to its original destination.")
+        }
+        refreshInsectCatchControls();refreshBathControls()
+    }
+    func cancelInsectCatchPreview() {
+        if desktop.engine.hasInsectCatchPreview {desktop.engine.handle(.cancelInsectCatchPreview)}
+        ownsInsectCatchPreview=false;refreshInsectCatchControls()
+    }
+    @objc func cancelInsectCatchPreviewClicked() {
+        cancelInsectCatchPreview();desktop.consumeBehaviorEvents()
+        message.stringValue=t("已取消等待中的捕虫预览。","Waiting insect catch preview cancelled.")
+    }
+    @objc func clearInsect() {
+        desktop.engine.handle(.clearInsect);desktop.consumeBehaviorEvents()
+        ownsInsectCatchPreview=false;refreshInsectCatchControls();refreshBathControls()
+        message.stringValue=t("已清除昆虫并取消等待中的捕虫预览。","Insect cleared and waiting catch preview cancelled.")
+    }
+    func insectCatchMessage(_ reason:BehaviorReason)->String {
+        switch reason {
+        case .disabled,.settingsChanged:return t("请先保存并开启捕虫互动。","Save and enable insect catching first.")
+        case .noSpecies,.missingBird,.unavailableBird:return t("请启用家燕并保存，等待已有居民自然飞行；不会生成或强制起飞。 ","Enable Barn Swallow and save, then wait for an existing resident’s natural flight. No spawning or forced takeoff. ")+language.insectCatchSupport
+        case .missingFrames:return t("捕虫姿态、昆虫四帧或飞行喙锚不完整。","Catching poses, four insect frames or flight bill anchors are incomplete. ")+language.insectCatchSupport
+        case .timedOut:return t("已等待 10 秒（暂停不计时），没有可用的普通飞行家燕；请稍后重试。","No eligible Barn Swallow entered ordinary flight within 10 unpaused seconds. Try again later.")
+        case .missedTarget:return t("本次未捕获昆虫，已安全恢复；未记入观察手册。","The insect was not caught. The bird recovered safely; no journal entry was added.")
+        case .noSpace,.targetInvalid:return t("昆虫入场、连续拦截或恢复路线空间不足，请等待更开阔的普通飞行。","Not enough room for insect entry, a continuous interception or recovery. Wait for a clearer ordinary flight.")
+        case .busy:return t("请等待当前场景、昆虫或预览结束后再试。","Wait for the current scene, insect or preview to finish, then retry.")
+        case .pointerNearby,.pointerMoved:return t("请把鼠标移离小鸟和拦截路线后再试。","Move the pointer away from the bird and interception route, then retry.")
         default:return desktop.behaviorMessage(reason)
         }
     }
@@ -1059,6 +1142,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         draft.foodTrayEnabled=foodTrayButton.state == .on
         draft.bathEnabled=bathButton.state == .on
         draft.leafCarryEnabled=leafCarryButton.state == .on
+        draft.insectCatchEnabled=insectCatchButton.state == .on
         refreshFixedPerchControls()
         return true
     }
@@ -1067,6 +1151,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         cancelFoodTrayPlacement()
         cancelBathPlacement()
         cancelCarryLeafPlacement()
+        cancelInsectCatchPreview()
         window?.makeFirstResponder(nil)
         guard readInteraction() else {tabs.selectTabViewItem(at:2);message.stringValue=t("请输入 0–10 秒之间的有效等待时间。","Enter a valid hover delay between 0 and 10 seconds.");return}
         guard readDetails() else { tabs.selectTabViewItem(at:1); message.stringValue=t("请检查体型与动作数值：最长停留不能小于最短停留。","Check size and behavior ranges; maximum perch time must not be below minimum."); return }
@@ -1074,7 +1159,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         catch { message.stringValue=t("保存失败，请重试。当前设置未改变。","Could not save. Try again; active settings are unchanged.") }
     }
     @objc func resetDefaults() { cancelFixedPerchCapture();window?.makeFirstResponder(nil); draft=BirdSettings();selectedFixedPerchSlot=1; build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
-    @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement();window?.close() }
+    @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement();cancelInsectCatchPreview();window?.close() }
     func relocalize() {
         cancelFixedPerchCapture()
         window?.makeFirstResponder(nil)

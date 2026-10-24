@@ -110,6 +110,18 @@ public struct PoseClip:Codable,Equatable {
                 Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
             })
     }
+    /// A caught insect is already gone. These two poses finish while the
+    /// existing motion integrator restores the saved ordinary flight.
+    public static func insectCatchRecovery(species:SpeciesID) -> Self? {
+        guard SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch) else {return nil}
+        return Self(id:"\(species.rawValue).insectCatch.recovery",
+            frames:zip(["catchClose","catchRecover"],[0.18,0.30]).map {
+                Frame(name:$0.0,duration:$0.1,beak:beakAnchor(species:species,frame:$0.0))
+            })
+    }
+    public static func catchBeakAnchor(species:SpeciesID,frame:String) -> Anchor? {
+        CatchPoseAnchors.anchor(species:species,frame:frame)
+    }
     public static func carryBeakAnchor(species:SpeciesID,frame:String) -> Anchor? {
         CarryPoseAnchors.anchor(species:species,frame:frame)
     }
@@ -118,6 +130,7 @@ public struct PoseClip:Codable,Equatable {
     }
     /// Logical canvas anchors track the editable species drawing, never bitmap size.
     public static func beakAnchor(species:SpeciesID,frame:String) -> Anchor {
+        if let anchor=CatchPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=CarryPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=BathPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=M6cPoseAnchors.anchor(species:species,frame:frame) {return anchor}

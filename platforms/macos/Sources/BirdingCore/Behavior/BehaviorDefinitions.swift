@@ -1,7 +1,7 @@
 /// Capabilities describe complete groups of existing renderer frames.
 public enum BirdCapability:String,CaseIterable,Codable {
     case standing, blinking, preening, greeting, flight, landing, allopreening, feeding
-    case observationPose, alertPose, restPose, takeoffPose, edgePeekPose, bathing, carryingLeaf
+    case observationPose, alertPose, restPose, takeoffPose, edgePeekPose, bathing, carryingLeaf, insectCatching
 
     public var requiredFrames:Set<String> {
         switch self {
@@ -16,6 +16,7 @@ public enum BirdCapability:String,CaseIterable,Codable {
         case .greeting:return ["idle0","idle1","idle2"]
         case .flight:return ["fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7"]
         case .landing:return ["land0","land1","land2"]
+        case .insectCatching:return Set(SpeciesBehaviorProfile.catchFrameNames)
         case .carryingLeaf:return Set(SpeciesBehaviorProfile.carryFrameNames)
         case .bathing:return Set(SpeciesBehaviorProfile.bathFrameNames).union(["shake"])
         case .feeding:return ["feedLook","feedDown0","feedDown1","feedLift"]
@@ -53,6 +54,7 @@ public struct BehaviorDefinition {
         if source == .automatic,settings.activityRhythm == .quiet,occupiesEncounter {return false}
         switch kind {
         case .relocate:return true
+        case .insectCatch:return settings.insectCatchEnabled
         case .leafCarry:return settings.leafCarryEnabled
         case .bathVisit:return settings.bathEnabled && (source != .automatic || settings.activityRhythm != .quiet)
         case .foodTrayVisit:return settings.foodTrayEnabled && (source != .automatic || settings.activityRhythm != .quiet)
@@ -100,6 +102,9 @@ public enum BehaviorDefinitions {
         case .sideBySide,.giveWay,.pairedTakeoff:
             return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.blinking,.flight,.landing],occupiesEncounter:true,
                 runsWhilePaused:false,priority:60,cooldown:20)
+        case .insectCatch:
+            return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.flight,.landing,.insectCatching],occupiesEncounter:true,
+                runsWhilePaused:false,priority:60,cooldown:180)
         case .leafCarry:
             return BehaviorDefinition(kind:kind,requiredCapabilities:[.standing,.flight,.landing,.carryingLeaf],occupiesEncounter:true,
                 runsWhilePaused:false,priority:60,cooldown:45)
@@ -142,7 +147,7 @@ public enum BehaviorDefinitions {
     /// Stable content order, independent of dictionary or Set iteration.
     public static var all:[BehaviorDefinition] {
         let kinds:[BehaviorKind] = [.relocate,.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,
-            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry]
+            .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch]
         return kinds.map {definition(for:$0)}
     }
 
@@ -155,10 +160,10 @@ public enum BehaviorDefinitions {
             switch current {
             case .rest,.preen,.watch:return true
             case .relocate,.pointerVisit,.flockPass,.socialGreeting,.sideBySide,.giveWay,
-                 .pairedTakeoff,.leafPlay,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry:return false
+                 .pairedTakeoff,.leafPlay,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch:return false
             }
         case .pointerVisit,.flockPass,.rest,.preen,.socialGreeting,.sideBySide,.giveWay,
-             .pairedTakeoff,.leafPlay,.watch,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry:return false
+             .pairedTakeoff,.leafPlay,.watch,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch:return false
         }
     }
 }

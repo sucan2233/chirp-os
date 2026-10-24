@@ -42,6 +42,9 @@ final class BehaviorRuntime {
         // transient participants may already be gone when completion is emitted.
         var observationSpecies=Set<SpeciesID>()
         var age: Double = 0
+        /// Only after-motion executions clip the final integrator step to their
+        /// hard deadline; ordinary behavior timing stays unchanged.
+        var motionDT:Double?
     }
     private(set) var runs: [BehaviorRunID:Run] = [:]
     private(set) var owners: [BirdID:BehaviorRunID] = [:]
@@ -121,12 +124,15 @@ final class BehaviorRuntime {
         validate(in:engine)
         for id in runs.keys.sorted() {
             guard var run=runs[id],!engine.paused || run.execution.runsWhilePaused else {continue}
-            run.age+=dt;runs[id]=run
-            if run.age>run.execution.timeout {
+            let afterMotion=run.execution.kind == .insectCatch
+            let advanceDT=afterMotion ? min(dt,max(0,run.execution.timeout-run.age)):dt
+            run.motionDT=afterMotion ? advanceDT:nil
+            run.age+=advanceDT;runs[id]=run
+            if !afterMotion,run.age>run.execution.timeout {
                 finish(id,result:.failed(.timedOut),in:engine);continue
             }
             captureObservationSpecies(id,in:engine)
-            let result=run.execution.advance(dt,in:engine)
+            let result=run.execution.advance(advanceDT,in:engine)
             captureObservationSpecies(id,in:engine)
             if let result {finish(id,result:result,in:engine)}
         }

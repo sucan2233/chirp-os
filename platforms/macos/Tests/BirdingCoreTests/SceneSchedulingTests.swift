@@ -3,16 +3,16 @@ import XCTest
 
 final class SceneSchedulingTests:XCTestCase {
     private func tick(_ scheduler:inout AmbientScheduler,frequency:AmbientFrequency = .high,
-                      hz:Int=60,busy:Bool=false,buttons:Bool=false,legacy:Double=0)->AmbientEvent? {
+                      hz:Int=60,busy:Bool=false,buttons:Bool=false,legacy:Double=0,insect:Bool=false)->AmbientEvent? {
         scheduler.tick(1/Double(hz),pointer:.zero,buttonsDown:buttons,pointerEnabled:false,
-            flockEnabled:true,frequency:frequency,busy:busy,random:{legacy})
+            flockEnabled:true,insectEnabled:insect,frequency:frequency,busy:busy,random:{legacy})
     }
     private func nextOpportunity(_ scheduler:inout AmbientScheduler,frequency:AmbientFrequency = .high,
-                                 hz:Int=60,busy:Bool=false,legacy:Double=0)->AmbientEvent? {
+                                 hz:Int=60,busy:Bool=false,legacy:Double=0,insect:Bool=false)->AmbientEvent? {
         let count=Int(ceil(scheduler.remaining*Double(hz)))+2
         for _ in 0..<count {
             let before=scheduler.remaining
-            let event=tick(&scheduler,frequency:frequency,hz:hz,busy:busy,legacy:legacy)
+            let event=tick(&scheduler,frequency:frequency,hz:hz,busy:busy,legacy:legacy,insect:insect)
             if scheduler.remaining>before {return event}
             XCTAssertNil(event)
         }
@@ -46,8 +46,8 @@ final class SceneSchedulingTests:XCTestCase {
         XCTAssertEqual(soon.remaining,remaining,"Placement cannot postpone an already closer opportunity")
     }
 
-    func testSceneSeventyPercentAndDailyReservedThirteenPercentAreNotRedistributed() {
-        var sceneHits=0,dailyEmpty=0
+    func testSceneSeventyPercentAndDailyInsectEightPercentKeepTheOtherFivePercentEmpty() {
+        var sceneHits=0,dailyEmpty=0,dailyInsect=0,dailyLegacy=0
         let count=512,id=HabitatObjectID(7)
         for seed in 0..<count {
             var scene=AmbientScheduler(seed:UInt64(seed));scene.reset(.high)
@@ -56,15 +56,19 @@ final class SceneSchedulingTests:XCTestCase {
             if event == .bathVisit(id) {sceneHits+=1}
             else {XCTAssertEqual(event,.flockPass,"The other 30% uses exactly the existing selector")}
             var daily=AmbientScheduler(seed:UInt64(seed));daily.reset(.high)
-            let ordinary=nextOpportunity(&daily)
+            let ordinary=nextOpportunity(&daily,insect:true)
             if ordinary == nil {dailyEmpty+=1}
-            else {XCTAssertEqual(ordinary,.flockPass)}
+            else if ordinary == .insectCatch {dailyInsect+=1}
+            else {XCTAssertEqual(ordinary,.flockPass);dailyLegacy+=1}
             XCTAssertEqual(daily.remaining,45,accuracy:1e-7)
         }
         XCTAssertEqual(Double(sceneHits)/Double(count),0.70,accuracy:0.06)
-        // In M6d the frozen insect/courtship/gift intervals (8%+4%+1%)
-        // are all empty, even with an available legacy flock action.
-        XCTAssertEqual(Double(dailyEmpty)/Double(count),0.13,accuracy:0.04)
+        // An ineligible insect opportunity is silently spent by the engine;
+        // it must not be transferred to the old selector.
+        XCTAssertEqual(Double(dailyInsect)/Double(count),0.08,accuracy:0.04)
+        XCTAssertEqual(Double(dailyEmpty)/Double(count),0.05,accuracy:0.03)
+        XCTAssertEqual(Double(dailyLegacy)/Double(count),0.87,accuracy:0.04)
+        XCTAssertEqual(dailyEmpty+dailyInsect+dailyLegacy,count)
     }
 
     func testBusyAndCoolingSceneOpportunitiesAreDiscardedWithoutImmediateRetry() {

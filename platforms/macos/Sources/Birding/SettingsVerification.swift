@@ -259,24 +259,28 @@ enum SettingsVerification {
                 checks["manualMigrationScrollsToFirstNewBird"] = scroll.documentView!.visibleRect.intersects(w.fields[7].frame)
             }
             w.cancel()
-            try checkPassiveSettings(folder:folder,checks:&checks)
-            try PassiveMotionSettingsVerification.run(into:&checks,folder:folder)
-            try VisitorMemorySettingsVerification.run(into:&checks,folder:folder)
-            try ActivityRhythmSettingsVerification.run(into:&checks,folder:folder)
-            try EdgePeekSettingsVerification.run(into:&checks,folder:folder)
-            try ChaseSettingsVerification.run(into:&checks,folder:folder)
-            try TravelTogetherSettingsVerification.run(into:&checks,folder:folder)
-            try AllopreeningSettingsVerification.run(into:&checks,folder:folder)
-            try FixedPerchSettingsVerification.run(into:&checks,folder:folder)
-            try FoodTraySettingsVerification.run(into:&checks,folder:folder)
-            try BathSettingsVerification.run(into:&checks,folder:folder)
-            try LeafCarrySettingsVerification.run(into:&checks,folder:folder)
+            // This entire suite runs inside applicationDidFinishLaunching.
+            // Bound each fixture's autoreleased Cocoa/hosted SwiftUI controls;
+            // closed/rebuilt windows must not accumulate until app.run returns.
+            try autoreleasepool {try checkPassiveSettings(folder:folder,checks:&checks)}
+            try autoreleasepool {try PassiveMotionSettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try VisitorMemorySettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try ActivityRhythmSettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try EdgePeekSettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try ChaseSettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try TravelTogetherSettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try AllopreeningSettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try FixedPerchSettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try FoodTraySettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try BathSettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try LeafCarrySettingsVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try InsectCatchSettingsVerification.run(into:&checks,folder:folder)}
             ActivityRhythmClockVerification.run(into:&checks)
-            try VisitorMemoryPersistenceVerification.run(into:&checks,folder:folder)
-            try ObservationJournalPersistenceVerification.run(into:&checks,folder:folder)
-            try ObservationJournalConcurrencyVerification.run(into:&checks,folder:folder)
-            try ObservationJournalUIVerification.run(into:&checks,folder:folder)
-            try checkLeafSettings(folder:folder,checks:&checks)
+            try autoreleasepool {try VisitorMemoryPersistenceVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try ObservationJournalPersistenceVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try ObservationJournalConcurrencyVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try ObservationJournalUIVerification.run(into:&checks,folder:folder)}
+            try autoreleasepool {try checkLeafSettings(folder:folder,checks:&checks)}
             d.showSpeciesGallery()
             checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.title=="图鉴…"} && d.gallery?.window?.isVisible == true
             if let gallery=d.gallery?.window {

@@ -202,6 +202,9 @@ public final class Bird {
     private var pointerFollow:PointerFollowMotion?
     var pointerFollowCenter:CGPoint? {pointerFollow == nil ? nil:orbitCenter}
     private var urgentFlight = false
+    /// Only scene return legs suppress the ordinary decorative wave, retaining
+    /// their checked envelope while using the existing ordinary flight sampler.
+    private var sceneContinuation = false
     private var entryDuration=0.0, exitDuration=0.0, orbitTurns=1.0
     private var approach:FlightPath?, exitPath:FlightPath?, transitPath:FlightPath?
     private var plannedTarget:CGPoint = .zero
@@ -209,6 +212,7 @@ public final class Bird {
     private var cruiseSpeed=0.0
     public private(set) var flightSpeed=0.0
     private var flightVelocity:CGPoint = .zero
+    var ordinaryFlightVelocity:CGPoint {flightVelocity}
     /// Actual last-step velocity, never a guessed vector toward the destination.
     /// The snapshot does not advance simulation or consume randomness.
     var airborneFlight:AirborneFlightSnapshot? {
@@ -247,6 +251,7 @@ public final class Bird {
         coordinatedMotion=nil
         sideHopMotion=nil
         pointerFollow=nil
+        sceneContinuation=false
         isDeparting = false
         motionRevision &+= 1; wingPhase = 0
         if host?.isGround == true { edge = .top }
@@ -411,6 +416,7 @@ public final class Bird {
     }
     public var departureFinished: Bool { isDeparting && flightAge >= flightDuration }
     public func perch(on host: Surface, spriteScale:CGFloat=1) {
+        sceneContinuation=false
         flightVelocity = .zero
         coordinatedMotion=nil
         sideHopMotion=nil
@@ -580,6 +586,7 @@ public final class Bird {
     /// Release an interrupted scene at its actual feet. Ordinary routing can
     /// choose a fresh destination once simulation resumes.
     func requestFlightRecovery() {
+        sceneContinuation=false
         flightVelocity = .zero
         coordinatedMotion=nil;sideHopMotion=nil;pointerFollow=nil;motionRevision &+= 1
         hostID=nil;hostPID=nil;depthID=nil;previousHost=nil
@@ -588,6 +595,38 @@ public final class Bird {
     func finishCoordinatedFlight() {
         guard state == .perched else {return}
         coordinatedMotion=nil
+    }
+    /// Adopt one checked ordinary return leg at actual feet. Unlike fly() or
+    /// requestFlightRecovery(), this handoff never zeros measured velocity or
+    /// restarts the wing phase. The caller owns reservation/envelope validation.
+    @discardableResult
+    func resumeOrdinaryFlight(_ leg:CoordinatedFlightLeg,on host:Surface,fraction:CGFloat,
+                              spriteScale:CGFloat,expectedRevision:UInt64) -> Bool {
+        guard state == .flying,!isDeparting,motionRevision==expectedRevision,
+              spriteScale.isFinite,spriteScale>0,fraction.isFinite,(0...1).contains(fraction),
+              !host.isHabitat,host.isGround || host.layer==0,
+              Geometry.distance(position,leg.path.point(0))<0.001,
+              Geometry.distance(Geometry.foot(on:host,fraction:fraction,edge:.top,scale:spriteScale),leg.path.point(1))<0.001,
+              leg.timing.duration.isFinite,leg.timing.duration>0,
+              abs(leg.timing.distance-leg.path.length)<0.001 else {return false}
+        let speed=Double(Geometry.distance(.zero,flightVelocity))
+        guard abs(leg.timing.speed(at:0)-speed)<0.1 else {return false}
+        if speed>0.001 {
+            let next=leg.path.point(leg.timing.progress(at:min(0.001,leg.timing.duration)))
+            let length=Geometry.distance(position,next)
+            guard length>0 else {return false}
+            let incoming=CGPoint(x:(next.x-position.x)/length*speed,y:(next.y-position.y)/length*speed)
+            guard Geometry.distance(incoming,flightVelocity)<=max(2,speed*0.01) else {return false}
+        }
+        wingPhase+=flightAge;flightAge=0
+        origin=position;target=leg.path.point(1);plannedTarget=target
+        hostID=host.id;hostPID=host.pid;self.fraction=fraction;edge = .top
+        depthID=nil;previousHost=nil;coordinatedMotion=nil;sideHopMotion=nil;pointerFollow=nil
+        orbitDuration=0;orbitPath=nil;approach=nil;exitPath=nil;approachTiming=nil;exitTiming=nil
+        transitPath=leg.path;transitTiming=leg.timing;transitDuration=leg.timing.duration;flightDuration=transitDuration
+        cruiseSpeed=leg.timing.peakSpeed;flightSpeed=speed;urgentFlight=false;sceneContinuation=true
+        destinationInvalidated=false;isGliding=false;motionRevision &+= 1
+        return true
     }
     private func advanceCoordinatedFlight(_ dt:Double) {
         guard var motion=coordinatedMotion else {return}
@@ -699,7 +738,7 @@ public final class Bird {
                 }
             } else {
                 let u=transitTiming?.progress(at:flightAge) ?? FlightBehavior.travelProgress(t,duration:transitDuration),p=transitPath?.point(u) ?? origin
-                let wave = urgentFlight ? 0 : m.wave * sin(2 * .pi * (flightAge+wingPhase) / m.cycle) * pow(sin(t * .pi), 2)
+                let wave = urgentFlight || sceneContinuation ? 0 : m.wave * sin(2 * .pi * (flightAge+wingPhase) / m.cycle) * pow(sin(t * .pi), 2)
                 next=CGPoint(x:p.x+(target.x-plannedTarget.x)*u,y:p.y+(target.y-plannedTarget.y)*u+wave)
             }
             if abs(next.x-position.x) > 0.05 { facingRight = next.x > position.x }
@@ -750,7 +789,7 @@ public final class Bird {
             // airspace or on the segment to its destination.
             if let follow=pointerFollow {include(follow.footArea)}
             include(CGRect(origin:target,size:.zero))
-            let wave=urgentFlight ? 0:abs(FlightBehavior.motion(profile.id).wave)
+            let wave=urgentFlight || sceneContinuation ? 0:abs(FlightBehavior.motion(profile.id).wave)
             area=area.insetBy(dx:0,dy:-wave)
         }
         guard area.minX.isFinite,area.minY.isFinite,area.width.isFinite,area.height.isFinite else {return nil}

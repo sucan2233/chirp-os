@@ -60,6 +60,8 @@ enum ExpandedVerification {
             try BathVerification.run(into:&checks,folder:folder)
             try LeafCarryArtVerification.run(into:&checks,folder:folder)
             try LeafCarryVerification.run(into:&checks,folder:folder)
+            try InsectCatchArtVerification.run(into:&checks,folder:folder)
+            try InsectCatchVerification.run(into:&checks,folder:folder)
             try M6ContentVerification.run(into:&checks,folder:folder)
             try ArrivalRenderingVerification.run(into:&checks,folder:folder)
             window.orderOut(nil)

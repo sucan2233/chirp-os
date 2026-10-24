@@ -20,17 +20,19 @@ extension BirdArt {
         let props=folder.appendingPathComponent("art/props")
         try FileManager.default.createDirectory(at:props,withIntermediateDirectories:true)
         let bathImages:[(String,CGImage)]=[("bathBasin",BathArt.image())] + BathGeometry.splashFrameNames.map{($0,BathArt.splashImage($0)!)}
-        for (name,image) in bathImages+[("leafToken",CarryArt.leafImage())] {
+        let insectImages=InsectArt.frameNames.map{($0,InsectArt.image($0)!)}
+        for (name,image) in bathImages+[("leafToken",CarryArt.leafImage())]+insectImages {
             let rep=NSBitmapImageRep(cgImage:image)
             try rep.representation(using:.png,properties:[:])!.write(to:props.appendingPathComponent(name+".png"))
         }
+        let insectMetadata:[String:Any]=["files":InsectArt.frameNames.map{$0+".png"},"logicalSize":[Int(InsectArt.logicalSize.width),Int(InsectArt.logicalSize.height)],"anchor":[Double(InsectArt.anchor.x),Double(InsectArt.anchor.y)],"collisionRadius":Double(InsectArt.collisionRadius),"frameDuration":InsectArt.frameDuration,"lifetime":CatchArtGeometry.insectLifetime,"maximumInstances":1,"scale":"worldScale","entry":"complete canvas starts offscreen"]
         let propMetadata:[String:Any]=["schemaVersion":1,"bathBasin":["file":"bathBasin.png","logicalSize":[128,40],"footAnchor":[64,20],"waterlineY":20,"waterEllipse":[16,10,96,20],"frontLayer":"derived from single basin art"],
-            "waterSplash":["files":BathGeometry.splashFrameNames.map{$0+".png"},"logicalSize":[24,24],"anchor":[12,22],"frameDuration":0.1,"lifetime":0.4,"maximumInstances":6],"leafToken":["file":"leafToken.png","logicalSize":[16,16],"gripAnchor":[3,12],"surfaceAnchor":[10,12],"scale":"worldScale","availableLifetime":180,"placedLifetime":8,"fadeDuration":0.2],"clock":"singleEngineSimulationClock"]
+            "waterSplash":["files":BathGeometry.splashFrameNames.map{$0+".png"},"logicalSize":[24,24],"anchor":[12,22],"frameDuration":0.1,"lifetime":0.4,"maximumInstances":6],"leafToken":["file":"leafToken.png","logicalSize":[16,16],"gripAnchor":[3,12],"surfaceAnchor":[10,12],"scale":"worldScale","availableLifetime":180,"placedLifetime":8,"fadeDuration":0.2],"insect":insectMetadata,"clock":"singleEngineSimulationClock"]
         try JSONSerialization.data(withJSONObject:propMetadata,options:[.prettyPrinted,.sortedKeys]).write(to:props.appendingPathComponent("manifest.json"))
         try exportSupport(to:folder.appendingPathComponent("species-support.json"))
         let metadata:[String:Any] = ["schemaVersion":2,"logicalFrameSize":48,"frameSizes":Dictionary(uniqueKeysWithValues:catalog.species.map{($0.id.rawValue,BirdArt(species:$0.id).frames["stand"]!.width)}),"footAnchor":[29,39],"frames":names,
                                     "speciesFrames":Dictionary(uniqueKeysWithValues:catalog.species.filter{Self.names(for:$0.id) != names}.map{($0.id.rawValue,Self.names(for:$0.id))}),
-                                    "poseClips":Self.poseMetadata,"poseClock":"owningBehaviorSimulationAge","source":"platforms/macos/Sources/Birding/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt}.swift"]
+                                    "poseClips":Self.poseMetadata,"poseClock":"owningBehaviorSimulationAge","source":"platforms/macos/Sources/Birding/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt}.swift"]
         try JSONSerialization.data(withJSONObject:metadata,options:[.prettyPrinted,.sortedKeys]).write(to:folder.appendingPathComponent("art/manifest.json"))
     }
 }

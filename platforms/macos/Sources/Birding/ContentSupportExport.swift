@@ -31,10 +31,14 @@ extension BirdArt {
             for (name,clip) in [("leafCarryPickup",PoseClip.leafCarryPickup(species:species)),("leafCarryPlace",PoseClip.leafCarryPlace(species:species))] {
                 if let clip,let data=try? JSONEncoder().encode(clip),let object=try? JSONSerialization.jsonObject(with:data) {clips[name]=object}
             }
-            let anchorNames=profile.poseFrameNames + (SpeciesBehaviorProfile.peekSpecies.contains(species) ? Self.peekNames:[]) + (profile.allows(.bathVisit) ? Self.bathNames:[]) + (profile.allows(.leafCarry) ? Self.carryNames:[])
-            result[species.rawValue]=["clips":clips,"durationPolicy":"watch/alert/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s",
-                "transportBeakAnchors":Dictionary(uniqueKeysWithValues:(profile.allows(.leafCarry) ? Self.names(for:species):[]).compactMap {name -> (String,[Double])? in
-                    guard let anchor=PoseClip.carryBeakAnchor(species:species,frame:name) else {return nil}
+            if let clip=PoseClip.insectCatchRecovery(species:species),
+               let data=try? JSONEncoder().encode(clip),let object=try? JSONSerialization.jsonObject(with:data) {
+                clips["insectCatchRecovery"]=object
+            }
+            let anchorNames=profile.poseFrameNames + (SpeciesBehaviorProfile.peekSpecies.contains(species) ? Self.peekNames:[]) + (profile.allows(.bathVisit) ? Self.bathNames:[]) + (profile.allows(.leafCarry) ? Self.carryNames:[]) + (profile.allows(.insectCatch) ? Self.catchNames:[])
+            result[species.rawValue]=["clips":clips,"durationPolicy":"watch/alert/rest use owning run duration; transitions compress proportionally; edgePeek samples its existing 1.6s observation phase; bathVisit samples 4.4s after landing, then existing shake for 0.8s; leafCarry pickup 1.2s with atomic grip at 0.7s, place 0.4s then recovery 0.3s; insectCatch holds catchOpen during interception, then catchClose 0.18s and catchRecover 0.30s after actual contact",
+                "transportBeakAnchors":Dictionary(uniqueKeysWithValues:(profile.allows(.leafCarry) || profile.allows(.insectCatch) ? Self.names(for:species):[]).compactMap {name -> (String,[Double])? in
+                    guard let anchor=PoseClip.catchBeakAnchor(species:species,frame:name) ?? PoseClip.carryBeakAnchor(species:species,frame:name) else {return nil}
                     return (name,[anchor.x,anchor.y])
                 }),
                 "waterContactAnchors":Dictionary(uniqueKeysWithValues:(profile.allows(.bathVisit) ? Self.bathNames:[]).map {name in
