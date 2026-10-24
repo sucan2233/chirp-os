@@ -1,6 +1,6 @@
 # M6h 隔离真实墙钟长跑：实现记录与待验收项
 
-记录日期：2026-10-24。**与M7a合批第三轮Release构建89.63s、strict签名通过；首次真实30秒smoke退出0，离线检查16/16通过。仅确认本次smoke，不代表M6h整阶段通过：2h观察、8h运行、其他退出入口和硬件验收仍未执行。** 用户文件隔离哈希证据有限，不能标为全通过。后续状态栏 autosave 隔离修订已写源码，尚未构建或运行；旧16项结果不覆盖此次新增检查。M6g冻结候选第六轮原生275/275已通过，主会已本地提交文档`392e39a`；不再沿用此前待解锁状态。这不替代M6h长跑或M7a验收。
+记录日期：2026-10-24。**状态栏隔离修正后真实30秒smoke退出0、离线22/22通过。第八轮M7b/c候选完整原生回归通过后，已启动8h默认工作负载隔离运行，尚未收尾或验收。2h人工观察、其他退出入口及硬件验收仍待执行，M6h未通过。** 用户文件隔离哈希证据有限，不能标为全通过。以下保留各轮实现、失败与smoke历史；最新8h启动记录见末节。
 
 ## 实现范围与接线
 
@@ -73,7 +73,7 @@ manifest记录二进制为 `dist/ChirpOS.app/Contents/MacOS/Birding`，版本0.6
 
 本次manifest五个持久化路径均落在独立输出目录，preferences为独立suite，源码隔离审计通过；真实文件隔离哈希证据仍有限。另，summary两份状态中的 `statusAutosaveDisabled=false`，离线16项未单独验证该字段，不能把16/16扩展成状态栏偏好无写入的动态证明。
 
-## 状态栏与默认偏好隔离修订（源码完成，待统一验证）
+## 状态栏与默认偏好隔离修订（历史实现，复验见末节）
 
 本机 SDK `NSStatusItem.h` 明确 `autosaveName` 为 `null_resettable`：未指定时自动选名，设为 nil 会重置自动名并清除保存信息。因此旧注释“无名称即不保存”以及 `statusAutosaveDisabled:(name==nil)` 的判据不成立；上述历史报告原样保留，不追加通过结论。
 
@@ -87,7 +87,7 @@ manifest记录二进制为 `dist/ChirpOS.app/Contents/MacOS/Birding`，版本0.6
 
 ## 运行方式与尚待执行项
 
-以下为运行方式；首次30秒已按上述证据完成，2h/8h仍未运行。每次必须使用全新绝对输出目录，直接启动二进制以保留其真实参数与终止路径：
+以下为运行方式；30秒复验已完成，8h首轮已启动、待收尾，2h人工观察尚未运行。每次必须使用全新绝对输出目录，直接启动二进制以保留其真实参数与终止路径：
 
 ```sh
 "<候选.app>/Contents/MacOS/Birding" --soak-desktop /absolute/new/m6h-smoke --soak-duration 30 --soak-birds 12
@@ -101,11 +101,11 @@ manifest记录二进制为 `dist/ChirpOS.app/Contents/MacOS/Birding`，版本0.6
 | --- | --- | --- |
 | 与M7a合批构建/签名 | 第三轮Release 89.63s、strict签名通过 | 本次结果不代表M7a整阶段验收 |
 | 30秒真实桌面smoke及离线检查 | 首次退出0、16/16通过 | `.build/m6h-smoke-initial`中的manifest/JSONL/summary/verification |
-| 状态栏UUID名称与默认应用偏好隔离修订 | 源码已完成，未构建或运行 | 新smoke的 `preference-isolation.json`、实际名称采样与新版离线六项检查；旧16/16不覆盖 |
+| 状态栏UUID名称与默认应用偏好隔离修订 | 第四轮候选真实30秒及22/22检查通过 | `.build/m6h-smoke-status-isolation`；旧16/16不覆盖新增检查 |
 | 控制窗关闭、菜单Quit、外部应用终止、启动失败清理 | 未运行 | 各自独立目录与幂等/零资源证据 |
 | 用户数据与草稿隔离 | 独立持久路径与源码审计通过；实际文件哈希证据有限，非全通过 | settings未变，visitors/observations变化，旧安装PID 13106同时运行，变化不可归因；需可区分写入来源的证据，不得为验证读取或改写草稿 |
 | 真实2h人工观察 | 未运行 | 解锁桌面、人工起止/观察记录；锁屏和不在场时段不能计算为观察 |
-| 真实8h运行 | 未运行 | 不加速连续实际运行、暂停/sleep/tick缺口、CPU/RSS趋势、自然及清理状态审阅 |
+| 真实8h运行 | 首轮已启动，尚未收尾或验收 | 不加速连续实际运行、暂停/sleep/tick缺口、CPU/RSS趋势、自然及清理状态审阅 |
 | 物理多屏/热插拔 | 未验收，需要用户硬件 | 实际设备操作和恢复证据，虚拟screens不替代 |
 | 系统sleep/wake | 未验收，需要用户真实操作 | 实际通知、时序与恢复状态；不能用调用sleeping/waking冒充 |
 | 长期泄漏/能耗 | 未验收 | RSS/CPU趋势用于定位；需补充实际工具/环境证据，不能仅据零计数定论 |
@@ -123,3 +123,13 @@ manifest记录二进制为 `dist/ChirpOS.app/Contents/MacOS/Birding`，版本0.6
 第四轮M7b/c候选（SHA256 `7d3b5931971cd52d0aab5aa52abeee89f4419d6190ac834e0c260d07baaffcb6`）运行`.build/m6h-smoke-status-isolation`，退出0、实际墙钟30.109228秒，新增偏好检查后的离线22/22通过。每次UUID autosaveName在整个记录生命周期保持一致；结束后隔离suite已移除，本次状态栏键无残留，默认应用域与受保护生产偏好键的进程内前后快照没有差异，cleanupSucceeded=true且errors为空。原始证据为该目录的`manifest.json`、`telemetry.jsonl`、`preference-isolation.json`、`summary.json`及`verification.json`。
 
 本轮用于验证已修正的名称隔离与清理，没有再次通过用户文件哈希碰运气消除此前归因限制；没有证明所有用户文件无写入、退出后磁盘状态或全局defaults隔离。桌面工具仍报告锁定，此次30秒工具运行不计入2h人工观察，不构成8h或M6h/M7d整阶段验收。
+
+## 第八轮候选8小时隔离运行已启动
+
+完整birds4593/4593、settings2190/2190退出0后，于北京时间 **2026-10-24 22:37:40**（UTC 14:37:40）启动真实8h运行，请求28800秒、默认12鸟；PID **75532**，证据目录`.build/m7-final-soak-8h-first`。若无退出/暂停/睡眠影响，预计北京时间2026-10-25 06:37:40以后收尾；以实际summary为准，不能预先判为通过。
+
+运行的是第八轮冻结候选的独立bundleID副本`ChirpOS M7bc Final Verification.app`，SHA256 `6afc9007ca8664a04d1969c50d06a1cf9207854f28f26dd7009b8c00c0b18796`。其38个Mach-O代码/数据分区与冻结候选一致，二进制文件哈希因应用标识及签名重签不同。默认应用域为`dev.birding.desktop.verification.6dd53dfa-7516-49d0-b836-ab17463e8b32`，controller suite为`dev.birding.desktop.soak.EE4E1A5F-0C5B-48AA-8A6C-75C33D13B769`；五个持久化路径均位于本次输出目录。已安装M6a/b继续运行，没有关闭、替换或保存其草稿。
+
+启动后100.112936秒样本记录12只自然到场、5996次生产tick、locked=true、sleep/wake均0，RSS为171917312 bytes；只是启动进展，不能外推长期趋势。默认设置不自动放置巢台/浴盆等场景，该样本nests/nestMaterials均0；本轮不能替未发生的新内容授予长跑覆盖。锁屏时间不计为人工观察，既有睡眠策略保持原状；最终必须分别审阅墙钟、awake uptime、模拟推进、tick缺口、实际sleep/wake与CPU/RSS趋势。
+
+收尾后读取summary、全部telemetry/events和preference-isolation，检查持续时长、完整事件、隔离及资源释放。现有`--verify-soak-smoke`明确只接受30秒，不用于此8h目录，也不改报告把8h冒充smoke。用户已安排稍后解锁、先完成其他工作；安装和2h人工观察留待实际条件满足，M6h/M7d及总目标仍未完成。

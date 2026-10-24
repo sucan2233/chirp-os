@@ -9,24 +9,42 @@ enum NestMaterialVerification {
         try FileManager.default.createDirectory(at:output,withIntermediateDirectories:true)
         var evidence=[[String:Any]]()
         var completed=false
-        defer {report(checks,evidence:evidence,prefix:"nestMaterialNative",folder:output,completed:completed)}
-        for scale:CGFloat in [0.5,1,2] {for right in [true,false] {try autoreleasepool {
+        var caseErrors=[String:String]()
+        defer {report(checks,evidence:evidence,prefix:"nestMaterialNative",folder:output,completed:completed,caseErrors:caseErrors)}
+        for scale:CGFloat in [0.5,1,2] {for right in [true,false] {
+            runCase("scale-\(scale)-\(right ? "right":"left")",errors:&caseErrors) {
             let f=try Fixture(folder:output);defer {f.close()}
             try f.install(scale:scale,right:right);try f.place()
             _=journey(f,kind:.nestMaterialCarry,source:.preview,key:"nestMaterialNative-\(scale)-\(right ? "right":"left")-",
                 capture:true,into:&checks,evidence:&evidence,folder:output)
         }}}
-        try autoreleasepool {
+        runCase("automatic",errors:&caseErrors) {
             let f=try Fixture(folder:output);defer {f.close()}
             try f.install();try f.place()
             _=journey(f,kind:.nestMaterialCarry,source:.automatic,key:"nestMaterialNative-automatic-",
                 capture:false,into:&checks,evidence:&evidence,folder:output)
+        }
+        runCase("interruptions",errors:&caseErrors) {
+            let f=try Fixture(folder:output);defer {f.close()}
             try interruptions(f,build:false,into:&checks,evidence:&evidence,folder:output)
             f.d.engine.handle(.clearCurrentScene);f.advance(3);f.view.updateSprites()
             checks["nestMaterialNativeFinalResourcesAndIsolation"]=f.isolated && clear(f.d.engine) &&
                 f.view.layer?.sublayers?.contains{$0.name?.hasPrefix("habitat-nest-")==true || $0.name?.hasPrefix("scene-prop-")==true}==false
         }
+        try requireAllCases(caseErrors)
         completed=true
+    }
+
+    /// Independent fixtures can still run after another case is blocked. All
+    /// exceptions remain failures, and the original route guards run unchanged.
+    static func runCase(_ name:String,errors:inout [String:String],body:()throws->Void) {
+        do {try autoreleasepool {try body()}}
+        catch {errors[name]=error.localizedDescription}
+    }
+    static func requireAllCases(_ errors:[String:String]) throws {
+        if !errors.isEmpty {
+            throw failure(errors.keys.sorted().map {"\($0): \(errors[$0]!)"}.joined(separator:"\n"))
+        }
     }
 
     final class Fixture {
@@ -173,6 +191,9 @@ enum NestMaterialVerification {
         let d=f.d,build=kind == .nestBuild,limit=build ? 30.0:35.0
         let before=entry(d,kind:kind),beforeCounts=counts(before),other=entry(d,kind:build ? .nestMaterialCarry:.nestBuild)
         let previousIDs=Set(initial.materials.map(\.id)),originalBird=bird
+        // Fixture reuse retains lifetime counters, including a departure caused
+        // by an earlier host-invalid case. This visit must not change them.
+        let arrivalsBefore=d.arrivalCount,departuresBefore=d.departureCount
         guard let run=f.start(kind,source:source),let start=d.engine.events.last(where:{$0.runID==run && $0.type == .started}) else {
             checks[key+"RealCommandAndNativePreviewStart"]=false
             evidence.append(["case":key,"layout":f.layout,"reason":d.engine.events.last?.reason?.rawValue ?? "none"]);return false
@@ -181,7 +202,7 @@ enum NestMaterialVerification {
         let output=folder.appendingPathComponent(key+"journey",isDirectory:true)
         if capture {try FileManager.default.createDirectory(at:output,withIntermediateDirectories:true)}
         var images=[URL](),times=[Double](),samples=[[String:Any]](),frames=Set<String>()
-        var conservation=true,identities=true,anchor=true,layerGeometry=true,continuous=true,noEarlyRecord=true
+        var conservation=true,identities=true,populationStable=true,anchor=true,layerGeometry=true,continuous=true,noEarlyRecord=true
         var pickup=false,delivery=false,commit=false,pickupContinuous=true,deliveryContinuous=true,attachedFlight=false
         var birdPixels=0,twigPixels=0,contactPixels=0,progressPixels=0,platformPixels=0,trayPixels=0
         var paused=0.0,pauseSeen=false,pauseOK=true,visibleSamples=true,contactSamples=true
@@ -199,7 +220,8 @@ enum NestMaterialVerification {
             let props=d.engine.propSnapshot().filter{$0.kind == .twigToken};f.view.updateSprites();frames.insert(state.frameName)
             conservation = conservation && conserved(nest) && nest.progress==nest.arranged
             identities = identities && Set(nest.materials.map(\.id))==previousIDs && d.birds.count==1 && d.birds.first === originalBird &&
-                d.arrivalCount==0 && d.departureCount==0 && Set(props.map(\.id)).count==props.count
+                Set(props.map(\.id)).count==props.count
+            populationStable = populationStable && d.arrivalCount==arrivalsBefore && d.departureCount==departuresBefore
             // Callbacks may run twice per fixed engine step. HabitatJourney's
             // FlightTiming peak never exceeds this production cruise speed;
             // measure displacement against elapsed simulation time, not 120Hz.
@@ -316,7 +338,9 @@ enum NestMaterialVerification {
             bird.hostID==f.host.id && f.d.surfaces.contains(where:{$0.id==bird.hostID})
         let required=build ? SpeciesBehaviorProfile.nestBuildFrameNames:SpeciesBehaviorProfile.nestCarryFrameNames
         checks[key+"DedicatedFramesAndRealCommit"]=Set(required).isSubset(of:frames) && (build ? commit:pickup && delivery && attachedFlight)
-        checks[key+"ThreeStableMaterialsAndConservation"]=conservation && identities && final.map(conserved)==true
+        populationStable = populationStable && d.arrivalCount==arrivalsBefore && d.departureCount==departuresBefore
+        checks[key+"ThreeStableMaterialsAndConservation"]=conservation && identities && populationStable && final.map(conserved)==true
+        checks[key+"NoPopulationChangeDuringVisit"]=populationStable
         checks[key+"AtomicSingleStep"]=build ? final?.progress==initial.progress+1 && final?.delivered==initial.delivered-1:
             final?.available==initial.available-1 && final?.delivered==initial.delivered+1 && final?.progress==initial.progress
         checks[key+"RealContactAndTextureTransform"]=anchor && layerGeometry && (build || pickupContinuous && deliveryContinuous) && continuous
@@ -355,6 +379,9 @@ enum NestMaterialVerification {
             "geometryInvariants":["anchor":anchor,"layer":layerGeometry,"pickup":pickupContinuous,"delivery":deliveryContinuous,"continuous":continuous],
             "motionSpeedLimit":motionSpeedLimit,"maxMotionDelta":maxMotionDelta,"maxFootStep":maxFootStep,
             "firstMotionViolation":firstMotionViolation as Any? ?? NSNull(),
+            "populationBefore":["arrivals":arrivalsBefore,"departures":departuresBefore],
+            "populationAfter":["arrivals":d.arrivalCount,"departures":d.departureCount],
+            "materialConservation":conservation,"materialAndBirdIdentitiesStable":identities,
             "beforeMaterials":materialRows(initial),"afterMaterials":final.map(materialRows) ?? []])
         return completed
     }
@@ -437,10 +464,11 @@ enum NestMaterialVerification {
     static func materialRows(_ nest:NestSnapshot)->[[String:Any]] {nest.materials.map{["id":$0.id.rawValue,"slot":$0.slot,"state":$0.state.rawValue,
         "owner":$0.owner?.rawValue ?? 0,"position":NSStringFromPoint($0.position),"pickupRun":$0.pickupRunID?.rawValue ?? 0,
         "deliveryRun":$0.deliveryRunID?.rawValue ?? 0,"arrangementRun":$0.arrangementRunID?.rawValue ?? 0]}}
-    static func report(_ checks:[String:Bool],evidence:[[String:Any]],prefix:String,folder:URL,completed:Bool) {
+    static func report(_ checks:[String:Bool],evidence:[[String:Any]],prefix:String,folder:URL,completed:Bool,caseErrors:[String:String]=[:]) {
         let own=checks.filter{$0.key.hasPrefix(prefix)}
         let checksPassed = !own.isEmpty && own.values.allSatisfy{$0}
-        saveJSON(["passed":completed && checksPassed,"completed":completed,"checksPassed":checksPassed,"checks":own,"evidence":evidence,
+        saveJSON(["passed":completed && caseErrors.isEmpty && checksPassed,"completed":completed,"checksPassed":checksPassed,
+            "caseErrors":caseErrors,"checks":own,"evidence":evidence,
             "scope":"Real production placement/preview/automatic commands, existing isolated residents, actual root-layer pixels. No system event injection, controller startup or user persistence. Core covers dt/replay/negative displays/pressure."],to:folder.appendingPathComponent("report.json"))
     }
     static func failure(_ text:String)->NSError {NSError(domain:"NestNativeVerification",code:1,userInfo:[NSLocalizedDescriptionKey:text])}

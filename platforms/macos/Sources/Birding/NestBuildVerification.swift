@@ -7,8 +7,10 @@ enum NestBuildVerification {
         try FileManager.default.createDirectory(at:output,withIntermediateDirectories:true)
         var evidence=[[String:Any]]()
         var completed=false
-        defer {NestMaterialVerification.report(checks,evidence:evidence,prefix:"nestBuildNative",folder:output,completed:completed)}
-        for scale:CGFloat in [0.5,1,2] {for right in [true,false] {try autoreleasepool {
+        var caseErrors=[String:String]()
+        defer {NestMaterialVerification.report(checks,evidence:evidence,prefix:"nestBuildNative",folder:output,completed:completed,caseErrors:caseErrors)}
+        for scale:CGFloat in [0.5,1,2] {for right in [true,false] {
+            NestMaterialVerification.runCase("scale-\(scale)-\(right ? "right":"left")",errors:&caseErrors) {
             let f=try NestMaterialVerification.Fixture(folder:output);defer {f.close()}
             try f.install(scale:scale,right:right);try f.place()
             let key="nestBuildNative-\(scale)-\(right ? "right":"left")-"
@@ -17,13 +19,20 @@ enum NestBuildVerification {
             _=NestMaterialVerification.journey(f,kind:.nestBuild,source:.preview,key:key,capture:true,
                 into:&checks,evidence:&evidence,folder:output)
         }}}
-        try autoreleasepool {
+        NestMaterialVerification.runCase("completeThree",errors:&caseErrors) {
             let f=try NestMaterialVerification.Fixture(folder:output);defer {f.close()}
             try completeThree(f,into:&checks,evidence:&evidence,folder:output)
+        }
+        NestMaterialVerification.runCase("automaticFocus",errors:&caseErrors) {
+            let f=try NestMaterialVerification.Fixture(folder:output);defer {f.close()}
             try automaticFocus(f,into:&checks,evidence:&evidence)
+        }
+        NestMaterialVerification.runCase("interruptions",errors:&caseErrors) {
+            let f=try NestMaterialVerification.Fixture(folder:output);defer {f.close()}
             try NestMaterialVerification.interruptions(f,build:true,into:&checks,evidence:&evidence,folder:output)
             checks["nestBuildNativeIsolationAndFinalResources"]=f.isolated && NestMaterialVerification.clear(f.d.engine)
         }
+        try NestMaterialVerification.requireAllCases(caseErrors)
         completed=true
     }
     private static func completeThree(_ f:NestMaterialVerification.Fixture,into checks:inout [String:Bool],
