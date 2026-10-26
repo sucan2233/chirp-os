@@ -1,0 +1,389 @@
+{
+  "baseline": "2d56542",
+  "scope": "Swift implementation, XCTest and validation tools only; excludes generated JSON, atlases, docs and evidence",
+  "summary": {
+    "productionSwift": {
+      "files": 20,
+      "added": 3788,
+      "deleted": 15,
+      "net": 3773
+    },
+    "coreTests": {
+      "files": 24,
+      "added": 1038,
+      "deleted": 96,
+      "net": 942
+    },
+    "verificationAndTools": {
+      "files": 7,
+      "added": 578,
+      "deleted": 40,
+      "net": 538
+    }
+  },
+  "total": {
+    "files": 51,
+    "added": 5404,
+    "deleted": 151,
+    "net": 5253
+  },
+  "files": [
+    {
+      "file": "platforms/macos/Sources/Birding/DetailedBirdArt.swift",
+      "group": "productionSwift",
+      "added": 5,
+      "deleted": 0,
+      "net": 5
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/GalleryPreviewCapabilityVerification.swift",
+      "group": "verificationAndTools",
+      "added": 6,
+      "deleted": 2,
+      "net": 4
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/Localization.swift",
+      "group": "productionSwift",
+      "added": 1,
+      "deleted": 1,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/MotionBenchmark.swift",
+      "group": "verificationAndTools",
+      "added": 3,
+      "deleted": 3,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/PilotMotionVerification.swift",
+      "group": "verificationAndTools",
+      "added": 4,
+      "deleted": 2,
+      "net": 2
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/PixelArt.swift",
+      "group": "productionSwift",
+      "added": 6,
+      "deleted": 2,
+      "net": 4
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/SharedArt.swift",
+      "group": "productionSwift",
+      "added": 1,
+      "deleted": 1,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/main.swift",
+      "group": "productionSwift",
+      "added": 1,
+      "deleted": 1,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/BehaviorRecording.swift",
+      "group": "productionSwift",
+      "added": 1,
+      "deleted": 1,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/LivelyMotion.swift",
+      "group": "productionSwift",
+      "added": 2,
+      "deleted": 2,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/PoseClip.swift",
+      "group": "productionSwift",
+      "added": 1,
+      "deleted": 0,
+      "net": 1
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/SpeciesBehaviorProfile.swift",
+      "group": "productionSwift",
+      "added": 12,
+      "deleted": 7,
+      "net": 5
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/BathRecordingTests.swift",
+      "group": "coreTests",
+      "added": 2,
+      "deleted": 2,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/BehaviorDefinitionTests.swift",
+      "group": "coreTests",
+      "added": 1,
+      "deleted": 2,
+      "net": -1
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/BehaviorRecordingTests.swift",
+      "group": "coreTests",
+      "added": 6,
+      "deleted": 6,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/CourtshipRecordingTests.swift",
+      "group": "coreTests",
+      "added": 2,
+      "deleted": 2,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/FlycatcherInsectCatchRecordingTests.swift",
+      "group": "coreTests",
+      "added": 2,
+      "deleted": 2,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/FoodTrayTests.swift",
+      "group": "coreTests",
+      "added": 1,
+      "deleted": 1,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/GalleryPreviewCapabilityTests.swift",
+      "group": "coreTests",
+      "added": 5,
+      "deleted": 5,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/HabitatObjectTests.swift",
+      "group": "coreTests",
+      "added": 1,
+      "deleted": 1,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/InsectCatchRecordingTests.swift",
+      "group": "coreTests",
+      "added": 2,
+      "deleted": 2,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/LeafCarryRecordingTests.swift",
+      "group": "coreTests",
+      "added": 2,
+      "deleted": 2,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/LivelyMotionTests.swift",
+      "group": "coreTests",
+      "added": 4,
+      "deleted": 4,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/M8CompletionTests.swift",
+      "group": "coreTests",
+      "added": 4,
+      "deleted": 7,
+      "net": -3
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/NestRecordingTests.swift",
+      "group": "coreTests",
+      "added": 2,
+      "deleted": 2,
+      "net": 0
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/PoseClipTests.swift",
+      "group": "coreTests",
+      "added": 20,
+      "deleted": 17,
+      "net": 3
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/SpeciesBehaviorProfileTests.swift",
+      "group": "coreTests",
+      "added": 19,
+      "deleted": 18,
+      "net": 1
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/U2IntegrationTests.swift",
+      "group": "coreTests",
+      "added": 18,
+      "deleted": 21,
+      "net": -3
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/VisitorGiftRecordingTests.swift",
+      "group": "coreTests",
+      "added": 2,
+      "deleted": 2,
+      "net": 0
+    },
+    {
+      "file": "scripts/audit-expansion-capabilities.py",
+      "group": "verificationAndTools",
+      "added": 32,
+      "deleted": 20,
+      "net": 12
+    },
+    {
+      "file": "scripts/preview-m8-art.py",
+      "group": "verificationAndTools",
+      "added": 4,
+      "deleted": 2,
+      "net": 2
+    },
+    {
+      "file": "scripts/test-species-parity.py",
+      "group": "verificationAndTools",
+      "added": 38,
+      "deleted": 11,
+      "net": 27
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/ExpansionDisplayArt.swift",
+      "group": "productionSwift",
+      "added": 511,
+      "deleted": 0,
+      "net": 511
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/ExpansionGroundArt.swift",
+      "group": "productionSwift",
+      "added": 404,
+      "deleted": 0,
+      "net": 404
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/ExpansionLargeArt.swift",
+      "group": "productionSwift",
+      "added": 322,
+      "deleted": 0,
+      "net": 322
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/ExpansionSmallArt.swift",
+      "group": "productionSwift",
+      "added": 330,
+      "deleted": 0,
+      "net": 330
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/ExpansionWetlandArt.swift",
+      "group": "productionSwift",
+      "added": 372,
+      "deleted": 0,
+      "net": 372
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/ExpansionArtCatalog.swift",
+      "group": "productionSwift",
+      "added": 35,
+      "deleted": 0,
+      "net": 35
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/ExpansionDisplayArtGeometry.swift",
+      "group": "productionSwift",
+      "added": 375,
+      "deleted": 0,
+      "net": 375
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/ExpansionGroundArtGeometry.swift",
+      "group": "productionSwift",
+      "added": 370,
+      "deleted": 0,
+      "net": 370
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/ExpansionLargeArtGeometry.swift",
+      "group": "productionSwift",
+      "added": 319,
+      "deleted": 0,
+      "net": 319
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/ExpansionSmallArtGeometry.swift",
+      "group": "productionSwift",
+      "added": 432,
+      "deleted": 0,
+      "net": 432
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/ExpansionWetlandArtGeometry.swift",
+      "group": "productionSwift",
+      "added": 288,
+      "deleted": 0,
+      "net": 288
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/ExpansionCompletionFixture.swift",
+      "group": "coreTests",
+      "added": 66,
+      "deleted": 0,
+      "net": 66
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/ExpansionCompletionTests.swift",
+      "group": "coreTests",
+      "added": 47,
+      "deleted": 0,
+      "net": 47
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/ExpansionDisplayArtGeometryTests.swift",
+      "group": "coreTests",
+      "added": 135,
+      "deleted": 0,
+      "net": 135
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/ExpansionGroundArtGeometryTests.swift",
+      "group": "coreTests",
+      "added": 158,
+      "deleted": 0,
+      "net": 158
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/ExpansionLargeArtGeometryTests.swift",
+      "group": "coreTests",
+      "added": 197,
+      "deleted": 0,
+      "net": 197
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/ExpansionSmallArtGeometryTests.swift",
+      "group": "coreTests",
+      "added": 147,
+      "deleted": 0,
+      "net": 147
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/ExpansionWetlandArtGeometryTests.swift",
+      "group": "coreTests",
+      "added": 195,
+      "deleted": 0,
+      "net": 195
+    },
+    {
+      "file": "scripts/audit-expansion-art.py",
+      "group": "verificationAndTools",
+      "added": 491,
+      "deleted": 0,
+      "net": 491
+    }
+  ]
+}

@@ -1,0 +1,204 @@
+{
+  "baselineCommit": "2d56542ec7209ec7c2af66a772c732a87cdc13fc",
+  "passed": true,
+  "counts": {
+    "currentSlots": 4867,
+    "deliveredSlots": 1280,
+    "e0Slots": 84,
+    "expansionSlots": 756,
+    "m8Slots": 524,
+    "newSlots": 672,
+    "newSlotsCompared": 672,
+    "oldSlots": 4195,
+    "oldSlotsCompared": 4195
+  },
+  "batches": {
+    "E0": {
+      "appendedThisBatch": 0,
+      "budget": 84,
+      "inspectedSlots": 84,
+      "species": [
+        "crestedMyna",
+        "eurasianGreatTit",
+        "eurasianNuthatch",
+        "greatEgret",
+        "indianWhiteEye",
+        "whiteWagtail"
+      ]
+    },
+    "E1": {
+      "appendedThisBatch": 168,
+      "budget": 168,
+      "inspectedSlots": 168,
+      "species": [
+        "blackRedstart",
+        "blackThroatedBushtit",
+        "blueFrontedRedstart",
+        "commonTailorbird",
+        "daurianRedstart",
+        "greenBackedTit",
+        "greyCappedGreenfinch",
+        "marshTit",
+        "ornateSunbird",
+        "silverThroatedBushtit",
+        "twite",
+        "whiskeredYuhina"
+      ]
+    },
+    "E2": {
+      "appendedThisBatch": 168,
+      "budget": 168,
+      "inspectedSlots": 168,
+      "species": [
+        "carrionCrow",
+        "daurianJackdaw",
+        "groundTit",
+        "henricsLaughingthrush",
+        "hornedLark",
+        "plainLaughingthrush",
+        "redBilledChough",
+        "redThroatedThrush",
+        "rufousBreastedAccentor",
+        "silkyStarling",
+        "whiteBrowedLaughingthrush",
+        "whiteCheekedStarling"
+      ]
+    },
+    "E3": {
+      "appendedThisBatch": 168,
+      "budget": 168,
+      "inspectedSlots": 168,
+      "species": [
+        "ashyDrongo",
+        "blackBulbul",
+        "blueThroatedBarbet",
+        "blueWhistlingThrush",
+        "brownBreastedBulbul",
+        "collaredFinchbill",
+        "eurasianMagpie",
+        "greyTreepie",
+        "redBilledBlueMagpie",
+        "sootyHeadedBulbul",
+        "taiwanBarbet",
+        "yellowBilledBlueMagpie"
+      ]
+    },
+    "E4": {
+      "appendedThisBatch": 84,
+      "budget": 84,
+      "inspectedSlots": 84,
+      "species": [
+        "blackTailedGull",
+        "easternCattleEgret",
+        "easternSpotBilledDuck",
+        "greatCrestedGrebe",
+        "littleGrebe",
+        "ruddyShelduck"
+      ]
+    },
+    "E5": {
+      "appendedThisBatch": 84,
+      "budget": 84,
+      "inspectedSlots": 84,
+      "species": [
+        "commonPheasant",
+        "eurasianCollaredDove",
+        "greaterCoucal",
+        "himalayanVulture",
+        "orientalTurtleDove",
+        "uplandBuzzard"
+      ]
+    },
+    "M8a": {
+      "appendedThisBatch": 0,
+      "budget": 74,
+      "inspectedSlots": 74,
+      "species": [
+        "greatSpottedWoodpecker",
+        "greatTit",
+        "littleEgret",
+        "magpieRobin",
+        "mallard",
+        "orientalMagpie"
+      ]
+    },
+    "M8b": {
+      "appendedThisBatch": 0,
+      "budget": 32,
+      "inspectedSlots": 32,
+      "species": [
+        "azureWingedMagpie",
+        "chineseBlackbird",
+        "lightVentedBulbul",
+        "redBilledLeiothrix",
+        "redWhiskeredBulbul",
+        "spottedDove",
+        "swinhoesWhiteEye",
+        "treeSparrow"
+      ]
+    },
+    "M8c": {
+      "appendedThisBatch": 0,
+      "budget": 112,
+      "inspectedSlots": 112,
+      "species": [
+        "blackDrongo",
+        "longTailedShrike",
+        "plumbeousWaterRedstart",
+        "redFlankedBluetail",
+        "vinousThroatedParrotbill",
+        "yellowBilledGrosbeak",
+        "yellowBrowedWarbler",
+        "yellowRumpedFlycatcher"
+      ]
+    },
+    "M8d": {
+      "appendedThisBatch": 0,
+      "budget": 102,
+      "inspectedSlots": 102,
+      "species": [
+        "blackWingedStilt",
+        "chinesePondHeron",
+        "commonMoorhen",
+        "eurasianCoot",
+        "greyHeron",
+        "littleRingedPlover",
+        "nightHeron",
+        "whimbrel"
+      ]
+    },
+    "M8e": {
+      "appendedThisBatch": 0,
+      "budget": 102,
+      "inspectedSlots": 102,
+      "species": [
+        "asianBarredOwlet",
+        "blackKite",
+        "collaredScopsOwl",
+        "commonBuzzard",
+        "commonKestrel",
+        "littleOwl",
+        "peregrineFalcon",
+        "piedKingfisher"
+      ]
+    },
+    "M8f": {
+      "appendedThisBatch": 0,
+      "budget": 102,
+      "inspectedSlots": 102,
+      "species": [
+        "asianKoel",
+        "barnSwallow",
+        "blackCollaredStarling",
+        "blackHeadedGull",
+        "commonKingfisher",
+        "eurasianWoodcock",
+        "hoopoe",
+        "largeBilledCrow"
+      ]
+    }
+  },
+  "errors": [],
+  "checks": 19713,
+  "passedChecks": 19713
+}

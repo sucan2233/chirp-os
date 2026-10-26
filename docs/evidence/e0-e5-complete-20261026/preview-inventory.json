@@ -1,0 +1,7910 @@
+{
+  "baseline": "2d56542ec7209ec7c2af66a772c732a87cdc13fc",
+  "contactSheets": [
+    {
+      "batch": "E0",
+      "species": [
+        "eurasianGreatTit",
+        "whiteWagtail",
+        "indianWhiteEye",
+        "crestedMyna",
+        "eurasianNuthatch",
+        "greatEgret"
+      ],
+      "file": "e0-contact.png",
+      "sha256": "2c2b863441365cac50cb0172f9870fd28b0f9d0b6b15707535e378fb68a8d6da"
+    },
+    {
+      "batch": "E1",
+      "species": [
+        "marshTit",
+        "greenBackedTit",
+        "blackThroatedBushtit",
+        "silverThroatedBushtit",
+        "whiskeredYuhina",
+        "daurianRedstart",
+        "blueFrontedRedstart",
+        "blackRedstart",
+        "commonTailorbird",
+        "greyCappedGreenfinch",
+        "twite",
+        "ornateSunbird"
+      ],
+      "file": "e1-contact.png",
+      "sha256": "957e984b264be51b70346acfb994d5889ff4c7c01632638f4f4312f86533490a"
+    },
+    {
+      "batch": "E2",
+      "species": [
+        "silkyStarling",
+        "whiteCheekedStarling",
+        "carrionCrow",
+        "daurianJackdaw",
+        "redBilledChough",
+        "plainLaughingthrush",
+        "henricsLaughingthrush",
+        "whiteBrowedLaughingthrush",
+        "groundTit",
+        "rufousBreastedAccentor",
+        "hornedLark",
+        "redThroatedThrush"
+      ],
+      "file": "e2-contact.png",
+      "sha256": "e73a45b3f5ba736e5af0fe67ef205d5d6e69c478d85b8ae9ff1dbf4f4e6245a7"
+    },
+    {
+      "batch": "E3",
+      "species": [
+        "eurasianMagpie",
+        "greyTreepie",
+        "redBilledBlueMagpie",
+        "yellowBilledBlueMagpie",
+        "ashyDrongo",
+        "blueWhistlingThrush",
+        "sootyHeadedBulbul",
+        "brownBreastedBulbul",
+        "blackBulbul",
+        "collaredFinchbill",
+        "taiwanBarbet",
+        "blueThroatedBarbet"
+      ],
+      "file": "e3-contact.png",
+      "sha256": "5635b8a681507bfd8458da5e1f60a289981ab336c7f41f6a6122190949b6d188"
+    },
+    {
+      "batch": "E4",
+      "species": [
+        "easternSpotBilledDuck",
+        "ruddyShelduck",
+        "easternCattleEgret",
+        "blackTailedGull",
+        "greatCrestedGrebe",
+        "littleGrebe"
+      ],
+      "file": "e4-contact.png",
+      "sha256": "1ce5acab26e578be59bf2b509a643ede5841a92654d9171744bb0b70e0023b34"
+    },
+    {
+      "batch": "E5",
+      "species": [
+        "orientalTurtleDove",
+        "eurasianCollaredDove",
+        "uplandBuzzard",
+        "himalayanVulture",
+        "commonPheasant",
+        "greaterCoucal"
+      ],
+      "file": "e5-contact.png",
+      "sha256": "d0f0617b74523b63116d595dd8d60c3f8bd4a23b9db528f782e15f7a2f94e6ad"
+    }
+  ],
+  "visualReviewRequired": true,
+  "gifVerification": {
+    "directory": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/previews",
+    "passed": true,
+    "files": [
+      {
+        "file": "ashyDrongo-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8e7e8b5df0e7fae6d8a54944418de4799a07342a17e1d7058e032c0435f93551"
+      },
+      {
+        "file": "ashyDrongo-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "541284153cf8453be2b1fd62ff3469bb62dbce38942ebda9b471e618b4fe4536"
+      },
+      {
+        "file": "ashyDrongo-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "86a40a027cd001ce7cf646ce722b952bedca74c2ba6e141e3bd17c102e14db7d"
+      },
+      {
+        "file": "ashyDrongo-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7668c85260cd518cc0e9367ad025bd6bf8a5a55a16ad5d38ea9343e1d91cff87"
+      },
+      {
+        "file": "ashyDrongo-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1085,
+          197
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ae6ce97b2492c8a7d03da40f3cc3bd8a10fcea8e9276702d38cac5b68a5ad2ec"
+      },
+      {
+        "file": "ashyDrongo-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1085,
+          197
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "55b80c2fd98a5a646beca77ec875afe74c6d6703c9b70a6c03e2404579885eb1"
+      },
+      {
+        "file": "asianBarredOwlet-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "81f6d6a4147cf00e6054dd52d9074713924fed1cc755dee90f0614a0499bd44a"
+      },
+      {
+        "file": "asianBarredOwlet-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1c73cd00b06d836e718418d4ef238e839cb81bcb0b03085532d9042e44b6d247"
+      },
+      {
+        "file": "asianBarredOwlet-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "88c9153534bc3cb856ee5fc1fcfee96547b78b2ba985814b546bd3b4c93f1b22"
+      },
+      {
+        "file": "asianBarredOwlet-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "16060c08c4d3c6f30838188c25387bfbf823ca7655ffb637c0c60966bb21fbf0"
+      },
+      {
+        "file": "asianBarredOwlet-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "01871be2578f4183552adf227545a981c1f7f2316796f3a5031f060f20310b49"
+      },
+      {
+        "file": "asianBarredOwlet-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "deecd0ade7fcba05ef2d02e69101a94edb0d8014a5ba022b0555415bd42fcd0a"
+      },
+      {
+        "file": "asianKoel-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8af02e7ab2a1dc94f87b903a5b0c265071c17a1c2e4ff027f210e2455172f2d5"
+      },
+      {
+        "file": "asianKoel-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "010125fde25417e6836de63aea2f1524a0d8d64a3b37ef7eddbf6475d89b40ed"
+      },
+      {
+        "file": "asianKoel-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "62e86644fbd8019ed2aa400e9ce5629d9b995341bea56cfc9c585903fa39d878"
+      },
+      {
+        "file": "asianKoel-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d16b2f473dcba304b96906f9622b56b3cd43a963682b51581546e0e14db95b70"
+      },
+      {
+        "file": "asianKoel-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1302,
+          228
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d23937098fc3fa84158aff1185ade0c7acb4740f5f10b49dbc148b741e76e8e4"
+      },
+      {
+        "file": "asianKoel-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1302,
+          228
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6f70e44e7a04d9b628c7542382f9a30df6291439e1d6b40fdadc1a7a4ad0c736"
+      },
+      {
+        "file": "azureWingedMagpie-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b8f9ec2bacde6f69d80edde4a45a83273f64538efa0742f4b95e6dcb320a3dd2"
+      },
+      {
+        "file": "azureWingedMagpie-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9f082de339369c001027ad8588f323caa2d22efe2bc28837ba411f55ca80e377"
+      },
+      {
+        "file": "azureWingedMagpie-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "829f54d9f981d8fd734b3e6e0e0e1dc88c8dbb2f853686ecf500d2aa7574692e"
+      },
+      {
+        "file": "azureWingedMagpie-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1ae9b3aa65d90fd8fa3e8187117358ab765d86d6e747f5d67bfc52ceaf80ae6a"
+      },
+      {
+        "file": "azureWingedMagpie-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1352,
+          211
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "658be7dd703e5c4251d299c36d63dd751ccc2aa7d2aca6343ff957a939ced46f"
+      },
+      {
+        "file": "azureWingedMagpie-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1352,
+          211
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e8fd30534f6603046a43f4bb08f78bc9760ca40b33ed54abcc9eb20006913591"
+      },
+      {
+        "file": "barnSwallow-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b1af916b0eb05453220d8c54995535cc5ac692d08d580da0c127539d6416e713"
+      },
+      {
+        "file": "barnSwallow-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "87518470680d092dd95598581c816cab27c88d3238c49010a8ac13c5cec501ee"
+      },
+      {
+        "file": "barnSwallow-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5f2ef5359b4a50f3be5b4d93ef7552218c5f0666a4b7c4bf5c7f8d64c21b8050"
+      },
+      {
+        "file": "barnSwallow-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ec174a87bd6dfe95078616ad15dcc22824d45eabb3629c01efada5e94b0c68de"
+      },
+      {
+        "file": "barnSwallow-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ea2c27d3b89d219fb203052a7e1992bba9b8d665fb607ebe4851d12aad800503"
+      },
+      {
+        "file": "barnSwallow-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "47e9ad1716d5b74f9745e643956acd25d6c37312f635edb7be314f203960a398"
+      },
+      {
+        "file": "blackBulbul-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d6511a5442f204f307ee0f78d423ba7488cfd032576667b4abf2f66a10486bfd"
+      },
+      {
+        "file": "blackBulbul-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b0c07e8283ef83116b80db832a195955c59e62ed84d55399a37a3040ab22d6ca"
+      },
+      {
+        "file": "blackBulbul-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f74c0700067349e369cc6011277a898a662eacac620dfbde142ca59b2101f832"
+      },
+      {
+        "file": "blackBulbul-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "08d49a0a3cf3bbde01bd35bbba31a5667e7e24840c053c11a7803bdd33187157"
+      },
+      {
+        "file": "blackBulbul-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1015,
+          187
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f22c1ddcfb58fdd9e617eefd4f7e917006224026d67a58629e8ebd1fb3d7f5c4"
+      },
+      {
+        "file": "blackBulbul-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1015,
+          187
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a48f5ded00774b0d515875ab49c7307e53a17c8aaee4ef452c87bc1e0642489d"
+      },
+      {
+        "file": "blackCollaredStarling-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6a0446fa838b6db8f9152775be90fa772604badf3a7f53e58e9f8569c7f80704"
+      },
+      {
+        "file": "blackCollaredStarling-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7e6613a7590404ba409b02a96ffab79c9e9d9b5204ada8347508d08f007996f7"
+      },
+      {
+        "file": "blackCollaredStarling-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9953fc190714b9a99175aea4d6ef0d4d9ae340f4ed64abdab61231cf5cf6f53e"
+      },
+      {
+        "file": "blackCollaredStarling-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "699d610a7c15ba7fa659de17f49d35a6f91ee4a570799a2458434132e0876012"
+      },
+      {
+        "file": "blackCollaredStarling-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8d285a45cde724ca5c4b6f3fc30582f9031c623866ff2c917bb386c10ac4ffaf"
+      },
+      {
+        "file": "blackCollaredStarling-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a83c093719807e2c224e8e2b4c95230bdeb8466e3bc5f056429be0560c5bb557"
+      },
+      {
+        "file": "blackDrongo-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1b6ecda3f2a2b4223c38b883dd0d82b2c73e999b35f0845314e9e5ae35390b49"
+      },
+      {
+        "file": "blackDrongo-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a013adbc6e3592d34f77bd7e81ff9a713d7fa64991b632348fc13c5d826d19db"
+      },
+      {
+        "file": "blackDrongo-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e47e78def99d9fd83afe69a35d0bcf54afc55fa3617997365217efa2b8364729"
+      },
+      {
+        "file": "blackDrongo-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a4d6704dc769958f07a251d66f001fcdb823ef930b2857d279601725cd969714"
+      },
+      {
+        "file": "blackDrongo-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5ee15b081e9dc1cab0a99b884d6df095ff27c14fda3638a2baf530b58ea8e643"
+      },
+      {
+        "file": "blackDrongo-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7efc7d773e1b8dbb408407391d2d666fa39e05777c053fd6a85ea47acb76488f"
+      },
+      {
+        "file": "blackHeadedGull-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "740c5c3e7effd6e05f651f4f2d08d04377c54458caedb0b3c1925c2bb460071d"
+      },
+      {
+        "file": "blackHeadedGull-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2f44ad9cd60d54389d221045cfe82481219cc06d63663ae4269fb1813ddf9d0a"
+      },
+      {
+        "file": "blackHeadedGull-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2eeaa9f0e3e4946bb65a4d062d68a26fdaee8658ce6cfd913335a8d6f1453e89"
+      },
+      {
+        "file": "blackHeadedGull-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "85fd50223e194ddb46be177803d072ca42bce0489ea2778acd6d0669f0895183"
+      },
+      {
+        "file": "blackHeadedGull-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1239,
+          219
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ce592ed6df6ec13e6af2a2c00d3cb506aaffc318ea35181d4a992d269f88ab79"
+      },
+      {
+        "file": "blackHeadedGull-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1239,
+          219
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "cfb23b8704b8e89e393b831d2da35a1f7c8d28a924a9899eca5a39917419afe4"
+      },
+      {
+        "file": "blackKite-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "405801bfbfdbe86ddb9db4d0f4aa50f12ba0c752c976adf3176dfa0ef22b8f74"
+      },
+      {
+        "file": "blackKite-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1c1f2ac5b032d73b835059ddd07d96db242fd128d676526ce5ee254fa7f87cd0"
+      },
+      {
+        "file": "blackKite-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "211595a6a2d6cb6a53d7f1366f3e3df4c9525ad759d075a3ff353e2c8c24fff1"
+      },
+      {
+        "file": "blackKite-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "69a3db7cda58db03660e6c7ea53be7f9a801819b4a22349e6a8819a2dd612a4b"
+      },
+      {
+        "file": "blackKite-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1498,
+          256
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e02004fb0b35c0236b2a1bca180fa68f90afde4cc49b278b4735673d8c7be679"
+      },
+      {
+        "file": "blackKite-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1498,
+          256
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2416c4368b675a80a59c5a3a023f8412406bdfcf166a09b52a57cc83623d20e7"
+      },
+      {
+        "file": "blackRedstart-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d9564b4a0ca19d5bcafdf119b25e432d81e4cc2fc2a6e03af15ec9be90f77e3f"
+      },
+      {
+        "file": "blackRedstart-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1f5b8faf307589926dcf05f2c6e50ce7b2475acfd5cba93f2b3ad349ed53fc4f"
+      },
+      {
+        "file": "blackRedstart-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9762a2dc262db5051f063e044fbc7e683e19535e3700411cc72e4099ac2be516"
+      },
+      {
+        "file": "blackRedstart-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8c7dee7dfcc1817643b0f072c909fa119cacf93a64bfee29f0be1dbeb938b259"
+      },
+      {
+        "file": "blackRedstart-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c667eb6938328fbd26e9adf9381d7b12b12a9cd3b10e987afd00b71dea8d564b"
+      },
+      {
+        "file": "blackRedstart-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d9f27871e08caecfcda90ac0dd929ed2ad1552c6d3c5197b0ca9a5ad899b86e1"
+      },
+      {
+        "file": "blackTailedGull-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "cfd573817d9494ae6e492b07ed1161eca1429f7518bb56806281129bb0b9b7ab"
+      },
+      {
+        "file": "blackTailedGull-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "966ce4f09d843bcc9179025bdcef69097ba1bbb384714fbb6a10ca78c9fb8488"
+      },
+      {
+        "file": "blackTailedGull-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c8cdc9a945aee25f26498e946e0a2390f00748cd7d6ff3a026b3dc58649d6f42"
+      },
+      {
+        "file": "blackTailedGull-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "99a7ed55cdaa027dd9750775208917d6597d00572557ab43bef32f3b6f59fb67"
+      },
+      {
+        "file": "blackTailedGull-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1372,
+          238
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "248a8beb6d5f07fa071a90db6c61d2980b788a76a20a8f94b63b67f2718c2018"
+      },
+      {
+        "file": "blackTailedGull-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1372,
+          238
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fdb9daab6111107f31098ae22517bb2beeda8fdaa180bee6f5650b9c124c90aa"
+      },
+      {
+        "file": "blackThroatedBushtit-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "784f18a2cb81c53427fad787d10d430daf73459f4f77872c6eb2f358c0600423"
+      },
+      {
+        "file": "blackThroatedBushtit-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fabf01229753dadf9144df69e71a047b1c022ae4bc6e823afcb0edeb4dc62511"
+      },
+      {
+        "file": "blackThroatedBushtit-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8d53527a9d540608bd1ebf72dec47b0ccabb2272ba35824a897f334fb24445ee"
+      },
+      {
+        "file": "blackThroatedBushtit-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "23ba1b61c01145cbf7fe1de66b4ac4ea46ee2d9dac196165e63fb1fc027a5bf4"
+      },
+      {
+        "file": "blackThroatedBushtit-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d5241cec99b49bbd1cd18a15de1144024483d5a2f4701e3f81b6e79df48c7caf"
+      },
+      {
+        "file": "blackThroatedBushtit-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "bdca9f71bb5b800962e77e949a6136180012430dd83c90979b847ff839d1c672"
+      },
+      {
+        "file": "blackWingedStilt-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "bdc234a7967980eeca8e133e9b5e5179024226e260d27bbdb7e72872bb14bd42"
+      },
+      {
+        "file": "blackWingedStilt-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "383dad315e260852f6e173dda6ff91f2e3a893f9aa4e90ac36985fbbf569ed10"
+      },
+      {
+        "file": "blackWingedStilt-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d4f0caa10b9afba43a4060feaa73a44c5e6c7167c2db8d7324cabf9c838e02f1"
+      },
+      {
+        "file": "blackWingedStilt-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "cdb3dce3da4a6eda7ce6304eb280edf87d5d78c2db5a653b8ff8eaa2fee1dd4e"
+      },
+      {
+        "file": "blackWingedStilt-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1211,
+          215
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2ba82c52f646fd669e83bb44ff8bd952e3df99d8a6c314a7a9d5fec7c7d7ad4d"
+      },
+      {
+        "file": "blackWingedStilt-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1211,
+          215
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "172e25812c8e0a0b578eb880c91fadd3905cddce15386d8c1512eee587e6e954"
+      },
+      {
+        "file": "blueFrontedRedstart-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "107de81fee9bf423b5dc00d2b6b5124fcd3bccb1f8bd18689d93016ca18a2519"
+      },
+      {
+        "file": "blueFrontedRedstart-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1f4e8d5359ebea99147745deb3bf73931cf708161eba15764e228a99d1b26024"
+      },
+      {
+        "file": "blueFrontedRedstart-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4729e019beeb6d45b4b4861cb48611ee25776a92655cf1a5ce27723a87dc7699"
+      },
+      {
+        "file": "blueFrontedRedstart-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fb2d9e4d3acb2deb29025c8c5785eab968ffd8b100ee646b5e69ac811d45d954"
+      },
+      {
+        "file": "blueFrontedRedstart-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "882760827745c3d80fecb2abf4c2ad90d59c149dffa32db47bcb43c33f7c3599"
+      },
+      {
+        "file": "blueFrontedRedstart-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "cb44780e30bceb329de0723b54e98fbd1b932c3ad0afbdf350a01e9ef619a0ef"
+      },
+      {
+        "file": "blueThroatedBarbet-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0865e16d4a578ed0e8850776c2dec1070eba399aaf64969d27ded436a9f28737"
+      },
+      {
+        "file": "blueThroatedBarbet-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "41699d0d2a5eb2f40fc1f871e217f8c4ed1041d3f7c9637e4547f958d4c0b25d"
+      },
+      {
+        "file": "blueThroatedBarbet-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3696d6e16fbcab2747cb84549cdec1847ef5f43ec864493a0cb9e43f0217e809"
+      },
+      {
+        "file": "blueThroatedBarbet-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fdf2c929f75e6d02e4eebf1cb91653498ca93dd0dd772075b3385a75f3c4ca08"
+      },
+      {
+        "file": "blueThroatedBarbet-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "efcc7be0bba045e07f0b8320331b527b94bd742bdd5c9222e4d6007f2a5137aa"
+      },
+      {
+        "file": "blueThroatedBarbet-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f166241e1a4af40c208e59e7cdce22ff2931aa7bdfeb3b7ddddd4f19b6f2ac85"
+      },
+      {
+        "file": "blueWhistlingThrush-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a17065b32336fee60fd2ecb8392d97571b60c202a51432949c8ea8aaabcde746"
+      },
+      {
+        "file": "blueWhistlingThrush-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8afc3312816d9baeff0539bb0e693f9922228f646572ebdc20ba19688b18e6d1"
+      },
+      {
+        "file": "blueWhistlingThrush-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8c79644c0e07058130d166aff2c430cb479049209255a5157bb88c0b8a23083c"
+      },
+      {
+        "file": "blueWhistlingThrush-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9f9377fc8de354505586fcb5a91b242cd9edc01498ba2b8eaa889ebc55986341"
+      },
+      {
+        "file": "blueWhistlingThrush-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1148,
+          206
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e65b9d42413108a615ea6c1c7924b79321ef5146a6a8227a469087b69dd5c446"
+      },
+      {
+        "file": "blueWhistlingThrush-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1148,
+          206
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f3b4f7f2cb642917ffbadd26b12279ad0ca0796177c066388f2e7aabe08d52a1"
+      },
+      {
+        "file": "brownBreastedBulbul-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4e1627fff8b16a6fd77ac6c3782195bc1462668b253ec01e465ab9b66c943f1d"
+      },
+      {
+        "file": "brownBreastedBulbul-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fc0469ccbf90eb7de45d6b167af571fddc51e36987237eb4dad6466b98b44ca2"
+      },
+      {
+        "file": "brownBreastedBulbul-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "da7614a2cf9088e5262bab919214e87d042c7fa7ca9fcca3cde044bc9872e2a7"
+      },
+      {
+        "file": "brownBreastedBulbul-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "69a077b3e141031a7803ac4118481ef118bb9b6f0932df198536bef4b75a68d7"
+      },
+      {
+        "file": "brownBreastedBulbul-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "54551de5940a104ed8845746590566ab5c9c1f2958eb7b3816ef64ab0459e3b9"
+      },
+      {
+        "file": "brownBreastedBulbul-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5881f1c8467088af2920765687ffc01be3f99fe9335c5ca5c173c92cca2cb2ce"
+      },
+      {
+        "file": "carrionCrow-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3db2d3ba3a327e95cbb5e97d2c5bc26bc85fced00d5bd13b71832c581c1d464e"
+      },
+      {
+        "file": "carrionCrow-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f325e20e5e60a518c64d97935a9adc7fa5ed070d84b993d9f6273a4a09fb48b6"
+      },
+      {
+        "file": "carrionCrow-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "01db942547e03224c9dce984305db15a997ef514f7ff64c0a0b4a95afbc4a8d9"
+      },
+      {
+        "file": "carrionCrow-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ac24a0cf2515467ed5fd3979a12d654fcaf0327e465cc5a1d47e3902d19bdd91"
+      },
+      {
+        "file": "carrionCrow-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1372,
+          238
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "010deffecdf5410b70d1922505de874327db06780517366d8e04e30d7172119f"
+      },
+      {
+        "file": "carrionCrow-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1372,
+          238
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7a3107df3d5d7bea4f8be7aac4eef9c9acd85b10dc322db954177b6cbf65b70c"
+      },
+      {
+        "file": "chineseBlackbird-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0920e6ace16a2f81722a7c676d25aeb6f431405f6dc15e6ed33e59cc4cee6f12"
+      },
+      {
+        "file": "chineseBlackbird-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9db7c3aa0cf0c4bd6c35de2a10b87f4f13314204c9860c89cdc8343a758e558b"
+      },
+      {
+        "file": "chineseBlackbird-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6e2c034c876d5fb2fef7e249b525d21becf5579b22caef2270cf5f171f926ce3"
+      },
+      {
+        "file": "chineseBlackbird-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "14177f6a99988709d2d979351e952143b81ef33d6d93fc90a62db2cfddd31ada"
+      },
+      {
+        "file": "chineseBlackbird-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1078,
+          196
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d35d8e9174f1fb9923e2dfa6ed79d9f2b925315af97fac378d8262e27c405ab9"
+      },
+      {
+        "file": "chineseBlackbird-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1078,
+          196
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "728ed4484db942156e9c2450c90f154f89c53844316fe32209350c958138210d"
+      },
+      {
+        "file": "chinesePondHeron-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d8e8ddfbec3ade12d314a550512b66daf4bec3f8bbbc18af9e2b71b0af689418"
+      },
+      {
+        "file": "chinesePondHeron-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8d91c671a531828d1c091823dca49b9de023fe955403a4316f40e2f07fa5f2a0"
+      },
+      {
+        "file": "chinesePondHeron-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5ca0b1be845ad19ba27279b60c4d262e2720356362c0d1a493fe4a0f263f16e0"
+      },
+      {
+        "file": "chinesePondHeron-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "37baed8479bc155236aa72d9e033a00e9edb9a43c1b97574e02f4065bff56e01"
+      },
+      {
+        "file": "chinesePondHeron-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1358,
+          236
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8c7e6fadec2acd2938b36104ae8b074055e3a9e728e3a11642f8dae9830727d9"
+      },
+      {
+        "file": "chinesePondHeron-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1358,
+          236
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6d0f1e5109a6cdc8b889046c21e221b9a358aa0ecacf97a97883ed12a7062e55"
+      },
+      {
+        "file": "collaredFinchbill-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "364da35ba2cb06084bbaa6e5327cb6e333482a66e9c7f24e2ee48de050e9a18a"
+      },
+      {
+        "file": "collaredFinchbill-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c24f00962a6540de729e3edb8ae2041011421ba315240be8744229454a9bd9e4"
+      },
+      {
+        "file": "collaredFinchbill-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "94178d39e1da1c93d5261d39f1d7d9414f4c877b3131b28ee0ab2fe2a513191f"
+      },
+      {
+        "file": "collaredFinchbill-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "332070c6e0e50a3e5c830c057111b258d1b2a6a91b28c76ca755ce6ec16a6d36"
+      },
+      {
+        "file": "collaredFinchbill-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f52fd9de58c9f4a31820de441259e50d3f91a5d228b4038de680079e7ef7aa51"
+      },
+      {
+        "file": "collaredFinchbill-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e41969e04407cf221793807ce4b9e28e1e366a52457f5cfc72e63f57f7f541d5"
+      },
+      {
+        "file": "collaredScopsOwl-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d8427e622f9fe4c192ec7d1e2abd30f1faa82157a9bb418ecaddc5a30a3fe3a3"
+      },
+      {
+        "file": "collaredScopsOwl-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6258a5e6c94d9a3469b16447fb1984d16a462b1b68cb4de9e30e964e640b4bea"
+      },
+      {
+        "file": "collaredScopsOwl-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2f07b9735008fde88eaa1335adb42f534cfa4d18e0e341bc30ed66d137544715"
+      },
+      {
+        "file": "collaredScopsOwl-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d51366c2d83b2a4444e125abe8b8b8d1d87436f693d14489d14cb0ff14006f17"
+      },
+      {
+        "file": "collaredScopsOwl-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          994,
+          184
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3214366861a69fb79f800cdd76ad24d9d98b86debebd561274b46ddf6d93c49c"
+      },
+      {
+        "file": "collaredScopsOwl-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          994,
+          184
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "554c2b2294f69148b64fb4277e3c9d951977b20f79213281c8b5cdf4541344c3"
+      },
+      {
+        "file": "commonBuzzard-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1d224ff33fd54012f10654335014900834cc0b31a28602740817c129b2a6ad82"
+      },
+      {
+        "file": "commonBuzzard-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "43e3964823fbc1323c840d4c2d4cecccff5504fcfa40155da7917a9daa373956"
+      },
+      {
+        "file": "commonBuzzard-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "68ed9059637a893bff29479d00628b261f29cf442bb22cd226383bee17657c38"
+      },
+      {
+        "file": "commonBuzzard-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b380d0c9276bb04936fc359901e054d6bce973abd30d4a4562d49bfc55cfc3d6"
+      },
+      {
+        "file": "commonBuzzard-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1449,
+          249
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f74e6731d0fd82726b3f11ab21d5133138c1bbb9674d8228fde060f99f15b09f"
+      },
+      {
+        "file": "commonBuzzard-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1449,
+          249
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2851c0b642914f196f83398e9dfff97bd8a71ddee347348036c9858c00cd4ee3"
+      },
+      {
+        "file": "commonKestrel-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "eadfaefb6d6980d10704a0107192fd178d5e883ea9ab6d5c97ecf4f6c4f9187d"
+      },
+      {
+        "file": "commonKestrel-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2e83a6f18022d30f7b025c15799cf4183e160a90bb9ce08991d2f2096e6d6ebf"
+      },
+      {
+        "file": "commonKestrel-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "407564ceda7e0e3ba95d419260042aa4d48e4db7bf95d9303a2dcd6cd1abeca1"
+      },
+      {
+        "file": "commonKestrel-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6a9ac45518ffb588813324715874ab8c0cb222726b6319fbc8132340e6d465e5"
+      },
+      {
+        "file": "commonKestrel-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1169,
+          209
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "88b6575d6ce731fb102c120d4046875ff37954820b8838b0b067c77581d33554"
+      },
+      {
+        "file": "commonKestrel-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1169,
+          209
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "698726225595b6f0035fab043f6046296a51de4a279ee7590e4658e2b9d172c9"
+      },
+      {
+        "file": "commonKingfisher-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e5142d378b724c9b1f6fda326790cbfa0a4399e289acd38a8b23c0828e52e47b"
+      },
+      {
+        "file": "commonKingfisher-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "bb13db4c9d75163467149c7518475f60fc5a8f0007e42f912fab045cbf453b54"
+      },
+      {
+        "file": "commonKingfisher-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2ed4c92f720291c4ce6ab2f0b81c9f69a43a14056f19bf33e8e816e451a748eb"
+      },
+      {
+        "file": "commonKingfisher-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d207b03cb128aa25d2be1a24b4bdd922d2616596e3cd4d15993c89cd96af5f66"
+      },
+      {
+        "file": "commonKingfisher-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ea2def9ab762f170c7431d5b1859f1bc5ecc9f4b12e9b297e5e72033bddff271"
+      },
+      {
+        "file": "commonKingfisher-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "dbcd2c9673ca903774934da955a75b40d36f7b3dafb8566062a949e3d7a2b258"
+      },
+      {
+        "file": "commonMoorhen-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3982654b4a83b89297adfa5e283a4e96c64b14436d825113be5d2179873c0d93"
+      },
+      {
+        "file": "commonMoorhen-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "aececc8a5a2b73aa77ea6a9a4d45e19c7ccd6fec33ceb3b427f5ae219d8d85d6"
+      },
+      {
+        "file": "commonMoorhen-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fa8aed871f49b65156aad5c3c1c95ac174a2bd2f9082af2fafeaa70242e0caf1"
+      },
+      {
+        "file": "commonMoorhen-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2e5301690c8e25003ab8268937a481b9278c4f4fc0c71b46297992f792f7222a"
+      },
+      {
+        "file": "commonMoorhen-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1148,
+          206
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "207a3dfcb02507aa1e895f41c2244d08566f031c8197f0060ce9bad8ec2be6b9"
+      },
+      {
+        "file": "commonMoorhen-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1148,
+          206
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5e8022baa0f748757a6131b4296bc7e77f81e2667fdb09b07cd1a4a695fb3a68"
+      },
+      {
+        "file": "commonPheasant-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "dfc8610e52b6477fc3f10ff7d207b0ea544fc5ff0ece94ff693d99c05540988a"
+      },
+      {
+        "file": "commonPheasant-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e67a337524157245d510f22a3499a7402209eb21564cb5e05106b385bb369d9f"
+      },
+      {
+        "file": "commonPheasant-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1022,
+          188
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8eba14bd39b7116feebe9ef7190e8e6061ca2cde757cc7f53857d18e71a8b05b"
+      },
+      {
+        "file": "commonPheasant-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1022,
+          188
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "22634a4336e6a71bd7b794f585589baf5027d2085a801bdbbd0db4f6ccde8472"
+      },
+      {
+        "file": "commonPheasant-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1813,
+          301
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "44c5ca124a5008a70d236769dc5f8c23f125f212fa14ed67fdb42b39224a2f3b"
+      },
+      {
+        "file": "commonPheasant-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1813,
+          301
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3aa3931805a0b264dce292266ff1799b9544c4b0fb8a1704a2f005ed99521bc3"
+      },
+      {
+        "file": "commonTailorbird-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ea07d432811fbb74f85fbe31e827df4d73f3095588d330e100b86da64a0e5965"
+      },
+      {
+        "file": "commonTailorbird-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ed76720e352678862568067b9a846c7a2a9220910d5a51503545c05d75add1fa"
+      },
+      {
+        "file": "commonTailorbird-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "00c81a2c52d096d86ff152b9da0c445eb04037c801c013de6cab0aa09f96271d"
+      },
+      {
+        "file": "commonTailorbird-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e79388b1e6359bc69421b97a0c8a4f99017715e63f7420555e235b75ad38c7cc"
+      },
+      {
+        "file": "commonTailorbird-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f79284d67d582788f60d414ae31454ff9b88fb193c172bbaf1d57f77ae505d5c"
+      },
+      {
+        "file": "commonTailorbird-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "590201066da52adb53310d9ea38d0b6b366153a7b3e356e81233e4c136371060"
+      },
+      {
+        "file": "crestedMyna-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3a852258f32cdb215d962eb4619a4f9dbce65d8bc5b7b6c921dcafc76d7c5224"
+      },
+      {
+        "file": "crestedMyna-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "61b888042771dde83fae82eb45f40b6b7cf61ad35781d8e6c601a2adb9210275"
+      },
+      {
+        "file": "crestedMyna-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "236f1c2a803e9515681a464309da3e2656d7d5a2427486681f098479c7eddc83"
+      },
+      {
+        "file": "crestedMyna-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7e2a10cff119e88e8810cfcd6995322d53934eebf50e310e9f650339eec109bd"
+      },
+      {
+        "file": "crestedMyna-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1029,
+          189
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e1da4b63aa4926a2bb679b49d060e0ae3e390f43c02da39c57ab14bc3fa886a9"
+      },
+      {
+        "file": "crestedMyna-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1029,
+          189
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "64dfa8f66a3c52c28b5799ce065973422b8c1015243a583c16207115768263d4"
+      },
+      {
+        "file": "daurianJackdaw-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4202db0281db9f348338bab5b6df25d0a5b96db61660363da04c7161cfe1eb32"
+      },
+      {
+        "file": "daurianJackdaw-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d4ee17c0431e84db270f116a14e029db253f8575ca3077675807667f8a16a1f2"
+      },
+      {
+        "file": "daurianJackdaw-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c28e720eeaf9e1be855de2d1bb957696dae92e4811aea29fce23c471d1a312b4"
+      },
+      {
+        "file": "daurianJackdaw-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e74bcc68b23ddeab1688ef8b071a6563867d045fb37149f85c00be8067599830"
+      },
+      {
+        "file": "daurianJackdaw-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1169,
+          209
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "67bc9dece23d396bce1020d8b3e65b6eea33671f5961b2cf41714f4be61d6ad9"
+      },
+      {
+        "file": "daurianJackdaw-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1169,
+          209
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5811ac7d3fb977f743b35279762bdd6de8e49c8495f4184e66af121a2de39057"
+      },
+      {
+        "file": "daurianRedstart-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f40009a8fbe4391adc0d7f82147118e31421168f35c434d71368fc20530272b5"
+      },
+      {
+        "file": "daurianRedstart-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a67367f54ac2b1f16e1dd933ec0d3e4257218af352db744a1ba63607d6cc1609"
+      },
+      {
+        "file": "daurianRedstart-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c8127caacf4642dde76defcb0e900bdeee11b5383dda830a9bd493449cb6faff"
+      },
+      {
+        "file": "daurianRedstart-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "941bc421175499cf0121ab28e5ec5aa40d7fd069a6d0a1d2c1395b797d1008c0"
+      },
+      {
+        "file": "daurianRedstart-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "78762c4b0d6d95dfc9d215bb90bb3bab2fac21a8669cf10fc70df49d1ae1d463"
+      },
+      {
+        "file": "daurianRedstart-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "67e6ae47a3a7ae8b36465f0cb0a62ae67c323932e694b104df4d86a4e449abd2"
+      },
+      {
+        "file": "easternCattleEgret-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c3d267db50cc25e6e06f22c2967ad5d855b4164d5b3553a3ffc38c0c2dc65dbd"
+      },
+      {
+        "file": "easternCattleEgret-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e90c0e0a437e493e1453b086e5e5b1609ff85840ca262af29be282dcc06aee1b"
+      },
+      {
+        "file": "easternCattleEgret-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b67af7dcc3a03d02b14f27bd973fe0f40ff9b97094695f27d82280fde12bb5d5"
+      },
+      {
+        "file": "easternCattleEgret-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "aa4347dd2ad595aab8ac1d7b8d503e45e41138da5b0e66e25fc6ebee5d00cc58"
+      },
+      {
+        "file": "easternCattleEgret-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1400,
+          242
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "dfda3da6c5dcca314e989f1d8a9581cefad90401f402cbccb6e2cb3bd4149230"
+      },
+      {
+        "file": "easternCattleEgret-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1400,
+          242
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0cb5d95029810610484f975c6c977635bf2d5ea2b5b6d104d33381fcc3a8d306"
+      },
+      {
+        "file": "easternSpotBilledDuck-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "569de48885e3e5cf321aad39956aa6a811d5ff0bb8b7401bcd907bee5ba5da7b"
+      },
+      {
+        "file": "easternSpotBilledDuck-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ee5eb6d9a990de7b81e798443d4ddf5d3a0a368a09a63ffb66708b9221e49646"
+      },
+      {
+        "file": "easternSpotBilledDuck-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "71c84abf978109529994e30238c8546f3684ad6e65a3df2b9792d48b08b78fc7"
+      },
+      {
+        "file": "easternSpotBilledDuck-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "41dcca6d0e33a1863b8aee9115d83d2bbacc0b48796ca01a32f522882e4a009c"
+      },
+      {
+        "file": "easternSpotBilledDuck-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1526,
+          260
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "69bd44de71ef75c0ba3945317644c196dcccad9bb396a01896326d1b101c3bde"
+      },
+      {
+        "file": "easternSpotBilledDuck-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1526,
+          260
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2047556dc7876bbe495974624cd6019d993627e4e204a9524227f9af20afbec1"
+      },
+      {
+        "file": "eurasianCollaredDove-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "310d1398ebd2fee125c9da3b9437b32505676285d2f34449dce06a32f81e72a0"
+      },
+      {
+        "file": "eurasianCollaredDove-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "43b38fb04eb39a7896b5b773a4b629152ed5eb6017052f7679ca23e308f1a530"
+      },
+      {
+        "file": "eurasianCollaredDove-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "eb6c8a8a62b79667d76b464dff9146b0e50d58d91aa87fbf5a40f3e2e5d30b94"
+      },
+      {
+        "file": "eurasianCollaredDove-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "33ccf173dcb3b774a2d07679e171e6f003f3297cdef6043a9eb1771eb4256b96"
+      },
+      {
+        "file": "eurasianCollaredDove-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1134,
+          204
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ad0b3d5c7977e5af44632cc58b4d6b0aaa95de39643e8d5ce13368fa2e332ff8"
+      },
+      {
+        "file": "eurasianCollaredDove-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1134,
+          204
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5cc2e158497148fe3fa08589dd6cc31d292b88bead2726b0fc771f43c955ca79"
+      },
+      {
+        "file": "eurasianCoot-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "438eaf753e3a5724961c89921d8c59b58b45d20ca25c8c70a411880c5db093f2"
+      },
+      {
+        "file": "eurasianCoot-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8537903233c20f62a87b7d78d9175eda8e54ef73f1dc0447d32036c14b01ef9f"
+      },
+      {
+        "file": "eurasianCoot-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a71ea305b7a47530d4e77957a7a1b52238285b1fc4abec39a939359526b7956b"
+      },
+      {
+        "file": "eurasianCoot-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a88de4d43b60f4d7cca7a8ef94c590d3066390066ca07050ff86f33dfafaa14f"
+      },
+      {
+        "file": "eurasianCoot-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1239,
+          219
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e3b864b457ebaf416fceac7df7353c3de5c017adae2209b8b61cc47649b876b3"
+      },
+      {
+        "file": "eurasianCoot-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1239,
+          219
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "73a30538b8c8c8ea1a7c6d50fca30066648322caecfb8159ea2cb3ec2b9c8169"
+      },
+      {
+        "file": "eurasianGreatTit-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e5ef30334008586bd58af5387c0bce73a0e7896652ec955971f53e92ded3f3ae"
+      },
+      {
+        "file": "eurasianGreatTit-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e36588dbd3017a71d80a18265aa9e0b34664daf4b3415a6cf5297d6490787272"
+      },
+      {
+        "file": "eurasianGreatTit-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "68aefdbf779c2ba80d13e84aa0d4e9da0c385314403a3d776d5d72b00f58a668"
+      },
+      {
+        "file": "eurasianGreatTit-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5c27c6e3053b97b7193b99fa03aca071d286fa3a0d79f9e08b0e77e482d4bc3a"
+      },
+      {
+        "file": "eurasianGreatTit-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f576cb5bad28029c194d7a46068954a498baae540500fbc222d057234de4617f"
+      },
+      {
+        "file": "eurasianGreatTit-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4dcc4ce16ea7882ce048338dcba1bcfd9be4185f60a2bfb77f6ac4919a1f9135"
+      },
+      {
+        "file": "eurasianMagpie-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a7f5ce9a23ee29574d831970b317b1e4f2fde063f858d05c7d809ec62284743c"
+      },
+      {
+        "file": "eurasianMagpie-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8b049810b2d1165789e703ed5c9910d25108a0ddbd96776e97d29b9f4e43dde1"
+      },
+      {
+        "file": "eurasianMagpie-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b084dcd67196df5846c86d12c34a4e70ecd097afdc64f31c069d78c8843eb4df"
+      },
+      {
+        "file": "eurasianMagpie-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "53bb8f3cdb0f8edbc4e7d94c7077aac3c4ce7933042b9c80059943b07240428e"
+      },
+      {
+        "file": "eurasianMagpie-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1344,
+          234
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "33debc76c8980060dbd852a18f7bbdc0e5b68755eee9786ebfb327cd6137b60f"
+      },
+      {
+        "file": "eurasianMagpie-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1344,
+          234
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "aaa7935391f4f73e58d1c81b7cd0bf12cfc4138c2c68ce2424b4ff9bae2295fe"
+      },
+      {
+        "file": "eurasianNuthatch-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "89edc51f89a1226c13d43ba3813d304673da0f9aceab40423564e9cff57cc6ea"
+      },
+      {
+        "file": "eurasianNuthatch-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6af40f37c766a3acc076b08fa143512ed705eaa7bad30dcb98ee6073c533ee85"
+      },
+      {
+        "file": "eurasianNuthatch-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8111f53fcdd79f09db266187a7035d50d8226e3a5d5550175dfbb9787cb5336b"
+      },
+      {
+        "file": "eurasianNuthatch-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "bd30df3480efb44edd0dd591a8443b3f3696605a88a7d7db9b76159d4071bf5e"
+      },
+      {
+        "file": "eurasianNuthatch-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f69ac0da5bbed03abb8caf78fd1c819b526af0d9fe473439880631f2c785d821"
+      },
+      {
+        "file": "eurasianNuthatch-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "52655ebe00fb0e13dbb317b0cfcff7e9a8a5288e61c763f327b815a0f0dc1938"
+      },
+      {
+        "file": "eurasianWoodcock-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8533040738399f53f76528c7cca204293418583b09e29d4c00245a86e027f1ad"
+      },
+      {
+        "file": "eurasianWoodcock-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4fddacfdbff0d74eb43e970bb51a4227878ef67f571ed7537d9abb19834ee62c"
+      },
+      {
+        "file": "eurasianWoodcock-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0a3d64e727eb5b2e8541e68476a9c84036a21318024061f5fde9fce69204011e"
+      },
+      {
+        "file": "eurasianWoodcock-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e8b0a8661b9fcd4ebd206e597dd684a1bf171cd4c65153fbe64fed39013cce11"
+      },
+      {
+        "file": "eurasianWoodcock-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1183,
+          211
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7881d98563dc7d5552a0209b31e092f43195df8284a1f3639d69cfcb89b217e2"
+      },
+      {
+        "file": "eurasianWoodcock-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1183,
+          211
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a55f7e98d24f2a5c22aee5c806ce2db8d4e4c0da7c304f0dd30db42a283fe8e6"
+      },
+      {
+        "file": "greatCrestedGrebe-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6fbbdfbeeb1683d95f6b1135a9524bb2aef36edd0cc111c47583758259775b9a"
+      },
+      {
+        "file": "greatCrestedGrebe-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a8a6029a3aa945c2801827a2b14980e929718d33b51bbc18c1315dcf34a252c4"
+      },
+      {
+        "file": "greatCrestedGrebe-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "49eb6eba0fe45fc929c2d941d1f5e2c52e2e2d66a89704d43d36254fefd15fa7"
+      },
+      {
+        "file": "greatCrestedGrebe-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e9fe30e50c0f579d6d5f14140f835fb5a09635bc26def3892096f425b8e7dbab"
+      },
+      {
+        "file": "greatCrestedGrebe-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1386,
+          240
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "87e6847e107ae032bf6c97bfb69ebf0e87be4d6f344d1635849b00197b854cf7"
+      },
+      {
+        "file": "greatCrestedGrebe-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1386,
+          240
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0aa5b200e2042993ad047b74f00c4b207723e0ec91828640dc039052617fcf20"
+      },
+      {
+        "file": "greatEgret-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "52077d40c4ce7a355a865a434eb33ea7c0c50a66ad59a31bd04304cd9bab7ca6"
+      },
+      {
+        "file": "greatEgret-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ee3194c637931a45c918a5385902cac2fd7d4a34aee81064e865c985367d79b0"
+      },
+      {
+        "file": "greatEgret-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fcd8e6ae59bafe64509d47a6a46b8f06f0720ab09177401d2a084fe984564f11"
+      },
+      {
+        "file": "greatEgret-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3090bcf3cd9492761feb009d33300ebfc8d65fe97785166cb5b7b7c7b511633a"
+      },
+      {
+        "file": "greatEgret-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1904,
+          314
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7ca49023b0fd40e69dd13ae04ff896034c322249be683dc3b97ae52f7648fc9a"
+      },
+      {
+        "file": "greatEgret-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1904,
+          314
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "567211de774ffc8c6eb7e21b54338786733b4e1ae2cb45140ae712d01f912333"
+      },
+      {
+        "file": "greatSpottedWoodpecker-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4712c71661b352b54ca881cf60f65fa51142398553cc679bcac697629fc18886"
+      },
+      {
+        "file": "greatSpottedWoodpecker-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b769e27591e796ca4a6e82972f81181a732ddd30065ba06d91fe6e13c05c3cb7"
+      },
+      {
+        "file": "greatSpottedWoodpecker-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "438cb97b65444b29c9cb0b95c8c1bf47fd9640a65a8dd052df7189f76cadede4"
+      },
+      {
+        "file": "greatSpottedWoodpecker-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b3b0adc988d69a27c424c9bac96d569fcc26800e97b1f377c5bb2046ce11c589"
+      },
+      {
+        "file": "greatSpottedWoodpecker-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "08f3c03bc76656a3ac60ec65a0765db047765fb973b06177febc78502e774e9b"
+      },
+      {
+        "file": "greatSpottedWoodpecker-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "726b843a291b2a0b5cf9496bef806243e52fdb51d110c2876266d54feafc2783"
+      },
+      {
+        "file": "greatTit-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "031110437ce7c7258f4d48d0976b35033a2803a04452d8af8a434565e8dffe3e"
+      },
+      {
+        "file": "greatTit-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "330dc7a9958140929548164c5bc6497bbae6ea29f9c94695aff085ef6e2fbd0d"
+      },
+      {
+        "file": "greatTit-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8b9ba15cad8e834942ff5b697b4efab72f16dbcac4d6ddf98ed171fa294d456a"
+      },
+      {
+        "file": "greatTit-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "094f9e89fa5024e31644bfb272becde839fe406112ed3c8ebb4d168e01d62ff7"
+      },
+      {
+        "file": "greatTit-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f1454793a99c6764025cfd5557594dbc8f4894a94de90906ac18d9be0728c81d"
+      },
+      {
+        "file": "greatTit-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "56760faf94efac5d10e99f4d4cb5e7d54e138544694437d8d06088bf7336af70"
+      },
+      {
+        "file": "greaterCoucal-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f2673c23fdd12252d99987615b158b8cbe7f06e513bcce50affe9d794da5bf39"
+      },
+      {
+        "file": "greaterCoucal-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "48bb1b254fe63b4752454b24ab9476cabd58205c4125126df00e4f388b39a38c"
+      },
+      {
+        "file": "greaterCoucal-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fe17d7bcd836cbf9d9cd12fc35bf14ffc8d0ced548c2651fedb5875602bd788b"
+      },
+      {
+        "file": "greaterCoucal-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "78d139df39c7c41c911c6e5fc9f009bd114d0324602dd9d7c445f8ef035ccb2a"
+      },
+      {
+        "file": "greaterCoucal-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1372,
+          238
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "be481ba14251aa333cccd4ff0a150aec24fffa8e4fd210804cdc8c4b0b535bac"
+      },
+      {
+        "file": "greaterCoucal-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1372,
+          238
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b02102248ade27976dfbca4f4c373ca9a753adb74ff6d0f7680eceb2d3ce7a2e"
+      },
+      {
+        "file": "greenBackedTit-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e4fed04bc425a269add413922973a096539b8d1b466042fb5e36926711cb155c"
+      },
+      {
+        "file": "greenBackedTit-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e8ef49e7acb9cc7bc247a2599155bed03dd9707244e710cef5f4a8acbaf95f4e"
+      },
+      {
+        "file": "greenBackedTit-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "903344299b27d9d0552d262fc11b65ad796b4893bf6e95059a6085b03c215cee"
+      },
+      {
+        "file": "greenBackedTit-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d7a119667034fa9c67f8135864795cddf529f3cde5bb4e45eaccb18ace3f56dc"
+      },
+      {
+        "file": "greenBackedTit-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "38440d136ce6bded2565d6a39d7c1bcf0051bf631b7d28018134378d0ee86a95"
+      },
+      {
+        "file": "greenBackedTit-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7cc9a6484967e452323556ff0b4dd66ee4f2ac9a1a412d29ded3d50609168aa2"
+      },
+      {
+        "file": "greyCappedGreenfinch-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e7c292fd4da4b2f1e538ca2b725c3e095cd3321bc1720ce863d5fdf2452891ca"
+      },
+      {
+        "file": "greyCappedGreenfinch-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "377cfecb6ccd6948f1c5c24255351a64b7a14aada7952fae45d86b66e19edd68"
+      },
+      {
+        "file": "greyCappedGreenfinch-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f30b4c6ad50566ce2db8c65c853c8ff522829adb10faf5022e97f6d5351631e2"
+      },
+      {
+        "file": "greyCappedGreenfinch-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9e87911d24646de15bf5727c42e00bd0ce63ea6cfbeabcde3d12fa441cb254cf"
+      },
+      {
+        "file": "greyCappedGreenfinch-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "36800b3949af5f7ac1f393ac32fe343c8cb43293c459007cbcf3aa608681ae53"
+      },
+      {
+        "file": "greyCappedGreenfinch-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "216a3695c1af811b79b61ed35726a0ba71e006a879d244a3a911c316276cf055"
+      },
+      {
+        "file": "greyHeron-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "55c0ae7631fbc9d083433933a2b1e658a908dddbedbb5af659483ea3b7bc6f88"
+      },
+      {
+        "file": "greyHeron-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b5c399cf824fdb27847eacd766841ff52c6585582fe7019737c184299adcf796"
+      },
+      {
+        "file": "greyHeron-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "226f80f1f813f04833c6864e541f7b3eb758502d3e20056d47233786c84d10cf"
+      },
+      {
+        "file": "greyHeron-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "475a020a4e541f9883924b3ae083c57142d2f4f510fa182df9171d06684eb527"
+      },
+      {
+        "file": "greyHeron-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1904,
+          314
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b9c8b4e9e5db53095c866159c9c577d80b56809d7b05c625e6dc884c2a53bacf"
+      },
+      {
+        "file": "greyHeron-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1904,
+          314
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "58b185ac2443ae3524ee31865abe4b23931a5240f784bc27c989e4e9ab809f0f"
+      },
+      {
+        "file": "greyTreepie-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "68b1a2e18932b2fa399045b81933aa5f04556fccb4c1b4fd2a0a1f8c668bf198"
+      },
+      {
+        "file": "greyTreepie-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c4cc741a525fd95f27876318ee46cb65fcd0ffb62fdd1b9e600769eb01d5c6ec"
+      },
+      {
+        "file": "greyTreepie-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f157dcf172eb32003a6f20a7c8650bbed27ac4de7c362c9a4b49304639d77be4"
+      },
+      {
+        "file": "greyTreepie-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8347dc2c77498aef06330001a0030410d0e8876475e928b30e8c5b26c6f75e09"
+      },
+      {
+        "file": "greyTreepie-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1225,
+          217
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2c5edac6a4513188d634e3c53003ac2c933ee0029a4eb142fd36a38eb0394321"
+      },
+      {
+        "file": "greyTreepie-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1225,
+          217
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "714b9e81a799b1963b629ce098535d64a51440aec38351e3c97417476c3245fc"
+      },
+      {
+        "file": "groundTit-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3dfa69cfe33e68419ad248ecee32d209e39d3ff792b45d087f3add84a92c103c"
+      },
+      {
+        "file": "groundTit-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a3254f7cb93cf1c34758a9db3a3f989abde3981d22de37aaf877e03933429f37"
+      },
+      {
+        "file": "groundTit-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c3eff15e5fe3f235523fe1d14e2d73d23601fe9b63b914e8857153147262e926"
+      },
+      {
+        "file": "groundTit-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "82ed9771dcd645df93c78bc7f64e567b08e6cf2db9aeb519f4e8ea21678918b4"
+      },
+      {
+        "file": "groundTit-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a1ca742187999b334acdc7ea4ef89faf05000fd6ea8db579372caac21f652a5d"
+      },
+      {
+        "file": "groundTit-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "57407908d402456d674c37bf70e3df5f18cb5b4491cd50cef59452f8881dd0d9"
+      },
+      {
+        "file": "henricsLaughingthrush-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2c484256a38c30d12a6d82539280beb79f0f593a3a4f45ee43dbe94475d035d1"
+      },
+      {
+        "file": "henricsLaughingthrush-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e655997c20902f182fb6e6a901ed282ad1f9a9fadab4019c355a4338c6008833"
+      },
+      {
+        "file": "henricsLaughingthrush-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ac7350683185e68317b615e537d09e815c312cddfdff6f549a44fde80fb2fb05"
+      },
+      {
+        "file": "henricsLaughingthrush-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c6eacf20829789b20fc4abd57d9c08e9996e4d06cc5759bc46852816c8c1270f"
+      },
+      {
+        "file": "henricsLaughingthrush-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1029,
+          189
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9af3403739a6e06b03484d68b246a2fe4702d6cdd1c22e39b8093f64f2fc58eb"
+      },
+      {
+        "file": "henricsLaughingthrush-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1029,
+          189
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7aeb9f3c926ebaf272ee57269c832a17d3861c1c2f3a994dec24586bc9eca6df"
+      },
+      {
+        "file": "himalayanVulture-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0de8fb66a1df1d3282951d5b94a7c0d67c1c8f447f9d82043ec9fa8221eee2db"
+      },
+      {
+        "file": "himalayanVulture-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "254cf69281f65c899abb52953f6e69a5755e72d2a43e910916a17c569c437973"
+      },
+      {
+        "file": "himalayanVulture-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          202
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "85a5c9480d8506f89926cdf495b1d0ebb9751106d1263327d6186df331e6195b"
+      },
+      {
+        "file": "himalayanVulture-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          202
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "378cbb5d7e16de2025ae7bd4b6f4455bd6146b314a90b95dce3e3d52a121c60a"
+      },
+      {
+        "file": "himalayanVulture-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          2016,
+          330
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "45de84d29edb5260b028ada07126ac20be9982f2e4fca369e96052bf374dd5d0"
+      },
+      {
+        "file": "himalayanVulture-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          2016,
+          330
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "cddd87fc9b4fd639daaa09940bb6a0b0d0cf630b439f5d89d1bcd6a6d0ee19ea"
+      },
+      {
+        "file": "hoopoe-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1c5cf1808b113f774d89de78821a6139d893492c30cb4b07abf373d1eedb70ae"
+      },
+      {
+        "file": "hoopoe-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7430c30ccc6c9b75416fd4ed0336cf21a8ab02525f77d6b3d53279a31277140e"
+      },
+      {
+        "file": "hoopoe-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "75c8b14805baf14a22998d1497b9fc6a25a038a97f25578dc68a7d6ffa47984e"
+      },
+      {
+        "file": "hoopoe-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "06110fa1ade7d4d6f5c8341b18b44a07f3662602971106580e2b044baa6a1a5c"
+      },
+      {
+        "file": "hoopoe-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5beee2a8bc8ef70bec7fca6ef0698fae9ea4869b57bc7c085a0128d35e9c3439"
+      },
+      {
+        "file": "hoopoe-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "da62f9801df9fa25a9033835cbbab3872fa494cb61261b680fd70730f3e027e1"
+      },
+      {
+        "file": "hornedLark-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4ab0edb1327154487e36c5a71cf6e5c95b45d7fc1988b46d4b75c93417cc46f9"
+      },
+      {
+        "file": "hornedLark-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "42ccca535e020d573168c6b00930fb99e0ab8944eaf7646a8e98d2f27a91fdce"
+      },
+      {
+        "file": "hornedLark-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d3cae29fd52bfc9b77bb51eec4a221c9ee5f4e42b90ac817f010d66dd33ef1ef"
+      },
+      {
+        "file": "hornedLark-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ed65518495ceff940fb123197c8cab66ca45038e603846e77792224ef732842c"
+      },
+      {
+        "file": "hornedLark-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "14345af601409c6aa057ca6281e0ea9cbb5e61e961cd7486a5eb6a542c0b333f"
+      },
+      {
+        "file": "hornedLark-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "36b2220e58e145484414f1cf213f4073c1cfffd2f03cceb957a4246e5fadc13e"
+      },
+      {
+        "file": "indianWhiteEye-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6b9f7b13fc31ab0d8134f16329196c89f8f6fa27c901bc275d96c61571ab0b1c"
+      },
+      {
+        "file": "indianWhiteEye-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "354253cf24892e1b62de4fad39c0ee96a1413c8d432f106298c192e8dc27ab5a"
+      },
+      {
+        "file": "indianWhiteEye-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "abc5875e9a28e05ef937beec3d3fe9b1ae5981e81699c7f734b4447b2889e25d"
+      },
+      {
+        "file": "indianWhiteEye-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "34f13288235adc3cac87d24d65022732e6f39724fbb9738b9ba3cf07a593997e"
+      },
+      {
+        "file": "indianWhiteEye-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9cf77cf8d74a4a124f75a8c08fda693d0b615534844f78e96ced9c833116d3be"
+      },
+      {
+        "file": "indianWhiteEye-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "57d563c4ae822ef901c68c628018d6c12fb1383c6837f95f9a8e1731a81ec79c"
+      },
+      {
+        "file": "largeBilledCrow-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "438dc66014235d4711f91ecf5ec8b3c8fd86f248fd576bb4b43c2cd23bd23e0a"
+      },
+      {
+        "file": "largeBilledCrow-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8950cf1147f231225171ea020c9697a5e30cd0f6425446aed9bf14f3ef509f55"
+      },
+      {
+        "file": "largeBilledCrow-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "10ddda0d794754f45eabc660054ba4344eff3dcfd327ad93e43586ab71f9fc7c"
+      },
+      {
+        "file": "largeBilledCrow-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ccdc0e279fceb7ef3c7c5e81e27083f310b0c15b5dcd46a7ad516084168390ee"
+      },
+      {
+        "file": "largeBilledCrow-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1435,
+          247
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "06531c92ca869e81a7babd0b30da35cf88d3f4eb82f5c21e00502792fc62774e"
+      },
+      {
+        "file": "largeBilledCrow-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1435,
+          247
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a4eb5370bcf04efcd638c4cf78736f9699377a60ed272793c193389bc5fdd795"
+      },
+      {
+        "file": "lightVentedBulbul-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5bf003cdc3dc4188e2cd632f1b3a62d9588da3c67cb8413c0f11eed5d39d7d9e"
+      },
+      {
+        "file": "lightVentedBulbul-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "df7685828e420a95508c6d59e702aeb00f8380881523cf1f952e21aa74616040"
+      },
+      {
+        "file": "lightVentedBulbul-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "18d73ace392fd7bddad9cb328f9a45a998452e86ea168a2f79d214f70396114c"
+      },
+      {
+        "file": "lightVentedBulbul-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a6a1263a2fde2173f1c1f3c60e9e4f94629888170c9bf372e7d5a89f01193860"
+      },
+      {
+        "file": "lightVentedBulbul-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ee67fa77eee9568a584cca004ecc337003feab77b93d17919cc7cda984ed0f19"
+      },
+      {
+        "file": "lightVentedBulbul-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "702a8c4a7f45c02881de6c266649262dc62de4cea638e693d7c6b3ae11985f4a"
+      },
+      {
+        "file": "littleEgret-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "77d99513bebb0da0f739e76685c18776fb5af3c2305321ee8893c7403329da12"
+      },
+      {
+        "file": "littleEgret-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a1f5d61d99c248438ad9ce7ea5a6c00837c0d6a8467401dd66f4e27bc8645656"
+      },
+      {
+        "file": "littleEgret-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0d0c619834c36bbe2252c239e0dccec6f9daf4a3223e63d9a3a75d780063efa3"
+      },
+      {
+        "file": "littleEgret-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4ade50748b7e60bb59661c7af042d6d5d86f45f085b63109b91c07fd85a0f7b8"
+      },
+      {
+        "file": "littleEgret-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1540,
+          262
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c6578ffc7dd00299526ba39b6517f4c53c24d6ecdc577ce92377c652e6f391bc"
+      },
+      {
+        "file": "littleEgret-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1540,
+          262
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d3ba657b8d4dcb0655b6ec56e9a5c9ba2d76e6d4d29ad1decadfe4c5f286da82"
+      },
+      {
+        "file": "littleGrebe-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "388f28d4a010b6edfc7f8fd18e84d3ce88db765050e2e9962005da37c3c07be4"
+      },
+      {
+        "file": "littleGrebe-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5c93a55e1eacc371f59262cb09145f660c212a9d7cc56ebd6c53cd3aee0267b3"
+      },
+      {
+        "file": "littleGrebe-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "14635830671ca30b2312f2fff22d4df1e4c43347602c887d41b9f35ab7f7dac5"
+      },
+      {
+        "file": "littleGrebe-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c0549b6a40990b17abd0ab9a8d5ac54d5eb470fcb8f8ae734b5ab98769f4ff00"
+      },
+      {
+        "file": "littleGrebe-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1050,
+          192
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "14ec1cdd70a4eb69644b6264490442a91d5ac568ff2c9bc058daff03fec47674"
+      },
+      {
+        "file": "littleGrebe-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1050,
+          192
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fffb131941994fe00aa6252f543273e2978d14c78b8c277ae03a2254aa57bde8"
+      },
+      {
+        "file": "littleOwl-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f2a33a25d00a5d90965a8cc1371060efa2ab563df193fc74e1c5610820a7d1c2"
+      },
+      {
+        "file": "littleOwl-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e40e978036bcf478ead1fb1814b87b4b83156434371c804f92d9239b74a32f39"
+      },
+      {
+        "file": "littleOwl-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "61c5262d6e4ac892e5b94264e01ba1ccc9fee7486da0d6313e8630441c1b4726"
+      },
+      {
+        "file": "littleOwl-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "57037656058f0c5e8f44c2d700beda86bbeead3da8ae131d65df467a9c70ac8b"
+      },
+      {
+        "file": "littleOwl-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "76d8dbc469a0bd065d2e78bdb59672dcffa92eff75b55cedd83c6e786bae9b81"
+      },
+      {
+        "file": "littleOwl-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "960d4a916980680cacfaa54399b56accd348128d8c193871cc504d3ca7648e5e"
+      },
+      {
+        "file": "littleRingedPlover-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9447d68beca654b4fd9b96e9e128665adbfffe1e72aa9a974132a497dc7c7187"
+      },
+      {
+        "file": "littleRingedPlover-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "df7fb107ede95b9fb0ec773002580d6c2cc7293d78c9594a5068737303e9b810"
+      },
+      {
+        "file": "littleRingedPlover-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a2fe3344d44c8ea396f7dd7ac41460217e8f373f71fb9b89523e4530b7ec7ff7"
+      },
+      {
+        "file": "littleRingedPlover-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ad4adfd54765b0d53dfcd4404cf13f061b3e9c17a856aa6a8866d3d60ff73c62"
+      },
+      {
+        "file": "littleRingedPlover-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ab3c0a51f69b9fbe15ddddb06cff5c6019ab522f032da62eea3a2997367d4894"
+      },
+      {
+        "file": "littleRingedPlover-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "bab02d7e9d7723f5c59f11dde5dd94e1ddc2250c569a57a5388a0ea1aefce610"
+      },
+      {
+        "file": "longTailedShrike-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "354f86c2e639a7842efa0f63080316322152ab2a1353621b82c33577e62d4d26"
+      },
+      {
+        "file": "longTailedShrike-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4e0d08f092cb0814ec9ba01666eab4feaf20229e1c6c856d5f39e534ef6499a3"
+      },
+      {
+        "file": "longTailedShrike-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "16894ba856c399a452e1664dcd07d7fcf622af2d95075075805276bb559baf5e"
+      },
+      {
+        "file": "longTailedShrike-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9d19a7ba42b487c9d5ebaad5a2bf45cad6b2c913ac2455671f04c09960df31a6"
+      },
+      {
+        "file": "longTailedShrike-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ea721eabc18b5b359ea2433e246be09ed8c7970b9818213dcbcef58769bdb68e"
+      },
+      {
+        "file": "longTailedShrike-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fcc858381cb2afce8006d0b7a35900b74a08ed1ea1b77c36681e15350bb893f3"
+      },
+      {
+        "file": "magpieRobin-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c030943cb10b56cfb7bf209030b6388b4e53f7cedeabf2090b3124316372f8fd"
+      },
+      {
+        "file": "magpieRobin-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "bae3cff300d526c3e63a7b187bde9c52b7a44a42e8c7cfab90869add52d63679"
+      },
+      {
+        "file": "magpieRobin-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "14b6a47ca2538873a1b7ef0bc537d14a16cfaf88b4345b885cb79ef982563ef1"
+      },
+      {
+        "file": "magpieRobin-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ecea902692168995c475f7cd2aa59aad66ed6aa11ef07b6141a6998eec9f0e51"
+      },
+      {
+        "file": "magpieRobin-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9e3353878987f3fd12166a3d19078c51f014f28299dc079d6f25354652f4233e"
+      },
+      {
+        "file": "magpieRobin-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7b7ca0bafc9bf5e469936cae8da15f49b4d3bfa00a3fe83663e1462dfde4115b"
+      },
+      {
+        "file": "mallard-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "307810d2309eee13fe9cbc0dfb3cb30b31061436eb543732ddd849c8430107a9"
+      },
+      {
+        "file": "mallard-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d87051a5d810f28fc1ffc9d793c466a09c3166216f1b49ae7058ac400a7fb6e7"
+      },
+      {
+        "file": "mallard-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "768eb30aa074b9d18ace70e03ff0d6b29a3fe80e0c69204be49f6b7694767e3d"
+      },
+      {
+        "file": "mallard-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "43125d8590844f0369ead9a8d88bb7a604f0a9aa2066a4c36529c611bd257279"
+      },
+      {
+        "file": "mallard-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1498,
+          256
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2f6fb902741a179fab8b18867cf9716931a9ef1479a4cca4705e5c7c8177dce5"
+      },
+      {
+        "file": "mallard-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1498,
+          256
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "355be5e5916904fd79a99925126f71bbb1ff66d2bb5d0a74144b33cfef45abc7"
+      },
+      {
+        "file": "marshTit-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "bff12c483e84078729e836ff2942d364412d5965b584b725c41c46095152c08f"
+      },
+      {
+        "file": "marshTit-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "48838fa36ab83d3d917ca1b06978fe059765ddb99d0b5511260da1e3ec90709a"
+      },
+      {
+        "file": "marshTit-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2a8f8bd7be30b5f3cfff2bea3c8eabc1fdc14838dc9fa69f5648a10dae0b63d9"
+      },
+      {
+        "file": "marshTit-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9aa975643177d06965125a610bf12447aeb895fe55a89878ebf15364eafedf3f"
+      },
+      {
+        "file": "marshTit-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4da72bdf8d76860e377ccb2bfb95479ad7e362f7614a39cd74164bc5f44d30b7"
+      },
+      {
+        "file": "marshTit-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "aec92a42ef73cf4766ce16ef87584b3420ae11dd748581bd25822fc5d8ffb628"
+      },
+      {
+        "file": "nightHeron-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "24937a87c65ad9f3f295426f4077520cbd2aba9822309bc9100efef055240de9"
+      },
+      {
+        "file": "nightHeron-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d3e2365ebcd6acc6ce6f556194e53d1b57cccdc65018282f7cfb8660dbbc4284"
+      },
+      {
+        "file": "nightHeron-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "29eee15a0aaa44666b48aaba7ea29895259eb3b409f130aae62aa0a3a8444e7c"
+      },
+      {
+        "file": "nightHeron-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4217fb6a9bdce6635d0ae1e91f0026caeca3915cf5de4a51c4fe9121cc64bf4e"
+      },
+      {
+        "file": "nightHeron-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1540,
+          262
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "023837aa2391d5fef61829150c693e283b25b49d450ab1415757776836cb6d2f"
+      },
+      {
+        "file": "nightHeron-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1540,
+          262
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e6036a27302b859551cddf3389d6c67bcb741c0db3f0c2170916f3ed3d52b8b4"
+      },
+      {
+        "file": "orientalMagpie-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7ea184b6268dc1f16d22ce760b3f2ab92a4795fdf3800b0cc01ef1b222053c6e"
+      },
+      {
+        "file": "orientalMagpie-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e56ed046b5334f1f0bdcc5d2bc52ef8a1b1e98724e43b0da802f8d8113d21d52"
+      },
+      {
+        "file": "orientalMagpie-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9e4bf5c7d174055fe3712bcbd0e3dfcb667aaeb131302b29332646beb6d84624"
+      },
+      {
+        "file": "orientalMagpie-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3c152af0dc6bc20ba4d5e5e936ece2f07816159f434f4ca7a150e25a20ef38e4"
+      },
+      {
+        "file": "orientalMagpie-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1344,
+          234
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ac61246e7a2d059ab1a9aed02eb31ef78bd5fd4088723c1f33fe4c3d935b3d47"
+      },
+      {
+        "file": "orientalMagpie-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1344,
+          234
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b189cf8d5abf40ae48f5e154c9ff7827518a5d26b1850a8feff0b5e5c87a1e76"
+      },
+      {
+        "file": "orientalTurtleDove-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b825f8d3da45edd034173dd8c34eb6e38550ec3bfff41a3a9dfb29d45f0fb87e"
+      },
+      {
+        "file": "orientalTurtleDove-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5a9f642f42ab77e3905c942e3c7fa4bd2a3c4db6a68a697b9c77489450be86a5"
+      },
+      {
+        "file": "orientalTurtleDove-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "11eb08a8663c0df3844715b7a1c2543657fe198f4de5b3de1571db9fed6de03b"
+      },
+      {
+        "file": "orientalTurtleDove-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2fda3d72efc93145f16010f4fd48236d11f0b4ae516efeb621207569fa94ec6a"
+      },
+      {
+        "file": "orientalTurtleDove-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1148,
+          206
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "35d979a50e99612b7f05a09af863c458cd0e44a26c1be15353242e5e50778c08"
+      },
+      {
+        "file": "orientalTurtleDove-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1148,
+          206
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a71ef37890b86b05ebd6a4970db8f621eeb2f63f0494a71d6fd47681dcd3e1ee"
+      },
+      {
+        "file": "ornateSunbird-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "bbe0d348259c3d39dd384735cc7a2c12ed89cd9c554bcf5fe2358656d8a0cd53"
+      },
+      {
+        "file": "ornateSunbird-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e4cc164b5e5f63fc200cdff58a4903449f230892f7e6aabaf56b49872ddca133"
+      },
+      {
+        "file": "ornateSunbird-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6e49a6174540fae1d619375be8edf629cded2dddaef146f2aa934e5ec87453b7"
+      },
+      {
+        "file": "ornateSunbird-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c32a01d4b2c639c508f19a1f699620575ad515d3f264c5a08f67985e58b9c61e"
+      },
+      {
+        "file": "ornateSunbird-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e4e070fa6411ca2b4a9c589f2bba5fb9ecd6ddbf7dc207d7deac6e939059ece2"
+      },
+      {
+        "file": "ornateSunbird-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ea276a2f5e6eab7fa98b576af3b30498877beeafeb9b68d04312feb8f056ee6b"
+      },
+      {
+        "file": "peregrineFalcon-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3ae550a50c39fa31f8dbb8084e1aa8f04c6db902831e4ade0306595a6cfa69dc"
+      },
+      {
+        "file": "peregrineFalcon-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9b7d43961f893cbdae577311d2bbbd8fe82691a903f00ada178c1a971043d1af"
+      },
+      {
+        "file": "peregrineFalcon-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "917eb9a57f2cdb2e572d772811df348d7682d11f9c1ccfc8c459547abcd3668e"
+      },
+      {
+        "file": "peregrineFalcon-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5d3abef5ccdc53903c7a464e302e3a0f9646d94c144e2e7d6cf50aef237d47a7"
+      },
+      {
+        "file": "peregrineFalcon-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1302,
+          228
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e496476c302edbbd3f8b69a7066b46a24b382052aabcb910297a03b540999382"
+      },
+      {
+        "file": "peregrineFalcon-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1302,
+          228
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "122e5e27f97bc1aa57472a41ea561ffde0b93ef9d8ff3b3f37a575d34a9b7e38"
+      },
+      {
+        "file": "piedKingfisher-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "96fa719aa9c273889b10850ba6da254be52239f36fd9d27333bb3dfc4f4469d4"
+      },
+      {
+        "file": "piedKingfisher-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9b20c71c853e4732b862e22524975437242e230239d14a6ee68887ce30296ecc"
+      },
+      {
+        "file": "piedKingfisher-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "42b7dc6ac143e4ec010819674290ff462c481dbd4d74eef6362241c076c8ed1f"
+      },
+      {
+        "file": "piedKingfisher-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4b6a2c8733620a5424c1df0b12b6c2ddf4e19f8dc3563f9865aeaecf2f9de31d"
+      },
+      {
+        "file": "piedKingfisher-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6aeadc2b54d4f4ad2adae3126a6558075be86ec3eab98f77637e0c8d4bc5d621"
+      },
+      {
+        "file": "piedKingfisher-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1064,
+          194
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8fc125914ae61a1897bb655b0fe9ca18d5eef4256afcfe7670561b18db0e6f19"
+      },
+      {
+        "file": "plainLaughingthrush-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "da9a9c8ec7283eb85bb2503cd18a8b092f0e84a5c18645ae76df27061fb46d66"
+      },
+      {
+        "file": "plainLaughingthrush-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d582ec73fd877c2293cc7a00d10a3dda8149bb6e495adb2960bc6f051e262f89"
+      },
+      {
+        "file": "plainLaughingthrush-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d07aacceb128fc088199f5bc26043abbd2ed85c5a07852181dbf95139b902ad8"
+      },
+      {
+        "file": "plainLaughingthrush-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9532ae214e90a613b3f883828f0513518d750e0f560d46ce4a700480d1d2fd51"
+      },
+      {
+        "file": "plainLaughingthrush-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1029,
+          189
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3c093559b9e0c306e49ee859f0d37ea0d78e45191ede819f3e700f829831d0fb"
+      },
+      {
+        "file": "plainLaughingthrush-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1029,
+          189
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e0b7e41c1516ac2e70bd920c418860389365bc41a8bdd0e5a0b956dbee545528"
+      },
+      {
+        "file": "plumbeousWaterRedstart-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fb76f6e4468e0996ee9ca56a7635fd63af5744942fa99a8cd83cae034bffba24"
+      },
+      {
+        "file": "plumbeousWaterRedstart-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9bc0bd9b402e2ff35f8eb1001f3eba2bf85d07891fc1c4cc8dd2f8991a098737"
+      },
+      {
+        "file": "plumbeousWaterRedstart-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a301eda39d2a4757c002e511814580b4d1aa602659444aeafd831c2d413b1e34"
+      },
+      {
+        "file": "plumbeousWaterRedstart-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "820230ab8fe8f8e9f11668ec7ef557b3dbe6db42c1220d72cfc800ffc826e752"
+      },
+      {
+        "file": "plumbeousWaterRedstart-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c3c9ccc161dd69510741a18cdfac48473e1eff3d284b2914d2ae10668837bf92"
+      },
+      {
+        "file": "plumbeousWaterRedstart-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "73bb95e60b4f57c8b23991b76c977bdb914fb9d6d2d4af26cbeb65cecb567167"
+      },
+      {
+        "file": "redBilledBlueMagpie-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "afd39685a247bc42230abb76375ad193ae7c85e71956d39f10c823b0ec96a1dc"
+      },
+      {
+        "file": "redBilledBlueMagpie-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7341e8406f84ff49b26864ad5e7ba82b51996ec18fece0b27edba0bf034f05b4"
+      },
+      {
+        "file": "redBilledBlueMagpie-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ea9b2ed03dd49e5ffbe162077cf25e46970529c070ef0bdeedce5c61ff4d4968"
+      },
+      {
+        "file": "redBilledBlueMagpie-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9c5dcb02cf37d2aa1c6ac4e1e179532c67df054ebc4a9fcd5ebaa526ebac7693"
+      },
+      {
+        "file": "redBilledBlueMagpie-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1589,
+          269
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "17fdd6da883938fb54436daf26cbd2dc88727b6c411396b4427f9d7cbcd130a9"
+      },
+      {
+        "file": "redBilledBlueMagpie-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1589,
+          269
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7f9d8a855e6f945bbf4ee79f684c4614cbd5afbc93f13b3d4f26ddb4e346135f"
+      },
+      {
+        "file": "redBilledChough-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b125b4ac62afac880a968ef597f738c7729ac62bcefec50321edf2e6604a70cc"
+      },
+      {
+        "file": "redBilledChough-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d53904f103b671c003d32794928eb2e3485e504521dff5951c4bc25a0119ad6f"
+      },
+      {
+        "file": "redBilledChough-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0bdff20de9e98ac3717166bea99b61421a089b436172fcb5a312e201ad96ad41"
+      },
+      {
+        "file": "redBilledChough-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2f37c88e946c42b15213da7940cacf383aea1e1acc97ba54bde646fd3f963b23"
+      },
+      {
+        "file": "redBilledChough-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1239,
+          219
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9dd0409556d87a58cae17612f4630ed19842620833ffa234482f3fd5f781da15"
+      },
+      {
+        "file": "redBilledChough-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1239,
+          219
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "051054dd29c7244a1c8b2ec72a0fba82a14ffb1fb03c0ee2b39f0e45ab808995"
+      },
+      {
+        "file": "redBilledLeiothrix-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2d03e6e11332c73f920c58ddcd507e117ebe4f2e78b7b2d3ffc11d51c3a80233"
+      },
+      {
+        "file": "redBilledLeiothrix-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ac1d405abd802643355c7b9027cbf6aabd1cf9da622d3ba9c87a340f7cfc82e4"
+      },
+      {
+        "file": "redBilledLeiothrix-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9afa7718f052f0c5200760fec6305b856a8ac55e6cf6f7cd02c1aad034b2be6b"
+      },
+      {
+        "file": "redBilledLeiothrix-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fec87aadb5567bbfd9bbf19a7bd0cd2336e8b3a75f745d8ea28fafe636729724"
+      },
+      {
+        "file": "redBilledLeiothrix-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "272096a5d70ad1746d5a77591334d3fc3f6ed79c74e76a37a15ce39d14d2dfae"
+      },
+      {
+        "file": "redBilledLeiothrix-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "855e1f1307be929b89d02b50527759f660b54f30506cc5222fbf396098d87d47"
+      },
+      {
+        "file": "redFlankedBluetail-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "500cb5414c79bf345ef6046cab2d458936166f93754307ddc041500161cab748"
+      },
+      {
+        "file": "redFlankedBluetail-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3c9d0d7f2b2979fd05c33765a5286a5851012a31a14e25c4d2f5b04153797d58"
+      },
+      {
+        "file": "redFlankedBluetail-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4d4667fcb1491112aa1d2f4c0b00991a8003091b0fde7463f073f0a743ddbaf5"
+      },
+      {
+        "file": "redFlankedBluetail-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1745cdb1c4ecae4116f3c60a3d624c683163b9b3372f0dec4e5cea7bbe3e34c6"
+      },
+      {
+        "file": "redFlankedBluetail-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "144a011f3178c1dc64770c2064198d21d083bdb5ac24cae789a27599479ba22b"
+      },
+      {
+        "file": "redFlankedBluetail-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6659c7530c0b5713d74ce41812c43bb38a83482df86f53bd676ad5f327a4a6b1"
+      },
+      {
+        "file": "redThroatedThrush-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5f9cbf9b177912c8fc705fe9bb499fcf55ac061c776ba8bf9c7fb265bd416b6b"
+      },
+      {
+        "file": "redThroatedThrush-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "509d8eac88e46bf82b9078a52f966c6cb5b3bc7b51402635ebbd05beee34a91c"
+      },
+      {
+        "file": "redThroatedThrush-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0a35614008199e99b12428dc06b1de501e88fac931abc90a28b90b60f6712d04"
+      },
+      {
+        "file": "redThroatedThrush-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6b6be3b85e1109a1d25f339cb2425b7862a6e26a274d9b553a155d15979b20cb"
+      },
+      {
+        "file": "redThroatedThrush-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          994,
+          184
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f94e831d90b4c91799e5c2ac1790a4ebc8408c38f9f73420da0de51218d9af45"
+      },
+      {
+        "file": "redThroatedThrush-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          994,
+          184
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "67203ca893ad6df8ea2ecb26ef0c3d727dd8930994bdd866b6ccc53ba0e39e1c"
+      },
+      {
+        "file": "redWhiskeredBulbul-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "cd24357d9a54a8347534471a24a43834355da9107ec487a381ef220525c093f1"
+      },
+      {
+        "file": "redWhiskeredBulbul-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c30e0b1a013e57c651e50561dc58f489fa991da277e5ec2fdb4632598e3028dc"
+      },
+      {
+        "file": "redWhiskeredBulbul-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8a74ce8a111fde76b9b032cbff759bd992e2e21fd174b2f00cbcd4f31ac5fac5"
+      },
+      {
+        "file": "redWhiskeredBulbul-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ce19b9c435e1dc98c75653b7c3abe776806b74276c8c820c3c896051790979d7"
+      },
+      {
+        "file": "redWhiskeredBulbul-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0e1c8750ae0648e491572c926de5616ea8628cc95787e29dc465310f9a3b8c57"
+      },
+      {
+        "file": "redWhiskeredBulbul-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c8b299fb436ec0cb45b081c5d25a33dbb15998401b8813f2b050a25c64113101"
+      },
+      {
+        "file": "ruddyShelduck-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "215992a1df6bca9367d2270c51b4d764fad76c1b7e7be6965df4f0c765288267"
+      },
+      {
+        "file": "ruddyShelduck-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f16b24dc71052fd520b9eb9132faa52310ab3eef69686a8d94a17c61608dd765"
+      },
+      {
+        "file": "ruddyShelduck-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5ccd1a5bed68700043b68ed31ccb2ccfd18b65c130daceef27369e0f9c6ed3ee"
+      },
+      {
+        "file": "ruddyShelduck-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b2ab9b2d26d74a085d53b3a421b4368c71b747d5e2c38e4858d9e152d3af1014"
+      },
+      {
+        "file": "ruddyShelduck-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1575,
+          267
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b84e73adb10f7371bc21f2ba4dc27777a0538a060dfaac39adf1a19113e10354"
+      },
+      {
+        "file": "ruddyShelduck-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1575,
+          267
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c5c277aacd9f0d13fa698dbb4faec499f6431565fc7ac154a441f437ac075eb5"
+      },
+      {
+        "file": "rufousBreastedAccentor-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ec812634f7439a45aad5a314c95b0aa7554e00da461fa0402b16b6951f006493"
+      },
+      {
+        "file": "rufousBreastedAccentor-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e3aa70aebbf9f14ffab2c139228196e0925b22d7f0a485ce44b060afae44c977"
+      },
+      {
+        "file": "rufousBreastedAccentor-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c876e6bd1a360a11147dfdfe0013ba4b04304e6f025c89ed61a097d05fac6d37"
+      },
+      {
+        "file": "rufousBreastedAccentor-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1222276c29c87ccc1ea33a1ef7f09fdf97d953c9d03ebf45e83a05e485f74ec2"
+      },
+      {
+        "file": "rufousBreastedAccentor-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "56d0157ce0a2c1bef87f1a67f6395510cb6a824ab017eaccf21592f6074151a8"
+      },
+      {
+        "file": "rufousBreastedAccentor-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "20ba1c4c2a5fb249f88aa40cdb8913ff05daa61288ddb56e373814eecf3fc2ec"
+      },
+      {
+        "file": "silkyStarling-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8ca5417db38e3f0ee162ca1f4305bd584fa6e22717130cf1d452265248353753"
+      },
+      {
+        "file": "silkyStarling-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "cd1421734bfc00654caba97a76995f86a0714f8a15fe05951b8313d923274e83"
+      },
+      {
+        "file": "silkyStarling-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "cc6cc59d435f8c3f7f3f9c64a79106885de57a6b0599c33aec8025a65177c0e0"
+      },
+      {
+        "file": "silkyStarling-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "33c3ccdfae066aa16b4ab96bbad580cd08dea0589faaa85760fd3eacaba2ae2f"
+      },
+      {
+        "file": "silkyStarling-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          994,
+          184
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "24df849262011356e4b728a892be71a8026122436a9846e5b6ea7859d8d300a9"
+      },
+      {
+        "file": "silkyStarling-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          994,
+          184
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2bb1ca9d89bdf1f5794edc988a4b85ab32f45b52bd757bab100abd8c311159f6"
+      },
+      {
+        "file": "silverThroatedBushtit-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0f0ccf34c5ad757d040fe2d2544e59ce25b0dab6c9ac769c77fdadebe23b05be"
+      },
+      {
+        "file": "silverThroatedBushtit-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c69c4a463f3f0b5c7d6af7ada228349bb9c04bfe37be49cf24081c46f5598ef2"
+      },
+      {
+        "file": "silverThroatedBushtit-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "834561f010a83b65a6e8761544725b93b5b9945dbe262aad0b9ace1b82e636d3"
+      },
+      {
+        "file": "silverThroatedBushtit-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d9e6ba6c5238db56451e7e9761f6123986d465ee218c752e2f37dbd301a16db6"
+      },
+      {
+        "file": "silverThroatedBushtit-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "90648754d08063948f4ad11cb0398c52d36a5e04e478c378d5ff562e2646096d"
+      },
+      {
+        "file": "silverThroatedBushtit-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8689e4de96db8b523be198b5d1a022c5681ee12c6632ca9a6d754cb567ee7821"
+      },
+      {
+        "file": "sootyHeadedBulbul-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f6e9d7922871483f702f4c1ed49d8a6b64b44cab5bdf0456c8a46d86b8198a0e"
+      },
+      {
+        "file": "sootyHeadedBulbul-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0373ea83b568642851c2d55844e4805ee65fc4a9e575b6592db4d62d4e075a2b"
+      },
+      {
+        "file": "sootyHeadedBulbul-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "75c10e6149ac96b79d9061b9223f745e8c0aefc5190e6a70fb5bec9047b63d05"
+      },
+      {
+        "file": "sootyHeadedBulbul-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1666c2be663fea14fe86b4dff6a2434c5ffdb43249244d683b593f0a5ef41275"
+      },
+      {
+        "file": "sootyHeadedBulbul-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e6fdd534ee7958a6ea77561cdc40bd8a5e9ca8f90eb13db10ac3e38b238a7a15"
+      },
+      {
+        "file": "sootyHeadedBulbul-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "61b087ec1df600d458527f91d70cae1b6dcaf87561f7cfcc49f5a05b6d981c01"
+      },
+      {
+        "file": "spottedDove-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1400,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "24cf0540bb23bb2f35a7069925138bff9a3c4b9ade264159c17225e98827c949"
+      },
+      {
+        "file": "spottedDove-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1400,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5074164303e7d624f1a08e08df2dff098c72de134470382e624774df170e639c"
+      },
+      {
+        "file": "spottedDove-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          2080,
+          250
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a518c4ae9bce4aa5d8d30427b6bc5bd1286136a4d7cbda53d49b5fcecb259e5b"
+      },
+      {
+        "file": "spottedDove-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          2080,
+          250
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6ad3f0f9547c0e5393e7423df350f2a1344375b9821abc5677c574266cc2713d"
+      },
+      {
+        "file": "spottedDove-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          3520,
+          394
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3a4ab50b327aadbcf84ce59e060497a56cbc2bdc8267978c126f4353d706743f"
+      },
+      {
+        "file": "spottedDove-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          3520,
+          394
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4956e821d1f8aae2e41484fe6227495be52e1bd196f823586acd7aea13aeb4b3"
+      },
+      {
+        "file": "swinhoesWhiteEye-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "243904befa4b7bd076f4664255e937e6a359b6274c2ba6386ee4860b794bbf0e"
+      },
+      {
+        "file": "swinhoesWhiteEye-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "405754fc69e681c9404541db2fdc62a793702eea237e24d158cf18f52f8eaf22"
+      },
+      {
+        "file": "swinhoesWhiteEye-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "fd499cadb1f8d8969a69a6c929ec55748427c876458c1900a761bcf6cc56598a"
+      },
+      {
+        "file": "swinhoesWhiteEye-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "024ffca78beea6293aeff81c9d91b44e646f13139db8cc38707cbcb13c791a5b"
+      },
+      {
+        "file": "swinhoesWhiteEye-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7bc3986d8214041b37899eb3915a5fb1fdbea34b71a22ae920a875494d722b83"
+      },
+      {
+        "file": "swinhoesWhiteEye-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "1cfc2d925fb91dbed23bf32e0d935a41dd10419b75dca531d5d541d304509d5c"
+      },
+      {
+        "file": "taiwanBarbet-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7d6cf8648f87eb7106209b5f3d35b2b5201c08475737e965333f1cda77245ec7"
+      },
+      {
+        "file": "taiwanBarbet-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "077fb27a2273f25fdadca61ea81764e4bc181e7327997cef4c4052600d110b87"
+      },
+      {
+        "file": "taiwanBarbet-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4983ce1fd91ce6c2d0855a2dd5a76a113c0eca8e35076cbeecd9dcad8078dfe2"
+      },
+      {
+        "file": "taiwanBarbet-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "de642c697b05ee84b2a90ca66ee13e16e369c97f312953a2bdf65c0a84ef4a71"
+      },
+      {
+        "file": "taiwanBarbet-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0518a061d24788b66eae9b675248a4229241a1f445e6e61659aa7ea09bee95e4"
+      },
+      {
+        "file": "taiwanBarbet-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "aa14bc0b706636fd7665c431f279e1c820e18705963ac7cc2a7196562a084223"
+      },
+      {
+        "file": "treeSparrow-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "998ad565bd28617c8cb442390623a706fb07eb10ea9a77016d67e313bc81824f"
+      },
+      {
+        "file": "treeSparrow-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "75d9cd07f61ff1c5bf7c2f64cc0d724a6f43e43c4cd6be7332258c1bc6e32234"
+      },
+      {
+        "file": "treeSparrow-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ea114e9a763c7609107ed646c21e05b2e2ca8173047a5a09ece68acb403a59bc"
+      },
+      {
+        "file": "treeSparrow-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8bf339b255278132c278fefc7063d307fe068ea5e356bf3cbaca514d1f300ddd"
+      },
+      {
+        "file": "treeSparrow-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f91a2a3e80d114030733427ba5df3d9206d7686fd200fb8a3095a7c50c49717d"
+      },
+      {
+        "file": "treeSparrow-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1260,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3beeb91377b9d312b177de21fdf3bd97c654ab5dbdb42b34b0664a1916a79d6e"
+      },
+      {
+        "file": "twite-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "cdf0e2fd6ea12ebdb6e69401edeadbfe5f006a72ad64f3470dc8f06a19f31ce1"
+      },
+      {
+        "file": "twite-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3c980b48f7a6e6b9d8855e4d02edafe92fe99d6ddd4f44ee64f9f232d036cf35"
+      },
+      {
+        "file": "twite-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "db8f83e549321932a0d923c010f15b5732af67dd3cb972ba6d653199e0f06784"
+      },
+      {
+        "file": "twite-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2bf64885b43e1800090231d350af05c57cd9d052045d06d2f3bc14c0f8d4a314"
+      },
+      {
+        "file": "twite-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f666f4d6e1d8382cb67f2c37826b9c4a5326a13c2566ba56981c0e4615877a96"
+      },
+      {
+        "file": "twite-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7979d0069d1c12643fa430730c12b5fb33d466e7f8f5ff5b03f6e7d128c22931"
+      },
+      {
+        "file": "uplandBuzzard-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "308a213d780740fd5a41b8cc98b5c01bece3a8fdaf941d0ece90638bfc2c3199"
+      },
+      {
+        "file": "uplandBuzzard-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c2979aef548ab2402b1d613543567cde9af4af81a78e9fab978e40bc5631c1e2"
+      },
+      {
+        "file": "uplandBuzzard-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c5169f381032c696f0d0a1b85e03d22ed9db56d10bb90d4a770e28210c11fb6e"
+      },
+      {
+        "file": "uplandBuzzard-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a24c76eaec3e71474540f478aedceb6968f3d3840848b2013930d510e117bd5a"
+      },
+      {
+        "file": "uplandBuzzard-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1561,
+          265
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f051aeb496b3bb193e215aa2e53d34153ca6bb5602314d8e041b1dc9822e0330"
+      },
+      {
+        "file": "uplandBuzzard-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1561,
+          265
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "62f53dc2350c9196b8890a3a8bc3678ff5dbbd851fe838865a9ad26c8e0a77c8"
+      },
+      {
+        "file": "vinousThroatedParrotbill-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f7e8b6a5e1e8189ad57d5d534d8efb06702ed7aa54674c0762f1e2d5568b2189"
+      },
+      {
+        "file": "vinousThroatedParrotbill-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "01fc04c7596784bbbf425980bc8f088fb783d6bbef882ec4cef5b0e90c37ddb9"
+      },
+      {
+        "file": "vinousThroatedParrotbill-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "a708db8e869466daffc60d8ce09c5dee2f3e0354e7afa7ab78ce2e8071563dbb"
+      },
+      {
+        "file": "vinousThroatedParrotbill-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "cb733092dfc224fb59bb00b7af6b019f428bd722ab4ce5ef3f8c97b543b356df"
+      },
+      {
+        "file": "vinousThroatedParrotbill-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "10057d142580549df3339dc4dc9a4c6c836393bd498f5191933bbe528ead284c"
+      },
+      {
+        "file": "vinousThroatedParrotbill-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d0f1147e417761a8c686e10baaea89fe99dad1fe24b15aa9a569d8909d9e5b43"
+      },
+      {
+        "file": "whimbrel-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "23317c79120b4faaa036c429b8d6c96ab3adc6cdd2e4df203dee1d4ee38ecea2"
+      },
+      {
+        "file": "whimbrel-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8d835475e27eacee2df937bdae57ef596fbf79b5a7ccc1d50f1f6a7ba8b3f24b"
+      },
+      {
+        "file": "whimbrel-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "073a83a72314e5179add30c3c939b705d9d7db7c59c4f961d8e623d2f0d9e933"
+      },
+      {
+        "file": "whimbrel-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d2fdb49440effbd7744ad7e0783dbad658e9bb7037f1619700576c830392b3bb"
+      },
+      {
+        "file": "whimbrel-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1302,
+          228
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "487e29d82fe481dd7de716113bbc0789545664a310792039a12ea7403ea19501"
+      },
+      {
+        "file": "whimbrel-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1302,
+          228
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "03a40103276a59c1dc2349a40a0ea65399a410bc47983bbffdb2a2bf63acd273"
+      },
+      {
+        "file": "whiskeredYuhina-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c3650b294585efb7ca45ba9a538c6971ddfc2ac7c5f36650e2a99732e6d6f5d2"
+      },
+      {
+        "file": "whiskeredYuhina-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "28a7039e4f4452dac179cc08199f9ed9711865787aa22ccb218ff3fbb942cb94"
+      },
+      {
+        "file": "whiskeredYuhina-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f031f2954982d4a5dc0c4c3ee557c692268a3330d46be0c7e1575d8008965fc2"
+      },
+      {
+        "file": "whiskeredYuhina-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6e1735268f805a38d07c6042291aeb3b1950dacec04cb4a13ce0672c01abebe7"
+      },
+      {
+        "file": "whiskeredYuhina-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "3eb9ea7de38219aff02d12652d2befc609b8b6f05eb514d0a5dbc9dc2fbe73b0"
+      },
+      {
+        "file": "whiskeredYuhina-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c125952515625213e26630452cce0dd7ee993460985a7d58842a7e85b7fd3693"
+      },
+      {
+        "file": "whiteBrowedLaughingthrush-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "aabe1eca2da53f31c3f694214cb2f60cfe8b38300fdccbc4d78bb364f12a7ae7"
+      },
+      {
+        "file": "whiteBrowedLaughingthrush-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "614b7300013d73df0b58db5b1b7f878b29fdbd01272f623e1c08ca67c9fafda2"
+      },
+      {
+        "file": "whiteBrowedLaughingthrush-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8cb8d3f0e2500365fbef2cfd780a6e0c37e98fb37aeed8205b5f3a54a130bf7e"
+      },
+      {
+        "file": "whiteBrowedLaughingthrush-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "8015482b5a7f7cebd5069b805afa11b8283eeafd997b9c1cadbbf370ef92d85a"
+      },
+      {
+        "file": "whiteBrowedLaughingthrush-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "297120c19df67956ab3bb2f6883eee41cd49414ef137e38b5c5bf714df7f0961"
+      },
+      {
+        "file": "whiteBrowedLaughingthrush-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6e7ea37f0a250c346fa8e93e483609dcba9061858d22634f9dfce6101d6688f3"
+      },
+      {
+        "file": "whiteCheekedStarling-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "51757f22b3bce8e09ebad43cdcf19715ab19b9d0c13e7d36812045803e43fafa"
+      },
+      {
+        "file": "whiteCheekedStarling-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d84ba2472253ca20738a89e5556854c96b8474ae9118c51dbcb9d0c3776bd307"
+      },
+      {
+        "file": "whiteCheekedStarling-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4a11b686282961d42d3b7616d801e8d9c91b2399606f830dd9cde49f299bf01f"
+      },
+      {
+        "file": "whiteCheekedStarling-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "758d06d6cdbde1d48bb63c9fe4d91e4e6594a99bea33ef3e90b42b79bb3c7819"
+      },
+      {
+        "file": "whiteCheekedStarling-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          994,
+          184
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d6f7f5e10601d1c617d23d962153654ca73007183188d3020c1ca89a2f6b114e"
+      },
+      {
+        "file": "whiteCheekedStarling-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          994,
+          184
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f6f089f6cbcbedb09dc68f47f079cdce5981b0d5b838f8bae87d4af5d6557b42"
+      },
+      {
+        "file": "whiteWagtail-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "9f5c6e2f45ae76d57f14573c82ad3acab1836b4501b72b143e833e5961a0a835"
+      },
+      {
+        "file": "whiteWagtail-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f5b22d35895377c150068ea42f4a535a3ed18c7a934228d46bee8a78a38b0861"
+      },
+      {
+        "file": "whiteWagtail-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ae51ecb83a739cde3c96e2154ff20bb045a7ee27e3a6fe39b87c3fcf4634d9fb"
+      },
+      {
+        "file": "whiteWagtail-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "f5b15848354b7cbdd96016e8b71140834d280b5e2a7b870650f677c6051103b1"
+      },
+      {
+        "file": "whiteWagtail-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "e21ee91dccef0f859b4e8a355c2cad8fbb916e9f3a52d291f623f423d6da1319"
+      },
+      {
+        "file": "whiteWagtail-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "308b5f89ec2f475515a765d24d414bdd893545a84b0e9ba221088f0317d6d4d3"
+      },
+      {
+        "file": "yellowBilledBlueMagpie-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "116df798c4d3836512ef79ca04cc864c0ccc333e45c683bad72bbdf913fed35a"
+      },
+      {
+        "file": "yellowBilledBlueMagpie-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "992ace1ab7ab5e60de9dc0f25e0fa0bc8cd31cf71817b4fb75f213110dad4cf0"
+      },
+      {
+        "file": "yellowBilledBlueMagpie-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "72d3fe485991fb927ebe311c995af90637a714d1186629501fcf0fdd40231211"
+      },
+      {
+        "file": "yellowBilledBlueMagpie-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0da43e7b68405e0a42f6326a61bd11f464b884db4a36957604d67f3cc3c1dae2"
+      },
+      {
+        "file": "yellowBilledBlueMagpie-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1526,
+          260
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "ba6c625fbc8030efdca14d17d967d511e9d9b3d62f39ee428551b8a853a91bbd"
+      },
+      {
+        "file": "yellowBilledBlueMagpie-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1526,
+          260
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5ed5ad0bef425fb2227e66ec70146150b7a20bc110a7a79e86c4b32e8bd1df14"
+      },
+      {
+        "file": "yellowBilledGrosbeak-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c7fff139e4104e0154fdd34b655455bb7ddc89f021def797aa1e32d4ceaa588f"
+      },
+      {
+        "file": "yellowBilledGrosbeak-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "5c745aa5a5f1c0f6aace04982cb23dcd5482c0df48bc1612aac017f466034a1f"
+      },
+      {
+        "file": "yellowBilledGrosbeak-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "d01d5f49614cd27cc9d9ca0d6a3ee2f0382004cbc39bfe3a15ed220b1a8740c1"
+      },
+      {
+        "file": "yellowBilledGrosbeak-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "7e0ee694bf4d0de7b258be30317719946bfae5d4b5793020a58b6fe6399dea1b"
+      },
+      {
+        "file": "yellowBilledGrosbeak-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b04b7857ef9e6172e0988754c2ef07c6e618e8785bb1a12c67c005be2f5a6d70"
+      },
+      {
+        "file": "yellowBilledGrosbeak-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "b2d56202e58f80d4ce7bad1a8e9c2db768214b97a1dd347c858c6d7009f372ac"
+      },
+      {
+        "file": "yellowBrowedWarbler-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c02d3b1badca204fbf765132870081e594dd36738a7cb343782de95d3247cafe"
+      },
+      {
+        "file": "yellowBrowedWarbler-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "234280d04d2820fa85279026fc6675f08b6280091883570ee95e90f8a3107780"
+      },
+      {
+        "file": "yellowBrowedWarbler-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "c9500eaf62ac3f9c816c3c9a2806c71c4a00c9ec96320823fc8d7ef927ea30fc"
+      },
+      {
+        "file": "yellowBrowedWarbler-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "845352fb2218fd72b6603b0d9622fcebc74d92daea19ea177ddce365d673828f"
+      },
+      {
+        "file": "yellowBrowedWarbler-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "012d3fee2b458ac0c4ac41d4ca3006fea41f8b512d918331ee1d318ea7143c8b"
+      },
+      {
+        "file": "yellowBrowedWarbler-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          980,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "355f980d4c7047758a427e90fb46b1244f0daacbf44783f01b1f113fd9da66b3"
+      },
+      {
+        "file": "yellowRumpedFlycatcher-0.5x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "6785af6ce11b153ec7b860442120508d01ab48d11943c2ba234b915d7f8829e7"
+      },
+      {
+        "file": "yellowRumpedFlycatcher-0.5x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "4d60fada2511a49edf2c462c5ca6a1135525e1d80770b9a66c069bf477125a8b"
+      },
+      {
+        "file": "yellowRumpedFlycatcher-1.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "2136c40b08cb23adae4d5a860beb14bb0c756824e761da60dcb073dc2cf14617"
+      },
+      {
+        "file": "yellowRumpedFlycatcher-1.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "66bac63e64dbd199e8ac5a89a811e18f2b91e808cd04ecc8358ab9d0d3767ccc"
+      },
+      {
+        "file": "yellowRumpedFlycatcher-2.0x-left-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "473a84623fe30892ffbbbb804e7b5e3085f5df78d67d5982cfbae7b2432f3d5d"
+      },
+      {
+        "file": "yellowRumpedFlycatcher-2.0x-right-loop.gif",
+        "frames": 100,
+        "size": [
+          1120,
+          182
+        ],
+        "loop": 0,
+        "durations": [
+          50
+        ],
+        "sha256": "0f7882b590e6300572faea885e2fcbf082d2dc64a6a7a4319cb6440b8f09255f"
+      }
+    ],
+    "gifCount": 600,
+    "decodedFrames": 60000
+  }
+}

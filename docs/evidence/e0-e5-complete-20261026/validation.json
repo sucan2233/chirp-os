@@ -1,0 +1,444 @@
+{
+  "baseline": "2d56542",
+  "steps": [
+    {
+      "step": "art-audit-round2",
+      "command": [
+        "python3",
+        "scripts/audit-expansion-art.py",
+        "--output",
+        ".build/expansion-complete-evidence/art.json"
+      ],
+      "startedAtUnix": 1792998256.483397,
+      "durationSeconds": 29.139475107192993,
+      "exitCode": 0
+    },
+    {
+      "step": "art-audit",
+      "command": [
+        "python3",
+        "scripts/audit-expansion-art.py",
+        "--output",
+        ".build/expansion-complete-evidence/art.json"
+      ],
+      "startedAtUnix": 1792997705.6996942,
+      "durationSeconds": 27.951839923858643,
+      "exitCode": 0
+    },
+    {
+      "step": "baseline-build",
+      "command": [
+        "swift",
+        "build",
+        "-c",
+        "release",
+        "--package-path",
+        ".build/expansion-baseline-source-2d56542"
+      ],
+      "startedAtUnix": 1792997484.411812,
+      "durationSeconds": 171.41113710403442,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-baseline-1",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-baseline-source-2d56542/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-baseline-1.json"
+      ],
+      "startedAtUnix": 1792998494.9008589,
+      "durationSeconds": 3.4700379371643066,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-baseline-2",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-baseline-source-2d56542/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-baseline-2.json"
+      ],
+      "startedAtUnix": 1792998501.2667542,
+      "durationSeconds": 2.7315728664398193,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-baseline-3",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-baseline-source-2d56542/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-baseline-3.json"
+      ],
+      "startedAtUnix": 1792998506.9214861,
+      "durationSeconds": 2.6538119316101074,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-baseline-4",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-baseline-source-2d56542/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-baseline-4.json"
+      ],
+      "startedAtUnix": 1792998717.067162,
+      "durationSeconds": 2.7256321907043457,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-baseline-5",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-baseline-source-2d56542/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-baseline-5.json"
+      ],
+      "startedAtUnix": 1792998722.84773,
+      "durationSeconds": 2.896268129348755,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-baseline-6",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-baseline-source-2d56542/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-baseline-6.json"
+      ],
+      "startedAtUnix": 1792998728.9009228,
+      "durationSeconds": 2.728537082672119,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-current-1",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-current-1.json"
+      ],
+      "startedAtUnix": 1792998498.394654,
+      "durationSeconds": 2.8442888259887695,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-current-2",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-current-2.json"
+      ],
+      "startedAtUnix": 1792998504.026873,
+      "durationSeconds": 2.8736519813537598,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-current-3",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-current-3.json"
+      ],
+      "startedAtUnix": 1792998509.597504,
+      "durationSeconds": 3.072571039199829,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-current-4",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-current-4.json"
+      ],
+      "startedAtUnix": 1792998719.818537,
+      "durationSeconds": 2.9903979301452637,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-current-5",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-current-5.json"
+      ],
+      "startedAtUnix": 1792998725.908438,
+      "durationSeconds": 2.966064929962158,
+      "exitCode": 0
+    },
+    {
+      "step": "benchmark-current-6",
+      "command": [
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/release/Birding",
+        "--benchmark-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/benchmark-current-6.json"
+      ],
+      "startedAtUnix": 1792998731.653219,
+      "durationSeconds": 2.8242809772491455,
+      "exitCode": 0
+    },
+    {
+      "step": "build-round1",
+      "command": [
+        "env",
+        "CHIRPOS_DEVELOPMENT_BUILD=1",
+        "CHIRPOS_APP_PATH=/Users/sucan/sucan/03_Codebase/Personal/chirp-os/dist/E0-E5-20261026/ChirpOS Dev.app",
+        "bash",
+        "scripts/build.sh"
+      ],
+      "startedAtUnix": 1792997484.41178,
+      "durationSeconds": 170.10228896141052,
+      "exitCode": 0
+    },
+    {
+      "step": "build-round2",
+      "command": [
+        "env",
+        "CHIRPOS_DEVELOPMENT_BUILD=1",
+        "CHIRPOS_APP_PATH=/Users/sucan/sucan/03_Codebase/Personal/chirp-os/dist/E0-E5-20261026/ChirpOS Dev.app",
+        "bash",
+        "scripts/build.sh"
+      ],
+      "startedAtUnix": 1792998284.6825988,
+      "durationSeconds": 146.34061121940613,
+      "exitCode": 0
+    },
+    {
+      "step": "capability-audit-round2",
+      "command": [
+        "python3",
+        "scripts/audit-expansion-capabilities.py",
+        "--output",
+        ".build/expansion-complete-evidence/capabilities.json"
+      ],
+      "startedAtUnix": 1792998256.475567,
+      "durationSeconds": 7.9971489906311035,
+      "exitCode": 0
+    },
+    {
+      "step": "capability-audit",
+      "command": [
+        "python3",
+        "scripts/audit-expansion-capabilities.py",
+        "--output",
+        ".build/expansion-complete-evidence/capabilities.json"
+      ],
+      "startedAtUnix": 1792997705.699924,
+      "durationSeconds": 6.813736915588379,
+      "exitCode": 0
+    },
+    {
+      "step": "contact-sheets-round2",
+      "command": [
+        "/Users/sucan/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "scripts/preview-m8-art.py",
+        "--contract",
+        "scripts/expansion-art-contract.json",
+        "--batch-prefix",
+        "E",
+        "--output-dir",
+        ".build/expansion-complete-evidence/contacts"
+      ],
+      "startedAtUnix": 1792998285.8015099,
+      "durationSeconds": 1.175126075744629,
+      "exitCode": 0
+    },
+    {
+      "step": "contact-sheets",
+      "command": [
+        "/Users/sucan/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "scripts/preview-m8-art.py",
+        "--contract",
+        "scripts/expansion-art-contract.json",
+        "--batch-prefix",
+        "E",
+        "--output-dir",
+        ".build/expansion-complete-evidence/contacts"
+      ],
+      "startedAtUnix": 1792997750.600496,
+      "durationSeconds": 1.2749919891357422,
+      "exitCode": 0
+    },
+    {
+      "step": "export-fixtures",
+      "command": [
+        ".build/release/Birding",
+        "--export-behavior-fixtures",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/shared/behavior-fixtures/v1"
+      ],
+      "startedAtUnix": 1792997689.829025,
+      "durationSeconds": 1.5015130043029785,
+      "exitCode": 0
+    },
+    {
+      "step": "export-shared-round2",
+      "command": [
+        ".build/release/Birding",
+        "--export-shared",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/shared"
+      ],
+      "startedAtUnix": 1792998236.823748,
+      "durationSeconds": 2.7443788051605225,
+      "exitCode": 0
+    },
+    {
+      "step": "export-shared",
+      "command": [
+        ".build/release/Birding",
+        "--export-shared",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/shared"
+      ],
+      "startedAtUnix": 1792997668.145922,
+      "durationSeconds": 2.064244031906128,
+      "exitCode": 0
+    },
+    {
+      "step": "native-round2",
+      "command": [
+        ".build/release/Birding",
+        "--verify-expansion-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/native"
+      ],
+      "startedAtUnix": 1792998256.48401,
+      "durationSeconds": 6.104249000549316,
+      "exitCode": 0
+    },
+    {
+      "step": "native",
+      "command": [
+        ".build/release/Birding",
+        "--verify-expansion-motion",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/native"
+      ],
+      "startedAtUnix": 1792997715.460484,
+      "durationSeconds": 6.131759881973267,
+      "exitCode": 0
+    },
+    {
+      "step": "parity-round2",
+      "command": [
+        "python3",
+        "scripts/test-species-parity.py"
+      ],
+      "startedAtUnix": 1792998348.506924,
+      "durationSeconds": 0.06806206703186035,
+      "exitCode": 0
+    },
+    {
+      "step": "parity",
+      "command": [
+        "python3",
+        "scripts/test-species-parity.py"
+      ],
+      "startedAtUnix": 1792997715.460276,
+      "durationSeconds": 0.0840609073638916,
+      "exitCode": 0
+    },
+    {
+      "step": "preview-export-round2",
+      "command": [
+        ".build/release/Birding",
+        "--export-pose-previews",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/previews"
+      ],
+      "startedAtUnix": 1792998238.081043,
+      "durationSeconds": 104.54786396026611,
+      "exitCode": 0
+    },
+    {
+      "step": "preview-export",
+      "command": [
+        ".build/release/Birding",
+        "--export-pose-previews",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/expansion-complete-evidence/previews"
+      ],
+      "startedAtUnix": 1792997732.433941,
+      "durationSeconds": 107.54119205474854,
+      "exitCode": 0
+    },
+    {
+      "step": "preview-verification",
+      "command": [
+        "/Users/sucan/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "scripts/preview-m8-art.py",
+        "--contract",
+        "scripts/expansion-art-contract.json",
+        "--batch-prefix",
+        "E",
+        "--output-dir",
+        ".build/expansion-complete-evidence/contacts",
+        "--gifs",
+        ".build/expansion-complete-evidence/previews"
+      ],
+      "startedAtUnix": 1792998383.079751,
+      "durationSeconds": 12.139967918395996,
+      "exitCode": 0
+    },
+    {
+      "step": "signature-round2",
+      "command": [
+        "codesign",
+        "--verify",
+        "--deep",
+        "--strict",
+        "dist/E0-E5-20261026/ChirpOS Dev.app"
+      ],
+      "startedAtUnix": 1792998535.093834,
+      "durationSeconds": 0.019442081451416016,
+      "exitCode": 0
+    },
+    {
+      "step": "signature",
+      "command": [
+        "codesign",
+        "--verify",
+        "--deep",
+        "--strict",
+        "dist/E0-E5-20261026/ChirpOS Dev.app"
+      ],
+      "startedAtUnix": 1792997679.201875,
+      "durationSeconds": 0.013245820999145508,
+      "exitCode": 0
+    },
+    {
+      "step": "tests-round1",
+      "command": [
+        "swift",
+        "test",
+        "-c",
+        "release"
+      ],
+      "startedAtUnix": 1792997715.4593868,
+      "durationSeconds": 256.51170110702515,
+      "exitCode": 1
+    },
+    {
+      "step": "tests-round2",
+      "command": [
+        "swift",
+        "test",
+        "-c",
+        "release"
+      ],
+      "startedAtUnix": 1792998065.647958,
+      "durationSeconds": 174.6044521331787,
+      "exitCode": 0
+    }
+  ],
+  "coreTestSummary": [
+    "1091",
+    "0",
+    "0",
+    "65.365"
+  ],
+  "nativeChecks": 1418,
+  "nativePassed": 1418,
+  "nativeFailures": [],
+  "historicalFixtureCount": 22,
+  "historicalExpectedUnchanged": true,
+  "visualReview": "Recorded separately in acceptance document; contact sheets inspected, representative GIF samples only.",
+  "manualUnverified": [
+    "real window following",
+    "menu pause/resume",
+    "system sleep/wake",
+    "physical external display/hotplug",
+    "U nest and gift native leftovers"
+  ],
+  "m9": "deferred",
+  "finalStatus": "automated-functional-and-art-checks-passed; desktop-manual-items-unverified; performance-tail-variance-unresolved",
+  "performanceFollowup": "performance-followup.json"
+}

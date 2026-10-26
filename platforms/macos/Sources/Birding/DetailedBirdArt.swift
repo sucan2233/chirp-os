@@ -149,6 +149,11 @@ enum DetailedBirdArt {
         if let image=carryImage(frame,species:id) {return image}
         if let image=bathImage(frame,species:id) {return image}
         // M6b has its own anatomy; no existing stand/idle raster is reused.
+        if let image=ExpansionSmallArt.image(frame,species:id) {return image}
+        if let image=ExpansionGroundArt.image(frame,species:id) {return image}
+        if let image=ExpansionDisplayArt.image(frame,species:id) {return image}
+        if let image=ExpansionWetlandArt.image(frame,species:id) {return image}
+        if let image=ExpansionLargeArt.image(frame,species:id) {return image}
         if let image=M8CommonArt.image(frame,species:id) {return image}
         if let image=M8SmallArt.image(frame,species:id) {return image}
         if let image=M8WetlandArt.image(frame,species:id) {return image}

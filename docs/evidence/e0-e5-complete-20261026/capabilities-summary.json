@@ -1,0 +1,79 @@
+{
+  "catalogSpecies": 100,
+  "expansionSpecies": 54,
+  "e0PilotSpecies": 6,
+  "remainingBaseExpansionSpecies": 0,
+  "expansionAddedFrameSlotsSinceBaseline": 756,
+  "expansionSignatureFrameSlots": 216,
+  "handbookSupportedActionCountDistribution": {
+    "4": 54
+  },
+  "catalogFrameSlots": 4867,
+  "expansionFrameSlots": 2592,
+  "distinctImagesSummedWithinExpansionSpecies": 2000,
+  "expansionDuplicateSlotExcess": 592,
+  "explicitFallbackSlots": 428,
+  "expansionAtlasRGBABytes": 47202624,
+  "completeEnhancedPoseSpeciesInCatalog": 100,
+  "missingEnhancedPoseSlotsInExpansion": 0,
+  "rendererFamilyCounts": {
+    "barbet": 2,
+    "bulbul": 4,
+    "bushtit": 2,
+    "coucal": 1,
+    "crow": 3,
+    "dove": 2,
+    "drongo": 1,
+    "duck": 2,
+    "egret": 2,
+    "finch": 2,
+    "grebe": 2,
+    "ground": 3,
+    "gull": 1,
+    "laugh": 3,
+    "magpie": 4,
+    "nuthatch": 1,
+    "pheasant": 1,
+    "raptor": 1,
+    "song": 4,
+    "starling": 3,
+    "sunbird": 1,
+    "thrush": 2,
+    "tit": 3,
+    "vulture": 1,
+    "wagtail": 1,
+    "whiteeye": 1,
+    "yuhina": 1
+  },
+  "idleActionCounts": {
+    "bow": 6,
+    "call": 6,
+    "crack": 3,
+    "dabble": 2,
+    "glean": 4,
+    "hammer": 3,
+    "peck": 9,
+    "probe": 4,
+    "scan": 2,
+    "stalk": 2,
+    "tail": 11,
+    "watch": 2
+  },
+  "galleryOtherRouteCounts": {
+    "signature": 53,
+    "signatureSide": 1
+  },
+  "distinctImageCountDistribution": {
+    "37": 53,
+    "39": 1
+  },
+  "existingPerSpeciesReferenceURLs": 48,
+  "missingPerSpeciesReferenceURLs": [
+    "greatCrestedGrebe",
+    "littleGrebe",
+    "commonTailorbird",
+    "yellowBilledBlueMagpie",
+    "ornateSunbird",
+    "brownBreastedBulbul"
+  ]
+}

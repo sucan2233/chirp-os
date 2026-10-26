@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Audit the current E0 delivery and the remaining base expansion species.
+"""Audit the complete E0–E5 delivery across all54 expansion species.
 
 Uses exported PNG pixels, manifests and current Swift configuration. This is
 not a runtime, visual-quality or natural-history acceptance test. Outputs a
 deterministic JSON report; no build, export, app launch or user data access.
 
 Run only after the coordinator has refreshed the shared art/support exports:
-python3 scripts/audit-expansion-capabilities.py --output docs/evidence/e0-capability-audit-20261026.json
+python3 scripts/audit-expansion-capabilities.py --output .build/expansion-complete-evidence/capabilities.json
 
 The expansion-capability-audit-20261026.json baseline is historical evidence;
 this script reads it for comparison and refuses to overwrite it.
@@ -94,13 +94,13 @@ def audit(root):
     for source, name, expected in (
         (pilot_source, "species", E0_IDS),
         (profile_source, "expansionPilotSpecies", E0_IDS),
-        (profile_source, "expansionPilotKinds", E0_KINDS),
+        (profile_source, "expansionPoseKinds", E0_KINDS),
     ):
         match = re.search(r"public static let " + name + r"\s*:[^=]+?=\s*\[([^\]]+)\]", source)
         require(match is not None and set(re.findall(r"\.(\w+)", match[1])) == expected,
-                f"E0 source contract changed: {name}; review audit scope")
+                f"Expansion source contract changed: {name}; review audit scope")
     require(new_ids == {sid for sid, row in support_by_id.items()
-                        if row["contentReview"]["cohort"] in {"upstream-v0.7-base", "expansion-e0-partial"}},
+                        if row["contentReview"]["cohort"] in {"expansion-e1-e5-partial", "expansion-e0-partial"}},
             "Expansion specification and support cohorts differ")
     require(E0_IDS == {sid for sid, row in support_by_id.items()
                        if row["contentReview"]["cohort"] == "expansion-e0-partial"},
@@ -127,6 +127,17 @@ def audit(root):
     require(set(signatures) == E0_IDS and all(len(set(names)) == len(names) == 4
                                              for names in signatures.values()),
             "Expected four unique signature frames per E0 species")
+    contract = document("scripts/expansion-art-contract.json")
+    for batch in ("E1", "E2", "E3", "E4", "E5"):
+        entry = contract["batches"][batch]
+        source = read("platforms/macos/Sources/BirdingCore/Behavior/" + entry["geometry"]).decode()
+        rows = re.findall(r'case\s+\.(\w+)\s*:\s*return\s*\[([^]]*)\]',
+                          source.split("func signatureFrameNames", 1)[1].split("default:", 1)[0])
+        authored = {sid: re.findall(r'"([A-Za-z0-9]+)"', names) for sid, names in rows}
+        require(authored == entry["signatures"], f"Authored signature contract differs: {batch}")
+        require(not set(signatures) & set(authored), f"Duplicate signature cohort: {batch}")
+        signatures.update(authored)
+    require(set(signatures) == new_ids, "All54 expansion species need signatures")
     gallery_compact = re.sub(r"\s+", "", gallery_source)
     gallery_branches = ["LivelyMotion.previewFrame(species:id,age:t)",
                         "ifid==.eurasianNuthatch", "ifSpeciesBehaviorProfile.profile(for:id).isExpansionSpecies"]
@@ -178,29 +189,29 @@ def audit(root):
         supported = [b["kind"] for b in row["behaviors"] if b["contentSupported"]]
         pilot = sid in E0_IDS
         signature_names = signatures.get(sid, [])
-        expected_behaviors = {"relocate"} | (E0_KINDS if pilot else set())
+        expected_behaviors = {"relocate"} | E0_KINDS
         require(set(allowed) == set(supported) == expected_behaviors,
                 f"Unexpected permissions/content support: {sid}; expected {sorted(expected_behaviors)}")
         require(all(not behavior["missingFrames"] for behavior in row["behaviors"]
                     if behavior["contentSupported"]), f"Supported behavior reports missing frames: {sid}")
-        require(set(row["capabilities"]) == (E0_CAPABILITIES if pilot else BASE_CAPABILITIES),
-                f"Reviewed capabilities differ from E0/base contract: {sid}")
+        require(set(row["capabilities"]) == E0_CAPABILITIES,
+                f"Reviewed expansion capabilities differ: {sid}")
         require(not row["missingPoseFrames"], f"Incomplete configured pose frames: {sid}")
-        expected_extra = pose_names + signature_names if pilot else []
-        require(len(expected_extra) == (14 if pilot else 0), f"E0 additions changed: {sid}")
+        expected_extra = pose_names + signature_names
+        require(len(expected_extra) == 14, f"Expansion additions changed: {sid}")
         require(len(manifest["frames"]) == baseline_by_id[sid]["frameSlots"] == 34 and
                 names[:34] == manifest["frames"] and len(names) == 34 + len(expected_extra) and
                 set(names[34:]) == set(expected_extra),
-                f"Expected unchanged base prefix plus E0's fourteen appended frames only: {sid}")
-        require(row["poseFrames"] == (pose_names if pilot else []), f"Configured pose contract differs: {sid}")
+                f"Expected unchanged base prefix plus each species' fourteen appended frames only: {sid}")
+        require(row["poseFrames"] == pose_names, f"Configured pose contract differs: {sid}")
         metadata = manifest.get("poseClips", {}).get(sid, {})
         clips = metadata.get("clips", {})
-        expected_clips = E0_KINDS | {"signature.v0", "signature.v1"} if pilot else set()
+        expected_clips = E0_KINDS | {"signature.v0", "signature.v1"}
         require(set(clips) == expected_clips, f"Stale/unexpected pose clip export: {sid}")
         policy = metadata.get("signaturePolicy")
-        if pilot:
+        if signature_names:
             anchors = metadata.get("beakAnchors", {})
-            require(set(anchors) == set(expected_extra), f"Incomplete E0 pose/signature anchors: {sid}")
+            require(set(anchors) == set(expected_extra), f"Incomplete expansion pose/signature anchors: {sid}")
             for name, anchor in anchors.items():
                 require(len(anchor) == 2 and all(isinstance(v, (int, float)) and math.isfinite(v) and
                                                 0 <= v <= 48 for v in anchor),
@@ -230,7 +241,7 @@ def audit(root):
                     f"Signature variants must have distinct cadence: {sid}")
         else:
             require(policy is None, f"Non-pilot unexpectedly exports signature policy: {sid}")
-        gallery_route = ("signatureSide" if sid == "eurasianNuthatch" else "signature") if pilot else "idle"
+        gallery_route = ("signatureSide" if sid == "eurasianNuthatch" else "signature")
         measurements.append({
             "id": sid, "name": species["name"], "scientificName": species["scientificName"],
             "rendererFamily": anatomy[sid], "motion": motions[sid],
@@ -272,7 +283,7 @@ def audit(root):
     summary = {
         "catalogSpecies": len(matrix), "expansionSpecies": len(measurements),
         "e0PilotSpecies": sum(r["isE0Pilot"] for r in measurements),
-        "remainingBaseExpansionSpecies": sum(not r["isE0Pilot"] for r in measurements),
+        "remainingBaseExpansionSpecies": sum(bool(r["enhancedPoseFramesMissing"]) for r in measurements),
         "expansionAddedFrameSlotsSinceBaseline": sum(r["addedFrameSlotsSinceBaseline"] for r in measurements),
         "expansionSignatureFrameSlots": sum(len(r["signatureFrames"]) for r in measurements),
         "handbookSupportedActionCountDistribution": dict(sorted(Counter(
@@ -294,7 +305,7 @@ def audit(root):
         "missingPerSpeciesReferenceURLs": [r["id"] for r in measurements if not r["existingReferenceURL"]],
     }
     return {
-        "schemaVersion": 2, "scope": "M8a/E0 catalog; pixel audit of six E0 pilots and 48 base expansion species",
+        "schemaVersion": 3, "scope": "Complete E0-E5 catalog; all54 expanded species retain base pixels and four reviewed foundation behaviors",
         "historicalBaseline": {"path": BASELINE_PATH, "schemaVersion": baseline["schemaVersion"],
                                "sha256": inputs[BASELINE_PATH]},
         "method": "Source configuration and exported atlas RGBA; transparent RGB normalized by existing U2 decoder",
@@ -312,7 +323,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--output", type=Path,
-                        help="New report path (recommended: docs/evidence/e0-capability-audit-20261026.json); omit for stdout")
+                        help="New report path (recommended: .build/expansion-complete-evidence/capabilities.json); omit for stdout")
     args = parser.parse_args()
     try:
         if args.output:
@@ -327,7 +338,8 @@ def main():
     result = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(result)
+        with args.output.open("x", encoding="utf-8") as stream:
+            stream.write(result)
         print(json.dumps(report["summary"], ensure_ascii=False))
     else:
         print(result, end="")

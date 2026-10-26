@@ -1,0 +1,322 @@
+[
+  {
+    "file": "silverThroatedBushtit-0.5x-left-loop.gif",
+    "sha256": "0f0ccf34c5ad757d040fe2d2544e59ce25b0dab6c9ac769c77fdadebe23b05be",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "silverThroatedBushtit-0.5x-right-loop.gif",
+    "sha256": "c69c4a463f3f0b5c7d6af7ada228349bb9c04bfe37be49cf24081c46f5598ef2",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "silverThroatedBushtit-2.0x-left-loop.gif",
+    "sha256": "90648754d08063948f4ad11cb0398c52d36a5e04e478c378d5ff562e2646096d",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "silverThroatedBushtit-2.0x-right-loop.gif",
+    "sha256": "8689e4de96db8b523be198b5d1a022c5681ee12c6632ca9a6d754cb567ee7821",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "ornateSunbird-0.5x-left-loop.gif",
+    "sha256": "bbe0d348259c3d39dd384735cc7a2c12ed89cd9c554bcf5fe2358656d8a0cd53",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "ornateSunbird-0.5x-right-loop.gif",
+    "sha256": "e4cc164b5e5f63fc200cdff58a4903449f230892f7e6aabaf56b49872ddca133",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "ornateSunbird-2.0x-left-loop.gif",
+    "sha256": "e4e070fa6411ca2b4a9c589f2bba5fb9ecd6ddbf7dc207d7deac6e939059ece2",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "ornateSunbird-2.0x-right-loop.gif",
+    "sha256": "ea276a2f5e6eab7fa98b576af3b30498877beeafeb9b68d04312feb8f056ee6b",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "redBilledChough-0.5x-left-loop.gif",
+    "sha256": "b125b4ac62afac880a968ef597f738c7729ac62bcefec50321edf2e6604a70cc",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "redBilledChough-0.5x-right-loop.gif",
+    "sha256": "d53904f103b671c003d32794928eb2e3485e504521dff5951c4bc25a0119ad6f",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "redBilledChough-2.0x-left-loop.gif",
+    "sha256": "9dd0409556d87a58cae17612f4630ed19842620833ffa234482f3fd5f781da15",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "redBilledChough-2.0x-right-loop.gif",
+    "sha256": "051054dd29c7244a1c8b2ec72a0fba82a14ffb1fb03c0ee2b39f0e45ab808995",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "redBilledBlueMagpie-0.5x-left-loop.gif",
+    "sha256": "afd39685a247bc42230abb76375ad193ae7c85e71956d39f10c823b0ec96a1dc",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "redBilledBlueMagpie-0.5x-right-loop.gif",
+    "sha256": "7341e8406f84ff49b26864ad5e7ba82b51996ec18fece0b27edba0bf034f05b4",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "redBilledBlueMagpie-2.0x-left-loop.gif",
+    "sha256": "17fdd6da883938fb54436daf26cbd2dc88727b6c411396b4427f9d7cbcd130a9",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "redBilledBlueMagpie-2.0x-right-loop.gif",
+    "sha256": "7f9d8a855e6f945bbf4ee79f684c4614cbd5afbc93f13b3d4f26ddb4e346135f",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "greatCrestedGrebe-0.5x-left-loop.gif",
+    "sha256": "6fbbdfbeeb1683d95f6b1135a9524bb2aef36edd0cc111c47583758259775b9a",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "greatCrestedGrebe-0.5x-right-loop.gif",
+    "sha256": "a8a6029a3aa945c2801827a2b14980e929718d33b51bbc18c1315dcf34a252c4",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "greatCrestedGrebe-2.0x-left-loop.gif",
+    "sha256": "87e6847e107ae032bf6c97bfb69ebf0e87be4d6f344d1635849b00197b854cf7",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "greatCrestedGrebe-2.0x-right-loop.gif",
+    "sha256": "0aa5b200e2042993ad047b74f00c4b207723e0ec91828640dc039052617fcf20",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "easternCattleEgret-0.5x-left-loop.gif",
+    "sha256": "c3d267db50cc25e6e06f22c2967ad5d855b4164d5b3553a3ffc38c0c2dc65dbd",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "easternCattleEgret-0.5x-right-loop.gif",
+    "sha256": "e90c0e0a437e493e1453b086e5e5b1609ff85840ca262af29be282dcc06aee1b",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "easternCattleEgret-2.0x-left-loop.gif",
+    "sha256": "dfda3da6c5dcca314e989f1d8a9581cefad90401f402cbccb6e2cb3bd4149230",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "easternCattleEgret-2.0x-right-loop.gif",
+    "sha256": "0cb5d95029810610484f975c6c977635bf2d5ea2b5b6d104d33381fcc3a8d306",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "himalayanVulture-0.5x-left-loop.gif",
+    "sha256": "0de8fb66a1df1d3282951d5b94a7c0d67c1c8f447f9d82043ec9fa8221eee2db",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "himalayanVulture-0.5x-right-loop.gif",
+    "sha256": "254cf69281f65c899abb52953f6e69a5755e72d2a43e910916a17c569c437973",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "himalayanVulture-2.0x-left-loop.gif",
+    "sha256": "45de84d29edb5260b028ada07126ac20be9982f2e4fca369e96052bf374dd5d0",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "himalayanVulture-2.0x-right-loop.gif",
+    "sha256": "cddd87fc9b4fd639daaa09940bb6a0b0d0cf630b439f5d89d1bcd6a6d0ee19ea",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "commonPheasant-0.5x-left-loop.gif",
+    "sha256": "dfc8610e52b6477fc3f10ff7d207b0ea544fc5ff0ece94ff693d99c05540988a",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "commonPheasant-0.5x-right-loop.gif",
+    "sha256": "e67a337524157245d510f22a3499a7402209eb21564cb5e05106b385bb369d9f",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "commonPheasant-2.0x-left-loop.gif",
+    "sha256": "44c5ca124a5008a70d236769dc5f8c23f125f212fa14ed67fdb42b39224a2f3b",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  },
+  {
+    "file": "commonPheasant-2.0x-right-loop.gif",
+    "sha256": "3aa3931805a0b264dce292266ff1799b9544c4b0fb8a1704a2f005ed99521bc3",
+    "ticks": [
+      8,
+      20,
+      34
+    ],
+    "track": "signature.v0"
+  }
+]

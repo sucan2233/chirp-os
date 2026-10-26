@@ -2,21 +2,18 @@ import XCTest
 @testable import BirdingCore
 
 final class M8CompletionTests: XCTestCase {
-    func testOriginalFortySixReachCompleteFoundationAndSignatureCoverageWithoutExpandingE0() {
+    func testOriginalM8CohortRemainsCompleteAfterExpansionDelivery() {
         let original=Set(SpeciesCatalog.standard.species.prefix(46).map(\.id))
         let expansion:Set<SpeciesID>=[.eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret]
-        XCTAssertEqual(Set(LivelyMotion.species),original.union(expansion))
-        XCTAssertEqual(Set(SpeciesBehaviorProfile.poseSpecies),original.union(expansion))
+        XCTAssertTrue(original.union(expansion).isSubset(of:Set(LivelyMotion.species)))
+        XCTAssertTrue(original.union(expansion).isSubset(of:Set(SpeciesBehaviorProfile.poseSpecies)))
         XCTAssertEqual(Set(M8ArtCatalog.species).count,40)
         XCTAssertEqual(M8ArtCatalog.species.reduce(0){$0+M8ArtCatalog.appendedFrameNames(for:$1).count},450)
         for species in original {
             XCTAssertEqual(SpeciesBehaviorProfile.profile(for:species).poseFrameNames.count,10)
             XCTAssertEqual(LivelyMotion.frameNames(for:species).count,4)
         }
-        for species in SpeciesID.allCases where !original.contains(species) && !expansion.contains(species) {
-            XCTAssertTrue(SpeciesBehaviorProfile.profile(for:species).poseFrameNames.isEmpty)
-            XCTAssertTrue(LivelyMotion.frameNames(for:species).isEmpty)
-        }
+
     }
 
     func testNewAnchorsAreFiniteAndInsideCanvasWithoutClaimingOldContactFrames() throws {

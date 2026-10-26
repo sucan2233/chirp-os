@@ -1,0 +1,107 @@
+{
+  "reason": "Original current run 3 p95 spike; three additional paired runs retained separately without replacing the planned three runs.",
+  "additionalOrder": [
+    "baseline-4",
+    "current-4",
+    "baseline-5",
+    "current-5",
+    "baseline-6",
+    "current-6"
+  ],
+  "originalSummary": "performance.json",
+  "metrics": {
+    "cpuFrameP95Milliseconds": {
+      "baselineAllSix": [
+        0.3319999999997769,
+        0.33799999999994945,
+        0.328000000000106,
+        0.3339999999996124,
+        0.34900000000015474,
+        0.3380000000001715
+      ],
+      "currentAllSix": [
+        0.34700000000009723,
+        0.3489999999999327,
+        0.47200000000025,
+        0.4109999999999392,
+        0.35600000000002296,
+        0.3449999999998177
+      ],
+      "baselineMedianAllSix": 0.3359999999997809,
+      "currentMedianAllSix": 0.35249999999997783,
+      "medianChangePercentAllSix": 4.910714285776097,
+      "baselineAdditionalMedian": 0.3380000000001715,
+      "currentAdditionalMedian": 0.35600000000002296
+    },
+    "cpuFrameMeanMilliseconds": {
+      "baselineAllSix": [
+        0.29379680555555604,
+        0.29561416666666956,
+        0.28817791666666936,
+        0.2962084722222252,
+        0.30759805555556097,
+        0.29870305555555876
+      ],
+      "currentAllSix": [
+        0.30816722222222676,
+        0.30860305555556106,
+        0.33259736111111,
+        0.3229401388888928,
+        0.31727666666666726,
+        0.3043429166666687
+      ],
+      "baselineMedianAllSix": 0.2959113194444474,
+      "currentMedianAllSix": 0.31293986111111416,
+      "medianChangePercentAllSix": 5.754609758976659,
+      "baselineAdditionalMedian": 0.29870305555555876,
+      "currentAdditionalMedian": 0.31727666666666726
+    },
+    "artLoadCPUSeconds": {
+      "baselineAllSix": [
+        0.355313,
+        0.333527,
+        0.32976500000000003,
+        0.336441,
+        0.360801,
+        0.322049
+      ],
+      "currentAllSix": [
+        0.37781200000000004,
+        0.37354,
+        0.37401100000000004,
+        0.382558,
+        0.387219,
+        0.38463400000000003
+      ],
+      "baselineMedianAllSix": 0.334984,
+      "currentMedianAllSix": 0.380185,
+      "medianChangePercentAllSix": 13.49348028562558,
+      "baselineAdditionalMedian": 0.336441,
+      "currentAdditionalMedian": 0.38463400000000003
+    },
+    "residentAfterArtBytes": {
+      "baselineAllSix": [
+        144244736,
+        144277504,
+        144097280,
+        144146432,
+        144392192,
+        144359424
+      ],
+      "currentAllSix": [
+        163069952,
+        163037184,
+        163020800,
+        163004416,
+        163250176,
+        163053568
+      ],
+      "baselineMedianAllSix": 144261120.0,
+      "currentMedianAllSix": 163045376.0,
+      "medianChangePercentAllSix": 13.02101078932425,
+      "baselineAdditionalMedian": 144359424,
+      "currentAdditionalMedian": 163053568
+    }
+  },
+  "interpretation": "Current p95 spikes occurred in runs 3 and 4; cause not established. Medians do not establish stable tail latency or real desktop performance."
+}

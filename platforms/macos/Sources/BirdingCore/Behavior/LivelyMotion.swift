@@ -3,9 +3,9 @@ import Foundation
 /// Decorative motion uses the existing species idle opportunity and bird clock.
 /// It owns no behavior, random stream, observation, habitat or persistent state.
 public enum LivelyMotion {
-    public static let species:[SpeciesID] = M8PilotArtGeometry.species + ExpansionPilotArtGeometry.species + M8ArtCatalog.species
+    public static let species:[SpeciesID] = M8PilotArtGeometry.species + ExpansionPilotArtGeometry.species + M8ArtCatalog.species + ExpansionArtCatalog.species
     private static let namesBySpecies=Dictionary(uniqueKeysWithValues:species.map {
-        ($0,M8PilotArtGeometry.signatureFrameNames(for:$0)+ExpansionPilotArtGeometry.signatureFrameNames(for:$0)+M8ArtCatalog.signatureFrameNames(for:$0))
+        ($0,M8PilotArtGeometry.signatureFrameNames(for:$0)+ExpansionPilotArtGeometry.signatureFrameNames(for:$0)+M8ArtCatalog.signatureFrameNames(for:$0)+ExpansionArtCatalog.signatureFrameNames(for:$0))
     })
     public static func frameNames(for species:SpeciesID) -> [String] {
         namesBySpecies[species] ?? []

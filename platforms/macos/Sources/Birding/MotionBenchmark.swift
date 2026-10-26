@@ -7,9 +7,9 @@ import Darwin
 /// This does not measure WindowServer composition or real desktop input latency.
 enum MotionBenchmark {
     private static let species: [SpeciesID] = [
-        .treeSparrow,.redWhiskeredBulbul,.spottedDove,.yellowRumpedFlycatcher,
-        .blackDrongo,.greyHeron,.whimbrel,.commonMoorhen,
-        .commonBuzzard,.collaredScopsOwl,.hoopoe,.commonKingfisher
+        .marshTit,.blackThroatedBushtit,.commonTailorbird,.carrionCrow,
+        .redBilledChough,.redBilledBlueMagpie,.blackBulbul,.ruddyShelduck,
+        .easternCattleEgret,.littleGrebe,.himalayanVulture,.commonPheasant
     ]
     private static func cpuSeconds() -> Double {
         var time = timespec()

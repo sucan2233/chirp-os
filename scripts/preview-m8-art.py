@@ -23,17 +23,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir', required=True, type=Path)
     parser.add_argument('--gifs', type=Path)
+    parser.add_argument('--contract', type=Path, default=ROOT/'scripts/m8-art-contract.json')
+    parser.add_argument('--batch-prefix', choices=['M8','E','all'], default='M8')
     args = parser.parse_args()
     out = args.output_dir.resolve()
     out.mkdir(parents=True, exist_ok=True)
-    contract = json.loads((ROOT/'scripts/m8-art-contract.json').read_text())
+    contract = json.loads(args.contract.read_text())
     manifest = json.loads((ROOT/'shared/art/manifest.json').read_text())
     baseline = contract['baselineCommit']
     old = json.loads(subprocess.check_output(['git','show',f'{baseline}:shared/art/manifest.json'],cwd=ROOT))
     font = ImageFont.load_default(size=12)
     rows = []
     for batch, spec in contract['batches'].items():
-        if not batch.startswith('M8'):
+        if args.batch_prefix != 'all' and not batch.startswith(args.batch_prefix):
             continue
         ids = list(spec['signatures'])
         cell, row_height = 156, 174

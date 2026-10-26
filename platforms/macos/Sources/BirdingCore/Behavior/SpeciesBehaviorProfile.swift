@@ -33,17 +33,22 @@ public struct SpeciesBehaviorProfile {
         return Dictionary(uniqueKeysWithValues:names.map{($0,"stand")})
     }
     public static let expansionPilotSpecies:[SpeciesID] = [.eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret]
-    public static let expansionPilotKinds:Set<BehaviorKind> = [.watch,.alert,.rest,.takeoffPreparation]
+    public static let expansionPoseKinds:Set<BehaviorKind> = [.watch,.alert,.rest,.takeoffPreparation]
+    /// Historical alias retained for callers and the E0 cohort contract.
+    public static let expansionPilotKinds = expansionPoseKinds
+    public static let expansionPoseSpecies = expansionPilotSpecies + ExpansionArtCatalog.species
+    private static let expansionPoseSpeciesSet = Set(expansionPoseSpecies)
+    public var hasReviewedExpansionPoses:Bool {Self.expansionPoseSpeciesSet.contains(species)}
     public var isExpansionPilot:Bool {Self.expansionPilotSpecies.contains(species)}
     public var reviewedCapabilities:Set<BirdCapability> {
         guard isExpansionSpecies else {return Set(BirdCapability.allCases)}
         let base:Set<BirdCapability> = [.standing,.blinking,.flight,.landing]
-        return isExpansionPilot ? base.union([.observationPose,.alertPose,.restPose,.takeoffPose]):base
+        return hasReviewedExpansionPoses ? base.union([.observationPose,.alertPose,.restPose,.takeoffPose]):base
     }
     public func hasReviewedContent(for kind:BehaviorKind) -> Bool {
         // Base preen/idle drawings are still usable by the decorative scheduler.
         // A complete managed behavior needs its own review before it can count.
-        !isExpansionSpecies || kind == .relocate || (isExpansionPilot && Self.expansionPilotKinds.contains(kind))
+        !isExpansionSpecies || kind == .relocate || (hasReviewedExpansionPoses && Self.expansionPoseKinds.contains(kind))
     }
     public static let dedicatedKinds:[BehaviorKind] = [.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,.visitorGift,.courtshipDisplay,.nestMaterialCarry,.nestBuild]
     private static let permissions:[BehaviorKind:[SpeciesID]] = [
@@ -69,7 +74,7 @@ public struct SpeciesBehaviorProfile {
         .azureWingedMagpie,.redBilledLeiothrix,.littleOwl,
         .greatTit,.orientalMagpie,.greatSpottedWoodpecker,.mallard,.littleEgret] + expansionPilotSpecies
     public static let poseSpecies:[SpeciesID] = initialPoseSpecies
-        + M8ArtCatalog.species.filter{!initialPoseSpecies.contains($0)}
+        + M8ArtCatalog.species.filter{!initialPoseSpecies.contains($0)} + ExpansionArtCatalog.species
     public static let catchFrameNames=["catchOpen","catchClose","catchRecover"]
     public static let courtshipFrameNames=["courtRaise","courtBow0","courtBow1","courtBowRecover","courtObserve"]
     public static let carryFrameNames=["carryLook","carryLower","carryGrip","carryPlace"]
@@ -89,13 +94,13 @@ public struct SpeciesBehaviorProfile {
         if kind == .flockPass {return Self.ambientFlockSpecies.contains(species)}
         if let allowed=Self.permissions[kind] {return allowed.contains(species)}
         return kind == .relocate || Self.legacySpeciesSet.contains(species) ||
-            (isExpansionPilot && Self.expansionPilotKinds.contains(kind))
+            (hasReviewedExpansionPoses && Self.expansionPoseKinds.contains(kind))
     }
     /// Dedicated artwork augments the existing behavior contract; admission,
     /// live validation and support export must all use this species-level set.
     public func requiredFrames(for kind:BehaviorKind) -> Set<String> {
         var base=BehaviorDefinitions.definition(for:kind).requiredFrames
-        if isExpansionPilot,Self.expansionPilotKinds.contains(kind) {
+        if hasReviewedExpansionPoses,Self.expansionPoseKinds.contains(kind) {
             base.formUnion(poseClip(for:kind,duration:1)?.requiredFrames ?? [])
         }
         return kind == .edgePeek && Self.peekSpecies.contains(species)
@@ -142,7 +147,7 @@ public struct SpeciesSupportAudit:Codable {
         }
         poseFrames=profile.poseFrameNames
         missingPoseFrames=poseFrames.filter{!availableFrames.contains($0)}
-        contentReview=ContentReview(cohort:profile.isExpansionPilot ? "expansion-e0-partial":(profile.isExpansionSpecies ? "upstream-v0.7-base":"local-46"),
+        contentReview=ContentReview(cohort:profile.isExpansionPilot ? "expansion-e0-partial":(profile.hasReviewedExpansionPoses ? "expansion-e1-e5-partial":(profile.isExpansionSpecies ? "upstream-v0.7-base":"local-46")),
             fallbackFrames:profile.frameFallbacks,sidePerching:profile.supportsSidePerching,
             managedBehaviorReviewPending:profile.isExpansionSpecies)
     }

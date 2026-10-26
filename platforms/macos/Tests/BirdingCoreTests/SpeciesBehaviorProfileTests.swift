@@ -30,9 +30,10 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         .redFlankedBluetail,.plumbeousWaterRedstart,.longTailedShrike,.blackDrongo,.yellowBilledGrosbeak,
         .greyHeron,.chinesePondHeron,.blackWingedStilt,.whimbrel,.littleRingedPlover,.commonMoorhen,.eurasianCoot,
         .commonKestrel,.peregrineFalcon,.blackKite,.commonBuzzard,.collaredScopsOwl,.asianBarredOwlet,.piedKingfisher,
-        .blackHeadedGull,.hoopoe,.commonKingfisher,.eurasianWoodcock,.blackCollaredStarling,.largeBilledCrow,.asianKoel]
+        .blackHeadedGull,.hoopoe,.commonKingfisher,.eurasianWoodcock,.blackCollaredStarling,.largeBilledCrow,.asianKoel] + ExpansionCompletionFixture.newSpecies
     private let expansionPilot:[SpeciesID] = [.eurasianGreatTit,.whiteWagtail,.indianWhiteEye,
         .crestedMyna,.eurasianNuthatch,.greatEgret]
+    private var expansionReviewed:[SpeciesID] {expansionPilot + ExpansionCompletionFixture.newSpecies}
     private let pilotSpecies:[SpeciesID] = [.greatTit,.orientalMagpie,.greatSpottedWoodpecker,
         .mallard,.littleEgret,.magpieRobin,
         .eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret]
@@ -82,14 +83,14 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         }
     }
 
-    func testGenericPermissionsAddOnlyTheFourReviewedExpansionPilotBehaviors() throws {
+    func testGenericPermissionsAddOnlyFourReviewedBehaviorsForAllFiftyFourExpansionSpecies() throws {
         let catalogOrder=SpeciesCatalog.standard.species.map(\.id)
         let legacy=Array(catalogOrder.prefix(46))
         XCTAssertEqual(SpeciesBehaviorProfile.legacySpecies,legacy)
         for kind in generic {
             let reviewed=reviewedPoseFrames[kind] ?? []
             let allowed=catalogOrder.filter {
-                kind == .relocate || legacy.contains($0) || (expansionPilot.contains($0) && !reviewed.isEmpty)
+                kind == .relocate || legacy.contains($0) || (expansionReviewed.contains($0) && !reviewed.isEmpty)
             }
             XCTAssertEqual(SpeciesBehaviorProfile.species(for:kind),allowed,kind.rawValue)
             for species in SpeciesID.allCases {
@@ -98,9 +99,9 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
                 let audit=SpeciesSupportAudit(species:species,availableFrames:commonFrames)
                 let entry=try XCTUnwrap(audit.behaviors.first{$0.kind==kind})
                 XCTAssertEqual(entry.productAllowed,supported)
-                let missing=expansionPilot.contains(species) ? reviewed.sorted():[]
+                let missing=expansionReviewed.contains(species) ? reviewed.sorted():[]
                 XCTAssertEqual(entry.contentSupported,supported && missing.isEmpty,
-                    "E0 review requires the authored pose package: \(species): \(kind)")
+                    "Expansion review requires the authored pose package: \(species): \(kind)")
                 XCTAssertEqual(entry.missingFrames,missing)
                 let complete=SpeciesSupportAudit(species:species,availableFrames:commonFrames.union(poseFrames))
                 XCTAssertEqual(try XCTUnwrap(complete.behaviors.first{$0.kind==kind}).contentSupported,supported)
@@ -121,19 +122,19 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         for species in SpeciesCatalog.standard.species.dropFirst(46).map(\.id) {
             let profile=SpeciesBehaviorProfile.profile(for:species),pilot=expansionPilot.contains(species)
             XCTAssertEqual(profile.isExpansionPilot,pilot)
-            XCTAssertEqual(profile.reviewedCapabilities,pilot ? base.union(added):base)
+            XCTAssertEqual(profile.reviewedCapabilities,base.union(added))
             for kind in BehaviorDefinitions.all.map(\.kind) {
                 XCTAssertEqual(profile.hasReviewedContent(for:kind),
-                    kind == .relocate || (pilot && reviewedPoseFrames[kind] != nil),"\(species): \(kind)")
+                    kind == .relocate || (reviewedPoseFrames[kind] != nil),"\(species): \(kind)")
             }
         }
     }
 
-    func testPosePackageCoversAllOriginalSpeciesAndOnlySixReviewedExpansionSpecies() {
+    func testPosePackageCoversAllHundredSpecies() {
         XCTAssertEqual(SpeciesBehaviorProfile.poseSpecies,poseSpecies)
-        XCTAssertEqual(poseSpecies.count,52)
-        XCTAssertEqual(Set(poseSpecies).count,52)
-        XCTAssertEqual(SpeciesID.allCases.filter{!poseSpecies.contains($0)}.count,48)
+        XCTAssertEqual(poseSpecies.count,100)
+        XCTAssertEqual(Set(poseSpecies).count,100)
+        XCTAssertEqual(SpeciesID.allCases.filter{!poseSpecies.contains($0)}.count,0)
         XCTAssertEqual(PoseClip.frameNames,poseFrames)
         XCTAssertEqual(Set(poseFrames).count,10)
         for species in SpeciesID.allCases {
@@ -197,7 +198,7 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
             for kind:BehaviorKind in [.watch,.alert,.rest,.preen,.takeoffPreparation] {
                 let row=try XCTUnwrap(empty.behaviors.first{$0.kind==kind})
                 let allowed=SpeciesCatalog.standard.species.prefix(46).contains{$0.id == species} ||
-                    (expansionPilot.contains(species) && reviewedPoseFrames[kind] != nil)
+                    (expansionReviewed.contains(species) && reviewedPoseFrames[kind] != nil)
                 XCTAssertEqual(row.productAllowed,allowed)
                 XCTAssertFalse(row.contentSupported)
                 XCTAssertFalse(row.missingFrames.isEmpty)
@@ -215,9 +216,9 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
             XCTAssertEqual(profile.requiredFrames(for:.edgePeek),enhanced ? legacy.union(peekFrames):legacy)
             for kind in BehaviorDefinitions.all.map(\.kind) where kind != .edgePeek {
                 let base=BehaviorDefinitions.definition(for:kind).requiredFrames
-                let reviewed=expansionPilot.contains(species) ? (reviewedPoseFrames[kind] ?? []):[]
+                let reviewed=expansionReviewed.contains(species) ? (reviewedPoseFrames[kind] ?? []):[]
                 XCTAssertEqual(profile.requiredFrames(for:kind),base.union(reviewed),
-                    "Only E0's reviewed poses become admission requirements: \(species), \(kind)")
+                    "Only reviewed expansion poses become admission requirements: \(species), \(kind)")
             }
             let allowed=dedicated[0].1.contains(species)
             for missing in peekFrames {
@@ -241,7 +242,7 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
     }
 
     func testMissingOptionalPoseFrameIsReportedButDoesNotDisableOldBehavior() throws {
-        for species in poseSpecies where !expansionPilot.contains(species) {
+        for species in poseSpecies where !expansionReviewed.contains(species) {
             for missing in poseFrames {
                 let frames=commonFrames.union(poseFrames).subtracting([missing])
                 let audit=SpeciesSupportAudit(species:species,availableFrames:frames)
@@ -260,8 +261,8 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         }
     }
 
-    func testMissingExpansionPilotPoseFrameDisablesOnlyItsReviewedBehavior() throws {
-        for species in expansionPilot {
+    func testMissingExpansionPoseFrameDisablesOnlyItsReviewedBehavior() throws {
+        for species in expansionReviewed {
             for missing in poseFrames {
                 let frames=commonFrames.union(poseFrames).subtracting([missing])
                 let audit=SpeciesSupportAudit(species:species,availableFrames:frames)
@@ -276,7 +277,7 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
                 let decoded=try JSONDecoder().decode(SpeciesSupportAudit.self,from:JSONEncoder().encode(audit))
                 XCTAssertEqual(decoded.missingPoseFrames,[missing])
                 XCTAssertEqual(decoded.behaviors.map(\.contentSupported),audit.behaviors.map(\.contentSupported))
-                XCTAssertEqual(decoded.contentReview?.cohort,"expansion-e0-partial")
+                XCTAssertEqual(decoded.contentReview?.cohort,expansionPilot.contains(species) ? "expansion-e0-partial":"expansion-e1-e5-partial")
                 XCTAssertEqual(decoded.contentReview?.managedBehaviorReviewPending,true)
             }
         }

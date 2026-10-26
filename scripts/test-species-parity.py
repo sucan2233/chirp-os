@@ -18,6 +18,16 @@ try:
 finally:
     sys.dont_write_bytecode = previous_bytecode
 contract, frozen_signatures, m8_appended, m8_delivered, m8_membership = m8.load_contract(ROOT / 'scripts/m8-art-contract.json')
+expansion_spec = importlib.util.spec_from_file_location('chirp_expansion_contract', ROOT / 'scripts/audit-expansion-art.py')
+expansion_audit = importlib.util.module_from_spec(expansion_spec)
+previous_bytecode = sys.dont_write_bytecode
+try:
+    sys.dont_write_bytecode = True
+    expansion_spec.loader.exec_module(expansion_audit)
+finally:
+    sys.dont_write_bytecode = previous_bytecode
+expansion_contract, all_signatures, expansion_appended, _, _ = expansion_audit.load_contract(ROOT / 'scripts/expansion-art-contract.json')
+
 swift = (ROOT / 'platforms/macos/Sources/BirdingCore/SpeciesBehavior.swift').read_text()
 csharp = (ROOT / 'platforms/windows/ChirpOS.Core/SpeciesBehavior.cs').read_text()
 source = json.loads((ROOT / 'platforms/macos/Sources/BirdingCore/Resources/species.json').read_text())
@@ -86,8 +96,11 @@ baseline_extras = {bird: names.copy() for bird, names in expected_extras.items()
 assert sum(len(names) for names in baseline_extras.values()) == 345
 for bird, names in m8_appended.items():
     expected_extras[bird] = expected_extras.get(bird, []) + names
-signature_frames = frozen_signatures
-assert len(signature_frames) == len(expected_extras) == 52
+for bird, names in expansion_appended.items():
+    expected_extras[bird] = expected_extras.get(bird, []) + names
+signature_frames = all_signatures
+assert len(signature_frames) == len(expected_extras) == 100
+assert len(expansion_appended) == 48 and sum(map(len, expansion_appended.values())) == 672
 assert len(m8_appended) == 40 and sum(map(len, m8_appended.values())) == 450
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
@@ -102,8 +115,8 @@ for batch, budget in m8.BATCH_BUDGETS.items():
                          for bird in contract['batches'][batch]['signatures'])
     assert appended_count == (budget if batch in m8.CURRENT_BATCHES else 0), f'{batch} append budget differs'
 
-assert sum(len(names) - len(frames) for names in specific.values()) == 795, 'Local appended poses were lost or expanded'
-assert sum(len(specific.get(bird, frames)) for bird in ids) == 4195, 'Complete M8/E0 atlas frame-slot budget differs'
+assert sum(len(names) - len(frames) for names in specific.values()) == 1467, 'Local appended poses were lost or expanded'
+assert sum(len(specific.get(bird, frames)) for bird in ids) == 4867, 'Complete M8/E0-E5 atlas frame-slot budget differs'
 assert sum(len(names) for bird, names in m8_delivered.items() if m8_membership[bird] != 'E0') == 524
 assert sum(len(names) for bird, names in m8_delivered.items() if m8_membership[bird] == 'E0') == 84
 
@@ -120,7 +133,7 @@ assert specific['yellowRumpedFlycatcher'][37:47] == pose_frames, 'Flycatcher bas
 assert len(specific['yellowRumpedFlycatcher']) == 51, 'Flycatcher must append 10 base and 4 signature frames'
 metadata = manifest['poseClips']
 assert set(metadata) == set(expected_extras), 'Pose/catch metadata omits a delivered species or expands scope'
-assert sum(bool(row['poseFrames']) for row in support) == 52
+assert sum(bool(row['poseFrames']) for row in support) == 100
 for bird, names in signature_frames.items():
     clips = metadata[bird]['clips']
     assert {key for key in clips if key.startswith('signature.')} == {'signature.v0', 'signature.v1'}
@@ -129,11 +142,18 @@ for bird, names in signature_frames.items():
     assert policy['sideOnly'] is (bird in ('greatSpottedWoodpecker', 'eurasianNuthatch'))
     assert all(m8.finite_positive(policy[key]) for key in ('cycle', 'start', 'duration'))
     assert policy['start'] + policy['duration'] <= policy['cycle']
+    historical_window=expansion_contract['signatureWindows'][bird]
+    assert all(math.isclose(policy[k],v,rel_tol=0,abs_tol=1e-9) for k,v in historical_window.items())
+    actual_window=(10,3,2) if bird == 'eurasianNuthatch' else normalized(swift_rows)[bird][1:4]
+    assert tuple(historical_window[k] for k in ('cycle','start','duration')) == actual_window
     for kind, sequence in m8.BASE_CLIPS.items():
         clip = clips[kind]
         assert [f['name'] for f in clip['frames']] == sequence, f'Incomplete base clip: {bird}/{kind}'
         assert clip['foot'] == {'x': 29, 'y': 39} and clip['maximumLoops'] == 1
         assert clip['recovery'] == 'currentEngineState'
+        times=expansion_contract['baseClipDurations'][kind]
+        assert len(clip['frames'])==len(times) and all(math.isclose(f['duration'],t,rel_tol=0,abs_tol=1e-9)
+                                                     for f,t in zip(clip['frames'],times))
     for variant, weights in enumerate(([0.20, 0.30, 0.22, 0.28], [0.28, 0.20, 0.32, 0.20])):
         clip = metadata[bird]['clips'][f'signature.v{variant}']
         assert [f['name'] for f in clip['frames']] == names
@@ -244,8 +264,8 @@ dedicated_species = {
     'flockPass': {'treeSparrow', 'barnSwallow', 'swinhoesWhiteEye', 'lightVentedBulbul', 'azureWingedMagpie', 'mallard', 'blackHeadedGull', 'blackCollaredStarling'},
 }
 e0_species = set(contract['batches']['E0']['signatures'])
-legacy_species = set(signature_frames) - e0_species
-remaining_expansion = ids - set(signature_frames)
+legacy_species = set(frozen_signatures) - e0_species
+remaining_expansion = set(expansion_appended)
 assert len(legacy_species) == 46 and len(e0_species) == 6 and len(remaining_expansion) == 48
 for row in support:
     bird = row['species']
@@ -253,26 +273,33 @@ for row in support:
     assert len(behaviors) == len(row['behaviors']) and set(dedicated_species) <= set(behaviors)
     for kind, behavior in behaviors.items():
         allowed = (bird in dedicated_species[kind] if kind in dedicated_species else
-                   kind == 'relocate' or bird in legacy_species or (bird in e0_species and kind in m8.BASE_CLIPS))
+                   kind == 'relocate' or bird in legacy_species or (bird in (e0_species | remaining_expansion) and kind in m8.BASE_CLIPS))
         assert behavior['productAllowed'] is allowed, f'Ecological permission changed: {bird}/{kind}'
         assert behavior['contentSupported'] is (allowed and not behavior['missingFrames']), f'Content support differs: {bird}/{kind}'
+    for kind in m8.BASE_CLIPS:
+        required={'stand'} | ({'blink'} if kind in ('watch','rest') else set())
+        if kind == 'takeoffPreparation': required |= {f'fly{i}' for i in range(8)}
+        if bird in e0_species | remaining_expansion: required |= set(m8.BASE_CLIPS[kind])
+        expected_missing=sorted(required-set(specific[bird]))
+        assert behaviors[kind]['missingFrames']==expected_missing==[], f'False missing pose frames: {bird}/{kind}'
+        assert behaviors[kind]['contentSupported'] is True, f'Foundation behavior unavailable: {bird}/{kind}'
     review = row['contentReview']
     assert review['sidePerching'] is (bird in ('greatSpottedWoodpecker', 'eurasianNuthatch'))
     assert review['managedBehaviorReviewPending'] is (bird not in legacy_species)
     if bird in legacy_species:
         assert review['cohort'] == 'local-46' and review['fallbackFrames'] == {}
     else:
-        assert review['cohort'] == ('expansion-e0-partial' if bird in e0_species else 'upstream-v0.7-base')
+        assert review['cohort'] == ('expansion-e0-partial' if bird in e0_species else 'expansion-e1-e5-partial')
         fallbacks = ['stretch', 'shake', 'poop0', 'poop1'] + ([] if bird == 'eurasianNuthatch' else ['cling0', 'cling1', 'peck0', 'peck1'])
         assert review['fallbackFrames'] == dict.fromkeys(fallbacks, 'stand')
         capabilities = {'standing', 'blinking', 'flight', 'landing'}
-        if bird in e0_species:
+        if bird in e0_species | remaining_expansion:
             capabilities |= {'observationPose', 'alertPose', 'restPose', 'takeoffPose'}
         assert set(row['capabilities']) == capabilities, f'Expansion capability scope changed: {bird}'
 
 recording_source = (ROOT / 'platforms/macos/Sources/BirdingCore/Behavior/BehaviorRecording.swift').read_text()
 version_match = re.search(r'\bengineVersion\s*=\s*(\d+)', recording_source)
-assert version_match and int(version_match.group(1)) == 21, 'M8 simulation version must be 21; fixtures must be re-exported from source'
+assert version_match and int(version_match.group(1)) == 22, 'Expansion simulation version must be 22; fixtures must be re-exported from source'
 
 prop_manifest = json.loads((ROOT / 'shared/art/props/manifest.json').read_text())
 leaf = prop_manifest['leafToken']

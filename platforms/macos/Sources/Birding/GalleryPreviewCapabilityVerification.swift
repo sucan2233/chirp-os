@@ -29,6 +29,10 @@ extension ObservationJournalUIVerification {
                 let audit = SpeciesSupportAudit(species: species, availableFrames: frames)
                 let supported = audit.behaviors.filter {$0.kind != .relocate && $0.contentSupported}
                 let key = "galleryCapability-\(language.rawValue)-\(species.rawValue)"
+                if SpeciesBehaviorProfile.profile(for:species).isExpansionSpecies {
+                    let expected:Set<BehaviorKind>=[.watch,.alert,.rest,.takeoffPreparation]
+                    checks[key + "-exactlyFourReviewedExpansionActions"] = Set(supported.map(\.kind)) == expected
+                }
                 let detail = handbook.detailText.string
                 let row = handbook.renderedSpecies.firstIndex(of: species)!
                 let cell = handbook.tableView(handbook.speciesTableView,
@@ -65,10 +69,10 @@ extension ObservationJournalUIVerification {
             let settings=SpeciesSettingsWindow(desktop:desktop)
             if let scroll=settings.tabs.tabViewItems[2].view as? NSScrollView,
                let field=scroll.documentView?.subviews.compactMap({$0 as? NSTextField}).first(where:{$0.identifier?.rawValue=="perchActivitiesHelp"}) {
-                checks["m8PoseHelpFits-\(language.rawValue)"]=field.stringValue.contains("52") &&
+                checks["allSpeciesPoseHelpFits-\(language.rawValue)"]=field.stringValue.contains("100") &&
                     field.toolTip==language.poseSpeciesNames &&
                     (field.cell?.cellSize(forBounds:field.bounds).height ?? .infinity)<=field.frame.height
-            } else {checks["m8PoseHelpFits-\(language.rawValue)"]=false}
+            } else {checks["allSpeciesPoseHelpFits-\(language.rawValue)"]=false}
             settings.cancel()
             checks["galleryPreviewHelp-\(language.rawValue)"] = handbook.previewAction.toolTip?.contains(
                 language.text("预览不解锁鸟种或动作", "Previews unlock neither species nor actions")) == true

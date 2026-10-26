@@ -77,8 +77,8 @@ final class BirdArt {
             (SpeciesBehaviorProfile.profile(for:species).allows(.nestMaterialCarry) ? nestCarryNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.nestBuild) ? nestBuildNames : []) +
             // New packs append after every old contact frame (notably flycatcher catch34–36).
-            M8ArtCatalog.appendedFrameNames(for:species) +
-            (M8ArtCatalog.species.contains(species) ? []:LivelyMotion.frameNames(for:species))
+            M8ArtCatalog.appendedFrameNames(for:species) + ExpansionArtCatalog.appendedFrameNames(for:species) +
+            ((M8ArtCatalog.species.contains(species) || ExpansionArtCatalog.species.contains(species)) ? []:LivelyMotion.frameNames(for:species))
     }
     let frames: [String: CGImage]
     let species: SpeciesID
@@ -120,6 +120,10 @@ final class BirdArt {
             guard let image=frames[name],let mask=hitMasks[name],mask.count==48*48,
                   let data=image.dataProvider?.data,let bytes=CFDataGetBytePtr(data) else {
                 throw failure(name)
+            }
+            let nativeSize=max(48,Int((48*SpeciesCatalog.standard.profile(species).relativeScale).rounded()))
+            guard image.width==nativeSize,image.height==nativeSize else {
+                throw failure("\(name) original density \(image.width)x\(image.height), expected \(nativeSize)")
             }
             var firstRow:Int?
             for y in 0..<48 {

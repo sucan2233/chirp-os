@@ -11,10 +11,11 @@ final class PoseClipTests:XCTestCase {
         .redFlankedBluetail,.plumbeousWaterRedstart,.longTailedShrike,.blackDrongo,.yellowBilledGrosbeak,
         .greyHeron,.chinesePondHeron,.blackWingedStilt,.whimbrel,.littleRingedPlover,.commonMoorhen,.eurasianCoot,
         .commonKestrel,.peregrineFalcon,.blackKite,.commonBuzzard,.collaredScopsOwl,.asianBarredOwlet,.piedKingfisher,
-        .blackHeadedGull,.hoopoe,.commonKingfisher,.eurasianWoodcock,.blackCollaredStarling,.largeBilledCrow,.asianKoel]
+        .blackHeadedGull,.hoopoe,.commonKingfisher,.eurasianWoodcock,.blackCollaredStarling,.largeBilledCrow,.asianKoel] + ExpansionCompletionFixture.newSpecies
     private let expansionPilot:[SpeciesID] = [.eurasianGreatTit,.whiteWagtail,.indianWhiteEye,
         .crestedMyna,.eurasianNuthatch,.greatEgret]
-    private var legacyPoseSpecies:[SpeciesID] {species.filter{!expansionPilot.contains($0)}}
+    private var expansionReviewed:[SpeciesID] {expansionPilot + ExpansionCompletionFixture.newSpecies}
+    private var legacyPoseSpecies:[SpeciesID] {species.filter{!expansionReviewed.contains($0)}}
     private let kinds:[BehaviorKind] = [.watch,.alert,.rest,.takeoffPreparation]
     private let poseFrames:Set<String> = ["lookNear","lookFar","alertRise","alertHold","alertRelax",
         "restLower","restTuck","restWake","takeoffCrouch","takeoffPush"]
@@ -349,7 +350,7 @@ final class PoseClipTests:XCTestCase {
                 world.pointer=CGPoint(x:origin.x+40*engine.spriteScale(for:model),y:origin.y)
                 if !complete {world.availableFrames[bird]?.remove("lookFar")}
                 engine.updateWorld(world)
-                if !complete && expansionPilot.contains(bird) {
+                if !complete && expansionReviewed.contains(bird) {
                     XCTAssertEqual(engine.handle(.attention(.watch,.preview)),.rejected(.missingFrames))
                     XCTAssertEqual(engine.activeRunCount,0);XCTAssertEqual(engine.leasedBirdCount,0)
                     XCTAssertEqual(model.position,origin)
@@ -365,11 +366,11 @@ final class PoseClipTests:XCTestCase {
         }
     }
 
-    func testExpansionPilotRejectsEveryMissingRequiredPoseAndFailsOnLiveLoss() throws {
+    func testAllReviewedExpansionSpeciesRejectEveryMissingPoseAndFailOnLiveLoss() throws {
         let required:[BehaviorKind:[String]] = [
             .watch:["lookNear","lookFar"],.alert:["alertRise","alertHold","alertRelax"],
             .rest:["restLower","restTuck","restWake"],.takeoffPreparation:["takeoffCrouch","takeoffPush"]]
-        for bird in expansionPilot {
+        for bird in expansionReviewed {
             for kind in kinds {
                 for missing in try XCTUnwrap(required[kind]) {
                     let context="\(bird): \(kind): missing \(missing)"
@@ -830,19 +831,21 @@ final class PoseClipTests:XCTestCase {
         }
     }
 
-    func testUnreviewedExpansionSpeciesRejectInjectedEnhancementFrames() {
-        XCTAssertEqual(species.count,52)
-        XCTAssertEqual(Set(species).count,52)
+    func testAllHundredPosePackagesPreserveExpansionSpecializedRestrictions() {
+        XCTAssertEqual(species.count,100)
+        XCTAssertEqual(Set(species),Set(SpeciesID.allCases))
         XCTAssertEqual(legacyPoseSpecies.count,46)
-        let unreviewed=SpeciesCatalog.standard.species.map(\.id).filter{!species.contains($0)}
-        XCTAssertEqual(unreviewed.count,48)
-        for bird in unreviewed {
-            for kind in kinds {
-                let engine=fixture(bird,topOnly:true)
-                XCTAssertNil(SpeciesBehaviorProfile.profile(for:bird).poseClip(for:kind,duration:2))
-                XCTAssertFalse(engine.handle(command(kind,.preview)).accepted)
-                XCTAssertEqual(engine.activeRunCount,0)
-                XCTAssertEqual(engine.leasedBirdCount,0)
+        XCTAssertEqual(expansionReviewed.count,54)
+        for bird in expansionReviewed {
+            let profile=SpeciesBehaviorProfile.profile(for:bird)
+            for kind in kinds {XCTAssertNotNil(profile.poseClip(for:kind,duration:2))}
+            // Even an injected complete image set cannot authorize scene actions.
+            let injected=legacyFrames.union(poseFrames).union(["feedLook","feedDown0","feedDown1","feedLift",
+                "nestPlace","nestAdjust0","nestAdjust1","nestSettle","catchOpen","catchClose","catchRecover"])
+            let audit=SpeciesSupportAudit(species:bird,availableFrames:injected)
+            for kind:BehaviorKind in [.foodTrayVisit,.nestBuild,.insectCatch,.courtshipDisplay,.allopreening,.visitorGift] {
+                XCTAssertFalse(profile.allows(kind))
+                XCTAssertFalse(audit.behaviors.first{$0.kind == kind}?.contentSupported ?? true)
             }
         }
     }

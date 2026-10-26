@@ -1,0 +1,112 @@
+[
+  {
+    "file": "activity-rhythm.json",
+    "expectedUnchanged": true,
+    "sha256": "d01f15508735d4d697b30b794f38d564efdf151119b40284c58fcba7e0ce8621"
+  },
+  {
+    "file": "allopreening.json",
+    "expectedUnchanged": true,
+    "sha256": "6a7ae9d6dad1e38425085026137e46915c3b2f4376a1e5b7b2320f1eb8f70d8f"
+  },
+  {
+    "file": "attention.json",
+    "expectedUnchanged": true,
+    "sha256": "d2632ed4bc2b00addd513a8ea55a35953ca44aa963824fad976d924e309b1f47"
+  },
+  {
+    "file": "bath.json",
+    "expectedUnchanged": true,
+    "sha256": "b6a76b0cc8367d4bd9eede846e9cfcbb93051f8cb6c9efc8c9ee8fdf3c250266"
+  },
+  {
+    "file": "chase.json",
+    "expectedUnchanged": true,
+    "sha256": "c2a786819238096c107c76496b3364169a9a10dc0c0e8980659356d6f829e6cf"
+  },
+  {
+    "file": "courtship-display.json",
+    "expectedUnchanged": true,
+    "sha256": "12711364ef160209340c8904fc3003da09a0397f4c9804a73705b5bcfdad18cc"
+  },
+  {
+    "file": "edge-peek.json",
+    "expectedUnchanged": true,
+    "sha256": "ef3da6314538e9ec894d56bcce09798f1c6ece7744e5d3d791a0c6dc257183bb"
+  },
+  {
+    "file": "fixed-perch.json",
+    "expectedUnchanged": true,
+    "sha256": "e91a19899684d3572c1cd378895a040bba78bd11359454701846fba059508a74"
+  },
+  {
+    "file": "flycatcher-insect-catch.json",
+    "expectedUnchanged": true,
+    "sha256": "e7e57473af87d7c5f09bb37875157251b00b4e767767f7db4471097dbce6ff67"
+  },
+  {
+    "file": "food-tray.json",
+    "expectedUnchanged": true,
+    "sha256": "e8b243d480eee85b50479fec77b5c1783a26778aa218bf91ba65e13d9c867465"
+  },
+  {
+    "file": "insect-catch.json",
+    "expectedUnchanged": true,
+    "sha256": "513c91f48d127488b88b19cde4867f1f975e71b9c313fe8bbe15cb6958029121"
+  },
+  {
+    "file": "interruptions.json",
+    "expectedUnchanged": true,
+    "sha256": "f765d28c6475b353754867289986ce28d40b7e094a780120d91e32d4ccac9f0b"
+  },
+  {
+    "file": "leaf-carry.json",
+    "expectedUnchanged": true,
+    "sha256": "b2318d1b2f48cc0ebba03cb240999ec7af7e81a7c8e6372a5d9bc22413382da0"
+  },
+  {
+    "file": "leaf.json",
+    "expectedUnchanged": true,
+    "sha256": "2488a272da18d413cda958c0a8b8780b1105603e26318530df114902f330243b"
+  },
+  {
+    "file": "nest-build.json",
+    "expectedUnchanged": true,
+    "sha256": "0e99afc400e53f22057cc9f8519d06eaf5817f0527ba919e09524c248043c9b7"
+  },
+  {
+    "file": "nest-material-carry.json",
+    "expectedUnchanged": true,
+    "sha256": "da66ccb59d784481d20cd9a81c5599a511dfb53aa8246f7ef77fb30286d30fa5"
+  },
+  {
+    "file": "returning-visitor.json",
+    "expectedUnchanged": true,
+    "sha256": "43775789323f8e500abe00c69aed6a2e82bfcb6efac31df63516bab13a42b019"
+  },
+  {
+    "file": "side-hop.json",
+    "expectedUnchanged": true,
+    "sha256": "90f1c5979d20beda798d56d114a444ee11b59b09882586dda3cc766eeacf8d4e"
+  },
+  {
+    "file": "social.json",
+    "expectedUnchanged": true,
+    "sha256": "b0a1a5e45146a072a45e25fc88ae7625b6f773c8e0bd751b1f6d99b4b33914b4"
+  },
+  {
+    "file": "takeoff-preparation.json",
+    "expectedUnchanged": true,
+    "sha256": "b86dad3e287e970cfa6be0ea4e0f2b84495bbd025d76fdcd5ad13af257456caa"
+  },
+  {
+    "file": "travel-together.json",
+    "expectedUnchanged": true,
+    "sha256": "c1696318c47feb32f253043a0e003a101a516ded3da22eaa82996819b54eaf78"
+  },
+  {
+    "file": "visitor-gift.json",
+    "expectedUnchanged": true,
+    "sha256": "7b4ea6135b4f2013ce9804b112d720bd7e3e0fce8ca1ae92e2c2898357ba8d0d"
+  }
+]

@@ -1,0 +1,108 @@
+{
+  "scope": "fixed 12-bird engine + offscreen CGContext draw with full catalog cache; excludes real compositor, sleep/wake and window following",
+  "baselineCommit": "2d56542",
+  "runsPerBuild": 3,
+  "species": [
+    "marshTit",
+    "blackThroatedBushtit",
+    "commonTailorbird",
+    "carrionCrow",
+    "redBilledChough",
+    "redBilledBlueMagpie",
+    "blackBulbul",
+    "ruddyShelduck",
+    "easternCattleEgret",
+    "littleGrebe",
+    "himalayanVulture",
+    "commonPheasant"
+  ],
+  "metrics": {
+    "cpuFrameP95Milliseconds": {
+      "baseline": [
+        0.3319999999997769,
+        0.33799999999994945,
+        0.328000000000106
+      ],
+      "current": [
+        0.34700000000009723,
+        0.3489999999999327,
+        0.47200000000025
+      ],
+      "baselineMedian": 0.3319999999997769,
+      "currentMedian": 0.3489999999999327,
+      "changePercent": 5.1204819277612
+    },
+    "cpuFrameMedianMilliseconds": {
+      "baseline": [
+        0.2909999999998192,
+        0.29100000000026327,
+        0.284000000000173
+      ],
+      "current": [
+        0.304000000000304,
+        0.304000000000082,
+        0.31399999999992545
+      ],
+      "baselineMedian": 0.2909999999998192,
+      "currentMedian": 0.304000000000304,
+      "changePercent": 4.467353952059416
+    },
+    "cpuFrameMeanMilliseconds": {
+      "baseline": [
+        0.29379680555555604,
+        0.29561416666666956,
+        0.28817791666666936
+      ],
+      "current": [
+        0.30816722222222676,
+        0.30860305555556106,
+        0.33259736111111
+      ],
+      "baselineMedian": 0.29379680555555604,
+      "currentMedian": 0.30860305555556106,
+      "changePercent": 5.039622528232424
+    },
+    "artLoadCPUSeconds": {
+      "baseline": [
+        0.355313,
+        0.333527,
+        0.32976500000000003
+      ],
+      "current": [
+        0.37781200000000004,
+        0.37354,
+        0.37401100000000004
+      ],
+      "baselineMedian": 0.333527,
+      "currentMedian": 0.37401100000000004,
+      "changePercent": 12.138147736165283
+    },
+    "residentAfterArtBytes": {
+      "baseline": [
+        144244736,
+        144277504,
+        144097280
+      ],
+      "current": [
+        163069952,
+        163037184,
+        163020800
+      ],
+      "baselineMedian": 144244736,
+      "currentMedian": 163037184,
+      "changePercent": 13.0281690140845
+    }
+  },
+  "residentGrowthBytes": {
+    "baseline": [
+      32768,
+      32768,
+      32768
+    ],
+    "current": [
+      32768,
+      32768,
+      32768
+    ]
+  }
+}

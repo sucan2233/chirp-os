@@ -1,0 +1,1336 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "2d56542ec7209ec7c2af66a772c732a87cdc13fc",
+  "provenance": "E1-E5 cohorts frozen from approved EXPANSION-54-CAPABILITY-PLAN; preserve M8/E0 contracts. New signature names transcribed from authored geometry before export, never inferred from exported pixels.",
+  "budgets": {
+    "baselineSlots": 4195,
+    "appendedSlots": 672,
+    "currentSlots": 4867,
+    "m8Slots": 524,
+    "e0Slots": 84,
+    "supportedSpecies": 100,
+    "unchangedExpansionSpecies": 0,
+    "variantsPerSpecies": 2,
+    "simulationVersion": 22
+  },
+  "coreFrames": [
+    "lookNear",
+    "lookFar",
+    "alertRise",
+    "alertHold",
+    "alertRelax",
+    "restLower",
+    "restTuck",
+    "restWake",
+    "takeoffCrouch",
+    "takeoffPush"
+  ],
+  "batches": {
+    "M8a": {
+      "budget": 74,
+      "geometry": "M8PilotArtGeometry.swift",
+      "baseAppendSpecies": [
+        "greatTit",
+        "orientalMagpie",
+        "greatSpottedWoodpecker",
+        "mallard",
+        "littleEgret"
+      ],
+      "signatures": {
+        "greatTit": [
+          "inspectLean",
+          "inspectDown",
+          "inspectLift",
+          "inspectSettle"
+        ],
+        "orientalMagpie": [
+          "tailPoise",
+          "tailBalance",
+          "tailCounter",
+          "tailSettle"
+        ],
+        "greatSpottedWoodpecker": [
+          "sideBrace",
+          "sideDraw",
+          "sideTap",
+          "sideRecover"
+        ],
+        "mallard": [
+          "wingLook",
+          "wingReach",
+          "wingSmooth",
+          "wingRecover"
+        ],
+        "littleEgret": [
+          "neckPoise",
+          "neckReach",
+          "neckObserve",
+          "neckRecover"
+        ],
+        "magpieRobin": [
+          "tailReady",
+          "tailLift",
+          "tailPulse",
+          "tailRecover"
+        ]
+      }
+    },
+    "M8b": {
+      "budget": 32,
+      "geometry": "M8CommonArtGeometry.swift",
+      "baseAppendSpecies": [],
+      "signatures": {
+        "treeSparrow": [
+          "fluffReady",
+          "fluffPeck",
+          "fluffLook",
+          "fluffSettle"
+        ],
+        "lightVentedBulbul": [
+          "shoulderReady",
+          "shoulderReach",
+          "shoulderSmooth",
+          "shoulderSettle"
+        ],
+        "redWhiskeredBulbul": [
+          "callPoise",
+          "callOpen",
+          "callClose",
+          "callSettle"
+        ],
+        "chineseBlackbird": [
+          "perchReady",
+          "perchTap",
+          "perchLift",
+          "perchSettle"
+        ],
+        "spottedDove": [
+          "preenPoise",
+          "preenShoulder",
+          "preenSmooth",
+          "preenSettle"
+        ],
+        "swinhoesWhiteEye": [
+          "gleanReady",
+          "gleanReach",
+          "gleanRecoil",
+          "gleanSettle"
+        ],
+        "redBilledLeiothrix": [
+          "dipReady",
+          "dipLow",
+          "dipTurn",
+          "dipSettle"
+        ],
+        "azureWingedMagpie": [
+          "balanceReady",
+          "balanceReach",
+          "balanceTurn",
+          "balanceSettle"
+        ]
+      }
+    },
+    "M8c": {
+      "budget": 112,
+      "geometry": "M8SmallArtGeometry.swift",
+      "baseAppendSpecies": [
+        "yellowBrowedWarbler",
+        "vinousThroatedParrotbill",
+        "yellowRumpedFlycatcher",
+        "redFlankedBluetail",
+        "plumbeousWaterRedstart",
+        "longTailedShrike",
+        "blackDrongo",
+        "yellowBilledGrosbeak"
+      ],
+      "signatures": {
+        "yellowBrowedWarbler": [
+          "canopyReady",
+          "canopyLift",
+          "canopyReturn",
+          "canopySettle"
+        ],
+        "vinousThroatedParrotbill": [
+          "roundGather",
+          "roundTurn",
+          "roundSway",
+          "roundSettle"
+        ],
+        "yellowRumpedFlycatcher": [
+          "wingPoise",
+          "wingFlick",
+          "wingLean",
+          "wingSettle"
+        ],
+        "redFlankedBluetail": [
+          "blueTailReady",
+          "blueTailLift",
+          "blueTailLook",
+          "blueTailSettle"
+        ],
+        "plumbeousWaterRedstart": [
+          "rustFanReady",
+          "rustFanOpen",
+          "rustFanLean",
+          "rustFanSettle"
+        ],
+        "longTailedShrike": [
+          "vigilPoise",
+          "vigilReach",
+          "vigilHold",
+          "vigilSettle"
+        ],
+        "blackDrongo": [
+          "forkPoise",
+          "forkOpen",
+          "forkFold",
+          "forkSettle"
+        ],
+        "yellowBilledGrosbeak": [
+          "billLower",
+          "billFlex",
+          "billLift",
+          "billSettle"
+        ]
+      }
+    },
+    "M8d": {
+      "budget": 102,
+      "geometry": "M8WetlandArtGeometry.swift",
+      "baseAppendSpecies": [
+        "greyHeron",
+        "chinesePondHeron",
+        "blackWingedStilt",
+        "whimbrel",
+        "littleRingedPlover",
+        "commonMoorhen",
+        "eurasianCoot"
+      ],
+      "signatures": {
+        "nightHeron": [
+          "shoulderGather",
+          "shoulderTurn",
+          "shoulderWake",
+          "shoulderSettle"
+        ],
+        "greyHeron": [
+          "distantPoise",
+          "distantReach",
+          "distantDraw",
+          "distantSettle"
+        ],
+        "chinesePondHeron": [
+          "lowPoise",
+          "lowReach",
+          "lowDraw",
+          "lowSettle"
+        ],
+        "blackWingedStilt": [
+          "stiltBalance",
+          "stiltTurn",
+          "stiltInspect",
+          "stiltSettle"
+        ],
+        "whimbrel": [
+          "curvePoise",
+          "curveDip",
+          "curveLift",
+          "curveSettle"
+        ],
+        "littleRingedPlover": [
+          "ploverLower",
+          "ploverTap",
+          "ploverLift",
+          "ploverSettle"
+        ],
+        "commonMoorhen": [
+          "railTailReady",
+          "railTailLift",
+          "railTailFold",
+          "railTailSettle"
+        ],
+        "eurasianCoot": [
+          "breastLower",
+          "breastLift",
+          "breastShake",
+          "breastSettle"
+        ]
+      }
+    },
+    "M8e": {
+      "budget": 102,
+      "geometry": "M8RaptorArtGeometry.swift",
+      "baseAppendSpecies": [
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "piedKingfisher"
+      ],
+      "signatures": {
+        "commonKestrel": [
+          "kestrelScanReady",
+          "kestrelScanFocus",
+          "kestrelScanReturn",
+          "kestrelScanSettle"
+        ],
+        "peregrineFalcon": [
+          "peregrineWatchReady",
+          "peregrineWatchLow",
+          "peregrineWatchLift",
+          "peregrineWatchSettle"
+        ],
+        "blackKite": [
+          "kitePreenReady",
+          "kitePreenReach",
+          "kitePreenFold",
+          "kitePreenSettle"
+        ],
+        "commonBuzzard": [
+          "buzzardShoulderReady",
+          "buzzardShoulderLoosen",
+          "buzzardShoulderDraw",
+          "buzzardShoulderSettle"
+        ],
+        "littleOwl": [
+          "littleOwlBowReady",
+          "littleOwlBowDip",
+          "littleOwlBowLift",
+          "littleOwlBowSettle"
+        ],
+        "collaredScopsOwl": [
+          "scopsTiltReady",
+          "scopsTiltBlink",
+          "scopsTiltOpen",
+          "scopsTiltSettle"
+        ],
+        "asianBarredOwlet": [
+          "owletScanReady",
+          "owletScanTurn",
+          "owletScanNod",
+          "owletScanSettle"
+        ],
+        "piedKingfisher": [
+          "piedLookReady",
+          "piedLookReach",
+          "piedLookDraw",
+          "piedLookSettle"
+        ]
+      }
+    },
+    "M8f": {
+      "budget": 102,
+      "geometry": "M8DistinctArtGeometry.swift",
+      "baseAppendSpecies": [
+        "blackHeadedGull",
+        "hoopoe",
+        "commonKingfisher",
+        "eurasianWoodcock",
+        "blackCollaredStarling",
+        "largeBilledCrow",
+        "asianKoel"
+      ],
+      "signatures": {
+        "barnSwallow": [
+          "wingPoise",
+          "wingLower",
+          "wingAttend",
+          "wingSettle"
+        ],
+        "blackHeadedGull": [
+          "shoulderTurn",
+          "shoulderStretch",
+          "shoulderDraw",
+          "shoulderSettle"
+        ],
+        "hoopoe": [
+          "crestPoise",
+          "crestLower",
+          "crestLift",
+          "crestSettle"
+        ],
+        "commonKingfisher": [
+          "downWatch",
+          "downTurn",
+          "downReach",
+          "downSettle"
+        ],
+        "eurasianWoodcock": [
+          "billBalance",
+          "billSide",
+          "billLower",
+          "billSettle"
+        ],
+        "blackCollaredStarling": [
+          "collarReach",
+          "collarCall",
+          "collarClose",
+          "collarSettle"
+        ],
+        "largeBilledCrow": [
+          "nearTurn",
+          "nearBow",
+          "nearLift",
+          "nearSettle"
+        ],
+        "asianKoel": [
+          "callReach",
+          "callOpen",
+          "callPulse",
+          "callSettle"
+        ]
+      }
+    },
+    "E0": {
+      "budget": 84,
+      "geometry": "ExpansionPilotArtGeometry.swift",
+      "baseAppendSpecies": [
+        "eurasianGreatTit",
+        "whiteWagtail",
+        "indianWhiteEye",
+        "crestedMyna",
+        "eurasianNuthatch",
+        "greatEgret"
+      ],
+      "signatures": {
+        "eurasianGreatTit": [
+          "inspectLean",
+          "inspectDown",
+          "inspectLift",
+          "inspectSettle"
+        ],
+        "whiteWagtail": [
+          "tailPoise",
+          "tailLift",
+          "tailFall",
+          "tailSettle"
+        ],
+        "indianWhiteEye": [
+          "gleanReady",
+          "gleanReach",
+          "gleanRecoil",
+          "gleanSettle"
+        ],
+        "crestedMyna": [
+          "peckReady",
+          "peckLower",
+          "peckLift",
+          "peckSettle"
+        ],
+        "eurasianNuthatch": [
+          "sideBrace",
+          "sideReach",
+          "sideProbe",
+          "sideRecover"
+        ],
+        "greatEgret": [
+          "neckPoise",
+          "neckReach",
+          "neckObserve",
+          "neckRecover"
+        ]
+      }
+    },
+    "E1": {
+      "budget": 168,
+      "geometry": "ExpansionSmallArtGeometry.swift",
+      "baseAppendSpecies": [
+        "marshTit",
+        "greenBackedTit",
+        "blackThroatedBushtit",
+        "silverThroatedBushtit",
+        "whiskeredYuhina",
+        "daurianRedstart",
+        "blueFrontedRedstart",
+        "blackRedstart",
+        "commonTailorbird",
+        "greyCappedGreenfinch",
+        "twite",
+        "ornateSunbird"
+      ],
+      "signatures": {
+        "marshTit": [
+          "marshReady",
+          "marshDip",
+          "marshReturn",
+          "marshSettle"
+        ],
+        "greenBackedTit": [
+          "greenInspectReady",
+          "greenInspectReach",
+          "greenInspectLift",
+          "greenInspectSettle"
+        ],
+        "blackThroatedBushtit": [
+          "chestnutReady",
+          "chestnutReach",
+          "chestnutRecoil",
+          "chestnutSettle"
+        ],
+        "silverThroatedBushtit": [
+          "silverReady",
+          "silverPeer",
+          "silverReturn",
+          "silverSettle"
+        ],
+        "whiskeredYuhina": [
+          "whiskerReady",
+          "whiskerLift",
+          "whiskerReturn",
+          "whiskerSettle"
+        ],
+        "daurianRedstart": [
+          "daurianReady",
+          "daurianTailLift",
+          "daurianTailFall",
+          "daurianSettle"
+        ],
+        "blueFrontedRedstart": [
+          "blueFrontReady",
+          "blueFrontTailLift",
+          "blueFrontReturn",
+          "blueFrontSettle"
+        ],
+        "blackRedstart": [
+          "rufousReady",
+          "rufousTailLift",
+          "rufousReturn",
+          "rufousSettle"
+        ],
+        "commonTailorbird": [
+          "tailorReady",
+          "tailorTailFan",
+          "tailorTailFold",
+          "tailorSettle"
+        ],
+        "greyCappedGreenfinch": [
+          "greenfinchReady",
+          "greenfinchBillFlex",
+          "greenfinchLift",
+          "greenfinchSettle"
+        ],
+        "twite": [
+          "twiteReady",
+          "twiteBillFlex",
+          "twiteReturn",
+          "twiteSettle"
+        ],
+        "ornateSunbird": [
+          "sunbirdReady",
+          "sunbirdReach",
+          "sunbirdRecoil",
+          "sunbirdSettle"
+        ]
+      }
+    },
+    "E2": {
+      "budget": 168,
+      "geometry": "ExpansionGroundArtGeometry.swift",
+      "baseAppendSpecies": [
+        "silkyStarling",
+        "whiteCheekedStarling",
+        "carrionCrow",
+        "daurianJackdaw",
+        "redBilledChough",
+        "plainLaughingthrush",
+        "henricsLaughingthrush",
+        "whiteBrowedLaughingthrush",
+        "groundTit",
+        "rufousBreastedAccentor",
+        "hornedLark",
+        "redThroatedThrush"
+      ],
+      "signatures": {
+        "silkyStarling": [
+          "silkBowReady",
+          "silkBowDown",
+          "silkBowRecover",
+          "silkBowSettle"
+        ],
+        "whiteCheekedStarling": [
+          "cheekDipReady",
+          "cheekDipDown",
+          "cheekDipRecover",
+          "cheekDipSettle"
+        ],
+        "carrionCrow": [
+          "crowInclineReady",
+          "crowInclineDown",
+          "crowInclineRecover",
+          "crowInclineSettle"
+        ],
+        "daurianJackdaw": [
+          "jackdawLeanReady",
+          "jackdawLeanDown",
+          "jackdawLeanRecover",
+          "jackdawLeanSettle"
+        ],
+        "redBilledChough": [
+          "choughProbeReady",
+          "choughProbeDown",
+          "choughProbeRecover",
+          "choughProbeSettle"
+        ],
+        "plainLaughingthrush": [
+          "plainDipReady",
+          "plainDipDown",
+          "plainDipRecover",
+          "plainDipSettle"
+        ],
+        "henricsLaughingthrush": [
+          "henricLookReady",
+          "henricLookDown",
+          "henricLookRecover",
+          "henricLookSettle"
+        ],
+        "whiteBrowedLaughingthrush": [
+          "whiteBrowLeanReady",
+          "whiteBrowLeanDown",
+          "whiteBrowLeanRecover",
+          "whiteBrowLeanSettle"
+        ],
+        "groundTit": [
+          "groundProbeReady",
+          "groundProbeDown",
+          "groundProbeRecover",
+          "groundProbeSettle"
+        ],
+        "rufousBreastedAccentor": [
+          "accentorDipReady",
+          "accentorDipDown",
+          "accentorDipRecover",
+          "accentorDipSettle"
+        ],
+        "hornedLark": [
+          "hornLookReady",
+          "hornLookDown",
+          "hornLookRecover",
+          "hornLookSettle"
+        ],
+        "redThroatedThrush": [
+          "redThroatLeanReady",
+          "redThroatLeanDown",
+          "redThroatLeanRecover",
+          "redThroatLeanSettle"
+        ]
+      }
+    },
+    "E3": {
+      "budget": 168,
+      "geometry": "ExpansionDisplayArtGeometry.swift",
+      "baseAppendSpecies": [
+        "eurasianMagpie",
+        "greyTreepie",
+        "redBilledBlueMagpie",
+        "yellowBilledBlueMagpie",
+        "ashyDrongo",
+        "blueWhistlingThrush",
+        "sootyHeadedBulbul",
+        "brownBreastedBulbul",
+        "blackBulbul",
+        "collaredFinchbill",
+        "taiwanBarbet",
+        "blueThroatedBarbet"
+      ],
+      "signatures": {
+        "eurasianMagpie": [
+          "eurasianTailReady",
+          "eurasianTailBalance",
+          "eurasianTailReturn",
+          "eurasianTailSettle"
+        ],
+        "greyTreepie": [
+          "treepieTailReady",
+          "treepieTailSweep",
+          "treepieLookBack",
+          "treepieTailSettle"
+        ],
+        "redBilledBlueMagpie": [
+          "redBlueTailReady",
+          "redBlueTailArc",
+          "redBlueHeadReturn",
+          "redBlueTailSettle"
+        ],
+        "yellowBilledBlueMagpie": [
+          "yellowBlueTailReady",
+          "yellowBlueTailPoise",
+          "yellowBlueTailReturn",
+          "yellowBlueTailSettle"
+        ],
+        "ashyDrongo": [
+          "ashyForkReady",
+          "ashyForkOpen",
+          "ashyForkClose",
+          "ashyForkSettle"
+        ],
+        "blueWhistlingThrush": [
+          "whistleTailReady",
+          "whistleTailFan",
+          "whistleTailFold",
+          "whistleTailSettle"
+        ],
+        "sootyHeadedBulbul": [
+          "sootyCallReady",
+          "sootyCallOpen",
+          "sootyCallClose",
+          "sootyCallSettle"
+        ],
+        "brownBreastedBulbul": [
+          "brownCallReady",
+          "brownCallOpen",
+          "brownCallReturn",
+          "brownCallSettle"
+        ],
+        "blackBulbul": [
+          "blackCallReady",
+          "blackCallOpen",
+          "blackCallClose",
+          "blackCallSettle"
+        ],
+        "collaredFinchbill": [
+          "collarBillReady",
+          "collarBillFlex",
+          "collarBillLift",
+          "collarBillSettle"
+        ],
+        "taiwanBarbet": [
+          "taiwanCallReady",
+          "taiwanCallOpen",
+          "taiwanCallReturn",
+          "taiwanCallSettle"
+        ],
+        "blueThroatedBarbet": [
+          "blueThroatReady",
+          "blueThroatOpen",
+          "blueThroatReturn",
+          "blueThroatSettle"
+        ]
+      }
+    },
+    "E4": {
+      "budget": 84,
+      "geometry": "ExpansionWetlandArtGeometry.swift",
+      "baseAppendSpecies": [
+        "easternSpotBilledDuck",
+        "ruddyShelduck",
+        "easternCattleEgret",
+        "blackTailedGull",
+        "greatCrestedGrebe",
+        "littleGrebe"
+      ],
+      "signatures": {
+        "easternSpotBilledDuck": [
+          "spotShoulderReady",
+          "spotShoulderTurn",
+          "spotShoulderRecover",
+          "spotShoulderSettle"
+        ],
+        "ruddyShelduck": [
+          "shelduckShoulderReady",
+          "shelduckShoulderTurn",
+          "shelduckShoulderRecover",
+          "shelduckShoulderSettle"
+        ],
+        "easternCattleEgret": [
+          "cattleNeckReady",
+          "cattleNeckReach",
+          "cattleNeckRecover",
+          "cattleNeckSettle"
+        ],
+        "blackTailedGull": [
+          "gullShoulderReady",
+          "gullShoulderTurn",
+          "gullShoulderRecover",
+          "gullShoulderSettle"
+        ],
+        "greatCrestedGrebe": [
+          "crestedNeckReady",
+          "crestedNeckTurn",
+          "crestedNeckRecover",
+          "crestedNeckSettle"
+        ],
+        "littleGrebe": [
+          "littleNeckReady",
+          "littleNeckTurn",
+          "littleNeckRecover",
+          "littleNeckSettle"
+        ]
+      }
+    },
+    "E5": {
+      "budget": 84,
+      "geometry": "ExpansionLargeArtGeometry.swift",
+      "baseAppendSpecies": [
+        "orientalTurtleDove",
+        "eurasianCollaredDove",
+        "uplandBuzzard",
+        "himalayanVulture",
+        "commonPheasant",
+        "greaterCoucal"
+      ],
+      "signatures": {
+        "orientalTurtleDove": [
+          "turtleShoulderReady",
+          "turtleShoulderTurn",
+          "turtleShoulderLift",
+          "turtleShoulderSettle"
+        ],
+        "eurasianCollaredDove": [
+          "collaredTurnReady",
+          "collaredTurnEase",
+          "collaredTurnReturn",
+          "collaredTurnSettle"
+        ],
+        "uplandBuzzard": [
+          "uplandWatchReady",
+          "uplandWatchLoosen",
+          "uplandWatchFold",
+          "uplandWatchSettle"
+        ],
+        "himalayanVulture": [
+          "vultureGazeReady",
+          "vultureGazeDraw",
+          "vultureGazeRecover",
+          "vultureGazeSettle"
+        ],
+        "commonPheasant": [
+          "pheasantPeerReady",
+          "pheasantPeerLower",
+          "pheasantPeerLift",
+          "pheasantPeerSettle"
+        ],
+        "greaterCoucal": [
+          "coucalLiftReady",
+          "coucalLiftGape",
+          "coucalLiftClose",
+          "coucalLiftSettle"
+        ]
+      }
+    }
+  },
+  "signatureWindows": {
+    "silkyStarling": {
+      "cycle": 13.32,
+      "start": 3.0,
+      "duration": 2.2
+    },
+    "crestedMyna": {
+      "cycle": 9.48,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "greatCrestedGrebe": {
+      "cycle": 19.0,
+      "start": 5.0,
+      "duration": 2.4
+    },
+    "daurianRedstart": {
+      "cycle": 6.6,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "taiwanBarbet": {
+      "cycle": 17.16,
+      "start": 4.0,
+      "duration": 2.8
+    },
+    "groundTit": {
+      "cycle": 11.92,
+      "start": 3.0,
+      "duration": 2.4
+    },
+    "greatEgret": {
+      "cycle": 26.92,
+      "start": 5.0,
+      "duration": 3.0
+    },
+    "uplandBuzzard": {
+      "cycle": 26.44,
+      "start": 7.0,
+      "duration": 3.0
+    },
+    "littleGrebe": {
+      "cycle": 19.0,
+      "start": 5.0,
+      "duration": 2.4
+    },
+    "carrionCrow": {
+      "cycle": 15.24,
+      "start": 3.0,
+      "duration": 2.2
+    },
+    "plainLaughingthrush": {
+      "cycle": 9.48,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "orientalTurtleDove": {
+      "cycle": 14.04,
+      "start": 3.0,
+      "duration": 2.2
+    },
+    "easternSpotBilledDuck": {
+      "cycle": 25.2,
+      "start": 6.0,
+      "duration": 3.0
+    },
+    "eurasianNuthatch": {
+      "cycle": 10,
+      "start": 3,
+      "duration": 2
+    },
+    "rufousBreastedAccentor": {
+      "cycle": 8.76,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "eurasianMagpie": {
+      "cycle": 9.08,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "eurasianGreatTit": {
+      "cycle": 8.52,
+      "start": 2.0,
+      "duration": 2.0
+    },
+    "marshTit": {
+      "cycle": 8.36,
+      "start": 2.0,
+      "duration": 2.0
+    },
+    "ashyDrongo": {
+      "cycle": 7.72,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "eurasianCollaredDove": {
+      "cycle": 13.96,
+      "start": 3.0,
+      "duration": 2.2
+    },
+    "greyTreepie": {
+      "cycle": 8.44,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "whiteCheekedStarling": {
+      "cycle": 9.32,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "henricsLaughingthrush": {
+      "cycle": 9.32,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "indianWhiteEye": {
+      "cycle": 5.2,
+      "start": 1.0,
+      "duration": 1.8
+    },
+    "easternCattleEgret": {
+      "cycle": 23.4,
+      "start": 5.0,
+      "duration": 3.0
+    },
+    "commonPheasant": {
+      "cycle": 14.2,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "sootyHeadedBulbul": {
+      "cycle": 17.0,
+      "start": 4.0,
+      "duration": 2.8
+    },
+    "whiteBrowedLaughingthrush": {
+      "cycle": 9.8,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "whiteWagtail": {
+      "cycle": 5.5,
+      "start": 1.0,
+      "duration": 2.2
+    },
+    "blueWhistlingThrush": {
+      "cycle": 8.04,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "redBilledChough": {
+      "cycle": 13.52,
+      "start": 3.0,
+      "duration": 2.4
+    },
+    "redBilledBlueMagpie": {
+      "cycle": 10.6,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "blackThroatedBushtit": {
+      "cycle": 5.2,
+      "start": 1.0,
+      "duration": 1.8
+    },
+    "greenBackedTit": {
+      "cycle": 8.44,
+      "start": 2.0,
+      "duration": 2.0
+    },
+    "blueThroatedBarbet": {
+      "cycle": 17.24,
+      "start": 4.0,
+      "duration": 2.8
+    },
+    "blueFrontedRedstart": {
+      "cycle": 6.6,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "greaterCoucal": {
+      "cycle": 19.24,
+      "start": 4.0,
+      "duration": 2.8
+    },
+    "hornedLark": {
+      "cycle": 8.76,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "redThroatedThrush": {
+      "cycle": 9.32,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "ruddyShelduck": {
+      "cycle": 25.52,
+      "start": 6.0,
+      "duration": 3.0
+    },
+    "blackRedstart": {
+      "cycle": 6.84,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "daurianJackdaw": {
+      "cycle": 14.12,
+      "start": 3.0,
+      "duration": 2.2
+    },
+    "greyCappedGreenfinch": {
+      "cycle": 13.52,
+      "start": 4.0,
+      "duration": 2.6
+    },
+    "silverThroatedBushtit": {
+      "cycle": 5.44,
+      "start": 1.0,
+      "duration": 1.8
+    },
+    "commonTailorbird": {
+      "cycle": 6.36,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "collaredFinchbill": {
+      "cycle": 14.16,
+      "start": 4.0,
+      "duration": 2.6
+    },
+    "himalayanVulture": {
+      "cycle": 32.0,
+      "start": 10.0,
+      "duration": 4.0
+    },
+    "twite": {
+      "cycle": 13.52,
+      "start": 4.0,
+      "duration": 2.6
+    },
+    "yellowBilledBlueMagpie": {
+      "cycle": 10.2,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "ornateSunbird": {
+      "cycle": 11.28,
+      "start": 3.0,
+      "duration": 2.4
+    },
+    "brownBreastedBulbul": {
+      "cycle": 17.08,
+      "start": 4.0,
+      "duration": 2.8
+    },
+    "whiskeredYuhina": {
+      "cycle": 5.44,
+      "start": 1.0,
+      "duration": 1.8
+    },
+    "blackTailedGull": {
+      "cycle": 15.24,
+      "start": 3.0,
+      "duration": 2.2
+    },
+    "blackBulbul": {
+      "cycle": 17.4,
+      "start": 4.0,
+      "duration": 2.8
+    },
+    "littleOwl": {
+      "cycle": 9.5,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "asianBarredOwlet": {
+      "cycle": 12.0,
+      "start": 3.0,
+      "duration": 2.2
+    },
+    "collaredScopsOwl": {
+      "cycle": 19.0,
+      "start": 4.0,
+      "duration": 2.4
+    },
+    "nightHeron": {
+      "cycle": 53.0,
+      "start": 20.0,
+      "duration": 2.0
+    },
+    "plumbeousWaterRedstart": {
+      "cycle": 6.0,
+      "start": 1.5,
+      "duration": 1.4
+    },
+    "littleEgret": {
+      "cycle": 19.0,
+      "start": 4.0,
+      "duration": 2.5
+    },
+    "greyHeron": {
+      "cycle": 29.0,
+      "start": 9.0,
+      "duration": 3.0
+    },
+    "commonKestrel": {
+      "cycle": 13.0,
+      "start": 3.0,
+      "duration": 2.0
+    },
+    "peregrineFalcon": {
+      "cycle": 21.0,
+      "start": 6.0,
+      "duration": 2.6
+    },
+    "blackKite": {
+      "cycle": 24.0,
+      "start": 8.0,
+      "duration": 3.0
+    },
+    "commonBuzzard": {
+      "cycle": 27.0,
+      "start": 10.0,
+      "duration": 3.5
+    },
+    "orientalMagpie": {
+      "cycle": 11.0,
+      "start": 2.0,
+      "duration": 2.0
+    },
+    "azureWingedMagpie": {
+      "cycle": 8.0,
+      "start": 1.5,
+      "duration": 2.0
+    },
+    "largeBilledCrow": {
+      "cycle": 18.0,
+      "start": 4.0,
+      "duration": 2.4
+    },
+    "hoopoe": {
+      "cycle": 12.0,
+      "start": 3.0,
+      "duration": 2.4
+    },
+    "barnSwallow": {
+      "cycle": 10.0,
+      "start": 2.0,
+      "duration": 1.5
+    },
+    "mallard": {
+      "cycle": 22.0,
+      "start": 5.0,
+      "duration": 3.0
+    },
+    "asianKoel": {
+      "cycle": 17.0,
+      "start": 3.0,
+      "duration": 2.8
+    },
+    "swinhoesWhiteEye": {
+      "cycle": 6.5,
+      "start": 1.0,
+      "duration": 1.6
+    },
+    "blackHeadedGull": {
+      "cycle": 16.0,
+      "start": 4.0,
+      "duration": 2.0
+    },
+    "whimbrel": {
+      "cycle": 15.0,
+      "start": 4.0,
+      "duration": 2.5
+    },
+    "piedKingfisher": {
+      "cycle": 14.0,
+      "start": 3.0,
+      "duration": 2.0
+    },
+    "eurasianWoodcock": {
+      "cycle": 9.0,
+      "start": 2.0,
+      "duration": 2.8
+    },
+    "blackDrongo": {
+      "cycle": 7.0,
+      "start": 2.0,
+      "duration": 1.6
+    },
+    "chinesePondHeron": {
+      "cycle": 25.0,
+      "start": 6.0,
+      "duration": 2.6
+    },
+    "yellowRumpedFlycatcher": {
+      "cycle": 7.5,
+      "start": 1.5,
+      "duration": 1.4
+    },
+    "yellowBrowedWarbler": {
+      "cycle": 5.5,
+      "start": 1.0,
+      "duration": 1.8
+    },
+    "greatTit": {
+      "cycle": 8.5,
+      "start": 2.0,
+      "duration": 2.0
+    },
+    "commonMoorhen": {
+      "cycle": 10.5,
+      "start": 2.0,
+      "duration": 2.0
+    },
+    "greatSpottedWoodpecker": {
+      "cycle": 12.0,
+      "start": 4.0,
+      "duration": 1.6
+    },
+    "vinousThroatedParrotbill": {
+      "cycle": 6.8,
+      "start": 1.0,
+      "duration": 2.0
+    },
+    "blackWingedStilt": {
+      "cycle": 18.5,
+      "start": 5.0,
+      "duration": 3.0
+    },
+    "eurasianCoot": {
+      "cycle": 20.0,
+      "start": 6.0,
+      "duration": 2.5
+    },
+    "redBilledLeiothrix": {
+      "cycle": 7.8,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "blackCollaredStarling": {
+      "cycle": 13.5,
+      "start": 3.0,
+      "duration": 2.0
+    },
+    "commonKingfisher": {
+      "cycle": 18.0,
+      "start": 5.0,
+      "duration": 2.0
+    },
+    "littleRingedPlover": {
+      "cycle": 8.0,
+      "start": 1.0,
+      "duration": 1.2
+    },
+    "yellowBilledGrosbeak": {
+      "cycle": 15.5,
+      "start": 4.0,
+      "duration": 2.5
+    },
+    "redFlankedBluetail": {
+      "cycle": 6.2,
+      "start": 1.8,
+      "duration": 1.4
+    },
+    "redWhiskeredBulbul": {
+      "cycle": 10.0,
+      "start": 2.0,
+      "duration": 2.2
+    },
+    "treeSparrow": {
+      "cycle": 9.0,
+      "start": 1.0,
+      "duration": 1.0
+    },
+    "lightVentedBulbul": {
+      "cycle": 11.5,
+      "start": 3.0,
+      "duration": 2.0
+    },
+    "spottedDove": {
+      "cycle": 14.5,
+      "start": 2.0,
+      "duration": 2.6
+    },
+    "chineseBlackbird": {
+      "cycle": 12.5,
+      "start": 2.0,
+      "duration": 1.8
+    },
+    "magpieRobin": {
+      "cycle": 8.8,
+      "start": 1.0,
+      "duration": 2.6
+    },
+    "longTailedShrike": {
+      "cycle": 16.5,
+      "start": 3.0,
+      "duration": 3.0
+    }
+  },
+  "baseClipDurations": {
+    "watch": [
+      0.15,
+      1.7,
+      0.15
+    ],
+    "alert": [
+      0.12,
+      1.13,
+      0.25
+    ],
+    "rest": [
+      0.25,
+      3.5,
+      0.25
+    ],
+    "takeoffPreparation": [
+      0.25,
+      0.2
+    ]
+  }
+}

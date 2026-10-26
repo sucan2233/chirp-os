@@ -2,9 +2,8 @@ import XCTest
 @testable import BirdingCore
 
 final class GalleryPreviewCapabilityTests: XCTestCase {
-    func testPreviouslyHiddenExpansionIdleArtworkIsVisibleInOther() {
-        // The original peck/bow/watch/scan regressions, excluding crestedMyna,
-        // whose reviewed signature preview now takes priority (covered below).
+    func testPreviouslyHiddenExpansionSpeciesNowPlayCompleteSignatures() {
+        // Formerly hidden peck/bow/watch/scan species now have authored signatures.
         let species: [SpeciesID] = [
             .silkyStarling, .greatCrestedGrebe, .uplandBuzzard, .littleGrebe,
             .carrionCrow, .plainLaughingthrush, .orientalTurtleDove,
@@ -17,7 +16,7 @@ final class GalleryPreviewCapabilityTests: XCTestCase {
             let frames = Set((0..<300).map {
                 GalleryPose.frame(id, age: Double($0) / 30, fps: 20, action: .other)
             })
-            XCTAssertEqual(frames, Set(["idle0", "idle1", "idle2"]), id.rawValue)
+            XCTAssertEqual(frames, Set(LivelyMotion.frameNames(for:id)+["stand"]), id.rawValue)
         }
     }
 
@@ -63,6 +62,7 @@ final class GalleryPreviewCapabilityTests: XCTestCase {
                     GalleryPose.frame(id, age: age, fps: 20, action: .resting)), id.rawValue)
             }
         }
-        XCTAssertEqual(GalleryPose.frame(.silkyStarling, age: -1, fps: 20, action: .other), "idle0")
+        XCTAssertEqual(GalleryPose.frame(.silkyStarling, age: -1, fps: 20, action: .other),
+                       GalleryPose.frame(.silkyStarling, age: 0, fps: 20, action: .other))
     }
 }

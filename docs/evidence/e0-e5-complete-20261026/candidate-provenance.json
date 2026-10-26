@@ -1,0 +1,13 @@
+{
+  "build": {
+    "signedSHA256": "ba449c85b774cbc5282b4434bb0834bfc18c0f570aa7dbddb5c570c56b691464",
+    "removedSignatureLinkeditVMSize": 4784128,
+    "normalizedSHA256": "f0f6b880ac40f14fb37f782eb09cd3a23d5017db52db3f1191662b313e1bb3fa"
+  },
+  "candidate": {
+    "signedSHA256": "9e4cf3f62d54eb36077274f80241f91d6ea47e154b2eb96a9bdcee2aa90589c5",
+    "removedSignatureLinkeditVMSize": 4734976,
+    "normalizedSHA256": "f0f6b880ac40f14fb37f782eb09cd3a23d5017db52db3f1191662b313e1bb3fa"
+  },
+  "comparison": "Original files untouched. Copies stripped using codesign --remove-signature differ only in the __LINKEDIT segment VM-size field at offset 3472 (8 bytes); after normalizing that field, all bytes match. Candidate strict signature verification passed."
+}

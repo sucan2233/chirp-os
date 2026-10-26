@@ -259,3 +259,26 @@ python3 scripts/preview-m8-art.py --output-dir "$PWD/.build/m8-complete-evidence
 `preview-m8-art.py`依赖Pillow；可使用工作区配套Python运行时。素材审计使用冻结的`scripts/m8-art-contract.json`，不能从待验导出反推预期值。历史M8a/E0证据保留，不覆盖。`--verify-m8-motion`兼容旧`--verify-pilot-motion`入口，覆盖所有已交付特色及全目录中英手册预览。
 
 性能对照需从`f06448f`创建隔离参考源码，仅复制同一个`MotionBenchmark.swift`及CLI入口，分别Release编译。顺序交替运行两版，记录每次结果；CPU p95采用逐帧进程CPU时间、nearest-rank第95百分位，不能把总运行秒数或冷启动峰值当成稳定桌面性能。详细范围、结果和限制见[M8交付记录](M8-COMPLETE-ACCEPTANCE.md)。
+
+
+### E0–E5 百鸟动作统一验证（当前流程）
+
+历史M8/E0命令应在对应提交执行；当前 `audit-expansion-capabilities.py` 与 parity 已升级为全54扩展种，禁止写入既有证据路径。新基线为 `2d56542`，本期E1–E5追加672帧，E0原84帧保留。全部实现完成后统一执行：
+
+```sh
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CHIRPOS_DEVELOPMENT_BUILD=1 CHIRPOS_APP_PATH="$PWD/dist/E0-E5-20261026/ChirpOS Dev.app" bash scripts/build.sh
+.build/release/Birding --export-shared "$PWD/shared"
+.build/release/Birding --export-behavior-fixtures "$PWD/shared/behavior-fixtures/v1"
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test -c release
+python3 scripts/test-species-parity.py
+python3 scripts/audit-expansion-art.py --output "$PWD/.build/expansion-complete-evidence/art.json"
+python3 scripts/audit-expansion-capabilities.py --output "$PWD/.build/expansion-complete-evidence/capabilities.json"
+.build/release/Birding --verify-expansion-motion "$PWD/.build/expansion-complete-evidence/native"
+.build/release/Birding --export-pose-previews "$PWD/.build/expansion-complete-evidence/previews"
+python3 scripts/preview-m8-art.py --contract scripts/expansion-art-contract.json --batch-prefix E --output-dir "$PWD/.build/expansion-complete-evidence/contacts" --gifs "$PWD/.build/expansion-complete-evidence/previews"
+.build/release/Birding --benchmark-motion "$PWD/.build/expansion-complete-evidence/benchmark.json"
+```
+
+素材预期独立冻结在 `scripts/expansion-art-contract.json`，应核对4195旧槽逐像素不变、672新槽、4867总槽和100种完整片段；六批E对照图包含已交付E0。600个GIF覆盖100种×三尺度×双朝向，解码不替代人工看图。Pillow可使用配套Python运行时。模拟版本22，记录格式1，旧版本必须拒绝，22个共享场景必须重新导出。
+
+性能参考源码取 `2d56542`，复制同一份当前 `MotionBenchmark.swift`（该基线已有CLI）；两版均Release，用相同12种扩展鸟工作负载交替运行三轮，避免与导出/编译争用CPU。数据是受控仿真和离屏绘制指标，不能充当真实窗口跟随、菜单暂停、睡眠或物理双屏验收。候选独立保存在dist，不替换已装版。实际结果与限制见[E0–E5交付记录](E0-E5-COMPLETE-ACCEPTANCE.md)。
