@@ -10,7 +10,7 @@ enum PilotMotionVerification {
             var added=0
             for species in LivelyMotion.species {
                 let art=BirdArt(species:species)
-                let names=M8PilotArtGeometry.frameNames(for:species)+ExpansionPilotArtGeometry.frameNames(for:species)
+                let names=M8PilotArtGeometry.frameNames(for:species)+ExpansionPilotArtGeometry.frameNames(for:species)+M8ArtCatalog.appendedFrameNames(for:species)
                 added+=names.count
                 try art.validateHitCaches()
                 checks["\(species.rawValue)-hitCaches"]=true
@@ -20,7 +20,9 @@ enum PilotMotionVerification {
                     checks["\(species.rawValue)-variant\(variant)"]=clip.map{$0.requiredFrames.isSubset(of:Set(art.frames.keys))} ?? false
                 }
             }
-            checks["exactly158AppendedFrames"]=added==158
+            checks["exactly608M8AndE0Frames"]=added==608
+            checks["all46OriginalSpeciesHaveSignature"]=Set(SpeciesBehaviorProfile.legacySpecies).isSubset(of:Set(LivelyMotion.species))
+            checks["all46OriginalSpeciesHaveFoundation"]=Set(SpeciesBehaviorProfile.legacySpecies).isSubset(of:Set(SpeciesBehaviorProfile.poseSpecies))
             try ObservationJournalUIVerification.run(into:&checks,folder:folder)
             let data=try JSONSerialization.data(withJSONObject:checks,options:[.prettyPrinted,.sortedKeys])
             try data.write(to:folder.appendingPathComponent("checks.json"),options:.atomic)

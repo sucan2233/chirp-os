@@ -1,0 +1,308 @@
+{
+  "baseline": "f06448f",
+  "method": "git diff --cached --numstat; Swift and Python source only. Native Verification.swift and MotionBenchmark.swift counted as tools; exportedJSON/art/docs/evidence not counted as code.",
+  "totals": {
+    "productionSwift": {
+      "files": 21,
+      "added": 3393,
+      "deleted": 16,
+      "net": 3377
+    },
+    "coreTests": {
+      "files": 18,
+      "added": 347,
+      "deleted": 62,
+      "net": 285
+    },
+    "tools": {
+      "files": 8,
+      "added": 809,
+      "deleted": 32,
+      "net": 777
+    }
+  },
+  "files": [
+    {
+      "file": "platforms/macos/Sources/Birding/DetailedBirdArt.swift",
+      "added": 5,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/GalleryPreviewCapabilityVerification.swift",
+      "added": 10,
+      "deleted": 4,
+      "category": "tools"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/InsectCatchArtVerification.swift",
+      "added": 4,
+      "deleted": 3,
+      "category": "tools"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/Localization.swift",
+      "added": 2,
+      "deleted": 3,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/M6ContentVerification.swift",
+      "added": 7,
+      "deleted": 7,
+      "category": "tools"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/M8CommonArt.swift",
+      "added": 323,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/M8DistinctArt.swift",
+      "added": 423,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/M8RaptorArt.swift",
+      "added": 407,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/M8SmallArt.swift",
+      "added": 412,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/M8WetlandArt.swift",
+      "added": 484,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/MotionBenchmark.swift",
+      "added": 100,
+      "deleted": 0,
+      "category": "tools"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/PilotMotionVerification.swift",
+      "added": 4,
+      "deleted": 2,
+      "category": "tools"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/PixelArt.swift",
+      "added": 9,
+      "deleted": 6,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/SharedArt.swift",
+      "added": 1,
+      "deleted": 1,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/SpeciesSettingsWindow.swift",
+      "added": 3,
+      "deleted": 1,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/Birding/main.swift",
+      "added": 4,
+      "deleted": 1,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/BehaviorRecording.swift",
+      "added": 1,
+      "deleted": 1,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/LivelyMotion.swift",
+      "added": 2,
+      "deleted": 2,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/M8ArtCatalog.swift",
+      "added": 33,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/M8CommonArtGeometry.swift",
+      "added": 204,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/M8DistinctArtGeometry.swift",
+      "added": 261,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/M8RaptorArtGeometry.swift",
+      "added": 272,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/M8SmallArtGeometry.swift",
+      "added": 292,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/M8WetlandArtGeometry.swift",
+      "added": 250,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/PoseClip.swift",
+      "added": 1,
+      "deleted": 0,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Sources/BirdingCore/Behavior/SpeciesBehaviorProfile.swift",
+      "added": 4,
+      "deleted": 1,
+      "category": "productionSwift"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/BathRecordingTests.swift",
+      "added": 2,
+      "deleted": 2,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/BehaviorRecordingTests.swift",
+      "added": 6,
+      "deleted": 6,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/CourtshipRecordingTests.swift",
+      "added": 2,
+      "deleted": 2,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/ExpansionTests.swift",
+      "added": 2,
+      "deleted": 2,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/FlycatcherInsectCatchRecordingTests.swift",
+      "added": 2,
+      "deleted": 2,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/FoodTrayTests.swift",
+      "added": 1,
+      "deleted": 1,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/GalleryPreviewCapabilityTests.swift",
+      "added": 4,
+      "deleted": 7,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/HabitatObjectTests.swift",
+      "added": 1,
+      "deleted": 1,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/InsectCatchRecordingTests.swift",
+      "added": 2,
+      "deleted": 2,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/LeafCarryRecordingTests.swift",
+      "added": 2,
+      "deleted": 2,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/LivelyMotionTests.swift",
+      "added": 5,
+      "deleted": 5,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/M8CompletionTests.swift",
+      "added": 48,
+      "deleted": 0,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/M8SmallArtGeometryTests.swift",
+      "added": 96,
+      "deleted": 0,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/M8WetlandArtGeometryTests.swift",
+      "added": 140,
+      "deleted": 0,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/NestRecordingTests.swift",
+      "added": 2,
+      "deleted": 2,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/PoseClipTests.swift",
+      "added": 18,
+      "deleted": 20,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/SpeciesBehaviorProfileTests.swift",
+      "added": 12,
+      "deleted": 6,
+      "category": "coreTests"
+    },
+    {
+      "file": "platforms/macos/Tests/BirdingCoreTests/VisitorGiftRecordingTests.swift",
+      "added": 2,
+      "deleted": 2,
+      "category": "coreTests"
+    },
+    {
+      "file": "scripts/audit-m8-art.py",
+      "added": 466,
+      "deleted": 0,
+      "category": "tools"
+    },
+    {
+      "file": "scripts/preview-m8-art.py",
+      "added": 93,
+      "deleted": 0,
+      "category": "tools"
+    },
+    {
+      "file": "scripts/test-species-parity.py",
+      "added": 125,
+      "deleted": 16,
+      "category": "tools"
+    }
+  ]
+}

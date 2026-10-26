@@ -1,10 +1,23 @@
 #!/usr/bin/env python3
 """Protect the separately compiled desktop timelines and atlas contract from drift."""
 import json
+import importlib.util
+import math
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+# Import definitions only; the pixel audit remains a separate explicit command.
+audit_spec = importlib.util.spec_from_file_location('chirp_m8_contract', ROOT / 'scripts/audit-m8-art.py')
+m8 = importlib.util.module_from_spec(audit_spec)
+previous_bytecode = sys.dont_write_bytecode
+try:
+    sys.dont_write_bytecode = True
+    audit_spec.loader.exec_module(m8)
+finally:
+    sys.dont_write_bytecode = previous_bytecode
+contract, frozen_signatures, m8_appended, m8_delivered, m8_membership = m8.load_contract(ROOT / 'scripts/m8-art-contract.json')
 swift = (ROOT / 'platforms/macos/Sources/BirdingCore/SpeciesBehavior.swift').read_text()
 csharp = (ROOT / 'platforms/windows/ChirpOS.Core/SpeciesBehavior.cs').read_text()
 source = json.loads((ROOT / 'platforms/macos/Sources/BirdingCore/Resources/species.json').read_text())
@@ -43,8 +56,9 @@ for bird in ('treeSparrow', 'lightVentedBulbul'):
 carry_frames = ['carryLook', 'carryLower', 'carryGrip', 'carryPlace']
 for bird in ('treeSparrow', 'azureWingedMagpie'):
     expected_extras[bird] += carry_frames
-expected_extras['barnSwallow'] += ['catchOpen', 'catchClose', 'catchRecover']
-expected_extras['yellowRumpedFlycatcher'] = ['catchOpen', 'catchClose', 'catchRecover']
+catch_frames = ['catchOpen', 'catchClose', 'catchRecover']
+expected_extras['barnSwallow'] += catch_frames
+expected_extras['yellowRumpedFlycatcher'] = catch_frames.copy()
 courtship_frames = ['courtRaise', 'courtBow0', 'courtBow1', 'courtBowRecover', 'courtObserve']
 expected_extras['spottedDove'] += courtship_frames
 nest_build_frames = ['nestPlace', 'nestAdjust0', 'nestAdjust1', 'nestSettle']
@@ -64,42 +78,88 @@ signature_frames = {
     'greatEgret': ['neckPoise', 'neckReach', 'neckObserve', 'neckRecover'],
 }
 for bird, names in signature_frames.items():
+    assert names == frozen_signatures[bird], f'Pilot signature contract changed: {bird}'
     expected_extras[bird] += names
+# Preserve the entire f06448f layout before appending M8b-f. In particular the
+# flycatcher's catch frames are already at 34..36, before its new base pack.
+baseline_extras = {bird: names.copy() for bird, names in expected_extras.items()}
+assert sum(len(names) for names in baseline_extras.values()) == 345
+for bird, names in m8_appended.items():
+    expected_extras[bird] = expected_extras.get(bird, []) + names
+signature_frames = frozen_signatures
+assert len(signature_frames) == len(expected_extras) == 52
+assert len(m8_appended) == 40 and sum(map(len, m8_appended.values())) == 450
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
     assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'
+    assert len(names) == len(set(names)), f'Duplicate frame names: {bird}'
+    old_names = frames + baseline_extras.get(bird, [])
+    assert names[:len(old_names)] == old_names, f'Historical frame indices moved: {bird}'
+for batch, budget in m8.BATCH_BUDGETS.items():
+    delivered_count = sum(len(names) for bird, names in m8_delivered.items() if m8_membership[bird] == batch)
+    assert delivered_count == budget, f'{batch} delivery budget differs'
+    appended_count = sum(len(specific[bird]) - len(frames) - len(baseline_extras.get(bird, []))
+                         for bird in contract['batches'][batch]['signatures'])
+    assert appended_count == (budget if batch in m8.CURRENT_BATCHES else 0), f'{batch} append budget differs'
 
-assert sum(len(names) - len(frames) for names in specific.values()) == 345, 'Local appended poses were lost or expanded'
-assert sum(len(specific.get(bird, frames)) for bird in ids) == 3745, 'M8a/E0 atlas frame-slot budget differs'
+assert sum(len(names) - len(frames) for names in specific.values()) == 795, 'Local appended poses were lost or expanded'
+assert sum(len(specific.get(bird, frames)) for bird in ids) == 4195, 'Complete M8/E0 atlas frame-slot budget differs'
+assert sum(len(names) for bird, names in m8_delivered.items() if m8_membership[bird] != 'E0') == 524
+assert sum(len(names) for bird, names in m8_delivered.items() if m8_membership[bird] == 'E0') == 84
 
 support = json.loads((ROOT / 'shared/species-support.json').read_text())
-assert {row['species'] for row in support} == ids, 'Missing species support audit'
+assert len(support) == 100 and {row['species'] for row in support} == ids, 'Missing or duplicate species support audit'
 for row in support:
     assert not row['missingPoseFrames'], f"Incomplete enhanced pose pack: {row['species']}"
     assert set(row['poseFrames']).issubset(specific.get(row['species'], frames)), 'Support audit differs from atlas'
+    assert row['poseFrames'] == (pose_frames if row['species'] in signature_frames else []), 'Base pose support scope differs'
 flycatcher = next(row for row in support if row['species'] == 'yellowRumpedFlycatcher')
-assert flycatcher['poseFrames'] == [], 'Catch-only flycatcher was added to the base pose pack'
-assert len(specific['yellowRumpedFlycatcher']) == 37, 'Flycatcher must append exactly three frames after the common 34'
+assert flycatcher['poseFrames'] == pose_frames, 'Flycatcher base pack missing'
+assert specific['yellowRumpedFlycatcher'][34:37] == catch_frames, 'Flycatcher historical catch indices moved'
+assert specific['yellowRumpedFlycatcher'][37:47] == pose_frames, 'Flycatcher base pack must follow catch'
+assert len(specific['yellowRumpedFlycatcher']) == 51, 'Flycatcher must append 10 base and 4 signature frames'
 metadata = manifest['poseClips']
 assert set(metadata) == set(expected_extras), 'Pose/catch metadata omits a delivered species or expands scope'
-assert sum(bool(row['poseFrames']) for row in support) == 23
+assert sum(bool(row['poseFrames']) for row in support) == 52
 for bird, names in signature_frames.items():
-    for variant in range(2):
+    clips = metadata[bird]['clips']
+    assert {key for key in clips if key.startswith('signature.')} == {'signature.v0', 'signature.v1'}
+    policy = metadata[bird]['signaturePolicy']
+    assert policy['variants'] == 2 and policy['recordsObservation'] is False
+    assert policy['sideOnly'] is (bird in ('greatSpottedWoodpecker', 'eurasianNuthatch'))
+    assert all(m8.finite_positive(policy[key]) for key in ('cycle', 'start', 'duration'))
+    assert policy['start'] + policy['duration'] <= policy['cycle']
+    for kind, sequence in m8.BASE_CLIPS.items():
+        clip = clips[kind]
+        assert [f['name'] for f in clip['frames']] == sequence, f'Incomplete base clip: {bird}/{kind}'
+        assert clip['foot'] == {'x': 29, 'y': 39} and clip['maximumLoops'] == 1
+        assert clip['recovery'] == 'currentEngineState'
+    for variant, weights in enumerate(([0.20, 0.30, 0.22, 0.28], [0.28, 0.20, 0.32, 0.20])):
         clip = metadata[bird]['clips'][f'signature.v{variant}']
         assert [f['name'] for f in clip['frames']] == names
+        assert clip['id'] == f'{bird}.signature.v{variant}'
         assert clip['maximumLoops'] == 1
         assert clip['foot'] == {'x': 29, 'y': 39}
-    assert metadata[bird]['signaturePolicy']['recordsObservation'] is False
+        assert clip['recovery'] == 'currentEngineState'
+        assert all(m8.finite_positive(f['duration']) and math.isclose(f['duration'], weight * policy['duration'],
+                   rel_tol=0, abs_tol=1e-9) for f, weight in zip(clip['frames'], weights)), f'Wrong cadence: {bird}/v{variant}'
+    for key in list(m8.BASE_CLIPS) + ['signature.v0', 'signature.v1']:
+        for frame in clips[key]['frames']:
+            anchor = metadata[bird]['beakAnchors'][frame['name']]
+            assert len(anchor) == 2 and all(math.isfinite(v) and 0 <= v < 48 for v in anchor)
+            assert all(abs(frame['beak'][axis] - anchor[index]) < 1e-9
+                       for index, axis in enumerate(('x', 'y'))), f'Clip bill drift: {bird}/{key}'
 
-assert set(metadata['yellowRumpedFlycatcher']['clips']) == {'insectCatchRecovery'}, 'Flycatcher exported unprovided clips'
+assert set(metadata['yellowRumpedFlycatcher']['clips']) == set(m8.BASE_CLIPS) | {'insectCatchRecovery', 'signature.v0', 'signature.v1'}, 'Flycatcher exported unprovided clips'
 transport_frames = [f'fly{i}' for i in range(8)] + [f'land{i}' for i in range(3)] + [f'glide{i}' for i in range(3)] + [f'bank{i}' for i in range(3)] + ['bound', 'stand']
 for bird in ('barnSwallow', 'yellowRumpedFlycatcher'):
-    assert set(metadata[bird]['transportBeakAnchors']) == set(transport_frames + expected_extras['yellowRumpedFlycatcher']), f'Incomplete catch beak geometry: {bird}'
+    assert set(metadata[bird]['transportBeakAnchors']) == set(transport_frames + catch_frames), f'Incomplete or expanded catch beak geometry: {bird}'
 for bird in ('treeSparrow', 'azureWingedMagpie'):
     assert set(metadata[bird]['transportBeakAnchors']) == set(transport_frames + carry_frames), f'Incomplete carry beak geometry: {bird}'
 magpie = metadata['azureWingedMagpie']
-assert len(specific['azureWingedMagpie']) == 48, 'Magpie must append only four carry frames after its historical 44'
-assert set(magpie['clips']) == {'watch', 'alert', 'rest', 'takeoffPreparation', 'visitorGiftPickup', 'visitorGiftRelease'}, 'Gift clips changed unrelated magpie capability'
+assert len(specific['azureWingedMagpie']) == 52 and specific['azureWingedMagpie'][44:48] == carry_frames, 'Magpie historical carry prefix changed'
+assert specific['azureWingedMagpie'][48:] == signature_frames['azureWingedMagpie']
+assert set(magpie['clips']) == {'watch', 'alert', 'rest', 'takeoffPreparation', 'visitorGiftPickup', 'visitorGiftRelease', 'signature.v0', 'signature.v1'}, 'Gift clips changed unrelated magpie capability'
 pickup = magpie['clips']['visitorGiftPickup']
 release = magpie['clips']['visitorGiftRelease']
 assert [frame['name'] for frame in pickup['frames']] == ['carryLook', 'carryLower', 'carryGrip', 'carryLook']
@@ -112,10 +172,11 @@ for frame, expected in (('carryGrip', [40, 39]), ('carryPlace', [42, 23])):
 dove = metadata['spottedDove']
 historical_dove = frames + feeding_frames + pose_frames + courtship_frames
 assert len(historical_dove) == 53 and specific['spottedDove'][:53] == historical_dove, 'Dove nesting changed the historical 53 prefix'
-assert len(specific['spottedDove']) == 61 and specific['spottedDove'][53:] == carry_frames + nest_build_frames, 'Dove must append exactly eight nest poses'
+assert len(specific['spottedDove']) == 65 and specific['spottedDove'][53:61] == carry_frames + nest_build_frames, 'Dove historical eight nest poses changed'
+assert specific['spottedDove'][61:] == signature_frames['spottedDove']
 assert specific['spottedDove'][48:53] == courtship_frames, 'Courtship no longer follows the historical 48'
 assert set(dove['clips']) == {'watch', 'alert', 'rest', 'takeoffPreparation', 'courtshipInitiator', 'courtshipObserver',
-                            'nestMaterialPickup', 'nestMaterialPlace', 'nestBuild'}
+                            'nestMaterialPickup', 'nestMaterialPlace', 'nestBuild', 'signature.v0', 'signature.v1'}
 assert set(dove['courtshipBeakAnchors']) == set(courtship_frames + ['stand'])
 for frame, expected in zip(courtship_frames, ([39.5, 13], [41, 24], [41.5, 30], [40, 19], [38.5, 16])):
     for key in ('beakAnchors', 'courtshipBeakAnchors'):
@@ -164,6 +225,54 @@ for row in support:
         if allowed:
             assert not behavior['missingFrames']
 assert not next(b for b in dove_support['behaviors'] if b['kind'] == 'leafCarry')['productAllowed'], 'Nest art granted ordinary leaf carry'
+
+# Presentation coverage must not silently widen any ecological whitelist.
+dedicated_species = {
+    'edgePeek': {'treeSparrow', 'chineseBlackbird', 'hoopoe', 'whimbrel', 'lightVentedBulbul', 'magpieRobin'},
+    'chase': {'treeSparrow', 'barnSwallow', 'swinhoesWhiteEye', 'lightVentedBulbul', 'azureWingedMagpie', 'blackCollaredStarling', 'redWhiskeredBulbul'},
+    'travelTogether': {'treeSparrow', 'barnSwallow', 'spottedDove', 'lightVentedBulbul', 'azureWingedMagpie', 'blackCollaredStarling', 'redWhiskeredBulbul'},
+    'allopreening': {'barnSwallow', 'swinhoesWhiteEye'},
+    'fixedPerchVisit': {'treeSparrow', 'barnSwallow', 'swinhoesWhiteEye', 'redWhiskeredBulbul', 'magpieRobin', 'redBilledLeiothrix', 'lightVentedBulbul'},
+    'foodTrayVisit': {'treeSparrow', 'spottedDove'},
+    'bathVisit': {'treeSparrow', 'lightVentedBulbul'},
+    'leafCarry': {'treeSparrow'},
+    'insectCatch': {'barnSwallow', 'yellowRumpedFlycatcher'},
+    'visitorGift': {'azureWingedMagpie'},
+    'courtshipDisplay': {'spottedDove'},
+    'nestMaterialCarry': {'spottedDove'},
+    'nestBuild': {'spottedDove'},
+    'flockPass': {'treeSparrow', 'barnSwallow', 'swinhoesWhiteEye', 'lightVentedBulbul', 'azureWingedMagpie', 'mallard', 'blackHeadedGull', 'blackCollaredStarling'},
+}
+e0_species = set(contract['batches']['E0']['signatures'])
+legacy_species = set(signature_frames) - e0_species
+remaining_expansion = ids - set(signature_frames)
+assert len(legacy_species) == 46 and len(e0_species) == 6 and len(remaining_expansion) == 48
+for row in support:
+    bird = row['species']
+    behaviors = {b['kind']: b for b in row['behaviors']}
+    assert len(behaviors) == len(row['behaviors']) and set(dedicated_species) <= set(behaviors)
+    for kind, behavior in behaviors.items():
+        allowed = (bird in dedicated_species[kind] if kind in dedicated_species else
+                   kind == 'relocate' or bird in legacy_species or (bird in e0_species and kind in m8.BASE_CLIPS))
+        assert behavior['productAllowed'] is allowed, f'Ecological permission changed: {bird}/{kind}'
+        assert behavior['contentSupported'] is (allowed and not behavior['missingFrames']), f'Content support differs: {bird}/{kind}'
+    review = row['contentReview']
+    assert review['sidePerching'] is (bird in ('greatSpottedWoodpecker', 'eurasianNuthatch'))
+    assert review['managedBehaviorReviewPending'] is (bird not in legacy_species)
+    if bird in legacy_species:
+        assert review['cohort'] == 'local-46' and review['fallbackFrames'] == {}
+    else:
+        assert review['cohort'] == ('expansion-e0-partial' if bird in e0_species else 'upstream-v0.7-base')
+        fallbacks = ['stretch', 'shake', 'poop0', 'poop1'] + ([] if bird == 'eurasianNuthatch' else ['cling0', 'cling1', 'peck0', 'peck1'])
+        assert review['fallbackFrames'] == dict.fromkeys(fallbacks, 'stand')
+        capabilities = {'standing', 'blinking', 'flight', 'landing'}
+        if bird in e0_species:
+            capabilities |= {'observationPose', 'alertPose', 'restPose', 'takeoffPose'}
+        assert set(row['capabilities']) == capabilities, f'Expansion capability scope changed: {bird}'
+
+recording_source = (ROOT / 'platforms/macos/Sources/BirdingCore/Behavior/BehaviorRecording.swift').read_text()
+version_match = re.search(r'\bengineVersion\s*=\s*(\d+)', recording_source)
+assert version_match and int(version_match.group(1)) == 21, 'M8 simulation version must be 21; fixtures must be re-exported from source'
 
 prop_manifest = json.loads((ROOT / 'shared/art/props/manifest.json').read_text())
 leaf = prop_manifest['leafToken']

@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-26",
+  "baseline": "f06448f1682780e3fc4fee1f4f613f5268292a03",
+  "status": "M8 implementation and bounded automated acceptance complete",
+  "coreTests": {
+    "passed": 1055,
+    "failed": 0,
+    "seconds": 78.28,
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test -c release",
+    "firstAttempt": "No tests executed: system default CommandLineTools lacks XCTest. Retry with installed full Xcode passed all1055 tests; no product code changes."
+  },
+  "build": {
+    "currentReleasePassed": true,
+    "seconds": 191.69,
+    "baselineReleasePassed": true,
+    "baselineSeconds": 220.04,
+    "candidateSignedAndVerified": true,
+    "candidatePath": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/dist/M8-20261026/ChirpOS Dev.app",
+    "installed": false,
+    "pushed": false
+  },
+  "nativeChecks": {
+    "passed": 1116,
+    "failed": 0,
+    "scope": "AppKit art caches, bilingual100-species handbook, settings text and isolated observation UI verifier. No real desktop lifecycle claim.",
+    "isolatedVerifierMaxRSSBytes": 570490880,
+    "isolatedVerifierPeakMemoryFootprintBytes": 646645176
+  },
+  "artAudit": {
+    "passed": 14192,
+    "failed": 0,
+    "currentSlots": 4195,
+    "deliveredSlots": 608,
+    "e0Slots": 84,
+    "m8Slots": 524,
+    "newSlots": 450,
+    "newSlotsCompared": 450,
+    "oldSlots": 3745,
+    "oldSlotsCompared": 3745
+  },
+  "previews": {
+    "gifCount": 312,
+    "decodedFrames": 31200,
+    "scales": [
+      0.5,
+      1,
+      2
+    ],
+    "directions": [
+      "left",
+      "right"
+    ],
+    "framesPerGIF": 100,
+    "frameDurationMilliseconds": 50,
+    "loop": 0,
+    "review": "All six M8 contact sheets visually inspected; six representative species reviewed at0.5x-left and2x-right at0.4/1.0/1.7s. This is sampling, not manual inspection of all31,200frames.",
+    "samples": [
+      "treeSparrow",
+      "blackDrongo",
+      "greyHeron",
+      "collaredScopsOwl",
+      "hoopoe",
+      "yellowRumpedFlycatcher"
+    ]
+  },
+  "replayFixtures": [
+    {
+      "file": "activity-rhythm.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "5f154dd44d1216d08d1856b694db7091eef51ae4bff5dba87e1db23e03afa969"
+    },
+    {
+      "file": "allopreening.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "f86ae89e26579fd8d6c7c92b57e2367d1033b86a6d5037e48a2ec1a382b558c3"
+    },
+    {
+      "file": "attention.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "13bc1c658f8aa7ef9a2bae601130542cd4af35c802786e031936a11f8ed545d6"
+    },
+    {
+      "file": "bath.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "73ccbcc96ef793d1fd0a4cb1e28ca00c5d231c1e76f9152fc91b5fbee93182fd"
+    },
+    {
+      "file": "chase.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "de0b8f91687f4c1900aebdaa5f8d957ea15fdfa4cb5a706728f307203313c5ba"
+    },
+    {
+      "file": "courtship-display.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "ce97c035d0dbfecdbc3a8b0f9a4ef330a9b2c3d5d873e72b363e71ed8b4abb51"
+    },
+    {
+      "file": "edge-peek.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "08b2cf046db52ea375d8dc55ea268aaa030e193f752802af2e4e48e6f6086288"
+    },
+    {
+      "file": "fixed-perch.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "226c3a7f39f221a247109605fd5f8d77c8c281a8404d39d54d11b5b8c2cc7521"
+    },
+    {
+      "file": "flycatcher-insect-catch.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "bac340a84a077223ae8e2c996540705b8fb318314a88f42a13a20bf242f2895c"
+    },
+    {
+      "file": "food-tray.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "b1d2a4d7a723f02ead2180f0ea61a55a26a15656443a1dcd3fdeb5546824275e"
+    },
+    {
+      "file": "insect-catch.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "b1ce79c1a4e0bc0697fdc89e3ffff22bf9716fdd094184b279d67a4b0c40f894"
+    },
+    {
+      "file": "interruptions.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "19ad62350c0d261c50b71a5746c678b872a76905466e3908b97863d225dc6cc6"
+    },
+    {
+      "file": "leaf-carry.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "089488642ea7ebad4cb631a244adf14b484aa79619486109bd39cdcfd2006c1d"
+    },
+    {
+      "file": "leaf.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "ead4b1792d06396865cc5c7abcc47b77c1d71d2a11250bf0b41c95b712afef61"
+    },
+    {
+      "file": "nest-build.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "c14544d793f0eaa03b3d6482ae7c310aea9d78762797a221ec61ffb198f29a23"
+    },
+    {
+      "file": "nest-material-carry.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "69f935ecfc51ec68a702fcf33f376cfadc55aafbf9ea8ba4a69f6c7f805906dd"
+    },
+    {
+      "file": "returning-visitor.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "5de6ca3af6d827455a1e3b3c80400fd637ba3374242f41c65aa2e8a9b651ce38"
+    },
+    {
+      "file": "side-hop.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "e8ea5fd1e2dbbd83e5069a7b35d5eba9e8646989a283125db8807396bc3129a5"
+    },
+    {
+      "file": "social.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "6d6bce4c85128916f8dc7883ae55329c40a11d8ec65546421f54c754fcf78ff4"
+    },
+    {
+      "file": "takeoff-preparation.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "e5d31740d32004edf09f66ca0046b37a1f304d0140d951dfcdb7c781edf0e93b"
+    },
+    {
+      "file": "travel-together.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "86d3c4bc25a2425dc735d62bd8a29213a01f7888f08149572686f610460915c6"
+    },
+    {
+      "file": "visitor-gift.json",
+      "expectedSemanticallyUnchanged": true,
+      "sha256": "d1860d0650868cf7d7712d11418a9878be8e582b09587d994071401590c115c3"
+    }
+  ],
+  "performance": "performance.json",
+  "logs": {
+    "build-round1.log": {
+      "sha256": "30de3430d9c2fd42893b9a039d090b9431aedc6af32996313d55dde1c6bceeb4",
+      "bytes": 498,
+      "archive": "build-round1.log.gz",
+      "archiveSHA256": "d05a500028e43274ef85391d9e7fbd1c7c03f2ceffac311c3b6e5580f3a40cd6"
+    },
+    "baseline-build.log": {
+      "sha256": "44adf45abaf9e80c88edd4b80fb2eea6524b61481ebeefec52089f7b4935351a",
+      "bytes": 409,
+      "archive": "baseline-build.log.gz",
+      "archiveSHA256": "0d665d83e7b60fd673ee0428eb964854d54bdfc03fdbaaf9801a1feabdaa58bc"
+    },
+    "tests-round1.log": {
+      "sha256": "b7b3e76a6a9ee19ac656a0c7a7c757bae9ea221535a144b971e1865f53f511fd",
+      "bytes": 783,
+      "archive": "tests-round1.log.gz",
+      "archiveSHA256": "9ce978b6c6a03a7ed875c06dc801283162561c96a9094e1ac6e791db7bbba932"
+    },
+    "tests-round2.log": {
+      "sha256": "b4435ca0ab5cbb3fac79d9ed65fa42510a13c41fe3945d527a8e321c52c593a0",
+      "bytes": 314855,
+      "archive": "tests-round2.log.gz",
+      "archiveSHA256": "f669d90c2c738b2cff37481debb8372200dd9ec5a61fefd24dfa9b73d00a4212"
+    },
+    "export-shared-round1.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "archive": "export-shared-round1.log.gz",
+      "archiveSHA256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    "export-fixtures.log": {
+      "sha256": "8ce1fa3b438f468f863c4d0a1550bb034367fb430d7fdad3ad03a2468e56f7ff",
+      "bytes": 93,
+      "archive": "export-fixtures.log.gz",
+      "archiveSHA256": "94a6f743dfc263b12d206d576799111aa6e0326cb22a86faf5f49695b2b5104a"
+    },
+    "parity-round1.log": {
+      "sha256": "70f620a758fd136000531240316fa366a5c3e039b2e726deeea26ccb0edd0f35",
+      "bytes": 98,
+      "archive": "parity-round1.log.gz",
+      "archiveSHA256": "aa2a4c77beaca4f0a84ac6c80d5d42f23d90f71d928db016e41653dd3b70a3a2"
+    },
+    "art-round1.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "archive": "art-round1.log.gz",
+      "archiveSHA256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    "native-round1.log": {
+      "sha256": "90e82582b6a38f7570895ed66ac7062a4a37944a5d57b157f81908c33f53391b",
+      "bytes": 808,
+      "archive": "native-round1.log.gz",
+      "archiveSHA256": "1be6dc34a37a7a2b916a1d9c919aea840111ab4e5d244d0ae7f048b9463facd0"
+    },
+    "previews-export.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "archive": "previews-export.log.gz",
+      "archiveSHA256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    "preview-validation.log": {
+      "sha256": "d5b1e9a05a4e359102881c2bd3bb53e28b1c1f6627c54c1c304a3107d935f221",
+      "bytes": 29,
+      "archive": "preview-validation.log.gz",
+      "archiveSHA256": "a4790640a3ec800d2458e3bb9df01e6c0f229b67f14915fa4a3a2336d0e605e6"
+    },
+    "expansion.log": {
+      "sha256": "f975c3ccd9e0997728dc9f4fd03a1ed234b1cd0c41dbbcef28dab297e677bf27",
+      "bytes": 1423,
+      "archive": "expansion.log.gz",
+      "archiveSHA256": "edcd19ffa22512a777683663affdada13462f5e90b2d49698023f645a65d8f03"
+    }
+  },
+  "remainingUnverified": [
+    "Actual window following",
+    "Actual menu pause/resume",
+    "System sleep/wake",
+    "External monitors/hotplug: no equipment",
+    "Prior U nest2x pointer/targetInvalid and gift0.5x startup evidence: see U-INTEGRATION-ACCEPTANCE.md",
+    "Windows compilation and macOS motion scheduling port"
+  ],
+  "excludedScope": [
+    "E1-E5",
+    "M9"
+  ],
+  "references": [
+    {
+      "id": "R3",
+      "url": "https://www.rspb.org.uk/birds-and-wildlife/hoopoe",
+      "retrieved": "2026-10-26",
+      "savedSourceSHA256": "fed23847e6139f08f8a3e11a056056f565ac69ca550b0a742fecc5aec313f55f",
+      "supports": "Hoopoe movable crest, curved bill and black-white wing pattern; not the specific four-frame sequence or timing."
+    }
+  ]
+}

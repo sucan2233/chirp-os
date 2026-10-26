@@ -57,17 +57,18 @@ final class BirdArt {
     static let courtshipNames = CourtshipArtGeometry.frameNames
     static let nestCarryNames = NestArtGeometry.carryFrameNames
     static let nestBuildNames = NestArtGeometry.buildFrameNames
-    /// Export catch-only species without granting the twelve-species base pack.
+    /// Export all delivered pose packs and any separately reviewed catch art.
     /// Keep all historical preview rows first, appending only new species.
     static var poseExportSpecies:[SpeciesID] {
-        let base=SpeciesBehaviorProfile.poseSpecies
-        let catchSpecies=SpeciesBehaviorProfile.species(for:.insectCatch).filter{!base.contains($0)}
-        return base+catchSpecies+SpeciesBehaviorProfile.species(for:.visitorGift).filter{!base.contains($0) && !catchSpecies.contains($0)}
+        let initial=SpeciesBehaviorProfile.initialPoseSpecies
+        let historicalCatch=SpeciesBehaviorProfile.species(for:.insectCatch).filter{!initial.contains($0)}
+        let historical=initial+historicalCatch
+        return historical+SpeciesBehaviorProfile.poseSpecies.filter{!historical.contains($0)}
     }
     static func names(for species:SpeciesID) -> [String] {
         names + (SpeciesBehaviorProfile.profile(for:species).allows(.allopreening) ? allopreeningNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.foodTrayVisit) ? feedingNames : []) +
-            SpeciesBehaviorProfile.profile(for:species).poseFrameNames +
+            (SpeciesBehaviorProfile.initialPoseSpecies.contains(species) ? poseNames:[]) +
             (SpeciesBehaviorProfile.peekSpecies.contains(species) ? peekNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.bathVisit) ? bathNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.leafCarry) || SpeciesBehaviorProfile.profile(for:species).allows(.visitorGift) ? carryNames : []) +
@@ -75,7 +76,9 @@ final class BirdArt {
             (CourtshipArtGeometry.species.contains(species) ? courtshipNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.nestMaterialCarry) ? nestCarryNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.nestBuild) ? nestBuildNames : []) +
-            LivelyMotion.frameNames(for:species)
+            // New packs append after every old contact frame (notably flycatcher catch34–36).
+            M8ArtCatalog.appendedFrameNames(for:species) +
+            (M8ArtCatalog.species.contains(species) ? []:LivelyMotion.frameNames(for:species))
     }
     let frames: [String: CGImage]
     let species: SpeciesID

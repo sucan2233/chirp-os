@@ -42,7 +42,10 @@ if let path=argument("--export-behavior-fixtures") {
 }
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
-if let path = argument("--verify-pilot-motion") {
+if let path = argument("--benchmark-motion") {
+    exit(MotionBenchmark.run(to:URL(fileURLWithPath:path)))
+}
+if let path = argument("--verify-m8-motion") ?? argument("--verify-pilot-motion") {
     exit(PilotMotionVerification.run(to:URL(fileURLWithPath:path)))
 }
 if let path = argument("--export-pose-previews") {

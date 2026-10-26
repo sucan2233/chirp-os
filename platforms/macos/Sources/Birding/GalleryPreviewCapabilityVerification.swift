@@ -19,13 +19,11 @@ extension ObservationJournalUIVerification {
         }
         handbook.showWindow(nil)
         handbook.selectAllSpecies()
-        let expansion = desktop.catalog.species.map(\.id).filter {
-            SpeciesBehaviorProfile.profile(for: $0).isExpansionSpecies
-        }
+        let catalogSpecies = desktop.catalog.species.map(\.id)
         for language in [AppLanguage.chinese, .english] {
             desktop.language = language
             handbook.relocalize()
-            for species in expansion {
+            for species in catalogSpecies {
                 handbook.selectSpecies(species)
                 let frames = Set(desktop.arts[species]?.frames.keys.map {$0} ?? [])
                 let audit = SpeciesSupportAudit(species: species, availableFrames: frames)
@@ -64,6 +62,14 @@ extension ObservationJournalUIVerification {
                         fps: profile.flapFPS, action: .other, speedMultiplier: profile.speed)
                 }
             }
+            let settings=SpeciesSettingsWindow(desktop:desktop)
+            if let scroll=settings.tabs.tabViewItems[2].view as? NSScrollView,
+               let field=scroll.documentView?.subviews.compactMap({$0 as? NSTextField}).first(where:{$0.identifier?.rawValue=="perchActivitiesHelp"}) {
+                checks["m8PoseHelpFits-\(language.rawValue)"]=field.stringValue.contains("52") &&
+                    field.toolTip==language.poseSpeciesNames &&
+                    (field.cell?.cellSize(forBounds:field.bounds).height ?? .infinity)<=field.frame.height
+            } else {checks["m8PoseHelpFits-\(language.rawValue)"]=false}
+            settings.cancel()
             checks["galleryPreviewHelp-\(language.rawValue)"] = handbook.previewAction.toolTip?.contains(
                 language.text("预览不解锁鸟种或动作", "Previews unlock neither species nor actions")) == true
         }

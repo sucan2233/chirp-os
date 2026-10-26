@@ -1953,7 +1953,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -1967,7 +1971,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "longTailedShrike"
   },
@@ -2516,7 +2529,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -2530,7 +2547,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "plumbeousWaterRedstart"
   },
@@ -3079,7 +3105,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -3093,7 +3123,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "greyHeron"
   },
@@ -3354,7 +3393,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -3368,7 +3411,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "commonKestrel"
   },
@@ -3629,7 +3681,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -3643,7 +3699,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "peregrineFalcon"
   },
@@ -3904,7 +3969,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -3918,7 +3987,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "blackKite"
   },
@@ -4179,7 +4257,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -4193,7 +4275,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "commonBuzzard"
   },
@@ -5023,7 +5114,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -5037,7 +5132,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "largeBilledCrow"
   },
@@ -5298,7 +5402,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -5312,7 +5420,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "hoopoe"
   },
@@ -6144,7 +6261,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -6158,7 +6279,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "asianKoel"
   },
@@ -6703,7 +6833,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -6717,7 +6851,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "blackHeadedGull"
   },
@@ -6978,7 +7121,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -6992,7 +7139,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "whimbrel"
   },
@@ -7253,7 +7409,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -7267,7 +7427,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "piedKingfisher"
   },
@@ -7528,7 +7697,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -7542,7 +7715,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "eurasianWoodcock"
   },
@@ -7803,7 +7985,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -7817,7 +8003,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "blackDrongo"
   },
@@ -8078,7 +8273,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -8092,7 +8291,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "chinesePondHeron"
   },
@@ -8352,6 +8560,10 @@
       "greeting",
       "flight",
       "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose",
       "insectCatching"
     ],
     "contentReview" : {
@@ -8366,7 +8578,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "yellowRumpedFlycatcher"
   },
@@ -8627,7 +8848,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -8641,7 +8866,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "yellowBrowedWarbler"
   },
@@ -9190,7 +9424,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -9204,7 +9442,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "commonMoorhen"
   },
@@ -9753,7 +10000,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -9767,7 +10018,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "vinousThroatedParrotbill"
   },
@@ -10028,7 +10288,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -10042,7 +10306,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "blackWingedStilt"
   },
@@ -10303,7 +10576,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -10317,7 +10594,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "eurasianCoot"
   },
@@ -10866,7 +11152,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -10880,7 +11170,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "blackCollaredStarling"
   },
@@ -11141,7 +11440,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -11155,7 +11458,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "commonKingfisher"
   },
@@ -11416,7 +11728,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -11430,7 +11746,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "littleRingedPlover"
   },
@@ -11691,7 +12016,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -11705,7 +12034,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "yellowBilledGrosbeak"
   },
@@ -11966,7 +12304,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -11980,7 +12322,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "redFlankedBluetail"
   },
@@ -12241,7 +12592,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -12255,7 +12610,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "collaredScopsOwl"
   },
@@ -12516,7 +12880,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -12530,7 +12898,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "asianBarredOwlet"
   },

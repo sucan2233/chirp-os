@@ -26,9 +26,9 @@ final class LivelyMotionTests:XCTestCase {
         guard let row=engine.renderSnapshot().first else {return false}
         return LivelyMotion.frameNames(for:row.species).contains(row.frameName)
     }
-    func testTwelveClipsHaveBoundedTwoVariantSequencesAndStableIndividualChoice() throws {
-        XCTAssertEqual(LivelyMotion.species.count,12)
-        XCTAssertEqual(Set(LivelyMotion.species).count,12)
+    func testFiftyTwoClipsHaveBoundedTwoVariantSequencesAndStableIndividualChoice() throws {
+        XCTAssertEqual(LivelyMotion.species.count,52)
+        XCTAssertEqual(Set(LivelyMotion.species).count,52)
         XCTAssertEqual(Set((1...32).map{LivelyMotion.variant(seed:73,bird:BirdID(UInt64($0)))}),[0,1])
         for species in LivelyMotion.species {
             let a=try XCTUnwrap(LivelyMotion.clip(species:species)),b=try XCTUnwrap(LivelyMotion.clip(species:species,variant:1))
@@ -39,7 +39,7 @@ final class LivelyMotionTests:XCTestCase {
             XCTAssertNil(a.sample(at:a.duration));XCTAssertNil(a.sample(at:-1))
             XCTAssertNil(LivelyMotion.previewFrame(species:species,age:.infinity))
         }
-        XCTAssertNil(LivelyMotion.clip(species:.treeSparrow))
+        XCTAssertNil(LivelyMotion.clip(species:.marshTit))
     }
     func testDesktopPlaybackVisitsAllFourFramesAtAllCallbackRatesWithoutObservations() {
         for species in LivelyMotion.species {
@@ -97,7 +97,7 @@ final class LivelyMotionTests:XCTestCase {
             let wrong=fixture(species,side:!LivelyMotion.isSideMotion(species))
             let missing=fixture(species,frames:false)
             for engine in [wrong,missing] {
-                for _ in 0..<360 {engine.advance(1.0/30);XCTAssertFalse(isSignature(engine))}
+                for _ in 0..<Int((LivelyMotion.window(species).start+LivelyMotion.window(species).duration+0.5)*30) {engine.advance(1.0/30);XCTAssertFalse(isSignature(engine))}
             }
         }
     }

@@ -21,9 +21,8 @@ enum AppLanguage: String {
     var poseSpeciesNames:String {
         SpeciesBehaviorProfile.poseSpecies.map { name($0) }.joined(separator:text("、",", "))
     }
-    /// One shared species list keeps the twelve English names readable without
-    /// repeating them inside the shorter preview and takeoff help controls.
-    var poseSupportReference:String {text("以上专用鸟种","the pose species listed above")}
+    /// Refer to the handbook/list tooltip rather than repeating 52 species names.
+    var poseSupportReference:String {text("观鸟手册中支持这些动作的鸟种","species supporting these poses in the birding handbook")}
     var leafCarrySupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.leafCarry)+text("。",".")}
     var insectCatchSupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.insectCatch)+text("。",".")}
     var visitorGiftSupport:String {text("所需鸟种：","Required species: ")+supportedSpeciesNames(for:.visitorGift)+text("。",".")}

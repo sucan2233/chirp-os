@@ -25,7 +25,12 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         .lightVentedBulbul,.redWhiskeredBulbul,.chineseBlackbird,.magpieRobin,
         .swinhoesWhiteEye,.azureWingedMagpie,.redBilledLeiothrix,.littleOwl,
         .greatTit,.orientalMagpie,.greatSpottedWoodpecker,.mallard,.littleEgret,
-        .eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret]
+        .eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret,
+        .yellowBrowedWarbler,.vinousThroatedParrotbill,.yellowRumpedFlycatcher,
+        .redFlankedBluetail,.plumbeousWaterRedstart,.longTailedShrike,.blackDrongo,.yellowBilledGrosbeak,
+        .greyHeron,.chinesePondHeron,.blackWingedStilt,.whimbrel,.littleRingedPlover,.commonMoorhen,.eurasianCoot,
+        .commonKestrel,.peregrineFalcon,.blackKite,.commonBuzzard,.collaredScopsOwl,.asianBarredOwlet,.piedKingfisher,
+        .blackHeadedGull,.hoopoe,.commonKingfisher,.eurasianWoodcock,.blackCollaredStarling,.largeBilledCrow,.asianKoel]
     private let expansionPilot:[SpeciesID] = [.eurasianGreatTit,.whiteWagtail,.indianWhiteEye,
         .crestedMyna,.eurasianNuthatch,.greatEgret]
     private let pilotSpecies:[SpeciesID] = [.greatTit,.orientalMagpie,.greatSpottedWoodpecker,
@@ -104,7 +109,8 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
     }
 
     func testTwelveMotionPilotsKeepExpansionReviewLimitedToFourPoseBehaviors() {
-        XCTAssertEqual(LivelyMotion.species,pilotSpecies)
+        XCTAssertEqual(Array(LivelyMotion.species.prefix(12)),pilotSpecies)
+        XCTAssertEqual(Set(LivelyMotion.species),Set(poseSpecies))
         XCTAssertEqual(pilotSpecies.count,12)
         XCTAssertEqual(Set(pilotSpecies).count,12)
         XCTAssertEqual(SpeciesBehaviorProfile.expansionPilotSpecies,expansionPilot)
@@ -123,11 +129,11 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         }
     }
 
-    func testPosePackageIsExactlyTenFramesForOnlyTheTwentyThreeAuthorizedSpecies() {
+    func testPosePackageCoversAllOriginalSpeciesAndOnlySixReviewedExpansionSpecies() {
         XCTAssertEqual(SpeciesBehaviorProfile.poseSpecies,poseSpecies)
-        XCTAssertEqual(poseSpecies.count,23)
-        XCTAssertEqual(Set(poseSpecies).count,23)
-        XCTAssertEqual(SpeciesID.allCases.filter{!poseSpecies.contains($0)}.count,77)
+        XCTAssertEqual(poseSpecies.count,52)
+        XCTAssertEqual(Set(poseSpecies).count,52)
+        XCTAssertEqual(SpeciesID.allCases.filter{!poseSpecies.contains($0)}.count,48)
         XCTAssertEqual(PoseClip.frameNames,poseFrames)
         XCTAssertEqual(Set(poseFrames).count,10)
         for species in SpeciesID.allCases {

@@ -21,11 +21,8 @@ final class GalleryPreviewCapabilityTests: XCTestCase {
         }
     }
 
-    func testOtherReusesSignatureClipsForGroundPilots() throws {
-        let species: [SpeciesID] = [
-            .greatTit, .orientalMagpie, .magpieRobin, .littleEgret, .mallard,
-            .eurasianGreatTit, .whiteWagtail, .indianWhiteEye, .crestedMyna, .greatEgret
-        ]
+    func testOtherReusesEveryDeliveredTopSignatureClip() throws {
+        let species = LivelyMotion.species.filter{!LivelyMotion.isSideMotion($0)}
         for id in species {
             var frames = Set<String>()
             for step in 0..<600 {
@@ -56,11 +53,11 @@ final class GalleryPreviewCapabilityTests: XCTestCase {
         }
     }
 
-    func testSelectingOtherPreservesLegacyNonPilotAndRestSelection() {
+    func testSelectingOtherUsesKiteSignatureAndPreservesRestSelection() {
         for step in 0..<300 {
             let age = Double(step) / 30
             XCTAssertEqual(GalleryPose.frame(.blackKite, age: age, fps: 20, action: .other),
-                           GalleryPose.frame(.blackKite, age: age, fps: 20, action: .resting))
+                           LivelyMotion.previewFrame(species: .blackKite, age: age))
             for id in [SpeciesID.crestedMyna, .silkyStarling, .greatCrestedGrebe, .eurasianNuthatch] {
                 XCTAssertTrue(["stand", "breathe", "blink"].contains(
                     GalleryPose.frame(id, age: age, fps: 20, action: .resting)), id.rawValue)

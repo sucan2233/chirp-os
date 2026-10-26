@@ -80,12 +80,12 @@ final class ExpansionTests:XCTestCase {
         let resting=Set((0..<1200).map{GalleryPose.frame(.nightHeron,age:Double($0)/30,fps:20)})
         XCTAssertEqual(resting,Set(["stand","breathe","blink"]))
         let night=Set((0..<300).map{GalleryPose.frame(.nightHeron,age:Double($0)/30,fps:20,action:.other)})
-        for frame in ["stretch","shake","poop0","poop1"] {XCTAssertTrue(night.contains(frame),frame)}
+        XCTAssertEqual(night,Set(LivelyMotion.frameNames(for:.nightHeron)+["stand"]))
         let wood=Set((0..<150).map{GalleryPose.frame(.greatSpottedWoodpecker,age:Double($0)/30,fps:24,action:.other)})
         XCTAssertEqual(wood,Set(["cling0","sideBrace","sideDraw","sideTap","sideRecover"]))
         for i in 0..<300 {
             let t=Double(i)/30
-            XCTAssertEqual(GalleryPose.frame(.blackKite,age:t,fps:20,action:.other), GalleryPose.frame(.blackKite,age:t,fps:20,action:.resting))
+            XCTAssertEqual(GalleryPose.frame(.blackKite,age:t,fps:20,action:.other), LivelyMotion.previewFrame(species:.blackKite,age:t))
             XCTAssertTrue(GalleryPose.frame(.blackKite,age:t,fps:20,action:.flapping).hasPrefix("fly"))
             XCTAssertEqual(GalleryPose.frame(.blackKite,age:t,fps:20,action:.gliding),"glide1")
         }

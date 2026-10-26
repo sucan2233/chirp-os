@@ -237,3 +237,25 @@ python3 scripts/audit-expansion-capabilities.py --output docs/evidence/e0-capabi
 ```
 
 `--verify-pilot-motion`使用隔离手册/档案路径及真实AppKit控件，不要求用户移动鼠标或改变已装版；它不等于真实睡眠、多屏或桌面场景全回归。预览包括pilot的before、signature.v0/v1与基础动作，三尺度双朝向。`test-species-parity.py`继续保护旧跨平台时序和共享图集契约；新的macOS特色调度未据此宣称Windows同步。原始54种盘点JSON保留为历史，更新审计禁止覆盖该路径。
+
+### M8 完整动作包统一验证
+
+全部素材、接入及测试实现完成后，统一执行；本批相对`f06448f`追加450帧，原46种M8累计524帧，E0另计84帧。
+
+```sh
+CHIRPOS_DEVELOPMENT_BUILD=1 CHIRPOS_APP_PATH="$PWD/dist/M8-20261026/ChirpOS Dev.app" bash scripts/build.sh
+.build/release/Birding --export-shared "$PWD/shared"
+.build/release/Birding --export-behavior-fixtures "$PWD/shared/behavior-fixtures/v1"
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test -c release
+python3 scripts/test-species-parity.py
+python3 scripts/audit-m8-art.py --output "$PWD/.build/m8-complete-evidence/art.json"
+python3 scripts/audit-expansion-capabilities.py --output "$PWD/.build/m8-complete-evidence/expansion.json"
+.build/release/Birding --verify-m8-motion "$PWD/.build/m8-complete-evidence/native"
+.build/release/Birding --export-pose-previews "$PWD/.build/m8-complete-evidence/previews"
+python3 scripts/preview-m8-art.py --output-dir "$PWD/.build/m8-complete-evidence/contacts" --gifs "$PWD/.build/m8-complete-evidence/previews"
+.build/release/Birding --benchmark-motion "$PWD/.build/m8-complete-evidence/benchmark.json"
+```
+
+`preview-m8-art.py`依赖Pillow；可使用工作区配套Python运行时。素材审计使用冻结的`scripts/m8-art-contract.json`，不能从待验导出反推预期值。历史M8a/E0证据保留，不覆盖。`--verify-m8-motion`兼容旧`--verify-pilot-motion`入口，覆盖所有已交付特色及全目录中英手册预览。
+
+性能对照需从`f06448f`创建隔离参考源码，仅复制同一个`MotionBenchmark.swift`及CLI入口，分别Release编译。顺序交替运行两版，记录每次结果；CPU p95采用逐帧进程CPU时间、nearest-rank第95百分位，不能把总运行秒数或冷启动峰值当成稳定桌面性能。详细范围、结果和限制见[M8交付记录](M8-COMPLETE-ACCEPTANCE.md)。

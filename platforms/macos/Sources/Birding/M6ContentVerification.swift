@@ -109,7 +109,7 @@ enum M6ContentVerification {
             [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,.lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]
         checks["m6ExactlyFourSpeciesTenOrderedPoseNames"]=Array(SpeciesBehaviorProfile.poseSpecies.prefix(4))==m6bSpecies &&
             PoseClip.frameNames==names && BirdArt.poseNames==names && Set(names).count==10
-        checks["m6cExactlyTwelvePoseSpeciesAndThreePeekNames"]=SpeciesBehaviorProfile.poseSpecies==species &&
+        checks["m6cExactlyTwelvePoseSpeciesAndThreePeekNames"]=Array(SpeciesBehaviorProfile.poseSpecies.prefix(species.count))==species &&
             species.count==12 && SpeciesBehaviorProfile.peekSpecies==peekSpecies && BirdArt.peekNames==peekNames
         checks["m6LegacyCommonThirtyFourFramesRetained"]=BirdArt.names.count==34
         for id in peekSpecies {
@@ -250,10 +250,10 @@ enum M6ContentVerification {
             CatchArtGeometry.species==ids && SpeciesBehaviorProfile.catchFrameNames==names && BirdArt.catchNames==names
         checks["m6f1CatchReferenceFootUnchanged"]=CatchArtGeometry.footAnchor==CGPoint(x:29,y:39) &&
             PoseClip.footAnchor==PoseClip.Anchor(29,39)
-        checks["m6f2FlycatcherCatchOnlyThirtySevenFrames"]=BirdArt.names(for:.yellowRumpedFlycatcher)==BirdArt.names+names &&
-            BirdArt.names(for:.yellowRumpedFlycatcher).count==37 &&
-            !SpeciesBehaviorProfile.poseSpecies.contains(.yellowRumpedFlycatcher)
-        checks["m6f2ThirteenExportSpeciesPreserveHistoricalTwelve"]=BirdArt.poseExportSpecies==species+[.yellowRumpedFlycatcher]
+        checks["m6f2FlycatcherCatchPrefixPreservedAfterM8"]=Array(BirdArt.names(for:.yellowRumpedFlycatcher).prefix(37))==BirdArt.names+names &&
+            BirdArt.names(for:.yellowRumpedFlycatcher).count==51 &&
+            SpeciesBehaviorProfile.poseSpecies.contains(.yellowRumpedFlycatcher)
+        checks["m6f2ExportsPreserveHistoricalTwelveAndCatchSpecies"]=Array(BirdArt.poseExportSpecies.prefix(12))==species && BirdArt.poseExportSpecies.contains(.yellowRumpedFlycatcher)
         var all=Set<Data>()
         for id in ids {all.formUnion(try checkCatchSpecies(id,into:&checks,evidence:&evidence,folder:folder))}
         checks["m6f2SixIndependentSpeciesCatchPoses"]=all.count==6
@@ -562,8 +562,8 @@ enum M6ContentVerification {
             }
             for identifier in ["perchActivitiesHelp","perchPreviewHelp","passiveMotionHelp"] {
                 let field=label(identifier)
-                let speciesHelp=label("perchActivitiesHelp")?.stringValue ?? ""
-                let sameScope=identifier=="perchActivitiesHelp" ? field?.stringValue.contains(language.poseSpeciesNames)==true:
+                let speciesHelp=label("perchActivitiesHelp")?.toolTip ?? ""
+                let sameScope=identifier=="perchActivitiesHelp" ? field?.toolTip==language.poseSpeciesNames:
                     field?.stringValue.contains(language.poseSupportReference)==true
                 checks["m6SettingsPoseSpeciesAndHelpFits-\(identifier)-\(suffix)"]=sameScope &&
                     species.allSatisfy{speciesHelp.contains(language.name($0))} &&

@@ -6,7 +6,12 @@ final class PoseClipTests:XCTestCase {
         .lightVentedBulbul,.redWhiskeredBulbul,.chineseBlackbird,.magpieRobin,
         .swinhoesWhiteEye,.azureWingedMagpie,.redBilledLeiothrix,.littleOwl,
         .greatTit,.orientalMagpie,.greatSpottedWoodpecker,.mallard,.littleEgret,
-        .eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret]
+        .eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret,
+        .yellowBrowedWarbler,.vinousThroatedParrotbill,.yellowRumpedFlycatcher,
+        .redFlankedBluetail,.plumbeousWaterRedstart,.longTailedShrike,.blackDrongo,.yellowBilledGrosbeak,
+        .greyHeron,.chinesePondHeron,.blackWingedStilt,.whimbrel,.littleRingedPlover,.commonMoorhen,.eurasianCoot,
+        .commonKestrel,.peregrineFalcon,.blackKite,.commonBuzzard,.collaredScopsOwl,.asianBarredOwlet,.piedKingfisher,
+        .blackHeadedGull,.hoopoe,.commonKingfisher,.eurasianWoodcock,.blackCollaredStarling,.largeBilledCrow,.asianKoel]
     private let expansionPilot:[SpeciesID] = [.eurasianGreatTit,.whiteWagtail,.indianWhiteEye,
         .crestedMyna,.eurasianNuthatch,.greatEgret]
     private var legacyPoseSpecies:[SpeciesID] {species.filter{!expansionPilot.contains($0)}}
@@ -825,26 +830,19 @@ final class PoseClipTests:XCTestCase {
         }
     }
 
-    func testUnlistedSpeciesKeepOldPresentationEvenWithInjectedEnhancementFrames() throws {
-        XCTAssertEqual(species.count,23)
-        XCTAssertEqual(Set(species).count,23)
-        XCTAssertEqual(legacyPoseSpecies.count,17)
-        let legacy=SpeciesCatalog.standard.species.prefix(46).map(\.id)
-        XCTAssertEqual(legacy.filter{!species.contains($0)}.count,29)
-        for bird in legacy where !species.contains(bird) {
+    func testUnreviewedExpansionSpeciesRejectInjectedEnhancementFrames() {
+        XCTAssertEqual(species.count,52)
+        XCTAssertEqual(Set(species).count,52)
+        XCTAssertEqual(legacyPoseSpecies.count,46)
+        let unreviewed=SpeciesCatalog.standard.species.map(\.id).filter{!species.contains($0)}
+        XCTAssertEqual(unreviewed.count,48)
+        for bird in unreviewed {
             for kind in kinds {
-                // Takeoff preparation requires a top-edge destination for every
-                // species, including the woodpecker. Keep the public preview
-                // command and real planner; constrain only this fixture's hosts.
-                let engine=fixture(bird,topOnly:true),control=fixture(bird,enhanced:false,topOnly:true)
-                let run=try start(kind,in:engine),other=try start(kind,in:control)
-                for _ in 0..<6*60 {
-                    XCTAssertEqual(engine.renderSnapshot().first?.frameName,control.renderSnapshot().first?.frameName)
-                    XCTAssertFalse(poseFrames.contains(try XCTUnwrap(engine.renderSnapshot().first).frameName))
-                    engine.advance(BehaviorEngine.step);control.advance(BehaviorEngine.step)
-                }
-                released(engine,run,type:.completed);released(control,other,type:.completed)
-                XCTAssertEqual(events(engine),events(control))
+                let engine=fixture(bird,topOnly:true)
+                XCTAssertNil(SpeciesBehaviorProfile.profile(for:bird).poseClip(for:kind,duration:2))
+                XCTAssertFalse(engine.handle(command(kind,.preview)).accepted)
+                XCTAssertEqual(engine.activeRunCount,0)
+                XCTAssertEqual(engine.leasedBirdCount,0)
             }
         }
     }

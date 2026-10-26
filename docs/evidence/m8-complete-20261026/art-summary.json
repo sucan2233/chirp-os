@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "baseline": "f06448f1682780e3fc4fee1f4f613f5268292a03",
+  "baselineCommit": "f06448f1682780e3fc4fee1f4f613f5268292a03",
+  "baselineManifestSHA256": "a6ce99e33acc4aa6b9994430b6f40b6d7fae0a0d62f5e3bd41b7e58f209029f2",
+  "currentManifestSHA256": "f7ca03d82c212823776ff46255e9efb1eaafcfefa3fde457d5472e13855c557e",
+  "contractSHA256": "0ff359d8966a083fcae5ebb05bf386ef9620ad86be2f84e5ed9a2cd97c65cafe",
+  "supportSHA256": "f7424db318bc26cb55a077e029b1727787ecda03e8583d32d4549e7cc993dbdc",
+  "counts": {
+    "currentSlots": 4195,
+    "deliveredSlots": 608,
+    "e0Slots": 84,
+    "m8Slots": 524,
+    "newSlots": 450,
+    "newSlotsCompared": 450,
+    "oldSlots": 3745,
+    "oldSlotsCompared": 3745
+  },
+  "batches": {
+    "E0": {
+      "appendedThisBatch": 0,
+      "budget": 84,
+      "inspectedSlots": 84,
+      "species": [
+        "crestedMyna",
+        "eurasianGreatTit",
+        "eurasianNuthatch",
+        "greatEgret",
+        "indianWhiteEye",
+        "whiteWagtail"
+      ]
+    },
+    "M8a": {
+      "appendedThisBatch": 0,
+      "budget": 74,
+      "inspectedSlots": 74,
+      "species": [
+        "greatSpottedWoodpecker",
+        "greatTit",
+        "littleEgret",
+        "magpieRobin",
+        "mallard",
+        "orientalMagpie"
+      ]
+    },
+    "M8b": {
+      "appendedThisBatch": 32,
+      "budget": 32,
+      "inspectedSlots": 32,
+      "species": [
+        "azureWingedMagpie",
+        "chineseBlackbird",
+        "lightVentedBulbul",
+        "redBilledLeiothrix",
+        "redWhiskeredBulbul",
+        "spottedDove",
+        "swinhoesWhiteEye",
+        "treeSparrow"
+      ]
+    },
+    "M8c": {
+      "appendedThisBatch": 112,
+      "budget": 112,
+      "inspectedSlots": 112,
+      "species": [
+        "blackDrongo",
+        "longTailedShrike",
+        "plumbeousWaterRedstart",
+        "redFlankedBluetail",
+        "vinousThroatedParrotbill",
+        "yellowBilledGrosbeak",
+        "yellowBrowedWarbler",
+        "yellowRumpedFlycatcher"
+      ]
+    },
+    "M8d": {
+      "appendedThisBatch": 102,
+      "budget": 102,
+      "inspectedSlots": 102,
+      "species": [
+        "blackWingedStilt",
+        "chinesePondHeron",
+        "commonMoorhen",
+        "eurasianCoot",
+        "greyHeron",
+        "littleRingedPlover",
+        "nightHeron",
+        "whimbrel"
+      ]
+    },
+    "M8e": {
+      "appendedThisBatch": 102,
+      "budget": 102,
+      "inspectedSlots": 102,
+      "species": [
+        "asianBarredOwlet",
+        "blackKite",
+        "collaredScopsOwl",
+        "commonBuzzard",
+        "commonKestrel",
+        "littleOwl",
+        "peregrineFalcon",
+        "piedKingfisher"
+      ]
+    },
+    "M8f": {
+      "appendedThisBatch": 102,
+      "budget": 102,
+      "inspectedSlots": 102,
+      "species": [
+        "asianKoel",
+        "barnSwallow",
+        "blackCollaredStarling",
+        "blackHeadedGull",
+        "commonKingfisher",
+        "eurasianWoodcock",
+        "hoopoe",
+        "largeBilledCrow"
+      ]
+    }
+  },
+  "errors": [],
+  "passed": true,
+  "limits": [
+    "Invisible RGB is normalized to zero by the historical PNG decoder.",
+    "Alpha proximity measures native pixel centers, not semantic bill identity.",
+    "Scale/mirror placements are mathematical transforms, not native desktop captures.",
+    "Transparent borders cannot detect geometry already clipped before PNG export.",
+    "Pixel uniqueness does not establish authorship, readable anatomy or motion continuity.",
+    "Simulation replay fixtures and native lifecycle checks belong to unified validation."
+  ],
+  "checksPassed": 14192,
+  "rawAudit": "art-audit.json.gz",
+  "rawSHA256": "bd2dc8f18e2762c6eb1121176f8867e85cd2282b7178709e702addc6542a19ed",
+  "compressedSHA256": "ecce32bf11099f5e24ac59bab17d42d17078adca52ed1b629aa5105943845d11",
+  "note": "Raw audit pendingVisualReview/pendingNativeRuntimeReview describe its isolated scope. Subsequent visual and native checks are recorded in validation.json; actual desktop lifecycle items remain unverified."
+}

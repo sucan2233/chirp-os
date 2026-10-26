@@ -60,7 +60,7 @@ extension BirdArt {
         let poseClips=Self.poseMetadata
         let metadata:[String:Any] = ["schemaVersion":2,"logicalFrameSize":48,"frameSizes":frameSizes,"footAnchor":[29,39],"frames":names,
                                     "speciesFrames":Dictionary(uniqueKeysWithValues:catalog.species.filter{Self.names(for:$0.id) != names}.map{($0.id.rawValue,Self.names(for:$0.id))}),
-                                    "poseClips":poseClips,"poseClock":"owningBehaviorSimulationAge","signatureClock":"existingBirdStateTimeIdleWindow","source":"platforms/macos/Sources/Birding/{PixelArt,SpeciesArt,DetailedBirdArt,ExpansionBirdArt,M8PilotArt,ExpansionPilotArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt,NestArt}.swift; platforms/macos/Sources/BirdingCore/Behavior/{CourtshipArtGeometry,NestArtGeometry,TwigGeometry,M8PilotArtGeometry,ExpansionPilotArtGeometry,LivelyMotion}.swift"]
+                                    "poseClips":poseClips,"poseClock":"owningBehaviorSimulationAge","signatureClock":"existingBirdStateTimeIdleWindow","source":"platforms/macos/Sources/Birding/{PixelArt,SpeciesArt,DetailedBirdArt,ExpansionBirdArt,M8PilotArt,ExpansionPilotArt,M8CommonArt,M8SmallArt,M8WetlandArt,M8RaptorArt,M8DistinctArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt,NestArt}.swift; platforms/macos/Sources/BirdingCore/Behavior/{CourtshipArtGeometry,NestArtGeometry,TwigGeometry,M8PilotArtGeometry,ExpansionPilotArtGeometry,M8ArtCatalog,M8CommonArtGeometry,M8SmallArtGeometry,M8WetlandArtGeometry,M8RaptorArtGeometry,M8DistinctArtGeometry,LivelyMotion}.swift"]
         try JSONSerialization.data(withJSONObject:metadata,options:[.prettyPrinted,.sortedKeys]).write(to:folder.appendingPathComponent("art/manifest.json"))
     }
 }

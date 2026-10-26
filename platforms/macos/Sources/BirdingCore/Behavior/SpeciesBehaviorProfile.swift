@@ -63,10 +63,13 @@ public struct SpeciesBehaviorProfile {
     ]
     public static let ambientFlockSpecies:[SpeciesID] = [.treeSparrow,.barnSwallow,.swinhoesWhiteEye,
         .lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]
-    public static let poseSpecies:[SpeciesID] = [.treeSparrow,.spottedDove,.barnSwallow,.nightHeron,
+    /// Historical order is retained for existing preview/export consumers.
+    public static let initialPoseSpecies:[SpeciesID] = [.treeSparrow,.spottedDove,.barnSwallow,.nightHeron,
         .lightVentedBulbul,.redWhiskeredBulbul,.chineseBlackbird,.magpieRobin,.swinhoesWhiteEye,
         .azureWingedMagpie,.redBilledLeiothrix,.littleOwl,
         .greatTit,.orientalMagpie,.greatSpottedWoodpecker,.mallard,.littleEgret] + expansionPilotSpecies
+    public static let poseSpecies:[SpeciesID] = initialPoseSpecies
+        + M8ArtCatalog.species.filter{!initialPoseSpecies.contains($0)}
     public static let catchFrameNames=["catchOpen","catchClose","catchRecover"]
     public static let courtshipFrameNames=["courtRaise","courtBow0","courtBow1","courtBowRecover","courtObserve"]
     public static let carryFrameNames=["carryLook","carryLower","carryGrip","carryPlace"]

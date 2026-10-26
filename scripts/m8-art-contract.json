@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "f06448f1682780e3fc4fee1f4f613f5268292a03",
+  "provenance": "Budgets/cohorts frozen from M8-SPECIES-ASSET-PLAN and the M8 completion brief; signature names transcribed from the seven authored Geometry sources on 2026-10-26. Never regenerate from shared exports during acceptance.",
+  "budgets": {"baselineSlots": 3745, "appendedSlots": 450, "currentSlots": 4195, "m8Slots": 524, "e0Slots": 84, "supportedSpecies": 52, "unchangedExpansionSpecies": 48, "variantsPerSpecies": 2, "simulationVersion": 21},
+  "coreFrames": ["lookNear", "lookFar", "alertRise", "alertHold", "alertRelax", "restLower", "restTuck", "restWake", "takeoffCrouch", "takeoffPush"],
+  "batches": {
+    "M8a": {
+      "budget": 74,
+      "geometry": "M8PilotArtGeometry.swift",
+      "baseAppendSpecies": ["greatTit", "orientalMagpie", "greatSpottedWoodpecker", "mallard", "littleEgret"],
+      "signatures": {
+        "greatTit": ["inspectLean", "inspectDown", "inspectLift", "inspectSettle"],
+        "orientalMagpie": ["tailPoise", "tailBalance", "tailCounter", "tailSettle"],
+        "greatSpottedWoodpecker": ["sideBrace", "sideDraw", "sideTap", "sideRecover"],
+        "mallard": ["wingLook", "wingReach", "wingSmooth", "wingRecover"],
+        "littleEgret": ["neckPoise", "neckReach", "neckObserve", "neckRecover"],
+        "magpieRobin": ["tailReady", "tailLift", "tailPulse", "tailRecover"]
+      }
+    },
+    "M8b": {
+      "budget": 32,
+      "geometry": "M8CommonArtGeometry.swift",
+      "baseAppendSpecies": [],
+      "signatures": {
+        "treeSparrow": ["fluffReady", "fluffPeck", "fluffLook", "fluffSettle"],
+        "lightVentedBulbul": ["shoulderReady", "shoulderReach", "shoulderSmooth", "shoulderSettle"],
+        "redWhiskeredBulbul": ["callPoise", "callOpen", "callClose", "callSettle"],
+        "chineseBlackbird": ["perchReady", "perchTap", "perchLift", "perchSettle"],
+        "spottedDove": ["preenPoise", "preenShoulder", "preenSmooth", "preenSettle"],
+        "swinhoesWhiteEye": ["gleanReady", "gleanReach", "gleanRecoil", "gleanSettle"],
+        "redBilledLeiothrix": ["dipReady", "dipLow", "dipTurn", "dipSettle"],
+        "azureWingedMagpie": ["balanceReady", "balanceReach", "balanceTurn", "balanceSettle"]
+      }
+    },
+    "M8c": {
+      "budget": 112,
+      "geometry": "M8SmallArtGeometry.swift",
+      "baseAppendSpecies": ["yellowBrowedWarbler", "vinousThroatedParrotbill", "yellowRumpedFlycatcher", "redFlankedBluetail", "plumbeousWaterRedstart", "longTailedShrike", "blackDrongo", "yellowBilledGrosbeak"],
+      "signatures": {
+        "yellowBrowedWarbler": ["canopyReady", "canopyLift", "canopyReturn", "canopySettle"],
+        "vinousThroatedParrotbill": ["roundGather", "roundTurn", "roundSway", "roundSettle"],
+        "yellowRumpedFlycatcher": ["wingPoise", "wingFlick", "wingLean", "wingSettle"],
+        "redFlankedBluetail": ["blueTailReady", "blueTailLift", "blueTailLook", "blueTailSettle"],
+        "plumbeousWaterRedstart": ["rustFanReady", "rustFanOpen", "rustFanLean", "rustFanSettle"],
+        "longTailedShrike": ["vigilPoise", "vigilReach", "vigilHold", "vigilSettle"],
+        "blackDrongo": ["forkPoise", "forkOpen", "forkFold", "forkSettle"],
+        "yellowBilledGrosbeak": ["billLower", "billFlex", "billLift", "billSettle"]
+      }
+    },
+    "M8d": {
+      "budget": 102,
+      "geometry": "M8WetlandArtGeometry.swift",
+      "baseAppendSpecies": ["greyHeron", "chinesePondHeron", "blackWingedStilt", "whimbrel", "littleRingedPlover", "commonMoorhen", "eurasianCoot"],
+      "signatures": {
+        "nightHeron": ["shoulderGather", "shoulderTurn", "shoulderWake", "shoulderSettle"],
+        "greyHeron": ["distantPoise", "distantReach", "distantDraw", "distantSettle"],
+        "chinesePondHeron": ["lowPoise", "lowReach", "lowDraw", "lowSettle"],
+        "blackWingedStilt": ["stiltBalance", "stiltTurn", "stiltInspect", "stiltSettle"],
+        "whimbrel": ["curvePoise", "curveDip", "curveLift", "curveSettle"],
+        "littleRingedPlover": ["ploverLower", "ploverTap", "ploverLift", "ploverSettle"],
+        "commonMoorhen": ["railTailReady", "railTailLift", "railTailFold", "railTailSettle"],
+        "eurasianCoot": ["breastLower", "breastLift", "breastShake", "breastSettle"]
+      }
+    },
+    "M8e": {
+      "budget": 102,
+      "geometry": "M8RaptorArtGeometry.swift",
+      "baseAppendSpecies": ["commonKestrel", "peregrineFalcon", "blackKite", "commonBuzzard", "collaredScopsOwl", "asianBarredOwlet", "piedKingfisher"],
+      "signatures": {
+        "commonKestrel": ["kestrelScanReady", "kestrelScanFocus", "kestrelScanReturn", "kestrelScanSettle"],
+        "peregrineFalcon": ["peregrineWatchReady", "peregrineWatchLow", "peregrineWatchLift", "peregrineWatchSettle"],
+        "blackKite": ["kitePreenReady", "kitePreenReach", "kitePreenFold", "kitePreenSettle"],
+        "commonBuzzard": ["buzzardShoulderReady", "buzzardShoulderLoosen", "buzzardShoulderDraw", "buzzardShoulderSettle"],
+        "littleOwl": ["littleOwlBowReady", "littleOwlBowDip", "littleOwlBowLift", "littleOwlBowSettle"],
+        "collaredScopsOwl": ["scopsTiltReady", "scopsTiltBlink", "scopsTiltOpen", "scopsTiltSettle"],
+        "asianBarredOwlet": ["owletScanReady", "owletScanTurn", "owletScanNod", "owletScanSettle"],
+        "piedKingfisher": ["piedLookReady", "piedLookReach", "piedLookDraw", "piedLookSettle"]
+      }
+    },
+    "M8f": {
+      "budget": 102,
+      "geometry": "M8DistinctArtGeometry.swift",
+      "baseAppendSpecies": ["blackHeadedGull", "hoopoe", "commonKingfisher", "eurasianWoodcock", "blackCollaredStarling", "largeBilledCrow", "asianKoel"],
+      "signatures": {
+        "barnSwallow": ["wingPoise", "wingLower", "wingAttend", "wingSettle"],
+        "blackHeadedGull": ["shoulderTurn", "shoulderStretch", "shoulderDraw", "shoulderSettle"],
+        "hoopoe": ["crestPoise", "crestLower", "crestLift", "crestSettle"],
+        "commonKingfisher": ["downWatch", "downTurn", "downReach", "downSettle"],
+        "eurasianWoodcock": ["billBalance", "billSide", "billLower", "billSettle"],
+        "blackCollaredStarling": ["collarReach", "collarCall", "collarClose", "collarSettle"],
+        "largeBilledCrow": ["nearTurn", "nearBow", "nearLift", "nearSettle"],
+        "asianKoel": ["callReach", "callOpen", "callPulse", "callSettle"]
+      }
+    },
+    "E0": {
+      "budget": 84,
+      "geometry": "ExpansionPilotArtGeometry.swift",
+      "baseAppendSpecies": ["eurasianGreatTit", "whiteWagtail", "indianWhiteEye", "crestedMyna", "eurasianNuthatch", "greatEgret"],
+      "signatures": {
+        "eurasianGreatTit": ["inspectLean", "inspectDown", "inspectLift", "inspectSettle"],
+        "whiteWagtail": ["tailPoise", "tailLift", "tailFall", "tailSettle"],
+        "indianWhiteEye": ["gleanReady", "gleanReach", "gleanRecoil", "gleanSettle"],
+        "crestedMyna": ["peckReady", "peckLower", "peckLift", "peckSettle"],
+        "eurasianNuthatch": ["sideBrace", "sideReach", "sideProbe", "sideRecover"],
+        "greatEgret": ["neckPoise", "neckReach", "neckObserve", "neckRecover"]
+      }
+    }
+  }
+}

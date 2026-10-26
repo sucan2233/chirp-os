@@ -15,10 +15,11 @@ enum InsectCatchArtVerification {
         let metadata=BirdArt.poseMetadata[SpeciesID.yellowRumpedFlycatcher.rawValue] as? [String:Any] ?? [:]
         let clips=metadata["clips"] as? [String:Any] ?? [:]
         let anchors=metadata["transportBeakAnchors"] as? [String:[Double]] ?? [:]
-        checks["flycatcherCatchArtMetadataOnlyCatchWithTwentyTwoAnchors"]=Set(clips.keys)==Set(["insectCatchRecovery"]) &&
+        checks["flycatcherCatchArtMetadataPreservesCatchWithTwentyTwoAnchors"]=Set(clips.keys)==Set(["insectCatchRecovery","watch","alert","rest","takeoffPreparation","signature.v0","signature.v1"]) &&
             Set(anchors.keys)==Set(TransportArtGeometry.frameNames+names) &&
-            SpeciesBehaviorProfile.profile(for:.yellowRumpedFlycatcher).poseFrameNames.isEmpty &&
-            BirdArt.poseExportSpecies==SpeciesBehaviorProfile.poseSpecies+[.yellowRumpedFlycatcher]
+            SpeciesBehaviorProfile.profile(for:.yellowRumpedFlycatcher).poseFrameNames==PoseClip.frameNames &&
+            Set(BirdArt.poseExportSpecies)==Set(SpeciesBehaviorProfile.poseSpecies) &&
+            BirdArt.poseExportSpecies[23] == .yellowRumpedFlycatcher
         var insects=Set<Data>()
         for name in InsectArt.frameNames {
             guard let image=InsectArt.image(name) else {throw failure("Missing insect frame: "+name)}
