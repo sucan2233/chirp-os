@@ -65,7 +65,7 @@ struct FlycatcherInsectCatchPlan {
                   !bird.isCoordinatedFlying,!bird.isSideHopping,!engine.pointerNear(bird),
                   abs(engine.baseHop(for:id,bird:bird))<0.001,
                   let host=engine.world.surfaces.first(where:{$0.id==bird.hostID && $0.pid==bird.hostPID}),
-                  !host.isHabitat,host.isGround || host.layer==0,
+                  host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,
                   requiredFrames.isSubset(of:engine.world.availableFrames[species] ?? []),
                   source != .automatic || engine.perchPlanner.automaticWeight(id,kind:.insectCatch)>0 else {continue}
             let scale=engine.spriteScale(for:bird),slot=LandingReservation(bird:id,host:host,fraction:bird.fraction)
@@ -320,13 +320,13 @@ final class FlycatcherInsectCatchExecution:InsectCatchMotionExecution {
     private func replanReturn(in engine:BehaviorEngine,bird:Bird,revision:UInt64) -> Bool {
         let velocity=bird.coordinatedFlightVelocity ?? .zero
         var targets:[LandingReservation]=[]
-        if let host=plan.originalDestination.host(in:engine),!host.isHabitat,host.isGround || host.layer==0 {
+        if let host=plan.originalDestination.host(in:engine),host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0 {
             targets.append(LandingReservation(bird:plan.id,host:host,fraction:plan.originalDestination.fraction))
         }
-        if let host=reservation.host(in:engine),!host.isHabitat,host.isGround || host.layer==0 {
+        if let host=reservation.host(in:engine),host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0 {
             targets.append(LandingReservation(bird:plan.id,host:host,fraction:reservation.fraction))
         }
-        for host in engine.world.surfaces.filter({!$0.isHabitat && ($0.isGround || $0.layer==0)}).sorted(by:{$0.id<$1.id}).prefix(32) {
+        for host in engine.world.surfaces.filter({$0.canHostBirds && !$0.isHabitat && ($0.isGround || $0.layer==0)}).sorted(by:{$0.id<$1.id}).prefix(32) {
             for fraction:CGFloat in [0.5,0.25,0.75] {targets.append(LandingReservation(bird:plan.id,host:host,fraction:fraction))}
         }
         for slot in targets {

@@ -53,7 +53,7 @@ extension BehaviorEngine {
     }
     func observeEnvironment(_ dt:Double) {
         perception.sample(world.pointer,screens:world.displays,dt:dt)
-        if world.buttonsDown {recordPointerClick()}
+        if world.interruptingButtonsDown {recordPointerClick()}
         else {clickHandled=false}
         for bird in birds where role(of:bird) == .resident {
             guard let id=id(of:bird) else {continue}
@@ -80,6 +80,7 @@ extension BehaviorEngine {
     private func attentionRejection(_ action:AttentionKind,id:BirdID,source:BehaviorSource) -> BehaviorReason? {
         guard let bird=bird(id),role(of:bird) == .resident,bird.state == .perched,bird.edge == .top,
               !bird.isDeparting,!bird.needsDestination,bird.perchDuration-bird.stateTime>3 else {return .unavailableBird}
+        guard supportsBehavior(action.behavior,bird:bird) else {return .unavailableBird}
         if let owner=runtime.owners[id],let run=runtime.runs[owner] {
             let canInterrupt=BehaviorDefinitions.canPreempt(incoming:action.behavior,source:source,
                 current:run.execution.kind,currentSource:run.source)
@@ -142,7 +143,8 @@ extension BehaviorEngine {
     @discardableResult func updateSideHops() -> Bool {
         // One chance per approach. No new ambient timer and no retry queue.
         let candidates=birds.compactMap {bird -> BirdID? in
-            guard let id=id(of:bird),perchPlanner.consumeHopOpportunity(id) else {return nil}
+            guard supportsBehavior(.sideHop,bird:bird),let id=id(of:bird),
+                  perchPlanner.consumeHopOpportunity(id) else {return nil}
             return id
         }
         guard ambientEnabled,settings.perchActions,settings.sideHopEnabled,!world.buttonsDown,
@@ -165,7 +167,7 @@ extension BehaviorEngine {
         guard !paused,ambientEnabled,settings.leafPlayEnabled,settings.ambientLeafPlayEnabled,
               !ambientBusy,!hasPointerPreview,!hasLeafPreview,!world.buttonsDown else {return}
         var candidates=birds.compactMap {bird -> BirdID? in
-            guard let id=id(of:bird),role(of:bird) == .resident,behavior(of:bird)==nil,
+            guard supportsBehavior(.leafPlay,bird:bird),let id=id(of:bird),role(of:bird) == .resident,behavior(of:bird)==nil,
                   bird.state == .perched,bird.edge == .top,!bird.needsDestination,!bird.isDeparting,
                   bird.perchDuration-bird.stateTime>LeafPlayPlan.observeDuration+BehaviorEngine.step,
                   spriteScale(for:bird)<=1.8,!pointerNear(bird),

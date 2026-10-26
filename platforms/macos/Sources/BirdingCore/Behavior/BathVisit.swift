@@ -140,7 +140,7 @@ final class BathVisitExecution:BehaviorExecution {
     }
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {
         guard engine.settings.bathEnabled else {return .cancelled(.settingsChanged)}
-        guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
+        guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         guard let bird=engine.bird(plan.id) else {return .failed(.missingBird)}
         guard BathVisitPlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
               engine.world.bathArtAvailable else {return .failed(.missingFrames)}

@@ -6,6 +6,7 @@ final class SettingsContentView: NSView {
     override var isOpaque: Bool { true }
     override func draw(_ dirtyRect:NSRect) { NSColor.windowBackgroundColor.setFill(); dirtyRect.intersection(bounds).fill() }
 }
+final class SettingsCardView:NSView { override var isFlipped:Bool {true} }
 final class DebugUnlockView:NSView {
     var unlock:(()->Void)?
     private var lastDoubleClick:TimeInterval?
@@ -22,6 +23,10 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var detailFields:[[NSTextField]] = []
     var message: NSTextField!
     var tabs: NSTabView!
+    private var newSpeciesNotice:NSTextField!
+    private var newSpeciesBudget:NSTextField!
+    private var allocateSpeciesButton:NSButton!
+    private var keepSpeciesButton:NSButton!
     var hoverDelaySlider:NSSlider!
     var hoverDelayField:NSTextField!
     var pointerVisitsButton:NSButton!
@@ -167,9 +172,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         debugButton=button(t("调试","Debug"),#selector(selectPage(_:)),NSRect(x:630,y:112,width:100,height:30),in:root)
         debugButton.tag=3;debugButton.isHidden = !debugEnabled
         let unlock=DebugUnlockView(frame:NSRect(x:790,y:10,width:40,height:44))
-        unlock.unlock={ [weak self] in self?.debugEnabled=true;self?.debugButton.isHidden=false }
-        root.addSubview(unlock)
-        tabs = NSTabView(frame:NSRect(x:30,y:150,width:780,height:446)); tabs.tabViewType = .noTabsNoBorder; root.addSubview(tabs)
+        unlock.unlock={ [weak self] in self?.debugEnabled=true;self?.debugButton.isHidden=false };root.addSubview(unlock)
+        tabs=NSTabView(frame:NSRect(x:30,y:156,width:780,height:440));tabs.tabViewType = .noTabsNoBorder;root.addSubview(tabs)
         let probabilityView = SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:CGFloat(110+draft.catalog.species.count*47)))
         let first = NSTabViewItem(identifier:"probabilities"); first.label=t("出现概率","Arrival probabilities"); first.view=scroll(probabilityView); tabs.addTabViewItem(first)
         label(t("鸟种","Species"),NSRect(x:20,y:14,width:240,height:23),in:probabilityView)
@@ -188,7 +192,19 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             let lock = NSButton(checkboxWithTitle:t("锁定","Lock"),target:self,action:#selector(lockChanged(_:)))
             lock.tag=i; lock.frame=NSRect(x:657,y:y+7,width:95,height:25); probabilityView.addSubview(lock); locks.append(lock)
         }
-        label(t("总计 100.00% · 锁定项不变；其他未锁定项按原比例分配，均为零时平均分配。\n默认频率用于游戏；新增鸟种可在启动提示中选择分配方式。","Total 100.00% · Locked values stay fixed. Other unlocked values redistribute proportionally, or equally when all are zero. Game defaults are estimates. Choose how to allocate new species in the startup prompt."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*47),width:710,height:54),in:probabilityView,size:12)
+        label(t("总计 100.00% · 锁定项不变；其他未锁定项按原比例分配，均为零时平均分配。\n默认频率是游戏权重；新增鸟种仅在你明确分配后启用。","Total 100.00% · Locked values stay fixed. Other unlocked values redistribute proportionally, or equally when all are zero. Defaults are game weights. New species require explicit allocation."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*47),width:710,height:54),in:probabilityView,size:12)
+        for view in probabilityView.subviews {view.frame.origin.y += 160}
+        probabilityView.frame.size.height += 160
+        newSpeciesNotice=label("",NSRect(x:20,y:12,width:710,height:66),in:probabilityView,size:12)
+        newSpeciesNotice.identifier=NSUserInterfaceItemIdentifier("newSpeciesNotice")
+        newSpeciesBudget=NSTextField(frame:NSRect(x:20,y:84,width:70,height:26))
+        newSpeciesBudget.stringValue="20";newSpeciesBudget.alignment = .right
+        newSpeciesBudget.setAccessibilityLabel(t("分给新鸟的总概率百分比","Total percentage allocated to new species"))
+        probabilityView.addSubview(newSpeciesBudget)
+        label("%",NSRect(x:96,y:88,width:24,height:24),in:probabilityView)
+        allocateSpeciesButton=button(t("给新鸟分配份额","Allocate to new species"),#selector(allocatePendingSpecies),NSRect(x:130,y:80,width:260,height:32),in:probabilityView)
+        keepSpeciesButton=button(t("保留手动设置","Keep manual settings"),#selector(keepPendingSpecies),NSRect(x:410,y:80,width:290,height:32),in:probabilityView)
+        label(t("仅修改草稿；保存并应用后生效。可直接在下方逐种调整。","Edits the draft; Save & Apply to activate. You can also edit each species below."),NSRect(x:20,y:122,width:710,height:30),in:probabilityView,size:12)
         let detailView = SettingsContentView(frame:probabilityView.frame)
         let second = NSTabViewItem(identifier:"behavior"); second.label=t("体型与动作","Size & behavior"); second.view=scroll(detailView); tabs.addTabViewItem(second)
         let titles = [t("体长 cm","Length cm"),t("振翅 次/秒","Beats / sec"),t("飞速 倍率","Speed ×"),t("最短停留 秒","Min perch s"),t("最长停留 秒","Max perch s")]
@@ -351,7 +367,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         // the existing footer buttons, including the cell's drawing insets.
         message.maximumNumberOfLines=0;message.lineBreakMode = .byWordWrapping
         message.cell?.usesSingleLineMode=false;message.cell?.isScrollable=false;message.cell?.wraps=true
-        _=button(t("恢复默认","Restore Defaults"),#selector(resetDefaults),NSRect(x:22,y:642,width:148,height:30),in:root)
+        _=button(t("全部恢复默认","Restore All Defaults"),#selector(resetDefaults),NSRect(x:22,y:642,width:180,height:30),in:root)
+        root.subviews.last?.toolTip=t("重置所有鸟种概率、体型和生态偏好，并解除所有锁定；保存后生效。","Resets all probabilities, sizes and ecology preferences, and clears all locks; save to apply.")
         _=button(t("取消","Cancel"),#selector(cancel),NSRect(x:562,y:642,width:100,height:30),in:root)
         let save=button(t("保存并应用","Save & Apply"),#selector(save),NSRect(x:672,y:642,width:144,height:30),in:root); save.keyEquivalent="\r"
         refresh()
@@ -808,7 +825,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
                              (previewFlycatcherInsectCatchButton!,"previewYellowRumpedFlycatcherInsectCatch")] {
             control.identifier=NSUserInterfaceItemIdentifier(id);control.setAccessibilityLabel(control.title)
         }
-        label(language.insectCatchSupport+t("\n默认开启，保存后生效。家燕预览选择已有普通飞行居民，否则最多等 10 秒自然起飞（暂停不计时）。白眉姬鹟从已有普通窗口顶部或地面停栖居民直接尝试，不等待自然飞行；固定树枝不适用。不会生成或传送小鸟。\n\n全局共用一只四帧昆虫，从屏外进入，寿命 12 秒，不跟随鼠标。真实喙接触才捕获。家燕恢复原飞行目标；白眉姬鹟必须返回有效脚位并停稳才完成，原点失效则寻找安全落点。\n\n点击小鸟仍立即换位；未捕获的虫继续原路线。保存关闭会清除等待和昆虫。暂停冻结动作与虫寿命。关闭、取消、保存或重建设置取消等待，保留其他草稿。\n\n仅捕获并安全恢复后记入观察手册，预览单独计数。失手安全返回后报告未捕获，不计数；超时或取消也不计数。",
+        label(language.insectCatchSupport+t("\n默认开启，保存后生效。家燕预览选择已有普通飞行居民，否则最多等 10 秒自然起飞（暂停不计时）。白眉姬鹟从已有普通窗口顶部或地面停栖居民直接尝试，不等待自然飞行；固定树枝不适用。不会生成或传送小鸟。\n\n全局共用一只四帧昆虫，从屏外进入，寿命 12 秒，不跟随鼠标。真实喙接触才捕获。家燕恢复原飞行目标；白眉姬鹟必须返回有效脚位并停稳才完成，原点失效则寻找安全落点。\n\n点击小鸟仍立即换位；未捕获的虫继续原路线。保存关闭会清除等待和昆虫。暂停冻结动作与虫寿命。关闭、取消、保存或重建设置取消等待，保留其他草稿。\n\n仅捕获并安全恢复后记入观鸟手册，预览单独计数。失手安全返回后报告未捕获，不计数；超时或取消也不计数。",
             "\nOn by default; save to apply. Barn Swallow preview uses an existing resident in ordinary flight, or waits up to 10 unpaused seconds for natural takeoff. Flycatcher preview attempts directly from an existing resident settled on a normal window top or ground edge; fixed branches are ineligible. No birds are spawned or teleported.\n\nBoth share one four-frame insect entering from offscreen, lasting 12 seconds without following the pointer. Capture requires real bill contact. Swallows resume their destination. Flycatchers must return to a valid foot point and settle; an invalid origin requires a safe fallback.\n\nClicks still relocate. Uncaught insects continue their route. Saving off clears waiting and insects. Pause freezes motion and insect age. Closing, cancelling, saving or rebuilding Settings cancels waiting and preserves other drafts.\n\nOnly capture with safe recovery is recorded, with previews counted separately. A miss is reported after safe return. Misses, timeouts and cancellations do not count."),NSRect(x:20,y:6630,width:710,height:246),in:view,size:12).identifier=NSUserInterfaceItemIdentifier("insectCatchHelp")
         insectCatchStatus=label("",NSRect(x:20,y:6892,width:710,height:76),in:view,size:12)
         insectCatchStatus.identifier=NSUserInterfaceItemIdentifier("insectCatchStatus");insectCatchStatus.setAccessibilityLabel(t("捕虫状态","Insect catching status"))
@@ -873,11 +890,11 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             return t("请启用家燕并保存，等待已有居民自然飞行；不会生成或强制起飞。 ","Enable Barn Swallow and save, then wait for an existing resident’s natural flight. No spawning or forced takeoff. ")+language.insectCatchSupport
         case .missingFrames:return t("捕虫姿态、昆虫四帧或飞行喙锚不完整。","Catching poses, four insect frames or flight bill anchors are incomplete. ")+language.insectCatchSupport
         case .timedOut:return species == .yellowRumpedFlycatcher ?
-            t("白眉姬鹟捕虫已超时结束，未记入观察手册。","The flycatcher attempt timed out; no journal entry was added."):
+            t("白眉姬鹟捕虫已超时结束，未记入观鸟手册。","The flycatcher attempt timed out; no journal entry was added."):
             t("已等待 10 秒（暂停不计时），没有可用的普通飞行家燕；请稍后重试。","No eligible Barn Swallow entered ordinary flight within 10 unpaused seconds. Try again later.")
         case .missedTarget:return species == .yellowRumpedFlycatcher ?
-            t("本次未捕获昆虫，白眉姬鹟已安全返回并停稳；未记入观察手册。","The insect was not caught. The flycatcher returned safely and settled; no journal entry was added."):
-            t("本次未捕获昆虫，已安全恢复；未记入观察手册。","The insect was not caught. The bird recovered safely; no journal entry was added.")
+            t("本次未捕获昆虫，白眉姬鹟已安全返回并停稳；未记入观鸟手册。","The insect was not caught. The flycatcher returned safely and settled; no journal entry was added."):
+            t("本次未捕获昆虫，已安全恢复；未记入观鸟手册。","The insect was not caught. The bird recovered safely; no journal entry was added.")
         case .noSpace,.targetInvalid:
             return species == .yellowRumpedFlycatcher ?
                 t("起飞、拦截或返回空间不足。请等待白眉姬鹟在更开阔的普通窗口顶部或地面停稳；固定树枝不适用。","Not enough room for takeoff, interception or return. Wait for the flycatcher to settle on a clearer normal window top or ground edge; fixed branches are ineligible."):
@@ -913,7 +930,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         if pending {visitorGiftStatus.stringValue=desktop.engine.giftAuthorizationRequest?.binding.source == .preview ?
             t("正在准备模拟礼物的内存授权，不使用自动额度。","Preparing in-memory authorization for the simulated gift; no automatic allowance is used."):
             t("正在授权礼物并核验自动额度，最多5秒；小鸟动画继续。","Authorizing the gift and checking its automatic allowance, for up to 5 seconds. Bird animation continues.")}
-        else if active {visitorGiftStatus.stringValue=t("正在拾取并飞越送叶；叶片到达接收锚、可见后才记入观察手册。","Picking up and delivering the leaf in flight. A journal entry requires a visible gift at the receiving anchor.")}
+        else if active {visitorGiftStatus.stringValue=t("正在拾取并飞越送叶；叶片到达接收锚、可见后才记入观鸟手册。","Picking up and delivering the leaf in flight. A journal entry requires a visible gift at the receiving anchor.")}
         else if let denial=desktop.engine.lastGiftAuthorizationDenial {visitorGiftStatus.stringValue=language.giftAuthorizationMessage(denial)}
         else {visitorGiftStatus.stringValue=language.visitorGiftSupport}
     }
@@ -953,7 +970,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         case .missingFrames:return t("礼物携带姿态或飞行喙锚不完整。 ","Gift-carrying poses or flight bill anchors are incomplete. ")+language.visitorGiftSupport
         case .noSpace,.targetInvalid:return t("需要普通边缘上的静止叶片、已保存的空闲接收栖木及安全飞越路线。","A static leaf on an ordinary edge, a saved empty receiving perch and a safe fly-past route are required.")
         case .busy:return t("请等待当前互动、礼物或授权结束，并让接收栖木保持空闲。","Wait for the current encounter, gift or authorization to finish, and keep the receiving perch empty.")
-        case .timedOut:return t("礼物申请或路线已超时结束，未记入观察手册；已提交额度不返还。","The gift request or route timed out without a journal entry. Committed allowances are not refunded.")
+        case .timedOut:return t("礼物申请或路线已超时结束，未记入观鸟手册；已提交额度不返还。","The gift request or route timed out without a journal entry. Committed allowances are not refunded.")
         default:return desktop.behaviorMessage(reason)
         }
     }
@@ -1288,7 +1305,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     func scrollToSpecies(_ id:SpeciesID) {
         guard let i=draft.probabilities.entries.firstIndex(where:{$0.id==id}),
               let scroll=tabs.tabViewItems[0].view as? NSScrollView else{return}
-        tabs.selectTabViewItem(at:0)
+        tabs.selectTabViewItem(at:0);refresh()
         scroll.contentView.scroll(to:CGPoint(x:0,y:max(0,fields[i].frame.minY-45)))
         scroll.reflectScrolledClipView(scroll.contentView)
         window?.makeFirstResponder(fields[i])
@@ -1301,6 +1318,38 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             let tip=t("可用上限：","Available maximum: ")+String(format:"%.2f%%",Double(draft.probabilities.maximum(at:i))/100)
             sliders[i].toolTip=tip; fields[i].toolTip=tip
         }
+        refreshNewSpeciesNotice()
+    }
+    /// Mode changes must not rebuild controls or discard uncommitted edits.
+    func refreshMode() {refreshNewSpeciesNotice()}
+    func refreshNewSpeciesNotice() {
+        guard newSpeciesNotice != nil else {return}
+        let ids=draft.pendingSpecies ?? []
+        let available=draft.probabilities.newSpeciesAllocationAvailable(ids)
+        let share=String(format:"%.2f",Double(available)/100)
+        newSpeciesNotice.stringValue=ids.isEmpty ?
+            t("没有待分配的新鸟。观鸟记录始终使用你的概率、体型与生态设置。","No new species await allocation. Birdwatching always uses your probabilities, sizes and ecology settings."):
+            t("新增 \(ids.count) 种鸟待分配 · 未锁定旧鸟可用 \(share)%\n默认分出总概率的20%；旧鸟按原比例扣除，新鸟按默认游戏权重分配。余额不足时请先解锁或手动调整。","\(ids.count) new species await allocation · \(share)% available from unlocked existing species.\nDefault: 20% of the total, funded proportionally by existing species and distributed by default game weights. Unlock or adjust manually if insufficient.")
+        newSpeciesBudget.isEnabled = !ids.isEmpty
+        allocateSpeciesButton.isEnabled = !ids.isEmpty && available>0
+        keepSpeciesButton.isEnabled = !ids.isEmpty
+    }
+    @objc func allocatePendingSpecies() {
+        window?.makeFirstResponder(nil)
+        guard let percent=number(newSpeciesBudget.stringValue),percent.isFinite,percent>0,percent<=100 else {
+            message.stringValue=t("请输入大于0且不超过100的总概率百分比。","Enter a total percentage greater than 0 and at most 100.");return
+        }
+        let ids=draft.pendingSpecies ?? []
+        guard draft.probabilities.allocateNewSpecies(ids,catalog:.standard,budgetPoints:Int((percent*100).rounded())) else {
+            message.stringValue=t("未分配：旧鸟未锁定余额不足，或新鸟已有概率/锁定。请解锁、减小份额或保留手动设置。","Not allocated: insufficient unlocked balance, or new species already edited/locked. Unlock, lower the share or keep manual settings.");return
+        }
+        draft.pendingSpecies=[];refresh()
+        message.stringValue=t("已保锁分配（尚未保存）；保存并应用后新鸟才会到访。","Allocated with locks preserved (unsaved). Save & Apply to enable new arrivals.")
+    }
+    @objc func keepPendingSpecies() {
+        window?.makeFirstResponder(nil)
+        draft.pendingSpecies=[];refreshNewSpeciesNotice()
+        message.stringValue=t("已保留当前概率草稿；保存后不再提示新增鸟种。","Current probability draft retained. Save to dismiss the new-species notice.")
     }
     func number(_ s:String) -> Double? {
         Double(s.trimmingCharacters(in:.whitespacesAndNewlines).replacingOccurrences(of:"%",with:"").replacingOccurrences(of:",",with:"."))
@@ -1417,8 +1466,10 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         window?.makeFirstResponder(nil)
         let raw = detailFields.map { $0.map(\.stringValue) }
         let rawDelay=hoverDelayField.stringValue
+        let rawBudget=newSpeciesBudget.stringValue
         build()
         for i in raw.indices { for j in raw[i].indices { detailFields[i][j].stringValue = raw[i][j] } }
         hoverDelayField.stringValue=rawDelay
+        newSpeciesBudget.stringValue=rawBudget
     }
 }

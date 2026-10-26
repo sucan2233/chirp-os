@@ -280,7 +280,7 @@ enum BathVerification {
                         guard let layer=f.sprite(id),let mask=layer.mask as? CAShapeLayer,
                               allows(mask,world:p,birdRect:state.rect),d.bird(at:p) === bird else {continue}
                         hitOriginal=true
-                        if let cg=CGEvent(mouseEventSource:nil,mouseType:.leftMouseDown,mouseCursorPosition:p,mouseButton:.left),let event=NSEvent(cgEvent:cg) {
+                        if let event=NativeVerificationInput.leftDown(at:p) {
                             d.handleMouseDown(event);clicked=true
                         }
                         break outer

@@ -275,7 +275,7 @@ final class PerchActivityExecution:BehaviorExecution {
     }
     func advance(_ dt:Double,in engine:BehaviorEngine) -> BehaviorCompletion? {
         guard let bird=engine.bird(id) else {return .failed(.missingBird)}
-        if engine.world.buttonsDown {return .cancelled(.userInput)}
+        if engine.world.interruptingButtonsDown {return .cancelled(.userInput)}
         if engine.pointerNear(bird) {return .cancelled(.pointerNearby)}
         age+=dt
         return age>=plan.duration ? .completed:nil

@@ -487,7 +487,7 @@ final class DesktopSoakSession: NSObject, NSWindowDelegate {
         let remaining = afterCleanup.keys.filter { $0.contains(statusAutosaveName) }.sorted()
         let changes = Self.changedPreferenceKeys(standardPreferencesBefore, afterCleanup)
         let protectedChanges = changes.filter {
-            ["appLanguage", "populationLower", "populationUpper"].contains($0) || $0.contains("ChirpOS.Main")
+            ["appLanguage", "populationLower", "populationUpper", "birdwatchingMode"].contains($0) || $0.contains("ChirpOS.Main")
         }
         let suiteRemoved = desktop.preferences.persistentDomain(forName: preferencesDomain)?.isEmpty != false
         let nameMatches = statusAutosaveConfigured && statusNameAtRemoval == statusAutosaveName && statusAutosaveName != "ChirpOS.Main"
@@ -510,7 +510,8 @@ final class DesktopSoakSession: NSObject, NSWindowDelegate {
         }.sorted()
     }
     private func persistencePresence() -> [String: Bool] {
-        Dictionary(uniqueKeysWithValues: ["settings.json", "legacy.json", "visitors.json", "journal.json", "gifts.json"].map {
+        Dictionary(uniqueKeysWithValues: ["settings.json", "legacy.json", "visitors.json", "journal.json", "gifts.json",
+            "life-list.json", "journal.json.lock", "journal.json.writers", "journal.json.backups"].map {
             ($0, FileManager.default.fileExists(atPath: output.appendingPathComponent($0).path))
         })
     }

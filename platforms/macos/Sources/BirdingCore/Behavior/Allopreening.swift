@@ -113,7 +113,7 @@ struct AllopreeningPlan {
                   !bird.isDeparting,!bird.needsDestination,!bird.isSideHopping,!bird.isCoordinatedFlying,
                   bird.perchDuration-bird.stateTime>duration+1,abs(bird.hopOffset)<0.001,
                   requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
-                  let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isGround,!host.isHabitat,host.layer==0,
+                  let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),host.canHostBirds,!host.isGround,!host.isHabitat,host.layer==0,
                   engine.hasUsablePerch(bird),bird.fraction.isFinite,(0...1).contains(bird.fraction),
                   Geometry.distance(bird.position,Geometry.foot(on:host,fraction:bird.fraction,edge:.top,
                       scale:engine.spriteScale(for:bird)))<0.001 else {return nil}
@@ -208,7 +208,7 @@ final class AllopreeningExecution:LedgeTraversalExecution {
         // Quiet closes new automatic opportunities, but lets an accepted visit finish.
         guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:.preview)
         else {return .cancelled(.settingsChanged)}
-        guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
+        guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         for (index,id) in participants.enumerated() {
             guard let bird=engine.bird(id),engine.birds.contains(where:{$0 === bird}) else {return .failed(.missingBird)}
             guard AllopreeningPlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? [])

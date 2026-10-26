@@ -67,7 +67,7 @@ final class LeafCarryRecordingTests:XCTestCase {
         advance(0.5);e.handle(.pause(true));advance(3)
         XCTAssertTrue(e.hasCarryLeafPlacement);XCTAssertTrue(e.propSnapshot().isEmpty)
         var log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(BehaviorInputLog.engineVersion,18);XCTAssertEqual(log.simulationVersion,18)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,19);XCTAssertEqual(log.simulationVersion,19)
         XCTAssertNotNil(log.expected)
         for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),log.expected)}
         e.handle(.pause(false));advance(1.6)
@@ -148,7 +148,7 @@ final class LeafCarryRecordingTests:XCTestCase {
         let root=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let log=try BehaviorInputLog.load(from:root.appendingPathComponent("shared/behavior-fixtures/v1/leaf-carry.json"))
-        XCTAssertNil(log.expected);XCTAssertEqual(log.simulationVersion,18)
+        XCTAssertEqual(log.simulationVersion,19)
         func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
             var input=log;input.inputs=Array(log.inputs.prefix(count));return try input.replay(callbackHz:hz)
         }
@@ -183,6 +183,7 @@ final class LeafCarryRecordingTests:XCTestCase {
         XCTAssertEqual(deleted.reservations,0);XCTAssertNil(deleted.sceneFocusID)
         XCTAssertEqual(deleted.events.filter{$0.kind=="leafCarry" && $0.type=="cancelled"}.count,1)
         let final=try prefix(log.inputs.count)
+        XCTAssertEqual(try XCTUnwrap(log.expected),final)
         XCTAssertEqual(final.carriedObjects,[]);XCTAssertEqual(final.hasCarryLeafPlacement,false)
         XCTAssertTrue(final.props.isEmpty);XCTAssertEqual(final.runs,0);XCTAssertEqual(final.reservations,0)
         XCTAssertEqual(final.events.filter{$0.kind=="leafCarry" && $0.type=="completed"}.count,1)

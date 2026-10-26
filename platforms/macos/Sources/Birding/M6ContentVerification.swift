@@ -473,8 +473,7 @@ enum M6ContentVerification {
         let origin=bird.position,revision=bird.motionRevision,id=d.engine.id(of:bird)
         let state=d.engine.renderSnapshot().first,art=d.arts[species]!
         let hit=state.flatMap{point($0,art:art,opaque:true)}
-        if reached,let hit,let event=CGEvent(mouseEventSource:nil,mouseType:.leftMouseDown,mouseCursorPosition:hit,mouseButton:.left),
-           let native=NSEvent(cgEvent:event) {d.handleMouseDown(native)}
+        if reached,let hit,let event=NativeVerificationInput.leftDown(at:hit) {d.handleMouseDown(event)}
         let ends=run.map{terminals(d,$0)} ?? []
         let moved=d.engine.behavior(of:bird) == .relocate
         checks["m6Click-\(species.rawValue)-\(frame)-ImmediateSameBird"]=reached && moved &&

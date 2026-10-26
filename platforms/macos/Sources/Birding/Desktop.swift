@@ -75,7 +75,7 @@ final class DesktopView: NSView {
         }
         nameLabel.zPosition=1000
         nameLabel.isHidden=true
-        if let hovered=controller.hoveredBird,let id=controller.engine.id(of:hovered),
+        if !controller.observationsEnabled,let hovered=controller.hoveredBird,let id=controller.engine.id(of:hovered),
            let bird=snapshot.first(where:{$0.id==id && $0.hoverable}),desktopRect.contains(bird.position) {
             let text=controller.language.name(bird.species)
             let width=min(desktopRect.width,ceil((text as NSString).size(withAttributes:[.font:NSFont.systemFont(ofSize:13)]).width)+20)
@@ -125,6 +125,20 @@ final class DesktopController: NSObject {
     }
     var catalog: SpeciesCatalog { settings.catalog }
     var isolatedSession=false
+    var observationsEnabled=false
+    let observationSession=UUID()
+    var observationArrivalOrdinal:UInt64=0
+    var observationVisits:[BirdID:ManualObservationVisit]=[:]
+    var cameraID:BirdID?
+    var cameraBird:Bird? {cameraID.flatMap{engine.bird($0)}}
+    var cameraPanel:OverlayPanel?
+    var feedbackPanel:OverlayPanel?
+    var feedbackStarted:Double=0
+    var observationClickHeld=false
+    var cameraPressed=false
+    var observationMenuOpen=false
+    var lastRoutedMouseEvent:MouseEventIdentity?
+    var lifeListURL:URL {settingsURL.deletingLastPathComponent().appendingPathComponent("life-list.json")}
     var preferences = UserDefaults.standard
     var isDevelopmentBuild:Bool {Bundle.main.object(forInfoDictionaryKey:"ChirpOSDevelopmentBuild") as? Bool == true}
     var language = AppLanguage.chinese
@@ -158,14 +172,14 @@ final class DesktopController: NSObject {
         settings = try BirdSettings.load(from:settingsURL,legacyURL:legacyURL)
     }
     func applySettings(_ value:BirdSettings) throws {
-        var saved=value;saved.pendingSpecies=[]
+        let saved=value
         try saved.save(to:settingsURL)
         settings = saved
         hoverTracker=HoverTracker<BirdID>();hoveredBird=nil
     }
     @objc func showSpeciesGallery() {
-        if gallery == nil {gallery=SpeciesGallery(desktop:self)}
-        gallery?.showWindow(nil);NSApp.activate(ignoringOtherApps:true)
+        showObservationJournal()
+        observationWindow?.selectAllSpecies()
     }
     @objc func showSpeciesSettings() {
         if let settingsWindow, settingsWindow.window?.isVisible == true {
@@ -216,7 +230,7 @@ final class DesktopController: NSObject {
     var scale: CGFloat = 1
     var paused:Bool {
         get {engine.paused}
-        set {if newValue {cancelGiftAuthorization()};engine.handle(.pause(newValue))}
+        set {if newValue {cancelGiftAuthorization();hideObservationOverlays()};engine.handle(.pause(newValue))}
     }
     /// Read-only telemetry after the ordinary production tick; never drives simulation.
     var tickObserver:((Double,Double)->Void)?
@@ -255,6 +269,7 @@ final class DesktopController: NSObject {
         do { try loadSpeciesConfig() } catch { NSLog("Birding species configuration: %@; using bundled defaults",error.localizedDescription) }
         loadVisitorMemory()
         loadObservationJournal()
+        loadObservationMode()
         makeMenu(); rebuildScreens(); startMouseMonitoring()
         if !isolatedSession && !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {DispatchQueue.main.async { [weak self] in self?.promptNewSpecies() }}
         sampleWindows(dt: 1.0/30)
@@ -271,10 +286,11 @@ final class DesktopController: NSObject {
         t.tolerance = 0.003
         RunLoop.main.add(t, forMode: .common); timer = t
     }
-    @objc func sleeping() { cancelGiftAuthorization();engine.handle(.cancelAmbient(.sleep));timer?.invalidate() }
+    @objc func sleeping() { hideObservationOverlays();cancelGiftAuthorization();engine.handle(.cancelAmbient(.sleep));timer?.invalidate() }
     @objc func waking() { lastSample = 0; startTimer() }
-    @objc func spaceChanged() { cancelGiftAuthorization();engine.handle(.cancelAmbient(.spaceChanged));lastSample = 0; sampleWindows(dt: 1); for v in views { v.needsDisplay = true } }
+    @objc func spaceChanged() { hideObservationOverlays();cancelGiftAuthorization();engine.handle(.cancelAmbient(.spaceChanged));lastSample = 0; sampleWindows(dt: 1); for v in views { v.needsDisplay = true } }
     @objc func rebuildScreens() {
+        hideObservationOverlays()
         cancelGiftAuthorization()
         engine.handle(.cancelFoodTrayPlacement)
         engine.handle(.cancelBathPlacement)
@@ -305,16 +321,21 @@ final class DesktopController: NSObject {
         // Higher levels (menus, security/lock screen) already cover our panel in WindowServer.
         // Software masking is only needed for windows that the floating overlay covers.
         let own = ProcessInfo.processInfo.processIdentifier
+        let overlays=Set(NSApp.windows.compactMap { window -> UInt32? in
+            guard window is OverlayPanel,window.windowNumber>0 else {return nil}
+            return UInt32(window.windowNumber)
+        })
         surfaces = list.compactMap { info in
             guard let id = info[kCGWindowNumber as String] as? UInt32,
-                  let pid = info[kCGWindowOwnerPID as String] as? Int32, pid != own,
+                  let pid = info[kCGWindowOwnerPID as String] as? Int32, !(pid == own && overlays.contains(id)),
                   let layer = info[kCGWindowLayer as String] as? Int, layer >= 0, layer <= NSWindow.Level.floating.rawValue,
                   let alpha = info[kCGWindowAlpha as String] as? Double, alpha > 0.05,
                   let raw = info[kCGWindowBounds as String] as? [String:Any],
                   let rect = CGRect(dictionaryRepresentation: raw as CFDictionary), rect.width > 1, rect.height > 1 else { return nil }
-            if layer == NSWindow.Level.floating.rawValue,
+            if pid != own,layer == NSWindow.Level.floating.rawValue,
                ["dev.birding.desktop","dev.birding.desktop.development"].contains(NSRunningApplication(processIdentifier:pid)?.bundleIdentifier ?? "") { return nil }
-            return Surface(id: id, pid: pid, rect: rect, layer: layer)
+            return Surface(id:id,pid:pid,rect:rect,layer:layer,
+                canHostBirds:!(pid == own && isolatedSession),occludesFlight:pid == own)
         }
         surfaces += groundSurfaces()
         syncWorld(sampleDT:dt)
@@ -332,6 +353,7 @@ final class DesktopController: NSObject {
         engine.ambientEnabled=engine.populationEnabled && !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"})
         engine.autonomousRouting=integration == nil
         engine.advance(dt)
+        reconcileObservationVisits()
         reconcileGiftAuthorization()
         consumeBehaviorEvents()
         settingsWindow?.refreshFoodTrayControls()
@@ -353,6 +375,7 @@ final class DesktopController: NSObject {
         persistVisitorMemoryIfNeeded(now:now)
         persistObservationJournalIfNeeded(now:now)
         updateHover(now:now)
+        updateCamera(now:now)
         for view in views { view.updateSprites() }
         if now-lastDiagnostic > 1 {
             lastDiagnostic = now
@@ -413,7 +436,7 @@ final class DesktopController: NSObject {
     func makeMenu() {
         if status == nil {
             status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-            status.autosaveName="ChirpOS.Main"
+            status.autosaveName=isolatedSession ? "ChirpOS.Verification."+observationSession.uuidString:"ChirpOS.Main"
             status.isVisible=true
         }
         // Template artwork remains legible in light, dark and tinted menu bars.
@@ -443,8 +466,10 @@ final class DesktopController: NSObject {
         populationItem.submenu = populationMenu; menu.addItem(populationItem)
         refreshPopulationMenu()
         menu.addItem(.separator())
-        add(menu,t("图鉴…","Field guide…"),#selector(showSpeciesGallery),"")
-        add(menu,t("观察手册…","Observation journal…"),#selector(showObservationJournal),"")
+        add(menu,t("观鸟手册…","Birdwatching handbook…"),#selector(showObservationJournal),"")
+        let observe=NSMenuItem(title:t("观鸟模式","Birdwatching mode"),action:#selector(toggleObservations),keyEquivalent:"")
+        observe.target=self;observe.state=observationsEnabled ? .on:.off
+        menu.addItem(observe)
         add(menu,t("鸟种设置…","Bird settings…"),#selector(showSpeciesSettings),"")
         addLoginItem(to:menu)
         add(menu,language.switchTitle,#selector(toggleLanguage),"")
@@ -456,7 +481,7 @@ final class DesktopController: NSObject {
         if isDevelopmentBuild {menu.insertItem(NSMenuItem(title:t("啾啾测试版 · 本地开发","ChirpOS Dev · Local build"),action:nil,keyEquivalent:""),at:0)}
         let main=NSMenu()
         let application=NSMenuItem();main.addItem(application);application.submenu=NSMenu()
-        add(application.submenu!,t("观察手册…","Observation journal…"),#selector(showObservationJournal),"j")
+        add(application.submenu!,t("观鸟手册…","Birdwatching handbook…"),#selector(showObservationJournal),"j")
         application.submenu!.addItem(.separator())
         add(application.submenu!,t("退出啾啾","Quit ChirpOS"),#selector(quit),"q")
         let editItem=NSMenuItem(title:t("编辑","Edit"),action:nil,keyEquivalent:"")
@@ -520,6 +545,7 @@ final class DesktopController: NSObject {
         NSWorkspace.shared.open(root.appendingPathComponent("README.md"))
     }
     @objc func quit() {
+        hideObservationOverlays()
         if isolatedSession {NSApp.terminate(nil);return}
         cancelGiftAuthorization();engine.handle(.cancelAmbient(.shutdown));stopMouseMonitoring();NSApp.terminate(nil)
     }

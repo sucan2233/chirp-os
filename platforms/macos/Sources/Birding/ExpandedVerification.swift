@@ -154,8 +154,7 @@ enum ExpandedVerification {
         d.updateHover(now:0,at:point);d.updateHover(now:1,at:point)
         checks["hoverNamesTopBirdBeforeClick"]=d.hoveredBird === bird
 
-        if let cgEvent=CGEvent(mouseEventSource:nil,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),
-           let event=NSEvent(cgEvent:cgEvent) {
+        if let event=NativeVerificationInput.leftDown(at:point) {
             d.handleMouseDown(event)
             checks["clickEventMovesOnlyTopBird"] = !bird.isDeparting && bird.state == .flying && bird.hostID != nil && !bird.needsDestination && behind.state == .perched
             checks["clickImmediatelyClearsName"]=d.hoveredBird == nil && d.hoverTracker.target == nil

@@ -33,6 +33,7 @@ enum GiftVerification {
         var archive:VisitorMemoryArchive
         var bird:Bird!,host:Surface!,leafID:ScenePropID!,receiver:ResolvedFixedPerch!
         var layoutEvidence=[String:Any]()
+        private(set) var startEvidence=[String:Any]()
         var leafPoint=CGPoint.zero
         var observedVisibleRuns=Set<UInt64>()
         init(folder:URL) throws {
@@ -164,15 +165,45 @@ enum GiftVerification {
             settings.refreshVisitorGiftControls()
             return placed
         }
+        func requestEvidence()->Any {
+            guard let request=d.engine.giftAuthorizationRequest else {return NSNull()}
+            let b=request.binding
+            return ["requestID":b.requestID,"visitorID":b.visitorID,"birdID":b.birdID.rawValue,
+                    "species":b.species.rawValue,"source":b.source.rawValue,"leafID":b.leafID.rawValue,
+                    "receiverSlot":b.receiverSlot,"receiverRevision":b.receiverRevision] as [String:Any]
+        }
+        func authorizationEvidence(after sequence:UInt64)->[String:Any] {
+            let events=d.engine.events.filter{$0.sequence>sequence}
+            let rows:[[String:Any]]=events.map {event in
+                ["sequence":event.sequence,"time":event.time,"kind":event.kind?.rawValue ?? "none",
+                 "type":event.type.rawValue,"source":event.source.rawValue,"run":event.runID?.rawValue ?? 0,
+                 "participants":event.participants.map(\.rawValue),"reason":event.reason?.rawValue ?? "none"]
+            }
+            return ["sequenceBefore":sequence,"eventsAfterSequence":rows,
+                    "reason":events.last(where:{$0.kind == .visitorGift})?.reason?.rawValue ?? "none",
+                    "previewButtonEnabled":settings.previewVisitorGiftButton.isEnabled,
+                    "settingsWindowVisible":settings.window?.isVisible ?? false,
+                    "pendingRequest":requestEvidence(),
+                    "authorizationDenial":d.engine.lastGiftAuthorizationDenial?.rawValue ?? "none"]
+        }
         func start()->BehaviorRunID? {
             let sequence=d.engine.events.last?.sequence ?? 0
+            let buttonEnabled=settings.previewVisitorGiftButton.isEnabled,pendingBefore=requestEvidence()
             settings.previewVisitorGiftButton.performClick(nil)
+            let pendingAfterClick=requestEvidence()
             // Drain only the platform's asynchronous memory-token callback;
             // no simulation time, resident motion or route is manufactured.
-            let deadline=ProcessInfo.processInfo.systemUptime+0.5
+            let waitingSince=ProcessInfo.processInfo.systemUptime,deadline=waitingSince+2
             while d.engine.giftAuthorizationRequest != nil,ProcessInfo.processInfo.systemUptime<deadline {
                 _=RunLoop.current.run(mode:.default,before:Date(timeIntervalSinceNow:0.001))
             }
+            startEvidence=authorizationEvidence(after:sequence)
+            startEvidence["buttonEnabledBeforeClick"]=buttonEnabled
+            startEvidence["pendingRequestBeforeClick"]=pendingBefore
+            startEvidence["pendingRequestAfterClick"]=pendingAfterClick
+            startEvidence["authorizationWaitSeconds"]=ProcessInfo.processInfo.systemUptime-waitingSince
+            startEvidence["authorizationWaitLimitSeconds"]=2
+            startEvidence["authorizationWaitExpired"]=d.engine.giftAuthorizationRequest != nil && ProcessInfo.processInfo.systemUptime>=deadline
             return d.engine.events.last{$0.sequence>sequence && $0.kind == .visitorGift && $0.type == .started}?.runID
         }
         func step() {d.syncWorld(buttonsDown:false);d.engine.advance(1.0/120);d.reconcileGiftAuthorization()}
@@ -192,8 +223,8 @@ enum GiftVerification {
             !SpeciesBehaviorProfile.species(for:.fixedPerchVisit).contains(.azureWingedMagpie) && f.receiver != nil
         guard let run,let initial,let receiver=f.receiver,
               let start=d.engine.events.first(where:{$0.runID==run && $0.type == .started}) else {
-            evidence.append(["case":key,"placement":String(describing:placed),"reason":d.engine.events.last?.reason?.rawValue ?? "none",
-                "layout":f.layoutEvidence]);return
+            evidence.append(["case":key,"placement":String(describing:placed),"reason":f.startEvidence["reason"] ?? "none",
+                "startEvidence":f.startEvidence,"layout":f.layoutEvidence]);return
         }
         let output=folder.appendingPathComponent(key+"journey",isDirectory:true)
         try FileManager.default.createDirectory(at:output,withIntermediateDirectories:true)
@@ -302,7 +333,7 @@ enum GiftVerification {
             "dropSeconds":releaseTime.flatMap{a in arrivalTime.map{$0-a}}.map{$0 as Any} ?? NSNull(),
             "terminal":ends.first?.type.rawValue ?? "none","reason":ends.first?.reason?.rawValue ?? "none",
             "birdPixels":birdPixels,"giftPixels":leafPixels,"visibleReceiverSamples":visibleSamples,
-            "samples":samples,"journeyGIF":gif.lastPathComponent,"layout":f.layoutEvidence,
+            "samples":samples,"journeyGIF":gif.lastPathComponent,"layout":f.layoutEvidence,"startEvidence":f.startEvidence,
             "capture":"Actual root CALayer, 15 Hz plus phase changes and 30 Hz descent; JSON simulation timestamps authoritative."])
     }
     private static func interruptions(_ f:Fixture,into checks:inout [String:Bool],evidence:inout [[String:Any]],folder:URL) throws {
@@ -320,7 +351,7 @@ enum GiftVerification {
             case "click":
                 if let state=d.engine.renderSnapshot().first,let point=InsectCatchVerification.visiblePoint(state,in:d) {
                     hit=d.bird(at:point) === bird
-                    if hit,let cg=CGEvent(mouseEventSource:nil,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),let event=NSEvent(cgEvent:cg) {d.handleMouseDown(event)}
+                    if hit,let event=NativeVerificationInput.leftDown(at:point) {d.handleMouseDown(event)}
                 }
                 relocated=d.engine.events.contains{$0.sequence>sequence && $0.kind == .relocate && $0.type == .started} && d.engine.behavior(of:bird) == .relocate
             case "clear":f.settings.clearVisitorGiftButton.performClick(nil)
@@ -362,7 +393,9 @@ enum GiftVerification {
             let sequence=d.engine.events.last?.sequence ?? 0
             let requested=d.engine.handle(.visitorGift(.automatic))
             guard placed.accepted,requested.accepted,let first=held.first else {
-                checks["giftNativeAuthorization-"+action]=false;evidence.append(["authorization":action,"reason":d.engine.events.last?.reason?.rawValue ?? "none"]);continue
+                checks["giftNativeAuthorization-"+action]=false
+                evidence.append(["authorization":action,"requestResult":String(describing:requested),
+                    "authorizationEvidence":f.authorizationEvidence(after:sequence)]);continue
             }
             let old=d.giftAuthorizationAttempt
             switch action {
@@ -430,7 +463,7 @@ enum GiftVerification {
             d.engine.lastGiftAuthorizationDenial==nil
         guard let start,let run=start.runID,let request,let leafID=f.leafID else {
             evidence.append(["automatic":"real durable provider did not start","denial":d.engine.lastGiftAuthorizationDenial?.rawValue ?? "none",
-                "reason":d.engine.events.last?.reason?.rawValue ?? "none"]);return
+                "authorizationEvidence":f.authorizationEvidence(after:sequence)]);return
         }
         let authorized=try GiftLedger.load(from:d.giftLedgerURL),persisted=try VisitorMemoryArchive.load(from:d.visitorMemoryURL)
         checks["giftNativeAutomaticGrantBindsPersistedVisitorExactlyOnce"]=authorized.grants.count==1 &&

@@ -267,7 +267,7 @@ enum CourtshipVerification {
                 guard let id=d.engine.id(of:f.birds[member]),let state=d.engine.renderSnapshot().first(where:{$0.id==id}),
                       let point=InsectCatchVerification.visiblePoint(state,in:d) else {checks[key]=false;continue}
                 hit=d.bird(at:point) === f.birds[member]
-                if hit,let cg=CGEvent(mouseEventSource:nil,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),let event=NSEvent(cgEvent:cg) {
+                if hit,let event=NativeVerificationInput.leftDown(at:point) {
                     d.handleMouseDown(event) // Handler only: never post a system event.
                 } else {hit=false}
             case "child-off":var v=d.settings;v.courtshipEnabled=false;d.settings=v

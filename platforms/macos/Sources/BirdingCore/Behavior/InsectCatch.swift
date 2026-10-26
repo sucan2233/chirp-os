@@ -61,7 +61,7 @@ struct InsectCatchPlan {
                   requiredFrames.isSubset(of:engine.world.availableFrames[species] ?? []),!engine.pointerNear(bird),
                   PoseClip.catchBeakAnchor(species:species,frame:bird.frameName) != nil,
                   let host=engine.world.surfaces.first(where:{$0.id==bird.hostID && $0.pid==bird.hostPID}),
-                  !host.isHabitat,host.isGround || host.layer==0,
+                  host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,
                   source != .automatic || engine.perchPlanner.automaticWeight(id,kind:.insectCatch)>0 else {continue}
             let scale=engine.spriteScale(for:bird),speed=Double(Geometry.distance(.zero,flight.velocity))
             guard scale.isFinite,scale>0,speed.isFinite,speed>=60,
@@ -419,7 +419,7 @@ final class InsectCatchExecution:InsectCatchMotionExecution {
         if let host=plan.originalDestination.host(in:engine),!host.isHabitat {
             targets.append(LandingReservation(bird:plan.id,host:host,fraction:plan.originalDestination.fraction))
         }
-        for host in engine.world.surfaces.filter({!$0.isHabitat && ($0.isGround || $0.layer==0)}).sorted(by:{$0.id<$1.id}).prefix(32) {
+        for host in engine.world.surfaces.filter({$0.canHostBirds && !$0.isHabitat && ($0.isGround || $0.layer==0)}).sorted(by:{$0.id<$1.id}).prefix(32) {
             for fraction in [CGFloat(0.5),CGFloat(0.25),CGFloat(0.75)] {targets.append(LandingReservation(bird:plan.id,host:host,fraction:fraction))}
         }
         for slot in targets {

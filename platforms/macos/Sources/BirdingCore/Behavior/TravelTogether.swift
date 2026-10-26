@@ -96,7 +96,7 @@ struct TravelTogetherPlan {
                   Geometry.distance(.zero,flight.velocity)>0,
                   requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
                   !engine.pointerNear(bird),
-                  let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),!host.isHabitat,host.isGround || host.layer==0
+                  let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0
             else {return nil}
             // The existing ecology clock carries cooldowns even while airborne.
             // Perched dwell/quiet time has no bearing on this opportunity.
@@ -280,7 +280,7 @@ final class TravelTogetherExecution:BehaviorExecution {
         // Quiet mode only closes the opportunity gate, never an active journey.
         guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:.preview)
         else {return .cancelled(.settingsChanged)}
-        guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
+        guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         for (index,id) in participants.enumerated() {
             guard let bird=engine.bird(id) else {return .failed(.missingBird)}
             guard TravelTogetherPlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? [])

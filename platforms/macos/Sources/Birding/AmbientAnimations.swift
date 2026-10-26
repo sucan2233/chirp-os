@@ -11,6 +11,7 @@ extension DesktopController {
     func syncWorld(sampleDT:Double?=nil,at point:CGPoint?=nil,buttonsDown:Bool?=nil) {
         var world=BehaviorWorld(screens:screenRects,displays:displayRects,surfaces:surfaces,
             scale:scale,pointer:point ?? pointerPosition,buttonsDown:buttonsDown ?? pointerButtonsDown(),availableFrames:frameCapabilities,localMinuteOfDay:activityMinuteOfDay(),displayIDs:fixedPerchDisplayIDs,fixedPerchArtAvailable:FixedPerchArt.shared != nil)
+        world.observationClick=observationClickHeld && world.buttonsDown
         world.foodTrayArtAvailable=HabitatObjectRenderer.foodTrayArtAvailable
         world.bathArtAvailable=HabitatObjectRenderer.bathArtAvailable
         world.leafCarryArtAvailable=ScenePropRenderer.leafCarryArtAvailable

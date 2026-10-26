@@ -115,6 +115,10 @@ public struct BehaviorWorld {
     public var scale: CGFloat
     public var pointer: CGPoint
     public var buttonsDown: Bool
+    /// A classified handbook click suppresses new encounters without cancelling
+    /// an encounter already in progress. Ordinary clicks keep their old contract.
+    public var observationClick:Bool=false
+    public var interruptingButtonsDown:Bool {buttonsDown && !observationClick}
     /// Local civil minute supplied by the platform; nil keeps clock-free simulations neutral.
     public var localMinuteOfDay: Int?
     /// Optional poses require real renderer frames; an empty manifest opts out.

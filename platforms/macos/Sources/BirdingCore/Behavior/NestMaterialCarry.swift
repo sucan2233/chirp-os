@@ -103,7 +103,7 @@ class NestActivityExecution:NestMotionExecution {
         guard engine.settings.nestBuildingEnabled,
               engine.settings.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0})
         else {return .cancelled(.settingsChanged)}
-        guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
+        guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         guard engine.world.nestArtAvailable,
               visit.requiredFrames.isSubset(of:engine.world.availableFrames[.spottedDove] ?? [])
         else {return .failed(.missingFrames)}

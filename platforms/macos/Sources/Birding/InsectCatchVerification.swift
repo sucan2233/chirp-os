@@ -291,7 +291,7 @@ enum InsectCatchVerification {
             case "click":
                 if let state=d.engine.renderSnapshot().first,let point=visiblePoint(state,in:d) {
                     hit=d.bird(at:point) === bird
-                    if hit,let cg=CGEvent(mouseEventSource:nil,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),let event=NSEvent(cgEvent:cg) {d.handleMouseDown(event);clicked=true}
+                    if hit,let event=NativeVerificationInput.leftDown(at:point) {d.handleMouseDown(event);clicked=true}
                 }
             case "disable","pausedDisable":
                 if action=="pausedDisable" {d.paused=true}

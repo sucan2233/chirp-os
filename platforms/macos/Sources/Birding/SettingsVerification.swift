@@ -10,7 +10,7 @@ enum SettingsVerification {
             let suite="Birding.SettingsVerification."+UUID().uuidString
             let prefs=UserDefaults(suiteName:suite)!
             defer { prefs.removePersistentDomain(forName:suite) }
-            let d=DesktopController();d.preferences=prefs
+            let d=DesktopController();d.preferences=prefs;d.isolatedSession=true
             func birdCounts() -> [Int] {
                 [d.engine.birds.count,d.engine.residentCount,d.engine.passingCount,d.engine.departingCount,
                  d.engine.pendingCount,d.engine.arrivalCount,d.engine.departureCount]
@@ -19,9 +19,11 @@ enum SettingsVerification {
             let login = VerificationLoginItem(); d.loginService = login
             d.makeMenu()
             let status=d.status!
-            checks["statusItemVisibleWithNamedTemplateIcon"] = status.isVisible && status.autosaveName == "ChirpOS.Main" && status.button?.image?.isTemplate == true && status.button?.image?.size == NSSize(width:18,height:18)
+            let isolatedStatusName="ChirpOS.Verification."+d.observationSession.uuidString
+            checks["statusItemVisibleWithNamedTemplateIcon"] = status.isVisible && status.autosaveName == isolatedStatusName && status.button?.image?.isTemplate == true && status.button?.image?.size == NSSize(width:18,height:18)
+            checks["statusItemAutosaveIsolatedFromProduction"] = d.isolatedSession && status.autosaveName != "ChirpOS.Main"
             d.status.isVisible=false;d.restoreStatusItem()
-            checks["reopenRestoresSameStatusItemAndMenu"] = d.status === status && status.isVisible && status.menu?.items.contains{$0.action == #selector(DesktopController.showSpeciesSettings)} == true
+            checks["reopenRestoresSameStatusItemAndMenu"] = d.status === status && status.isVisible && status.autosaveName == isolatedStatusName && status.menu?.items.contains{$0.action == #selector(DesktopController.showSpeciesSettings)} == true
             checks["developmentBuildIdentifiedInMenu"] = !d.isDevelopmentBuild || status.menu?.items.first?.title == "啾啾测试版 · 本地开发"
             checks["loginInitiallyOff"] = d.loginItem?.state == .off && d.loginItem?.title == "随系统启动" && login.registerCalls == 0
             d.toggleLoginItem()
@@ -287,8 +289,15 @@ enum SettingsVerification {
             try autoreleasepool {try ObservationJournalUIVerification.run(into:&checks,folder:folder)}
             try autoreleasepool {try checkLeafSettings(folder:folder,checks:&checks)}
             d.showSpeciesGallery()
-            checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.title=="图鉴…"} && d.gallery?.window?.isVisible == true
-            if let gallery=d.gallery?.window {
+            checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.action == #selector(DesktopController.showObservationJournal)} &&
+                !d.status.menu!.items.contains{$0.action == #selector(DesktopController.showSpeciesGallery)} &&
+                d.observationWindow?.window?.isVisible == true && d.observationWindow?.selectedView == .allSpecies
+            d.observationWindow?.window?.close()
+            // Retain all artwork-picker/size checks on the internal inspection
+            // controller; it is no longer a separate product menu destination.
+            let artGallery=SpeciesGallery(desktop:d)
+            artGallery.showWindow(nil)
+            if let gallery=artGallery.window {
                 try snapshot(gallery,to:folder.appendingPathComponent("gallery.png"))
                 let scroll=gallery.contentView!.subviews.first(where:{$0 is NSScrollView}) as! NSScrollView
                 let grid=scroll.documentView as! BirdGalleryView

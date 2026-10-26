@@ -199,7 +199,7 @@ enum LeafCarryVerification {
             case "click","clickAfterPlace":
                 if reached,let state=d.engine.renderSnapshot().first,let point=visiblePoint(state,in:d) {
                     hitOriginal=d.bird(at:point) === bird
-                    if hitOriginal,let cg=CGEvent(mouseEventSource:nil,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),let event=NSEvent(cgEvent:cg) {
+                    if hitOriginal,let event=NativeVerificationInput.leftDown(at:point) {
                         d.handleMouseDown(event);clicked=true
                     }
                 }

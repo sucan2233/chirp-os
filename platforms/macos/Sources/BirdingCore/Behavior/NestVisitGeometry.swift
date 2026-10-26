@@ -69,7 +69,7 @@ enum NestVisitGeometry {
               bird.fraction.isFinite,(0...1).contains(bird.fraction),
               let id=engine.id(of:bird),abs(engine.baseHop(for:id,bird:bird))<0.001,
               let host=engine.world.surfaces.first(where:{$0.id==bird.hostID && $0.pid==bird.hostPID}),
-              !host.isHabitat,host.isGround || host.layer==0,engine.hasUsablePerch(bird),
+              host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,engine.hasUsablePerch(bird),
               Geometry.distance(bird.position,Geometry.foot(on:host,fraction:bird.fraction,edge:.top,
                   scale:engine.spriteScale(for:bird)))<0.001 else {return nil}
         return host
@@ -115,7 +115,7 @@ enum NestVisitGeometry {
     static func exits(for bird:Bird,origin:Surface,in engine:BehaviorEngine) -> [NestVisitLanding] {
         guard let id=engine.id(of:bird) else {return []}
         let scale=engine.spriteScale(for:bird)
-        let hosts=engine.world.surfaces.filter{!$0.isHabitat && ($0.isGround || $0.layer==0)}.sorted {
+        let hosts=engine.world.surfaces.filter{$0.canHostBirds && !$0.isHabitat && ($0.isGround || $0.layer==0)}.sorted {
             if ($0.id==origin.id && $0.pid==origin.pid) != ($1.id==origin.id && $1.pid==origin.pid) {
                 return $0.id==origin.id && $0.pid==origin.pid
             }

@@ -3,7 +3,7 @@
 这些 JSON 是引擎输入，采用 Quartz 桌面坐标（向右为 x 正方向，向下为 y 正方向）。它们不依赖 AppKit、窗口标题、桌面截图或用户配置，供 macOS 与后续 Windows 核心运行同一场景。
 
 - `version`：文件格式版本；未知版本拒绝，不能忽略无法理解的事件。
-- `simulationVersion`：M7a当前为17，新增珠颈斑鸠求偶展示语义；文件格式`version`仍为1。旧真实生产录制版本1–16明确拒绝，请在相应旧提交重放或重新录制，不能直接改版本标签。旧19份仓库手写夹具仅迁移16→17，保留原输入及独立断言；新增第20份`courtship-display.json`，不从当前实现反向生成expected。本批尚待统一构建与验证；M6g历史57份完整报告及旧18份兼容结果见下文。
+- `simulationVersion`：U整合当前为19，新增100种默认目录、窗口宿主资格/飞行遮挡分离及观鸟点击分类；文件格式 `version` 仍为1。旧真实录制1–18必须在对应历史提交重放或重新录制，不得改版本标签。仓库22份JSON已从明确场景源码重建为v19，并通过30/60/120Hz一致性检查；旧v18真实录制仍明确拒绝。新的手写场景从 `SharedBehaviorExport.swift` 重建，不读取旧JSON；新 `expected` 仅冻结回归输出，独立语义断言仍负责判断动作是否正确；旧M6/M7结果仅作历史证据。
 - `seed`、鸟/运行/道具/栖息地对象 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
 - `settings`：完整配置或合法的旧格式配置；按 BirdSettings schema 迁移。
 - `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟；可选 `flightOrigin` 让鸟从该坐标开始普通直达飞行，仍需 `advance` 输入才能移动和产生速度。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。
@@ -14,6 +14,8 @@
 - `world.displayIDs`：与 displays 顺序对应的稳定标识；省略为空。`fixedPerchArtAvailable` 表示真实栖木素材是否可用，省略为 true；生产平台必须按实际资源填写。
 - `world.foodTrayArtAvailable`：真实食盘素材是否可用，省略为 true。每次 world 输入都是该能力的完整快照；省略不继承前次 false。该字段的变化参与录制去重，不能被省略素材清单的压缩逻辑吞掉。
 - `world.surfaces[].habitatKind`：可选 `fixedPerch`、`foodTray` 或 `bath`；未知标签拒绝。保留 `isFixedPerch` 旧格式兼容，缺少新标签时 true 映射为 `fixedPerch`；显式新标签优先。普通窗口缺少标签。对象表面由引擎对象存储生成，录制表面标签不能凭空恢复对象、食物或预约。
+- `world.surfaces[].canHostBirds`：省略为true；false表示参与遮挡但不得作为停靠宿主。`occludesFlight` 省略为false，true的普通窗口可遮挡飞行鸟。两者分别序列化，不能由layer或pid推断。
+- `world.observationClick`：省略为false；观鸟记录点击设为true时仍保留 `buttonsDown`，抑制新行为准入，但已有执行不按普通点击取消。每次world输入是完整快照，省略不继承前次true。
 - `world.localMinuteOfDay`：本地民用时钟的分钟（0–1439）；缺失或 null 表示没有时钟输入，日夜模式采用中性节奏。重放不读取机器时区或当前时间；世界更新中省略该字段会清空，不继承。
 - `world` 输入的 `sampleDT`：窗口采样时长。无该字段的世界更新只校验世界，不推进窗口跟随。
 - `expected`：生产录制保存终态报告和完整事件序列。重放命令逐项比较，包括鸟坐标、姿态、生态记忆、道具、租约和熟客档案，以及下述栖息地对象状态。共享手写夹具另由 XCTest 对完成行为、取消原因及零残留作独立断言，不用当前实现反向生成通过标准。
@@ -44,7 +46,19 @@ version 10 的报告增加：
 
 安全边界：最多 32 MiB、60,000 条输入、216,000 个回调、一小时有效模拟；最多 16 个显示器、256 个表面、64 个初始鸟。不完整/超限录制不能保存为正常记录。生产输入通过命令行显式启用，仅保存在指定本地文件。
 
+## 统一生成（U阶段已执行）
+
+仓库原来只有重放入口，`--export-shared` 不导出行为夹具。本轮新增 `SharedBehaviorExport.export(to:)`；主入口接入 `--export-behavior-fixtures` 后，在全部代码完成并统一构建后执行：
+
+```sh
+.build/release/Birding --export-behavior-fixtures shared/behavior-fixtures/v1
+```
+
+该工具从源码定义的22个场景创建v19输入，配置使用当前完整目录并显式固定场景鸟种概率，保留完成/暂停/取消等输入边界。先对所有场景比较30/60/120Hz完整报告，再写出JSON并捕获新的 `expected` 回归基线。之后必须运行核心测试的独立语义断言和CLI回归；跨率一致并不证明动作成功，也不证明与旧引擎轨迹一致。旧JSON与旧报告保留在Git历史，不修改版本号冒充新录制。
+
 ## 使用
+
+以下重放示例须先完成本轮统一导出。章节中的M6/M7验收数据均为历史结果，不是U阶段验收结果。
 
 ```sh
 # 开发构建，然后录制一个单独的 8 秒本机测试进程（也可不指定时长，正常退出时保存）
@@ -60,13 +74,13 @@ dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtur
 # 第16份场景：静止叶片携带；使用已统一验证的构建，无需为文档另行构建
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/leaf-carry.json --replay-hz 120 --replay-output .build/leaf-carry-report.json
 
-# 第17份场景：家燕捕虫、暂停/取消及真实捕获恢复（当前模拟v17）
+# 第17份场景：家燕捕虫、暂停/取消及真实捕获恢复（U阶段统一导出后为v19）
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/insect-catch.json --replay-hz 120 --replay-output .build/insect-catch-report.json
 
-# 第18份场景：白眉姬鹟栖点出击、暂停/返回及取消后独立虫继续（当前模拟v17）
+# 第18份场景：白眉姬鹟栖点出击、暂停/返回及取消后独立虫继续（U阶段统一导出后为v19）
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/flycatcher-insect-catch.json --replay-hz 120 --replay-output .build/flycatcher-insect-catch-report.json
 
-# 第19份场景：熟客赠叶及已记录的授权输入（当前模拟v17，不访问真实额度账本）
+# 第19份场景：熟客赠叶及已记录的授权输入（U阶段统一导出后为v19，不访问真实额度账本）
 dist/ChirpOS.app/Contents/MacOS/Birding --replay-behavior shared/behavior-fixtures/v1/visitor-gift.json --replay-hz 120 --replay-output .build/visitor-gift-report.json
 
 # 第20份场景：双鸟求偶展示、暂停/完成及暂停移除全组取消（待统一验证）
@@ -149,8 +163,12 @@ M6g已验收通过、未安装：冻结候选第六轮`.build/m6g-gift-sixth/rep
 
 M6h隔离真实墙钟长跑与M7a继续独立实施。18次同机加速核心性能对照不能代替2h/8h、原生渲染长期内存/能耗、物理多屏或真实睡眠验收。
 
-## M7a 求偶展示（当前模拟版本17，待统一验证）
+## M7a 求偶展示（历史模拟版本17）
 
 `courtshipDisplay`要求`source: user / preview / automatic`。`courtshipEnabled`缺省true并受`socialInteractions`控制；只招募两只真实已站稳且安静至少10秒的珠颈斑鸠居民。双方位于同一普通顶部或地面，全转身画布之间留12桌面点、鼠标离双方画布外扩80逻辑点区域；固定栖木不参与。4秒展示只保留临时initiator/observer角色，硬上限6秒，不生成配对或繁殖资源。
 
 第20夹具以手写输入覆盖完整完成、双方脚位不动、暂停冻结及暂停中移除任一参与者即全组取消。独立测试比较30/60/120Hz每个输入边界的完整报告，未添加`expected`。自动日常区间[0.08,0.12)使用同一机会，单鸟600秒、全局300秒冷却，暂停冻结、不补发。测试与夹具已落盘不代表本批已经编译或运行通过。
+
+## M7b/c 巢材运输与简化筑巢（历史模拟版本18）
+
+第21、22份场景为 `nest-material-carry.json` 与 `nest-build.json`，保留运输/整理分别计数、暂停冻结、取消不重复提交、三份材料和移除清理等独立断言。U阶段从同名源码场景重新导出v19，不能把M7b/c既有通过结论沿用为本轮通过。

@@ -11,6 +11,7 @@ source = json.loads((ROOT / 'platforms/macos/Sources/BirdingCore/Resources/speci
 shared = json.loads((ROOT / 'shared/species.json').read_text())
 assert source == shared, 'Shared catalog is stale'
 ids = {bird['id'] for bird in source['species']}
+assert len(source['species']) == len(ids) == 100, 'U catalog must contain 100 unique species'
 swift_rows = re.findall(r'case \.(\w+): return Motion\(action: \.(\w+), cycle: ([\d.]+), start: ([\d.]+), duration: ([\d.]+), rate: ([\d.]+), hop: ([\d.]+)\)', swift)
 cs_rows = re.findall(r'"(\w+)" => new\("(\w+)", ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+)\)', csharp)
 def normalized(rows):
@@ -20,7 +21,7 @@ assert normalized(swift_rows) == normalized(cs_rows), 'Windows schedule differs 
 manifest = json.loads((ROOT / 'shared/art/manifest.json').read_text())
 art_source = (ROOT / 'platforms/macos/Sources/Birding/PixelArt.swift').read_text()
 frames = re.findall(r'"([a-z]+\d*)"', re.search(r'static let names = \[(.*?)\]', art_source).group(1))
-assert manifest['frames'] == frames, 'Atlas frame order is stale'
+assert len(frames) == 34 and manifest['frames'] == frames, 'Atlas common frame order is stale'
 assert set(manifest['frameSizes']) == ids, 'Missing species in atlas manifest'
 # Optional species atlases append contact poses without moving common indices.
 contact_frames = [f'allopreen{role}{i}' for role in ('Give', 'Receive') for i in range(3)]
@@ -49,6 +50,9 @@ expected_extras['spottedDove'] += carry_frames + nest_build_frames
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
     assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'
+
+assert sum(len(names) - len(frames) for names in specific.values()) == 187, 'Local appended poses were lost or expanded'
+assert sum(len(specific.get(bird, frames)) for bird in ids) == 3587, 'U atlas frame-slot budget differs'
 
 support = json.loads((ROOT / 'shared/species-support.json').read_text())
 assert {row['species'] for row in support} == ids, 'Missing species support audit'

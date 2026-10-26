@@ -189,6 +189,8 @@ enum FixedPerchSettingsVerification {
 
     private static func isolatedDesktop(preferences:UserDefaults,folder:URL) -> DesktopController {
         let d=DesktopController();d.preferences=preferences;d.automaticPopulation=false
+        // Control fixtures assume released buttons; exercise the pressed gate explicitly below.
+        d.pointerButtonsDown={false}
         d.engine.populationEnabled=false;d.engine.ambientEnabled=false;d.engine.autonomousRouting=false
         d.settingsURL=folder.appendingPathComponent("settings.json");d.legacyURL=folder.appendingPathComponent("legacy.json")
         d.visitorMemoryPersistenceEnabled=false;d.visitorMemoryURL=folder.appendingPathComponent("visitors.json")
@@ -212,14 +214,25 @@ enum FixedPerchSettingsVerification {
                                 checks:inout [String:Bool]) {
         let saved=w.desktop.settings.fixedPerches,snapshot=w.desktop.engine.fixedPerchSnapshot()
         let sequence=w.desktop.engine.events.last?.sequence
-        select(w,slot:slot);w.placeFixedPerchButton.performClick(nil)
+        select(w,slot:slot)
+        let actionStarted=Date()
+        w.placeFixedPerchButton.performClick(nil)
+        let actionReturned=Date()
         let timer=w.fixedPerchCaptureTimer,request=w.fixedPerchCaptureRequest
-        // Nonrepeating Timer.timeInterval is zero; the scheduled deadline is
-        // the input delay. Check it before deterministic capture invalidates it.
+        // AppKit may animate/drain events before performClick returns. Verify
+        // the three-second schedule against its creation window, not a maximum
+        // 0.5-second button-dispatch latency on this machine.
         let deadline=timer?.fireDate.timeIntervalSinceNow ?? -1
+        let scheduledInAction=timer.map {
+            $0.fireDate>=actionStarted.addingTimeInterval(2.95) &&
+            $0.fireDate<=actionReturned.addingTimeInterval(3.05)
+        } ?? false
         checks["fixedPerchProductionButtonInstallsOneShotTimer-"+suffix] = timer?.isValid==true &&
-            timer?.timeInterval==0 && (2.5...3.1).contains(deadline) && request != nil && !w.placeFixedPerchButton.isEnabled &&
+            timer?.timeInterval==0 && scheduledInAction && request != nil && !w.placeFixedPerchButton.isEnabled &&
             w.selectedFixedPerchSlot==slot
+        if checks["fixedPerchProductionButtonInstallsOneShotTimer-"+suffix] == false {
+            print("Fixed perch timer diagnostic: \(suffix), valid=\(timer?.isValid ?? false), interval=\(timer?.timeInterval ?? -1), remaining=\(deadline), request=\(request != nil), enabled=\(w.placeFixedPerchButton.isEnabled), slot=\(w.selectedFixedPerchSlot)")
+        }
         if let request {w.captureFixedPerch(request:request,point:point,displayIDs:displayIDs,displays:displays)}
         checks["fixedPerchSamplingClearsTimer-"+suffix] = timer?.isValid==false &&
             w.fixedPerchCaptureTimer==nil && w.fixedPerchCaptureRequest==nil && w.placeFixedPerchButton.isEnabled
@@ -269,6 +282,9 @@ enum FixedPerchSettingsVerification {
             checks["fixedPerchPreviewUsesSavedDisabledSwitch-"+suffix] = !d.settings.fixedPerchesEnabled &&
                 w.draft.fixedPerchesEnabled && !d.settings.fixedPerches.isEmpty
             w.save();select(w,slot:1);w.removeFixedPerchButton.performClick(nil);set(w.fixedPerchesButton,to:false)
+            d.pointerButtonsDown={true}
+            checkRejection(w,reasons:[.userInput],suffix:"physical-button-down-"+suffix,checks:&checks)
+            d.pointerButtonsDown={false}
             checkRejection(w,reasons:[.noSpecies,.missingBird,.unavailableBird,.noCompanion,.noSpace],
                            suffix:"saved-on-empty-birds-"+suffix,checks:&checks)
             checks["fixedPerchPreviewUsesSavedPositionsAndEnabledSwitch-"+suffix] =

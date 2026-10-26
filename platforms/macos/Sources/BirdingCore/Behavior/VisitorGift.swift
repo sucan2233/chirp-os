@@ -98,7 +98,7 @@ struct VisitorGiftPlan {
                   !bird.isSideHopping,!bird.isCoordinatedFlying,engine.hasUsablePerch(bird),
                   abs(engine.baseHop(for:id,bird:bird))<0.001,
                   let host=engine.world.surfaces.first(where:{$0.id==bird.hostID && $0.pid==bird.hostPID}),
-                  !host.isHabitat,host.isGround || host.layer==0,
+                  host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,
                   let visitor=engine.visitor(of:bird),visitor.visits>=3,visitor.familiarity>=0.6,
                   requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return false}
             return source != .automatic || engine.perchPlanner.automaticWeight(id,kind:.visitorGift)>0
@@ -140,7 +140,7 @@ struct VisitorGiftPlan {
                     let receiver=GiftReceiverReservation(bird:id,perch:perch,revision:revision,rect:receiverRect,worldScale:worldScale)
                     guard receiver.isValid(in:engine,excluding:[id]),
                           !engine.runtime.giftReceiverReservations.contains(where:{receiver.conflicts(with:$0,in:engine)}) else {continue}
-                    let ordinary=engine.world.surfaces.filter{!$0.isHabitat && ($0.isGround || $0.layer==0)}.sorted {
+                    let ordinary=engine.world.surfaces.filter{$0.canHostBirds && !$0.isHabitat && ($0.isGround || $0.layer==0)}.sorted {
                         if ($0.id==host.id) != ($1.id==host.id) {return $0.id==host.id}
                         return $0.id==$1.id ? $0.pid<$1.pid:$0.id<$1.id
                     }
@@ -286,7 +286,7 @@ final class VisitorGiftExecution:BehaviorExecution {
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {
         guard engine.settings.visitorGiftsEnabled,engine.settings.visitorMemoryEnabled,engine.settings.fixedPerchesEnabled,
               engine.settings.probabilities.entries.contains(where:{$0.id == .azureWingedMagpie && $0.points>0}) else {return .cancelled(.settingsChanged)}
-        guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
+        guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         guard let bird=engine.bird(plan.id) else {return .failed(.missingBird)}
         guard VisitorGiftPlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}
         guard let visitor=engine.visitor(of:bird),visitor.id==plan.visitorID,visitor.visits>=3,visitor.familiarity>=0.6,

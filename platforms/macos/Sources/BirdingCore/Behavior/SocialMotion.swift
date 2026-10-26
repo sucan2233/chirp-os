@@ -106,7 +106,7 @@ enum SocialMotionPlanner {
     private static func make(_ action:SocialMotionKind,first:BirdID,second:BirdID,budget:Budget,in engine:BehaviorEngine) -> SocialMotionPlan? {
         guard let a=engine.bird(first),let b=engine.bird(second),
               let host=engine.world.surfaces.first(where:{$0.id==a.hostID}),
-              !host.isHabitat,host.isGround || host.layer==0 else {return nil}
+              host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0 else {return nil}
         let sa=engine.spriteScale(for:a),sb=engine.spriteScale(for:b)
         guard let display=engine.world.displays.first(where:{
             $0.contains(Geometry.landingFootprint(at:a.position,scale:sa)) &&
@@ -150,7 +150,7 @@ enum SocialMotionPlanner {
         case .pairedTakeoff:
             guard a.hostID==b.hostID,Geometry.distance(a.position,b.position)<=420*engine.world.scale,
                   abs(a.position.x-b.position.x)>=gap else {return nil}
-            for destination in engine.world.surfaces where destination.isGround || destination.layer==0 {
+            for destination in engine.world.surfaces where destination.canHostBirds && (destination.isGround || destination.layer==0) {
                 for fraction in [CGFloat(0.25),0.5,0.75] {
                     let midpoint=Geometry.perchX(fraction,rect:destination.rect),sign:CGFloat=a.position.x<b.position.x ? -1:1
                     guard let left=slot(first,destination,midpoint+sign*gap/2),
@@ -236,7 +236,7 @@ final class SocialMotionExecution:BehaviorExecution {
         actor.launched=true;actor.revision=bird.motionRevision;actors[id]=actor
     }
     func advance(_ dt:Double,in engine:BehaviorEngine) -> BehaviorCompletion? {
-        if engine.world.buttonsDown {return .cancelled(.userInput)}
+        if engine.world.interruptingButtonsDown {return .cancelled(.userInput)}
         if participants.contains(where:{engine.bird($0).map{engine.pointerNear($0)} ?? false}) {return .cancelled(.pointerNearby)}
         if actors.values.allSatisfy({!$0.launched}),age+dt+1e-9>=0.45,!SocialMotionPlanner.flightIsClear(plan,in:engine) {return .failed(.targetInvalid)}
         age+=dt

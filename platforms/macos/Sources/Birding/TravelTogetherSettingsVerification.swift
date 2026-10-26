@@ -128,6 +128,8 @@ enum TravelTogetherSettingsVerification {
 
     private static func isolatedDesktop(preferences:UserDefaults,folder:URL) -> DesktopController {
         let d=DesktopController();d.preferences=preferences;d.automaticPopulation=false
+        // Keep real mouse clicks from replacing the preview gate under test.
+        d.pointerButtonsDown={false}
         d.engine.populationEnabled=false;d.engine.ambientEnabled=false;d.engine.autonomousRouting=false
         d.settingsURL=folder.appendingPathComponent("settings.json");d.legacyURL=folder.appendingPathComponent("legacy.json")
         d.visitorMemoryPersistenceEnabled=false;d.visitorMemoryURL=folder.appendingPathComponent("visitors.json")

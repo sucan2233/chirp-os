@@ -19,6 +19,31 @@ final class BehaviorDefinitionTests:XCTestCase {
         .sideBySide,.giveWay,.pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,.visitorGift,.courtshipDisplay,.nestMaterialCarry,.nestBuild]
     private let sources:[BehaviorSource] = [.user,.preview,.automatic]
 
+    // Frozen pre-v0.7 fixture, independent of the profile's cohort classification.
+    private let legacySpecies:Set<SpeciesID> = [
+        .redWhiskeredBulbul,.treeSparrow,.lightVentedBulbul,.spottedDove,.chineseBlackbird,
+        .magpieRobin,.longTailedShrike,.nightHeron,.plumbeousWaterRedstart,.littleEgret,
+        .greyHeron,.commonKestrel,.peregrineFalcon,.blackKite,.commonBuzzard,.orientalMagpie,
+        .azureWingedMagpie,.largeBilledCrow,.hoopoe,.barnSwallow,.mallard,.asianKoel,
+        .swinhoesWhiteEye,.blackHeadedGull,.whimbrel,.piedKingfisher,.eurasianWoodcock,
+        .blackDrongo,.chinesePondHeron,.yellowRumpedFlycatcher,.yellowBrowedWarbler,
+        .greatTit,.commonMoorhen,.greatSpottedWoodpecker,.vinousThroatedParrotbill,
+        .blackWingedStilt,.eurasianCoot,.redBilledLeiothrix,.blackCollaredStarling,
+        .commonKingfisher,.littleRingedPlover,.yellowBilledGrosbeak,.redFlankedBluetail,
+        .collaredScopsOwl,.asianBarredOwlet,.littleOwl
+    ]
+
+    func testReviewedCohortRemainsTheOriginal46With54UnreviewedAdditions() {
+        XCTAssertEqual(legacySpecies.count,46)
+        XCTAssertEqual(Set(SpeciesID.allCases).count,100)
+        XCTAssertEqual(Set(SpeciesID.allCases).subtracting(legacySpecies).count,54)
+        XCTAssertEqual(Set(SpeciesBehaviorProfile.legacySpecies),legacySpecies)
+        for species in SpeciesID.allCases {
+            XCTAssertEqual(SpeciesBehaviorProfile.profile(for:species).isExpansionSpecies,
+                           !legacySpecies.contains(species),species.rawValue)
+        }
+    }
+
     // Literal expectations intentionally do not read existing plan requirements
     // or derive frames from the capability implementation under test.
     private var expected:[Expected] {
@@ -129,7 +154,8 @@ final class BehaviorDefinitionTests:XCTestCase {
     }
 
     func testSpeciesSpecificContactFramesDoNotAdvertiseUnsupportedBirdCapabilities() {
-        // Common poses are shared; contact poses are explicitly species-specific.
+        // Frame presence alone is not approval for an expansion species.
+        // Keep raw asset requirements separate from reviewed capabilities.
         // Keep this fixture independent of BirdArt (AppKit) and the definitions.
         let manifest:Set<String> = ["stand","breathe","blink","preen0","preen1","land0","land1","land2",
             "fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","idle0","idle1","idle2",
@@ -146,8 +172,10 @@ final class BehaviorDefinitionTests:XCTestCase {
             return (species,frames)
         })
         XCTAssertFalse(manifests.isEmpty)
+        let expansionCapabilities:Set<BirdCapability> = [.standing,.blinking,.flight,.landing]
         for species in SpeciesID.allCases {
             let frames=manifests[species]!
+            let audit=SpeciesSupportAudit(species:species,availableFrames:frames)
             for capability in BirdCapability.allCases {
                 let available:Bool
                 switch capability {
@@ -157,6 +185,9 @@ final class BehaviorDefinitionTests:XCTestCase {
                 default:available=true
                 }
                 XCTAssertEqual(capability.requiredFrames.isSubset(of:frames),available,"\(species): \(capability)")
+                XCTAssertEqual(audit.capabilities.contains(capability),
+                    available && (legacySpecies.contains(species) || expansionCapabilities.contains(capability)),
+                    "Reviewed capability: \(species): \(capability)")
             }
             for fixture in expected {
                 let available:Bool
@@ -168,6 +199,13 @@ final class BehaviorDefinitionTests:XCTestCase {
                 }
                 XCTAssertEqual(BehaviorDefinitions.definition(for:fixture.kind).missingFrames(in:frames).isEmpty,available,
                     "\(species): \(fixture.kind)")
+                if !legacySpecies.contains(species) {
+                    let behavior=audit.behaviors.first{$0.kind == fixture.kind}
+                    XCTAssertEqual(behavior?.productAllowed,fixture.kind == .relocate,
+                        "Expansion permission: \(species): \(fixture.kind)")
+                    XCTAssertEqual(behavior?.contentSupported,fixture.kind == .relocate,
+                        "Expansion content: \(species): \(fixture.kind)")
+                }
             }
         }
     }
@@ -179,11 +217,20 @@ final class BehaviorDefinitionTests:XCTestCase {
         XCTAssertEqual(BehaviorDefinitions.definition(for:.edgePeek).requiredCapabilities,[.standing,.greeting,.landing])
         XCTAssertEqual(BehaviorDefinitions.definition(for:.edgePeek).requiredFrames,legacy)
         for species in SpeciesID.allCases {
-            XCTAssertFalse(SpeciesSupportAudit(species:species,availableFrames:legacy).capabilities.contains(.edgePeekPose))
-            XCTAssertTrue(SpeciesSupportAudit(species:species,availableFrames:legacy.union(frames)).capabilities.contains(.edgePeekPose))
+            XCTAssertFalse(SpeciesSupportAudit(species:species,availableFrames:legacy).capabilities.contains(.edgePeekPose),species.rawValue)
+            let complete=SpeciesSupportAudit(species:species,availableFrames:legacy.union(frames))
+            XCTAssertEqual(complete.capabilities.contains(.edgePeekPose),legacySpecies.contains(species),
+                "Complete frame injection must not authorize an unreviewed species: \(species)")
+            if !legacySpecies.contains(species) {
+                let behavior=complete.behaviors.first{$0.kind == .edgePeek}
+                XCTAssertEqual(behavior?.missingFrames,[],species.rawValue)
+                XCTAssertEqual(behavior?.productAllowed,false,species.rawValue)
+                XCTAssertEqual(behavior?.contentSupported,false,species.rawValue)
+            }
             for missing in frames.sorted() {
                 XCTAssertFalse(SpeciesSupportAudit(species:species,
-                    availableFrames:legacy.union(frames).subtracting([missing])).capabilities.contains(.edgePeekPose),missing)
+                    availableFrames:legacy.union(frames).subtracting([missing])).capabilities.contains(.edgePeekPose),
+                    "\(species): missing \(missing)")
             }
         }
     }

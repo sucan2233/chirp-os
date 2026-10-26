@@ -7,7 +7,7 @@ final class CourtshipRecordingTests:XCTestCase {
         let root=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let log=try BehaviorInputLog.load(from:root.appendingPathComponent("shared/behavior-fixtures/v1/courtship-display.json"))
-        XCTAssertEqual(log.simulationVersion,18);XCTAssertNil(log.expected)
+        XCTAssertEqual(log.simulationVersion,19)
         func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
             var partial=log;partial.inputs=Array(log.inputs.prefix(count));return try partial.replay(callbackHz:hz)
         }
@@ -39,6 +39,7 @@ final class CourtshipRecordingTests:XCTestCase {
         XCTAssertEqual(completed.birds.map(\.position),feet)
         XCTAssertEqual(completed.runs,0);XCTAssertEqual(completed.leases,0);XCTAssertEqual(completed.reservations,0)
         let final=try prefix(log.inputs.count)
+        XCTAssertEqual(try XCTUnwrap(log.expected),final)
         XCTAssertEqual(final.events.filter{$0.kind=="courtshipDisplay" && $0.type=="started"}.count,2)
         XCTAssertEqual(final.events.filter{$0.kind=="courtshipDisplay" && $0.type=="completed"}.count,1)
         XCTAssertEqual(final.events.filter{$0.kind=="courtshipDisplay" && $0.type=="cancelled"}.map(\.reason),["removed"])
@@ -68,7 +69,7 @@ final class CourtshipRecordingTests:XCTestCase {
         e.handle(.pause(true));e.handle(.remove(try XCTUnwrap(e.id(of:e.birds[0]))))
         F.clean(e,cancelled);e.handle(.pause(false));F.advance(e,0.2)
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(BehaviorInputLog.engineVersion,18);XCTAssertEqual(log.simulationVersion,18)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,19);XCTAssertEqual(log.simulationVersion,19)
         let expected=try XCTUnwrap(log.expected);XCTAssertNil(log.failure);XCTAssertNil(log.fixtureBirds)
         XCTAssertEqual(expected.events.filter{$0.kind=="courtshipDisplay" && $0.type=="completed"}.map(\.source),["user"])
         XCTAssertEqual(expected.events.filter{$0.kind=="courtshipDisplay" && $0.type=="cancelled"}.map(\.source),["preview"])

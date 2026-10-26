@@ -196,7 +196,7 @@ final class LeafPlayExecution:BehaviorExecution {
         // BehaviorRuntime validates immediately before advancing, including
         // while paused. Do not repeat the bounded corridor scan on this tick.
         guard let bird=engine.bird(plan.id) else {return .failed(.missingBird)}
-        if engine.world.buttonsDown {return .cancelled(.userInput)}
+        if engine.world.interruptingButtonsDown {return .cancelled(.userInput)}
         age+=dt
         if !launched,age+1e-9>=LeafPlayPlan.observeDuration {
             bird.fly(to:plan.origin,host:plan.host,airspace:plan.airspace,allowsOrbit:false,pointerOrbit:plan.orbit,random:{0.5})

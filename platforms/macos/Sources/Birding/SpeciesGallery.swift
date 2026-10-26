@@ -1,10 +1,12 @@
 import AppKit
 import BirdingCore
 
+/// Internal art inspection only; product menus open ObservationJournalWindow.
 final class SpeciesGallery:NSWindowController {
     private var timer:Timer?
     private var grid:BirdGalleryView!
     private var actions:NSSegmentedControl!
+    func refreshMode() {grid?.updateLayout();grid?.needsDisplay=true}
     @objc func selectAction(_ sender:NSSegmentedControl) {
         grid.action=GalleryAction(rawValue:sender.selectedSegment) ?? .resting
         grid.started=ProcessInfo.processInfo.systemUptime
@@ -39,6 +41,7 @@ final class BirdGalleryView:NSView {
     unowned let desktop:DesktopController
     var started=ProcessInfo.processInfo.systemUptime
     var action:GalleryAction = .resting
+    var profiles:[SpeciesProfile] {desktop.catalog.species}
     var maxScale:CGFloat {desktop.scale * (desktop.catalog.species.map(\.relativeScale).max() ?? 1)}
     var cellWidth:CGFloat {max(220,ceil(48*maxScale)+32)}
     var cellHeight:CGFloat {ceil(48*maxScale)+90}

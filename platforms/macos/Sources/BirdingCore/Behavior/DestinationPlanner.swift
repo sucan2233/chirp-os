@@ -45,9 +45,9 @@ enum DestinationPlanner {
             // select the same perch or a point only a few pixels away.
             occupied.append(CGRect(x:avoiding.x-100*scale,y:avoiding.y-48*scale,width:200*scale,height:96*scale))
         }
-        if bird.profile.id == .greatSpottedWoodpecker {
+        if SpeciesBehaviorProfile.profile(for:bird.profile.id).supportsSidePerching {
             var sides:[(Surface,PerchEdge,ClosedRange<CGFloat>)]=[]
-            for host in surfaces where !host.isGround && !host.isHabitat && host.layer == 0 && host.rect.height >= 180 {
+            for host in surfaces where host.canHostBirds && !host.isGround && !host.isHabitat && host.layer == 0 && host.rect.height >= 180 {
                 for edge in [PerchEdge.left,.right] { for screen in screenRects {
                     for range in Geometry.sideRanges(on:host,edge:edge,surfaces:surfaces,screen:screen,scale:scale,occupied:occupied) { sides.append((host,edge,range)) }
                 }}
@@ -64,7 +64,7 @@ enum DestinationPlanner {
             }
         }
         var choices: [(Surface, ClosedRange<CGFloat>)] = []
-        for host in surfaces where !host.isGround && !host.isHabitat && host.layer == 0 && host.rect.width >= 180 && host.rect.height >= 100 {
+        for host in surfaces where host.canHostBirds && !host.isGround && !host.isHabitat && host.layer == 0 && host.rect.width >= 180 && host.rect.height >= 100 {
             for screen in screenRects {
                 for range in Geometry.landingRanges(on: host, surfaces: surfaces, screen: screen, scale: scale, occupied: occupied) {
                     choices.append((host, range))
@@ -72,7 +72,7 @@ enum DestinationPlanner {
             }
         }
         if choices.isEmpty {
-            for host in surfaces where host.isGround {
+            for host in surfaces where host.canHostBirds && host.isGround {
                 for screen in displayRects {
                     for range in Geometry.landingRanges(on:host,surfaces:surfaces,screen:screen,scale:scale,occupied:occupied) { choices.append((host,range)) }
                 }

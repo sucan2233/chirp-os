@@ -759,8 +759,9 @@ final class PoseClipTests:XCTestCase {
 
     func testUnlistedSpeciesKeepOldPresentationEvenWithInjectedEnhancementFrames() throws {
         XCTAssertEqual(species.count,12)
-        XCTAssertEqual(SpeciesID.allCases.filter{!species.contains($0)}.count,34)
-        for bird in SpeciesID.allCases where !species.contains(bird) {
+        let legacy=SpeciesCatalog.standard.species.prefix(46).map(\.id)
+        XCTAssertEqual(legacy.filter{!species.contains($0)}.count,34)
+        for bird in legacy where !species.contains(bird) {
             for kind in kinds {
                 // Takeoff preparation requires a top-edge destination for every
                 // species, including the woodpecker. Keep the public preview

@@ -96,7 +96,7 @@ public final class EdgePeekExecution:LedgeTraversalExecution {
         guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:source) else {return .cancelled(.settingsChanged)}
         guard Self.supportedSpecies.contains(bird.profile.id),
               EdgePeekPlan.requiredFrames(for:bird.profile.id).isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}
-        guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
+        guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         guard let revision,bird.motionRevision==revision,!bird.isDeparting,bird.edge == .top,
               bird.hostID==plan.approach.host.id,!bird.needsDestination,bird.isSideHopping,
               phase != .observe || bird.state == .perched,

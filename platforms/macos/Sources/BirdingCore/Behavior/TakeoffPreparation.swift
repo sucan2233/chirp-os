@@ -59,6 +59,7 @@ extension BehaviorEngine {
 
     private func takeoffPreparationRejection(_ id:BirdID) -> BehaviorReason? {
         guard let bird=bird(id) else {return .missingBird}
+        guard supportsBehavior(.takeoffPreparation,bird:bird) else {return .unavailableBird}
         guard birds.contains(where:{$0 === bird}),role(of:bird) == .resident,
               bird.state == .perched,bird.edge == .top,!bird.isDeparting else {return .unavailableBird}
         guard runtime.owners[id]==nil else {return .busy}
@@ -123,7 +124,7 @@ final class TakeoffPreparationExecution:BehaviorExecution {
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {
         guard let bird=engine.bird(id) else {return .failed(.missingBird)}
         guard engine.settings.perchActions,engine.settings.takeoffPreparationEnabled else {return .cancelled(.settingsChanged)}
-        if engine.world.buttonsDown {return .cancelled(.userInput)}
+        if engine.world.interruptingButtonsDown {return .cancelled(.userInput)}
         guard Self.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}
         guard let anchor,let destination=landingReservations.first,
               bird.motionRevision==anchor.revision,bird.state == .perched,bird.edge == .top,!bird.isDeparting,

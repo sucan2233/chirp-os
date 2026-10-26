@@ -21,7 +21,8 @@ extension DesktopController: NSMenuDelegate {
         approval.target = self; menu.addItem(approval); loginApprovalItem = approval
         refreshLoginItem()
     }
-    func menuWillOpen(_ menu:NSMenu) { refreshLoginItem() }
+    func menuWillOpen(_ menu:NSMenu) { observationMenuOpen=true; cameraPanel?.orderOut(nil); refreshLoginItem() }
+    func menuDidClose(_ menu:NSMenu) { observationMenuOpen=false }
     func refreshLoginItem() {
         let state = loginService.status
         loginItem?.title = state == .requiresApproval
@@ -30,6 +31,7 @@ extension DesktopController: NSMenuDelegate {
         loginItem?.state = state == .enabled ? .on : (state == .requiresApproval ? .mixed : .off)
         loginApprovalItem?.title = t("在系统设置中允许…","Allow in System Settings…")
         loginApprovalItem?.isHidden = state != .requiresApproval
+        settingsWindow?.refreshMode()
     }
     @objc func toggleLoginItem() {
         do {

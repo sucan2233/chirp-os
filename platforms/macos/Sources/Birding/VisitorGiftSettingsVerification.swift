@@ -198,7 +198,7 @@ enum VisitorGiftSettingsVerification {
             d.observationJournal.archive.entries.first?.previewCount==1
         observe(BehaviorObservation(sequence:2,simulationTime:2,kind:.rest,source:.automatic,species:[.treeSparrow],runID:2))
         let before=d.observationJournal.archive,settings=try encoded(d.settings),file=try Data(contentsOf:d.settingsURL)
-        let w=ObservationJournalWindow(desktop:d);w.showWindow(nil)
+        let w=ObservationJournalWindow(desktop:d);w.selectView(.behaviors);w.showWindow(nil)
         defer {w.window?.close()}
         for language:AppLanguage in [.chinese,.english] {
             d.language=language;w.relocalize();w.sourceFilter.selectedSegment=0
@@ -214,7 +214,8 @@ enum VisitorGiftSettingsVerification {
             let entry=w.renderedEntries.first
             checks[key+"PreviewNeverCountsAsNatural"]=w.selectedSource == .preview && w.tableView.numberOfRows==1 &&
                 entry?.automaticCount==0 && entry?.previewCount==1 && entry?.userCount==0 && entry?.totalCount==1 &&
-                w.sourceNoteLabel.stringValue.contains(language.text("预览不计为自然发生","Previews do not count as natural occurrences"))
+                !d.observationJournal.isDiscovered(.azureWingedMagpie) &&
+                w.sourceNoteLabel.stringValue.contains(language.text("预览不解锁鸟种或动作","Previews unlock neither species nor actions"))
             try SettingsVerification.snapshot(w.window!,to:folder.appendingPathComponent("visitor-gift-journal-preview-"+language.rawValue+".png"))
             for source in [ObservationJournalWindow.SourceFilter.natural,.manual] {
                 w.sourceFilter.selectedSegment=source.rawValue;w.sourceChanged(nil)

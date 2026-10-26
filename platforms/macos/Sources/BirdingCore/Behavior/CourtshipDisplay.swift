@@ -81,7 +81,7 @@ struct CourtshipDisplayPlan {
               engine.birds.contains(where:{$0 === bird}),bird.state == .perched,bird.edge == .top,
               bird.stateTime>=0.5,!bird.isDeparting,!bird.needsDestination,
               !bird.isSideHopping,!bird.isCoordinatedFlying,bird.hostID==host.id,bird.hostPID==host.pid,
-              !host.isHabitat,host.isGround || host.layer==0,
+              host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,
               bird.fraction.isFinite,(0...1).contains(bird.fraction),
               engine.world.surfaces.contains(host),engine.hasUsablePerch(bird) else {return false}
         return Geometry.distance(bird.position,Geometry.foot(on:host,fraction:bird.fraction,edge:.top,
@@ -94,7 +94,7 @@ struct CourtshipDisplayPlan {
         guard worldScale.isFinite,worldScale>0,scale.isFinite,scale>0,
               engine.world.scale==worldScale,engine.world.screens==screens,
               engine.world.displays==displays,engine.world.displayIDs==displayIDs,
-              engine.world.surfaces.contains(host),!host.isHabitat,host.isGround || host.layer==0,
+              engine.world.surfaces.contains(host),host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,
               participants.indices.allSatisfy({index in
                   guard let bird=engine.bird(participants[index]) else {return false}
                   return engine.spriteScale(for:bird)==scale && bird.position==originalPositions[index] &&
@@ -220,7 +220,7 @@ final class CourtshipDisplayExecution:LedgeTraversalExecution {
         guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:.preview),
               engine.settings.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0})
         else {return .cancelled(.settingsChanged)}
-        guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
+        guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         for (index,id) in participants.enumerated() {
             guard let bird=engine.bird(id),engine.birds.contains(where:{$0 === bird}) else {return .failed(.missingBird)}
             guard CourtshipDisplayPlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? [])
@@ -260,7 +260,7 @@ final class CourtshipDisplayExecution:LedgeTraversalExecution {
             if bird.state == .perched,bird.edge == .top,!bird.needsDestination,
                !bird.isSideHopping,!bird.isCoordinatedFlying,
                let host=engine.world.surfaces.first(where:{$0.id==bird.hostID && $0.pid==bird.hostPID}),
-               !host.isHabitat,host.isGround || host.layer==0,
+               host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,
                engine.hasUsablePerch(bird),Geometry.distance(bird.position,Geometry.foot(on:host,
                    fraction:bird.fraction,edge:.top,scale:engine.spriteScale(for:bird)))<0.001 {continue}
             engine.recoverFromCourtship(id)

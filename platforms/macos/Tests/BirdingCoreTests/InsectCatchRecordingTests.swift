@@ -10,8 +10,7 @@ final class InsectCatchRecordingTests:XCTestCase {
     }
 
     func testHandwrittenFixturePreservesActualCancellationPauseContactAndRestorationAtAllCallbackRates() throws {
-        let log=try sharedFixture();XCTAssertEqual(log.simulationVersion,18)
-        XCTAssertNil(log.expected,"Handwritten fixtures retain independent semantic assertions")
+        let log=try sharedFixture();XCTAssertEqual(log.simulationVersion,19)
         func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
             var input=log;input.inputs=Array(log.inputs.prefix(count));return try input.replay(callbackHz:hz)
         }
@@ -49,6 +48,7 @@ final class InsectCatchRecordingTests:XCTestCase {
         let second=try XCTUnwrap(try prefix(11).insect)
         XCTAssertNotEqual(second.id,insect.id);XCTAssertEqual(second.age,0)
         let final=try prefix(log.inputs.count),contact=try XCTUnwrap(final.lastInsectContact)
+        XCTAssertEqual(try XCTUnwrap(log.expected),final)
         XCTAssertEqual(final.events.filter{$0.kind=="insectCatch" && $0.type=="started"}.count,2)
         XCTAssertEqual(final.events.filter{$0.kind=="insectCatch" && $0.type=="cancelled"}.count,1)
         let completed=try XCTUnwrap(final.events.first{$0.kind=="insectCatch" && $0.type=="completed"})
@@ -117,7 +117,7 @@ final class InsectCatchRecordingTests:XCTestCase {
         for hz in [30,60,120] {XCTAssertEqual(try pending.replay(callbackHz:hz),report)}
         e.handle(.cancelInsectCatchPreview);e.handle(.pause(false));e.handle(.clearInsect)
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(log.simulationVersion,18);XCTAssertNotNil(log.expected)
+        XCTAssertEqual(log.simulationVersion,19);XCTAssertNotNil(log.expected)
         for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),log.expected)}
         XCTAssertEqual(log.expected?.events.filter{$0.kind=="insectCatch" && $0.type=="rejected"}.map(\.reason),["noSpecies"])
         _=e.startInsectCatchFixture(species:.barnSwallow,trajectory:try F.missTrajectory(in:e))

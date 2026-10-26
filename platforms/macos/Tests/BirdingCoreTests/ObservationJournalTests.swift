@@ -7,7 +7,8 @@ final class ObservationJournalTests:XCTestCase {
     private let date=Date(timeIntervalSince1970:1_790_000_000)
     private let kinds:[BehaviorKind]=[.pointerVisit,.flockPass,.rest,.preen,.socialGreeting,.sideBySide,.giveWay,
         .pairedTakeoff,.leafPlay,.watch,.alert,.sideHop,.takeoffPreparation,.edgePeek,.chase,.travelTogether,
-        .allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch]
+        .allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,
+        .visitorGift,.courtshipDisplay,.nestMaterialCarry,.nestBuild]
 
     private func fixture(seed:UInt64=73,species:[SpeciesID]=[.treeSparrow]) -> BehaviorEngine {
         let engine=BehaviorEngine(seed:seed)
@@ -46,7 +47,11 @@ final class ObservationJournalTests:XCTestCase {
         ObservationEntry(species:species,behavior:behavior,firstSeen:date,lastSeen:date,automaticCount:count)
     }
     private func object(_ archive:ObservationArchive) throws -> [String:Any] {
-        try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(archive)) as? [String:Any])
+        var raw=try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(archive)) as? [String:Any])
+        // Mutate the canonical v3 field so corrupt-entry tests cannot pass merely
+        // because an unchanged compatibility mirror differs from the payload.
+        raw.removeValue(forKey:"entries")
+        return raw
     }
     private func data(_ value:Any) throws -> Data {try JSONSerialization.data(withJSONObject:value,options:[.sortedKeys])}
     private func temporaryFolder()->URL {
@@ -368,9 +373,9 @@ final class ObservationJournalTests:XCTestCase {
         try FileManager.default.createDirectory(at:root,withIntermediateDirectories:true)
         defer {try? FileManager.default.removeItem(at:root)}
         var corrupt=try object(.init(entries:[entry()]))
-        var entries=try XCTUnwrap(corrupt["entries"] as? [[String:Any]])
-        entries[0]["automaticCount"] = -1;corrupt["entries"]=entries
-        let payloads=[try data(["formatVersion":3,"entries":"future schema"]),Data("broken json".utf8),
+        var entries=try XCTUnwrap(corrupt["behaviorEntries"] as? [[String:Any]])
+        entries[0]["automaticCount"] = -1;corrupt["behaviorEntries"]=entries
+        let payloads=[try data(["formatVersion":4,"behaviorEntries":"future schema"]),Data("broken json".utf8),
                       try data(corrupt),Data(repeating:32,count:ObservationArchive.maximumBytes+1)]
         for payload in payloads {
             try payload.write(to:target)
@@ -387,17 +392,17 @@ final class ObservationJournalTests:XCTestCase {
         XCTAssertThrowsError(try ObservationArchive().save(to:root))
     }
 
-    func testRejectsVersionsUnknownBehaviorsSpeciesDuplicatesAndCorruptCounts() throws {
+    func testRejectsVersionsInvalidBehaviorIDsSpeciesDuplicatesAndCorruptCounts() throws {
         let original=try object(.init(entries:[entry()]))
-        for version:Any in [3,0,-1,true,"1",1.5,NSNull()] {
-            XCTAssertThrowsError(try ObservationArchive.decode(data(["formatVersion":version,"entries":"future schema"])))
+        for version:Any in [4,0,-1,true,"1",1.5,NSNull()] {
+            XCTAssertThrowsError(try ObservationArchive.decode(data(["formatVersion":version,"behaviorEntries":"future schema"])))
         }
         for payload in [Data(),Data("null".utf8),Data("[]".utf8),Data("{".utf8),Data("{}".utf8)] {
             XCTAssertThrowsError(try ObservationArchive.decode(payload))
         }
-        let originalEntry=try XCTUnwrap(original["entries"] as? [[String:Any]])[0]
+        let originalEntry=try XCTUnwrap(original["behaviorEntries"] as? [[String:Any]])[0]
         let invalid:[(String,[Any])]=[
-            ("species",["unknown",1,NSNull()]),("behavior",["unknown","relocate",1,NSNull()]),
+            ("species",["unknown",1,NSNull()]),("behavior",["","future-behavior","future behavior",String(repeating:"x",count:129),"relocate",1,NSNull()]),
             ("automaticCount",[-1,1_000_001,Int.max,1.5,true,"1"]),
             ("previewCount",[-1,1_000_001,true]),("userCount",[-1,1_000_001,true]),
             ("firstSeen",[Date(timeIntervalSince1970:-1).timeIntervalSinceReferenceDate,"NaN",true]),
@@ -405,27 +410,49 @@ final class ObservationJournalTests:XCTestCase {
                          date.addingTimeInterval(-1).timeIntervalSinceReferenceDate,"Infinity",true])]
         for (key,values) in invalid {
             for value in values {
-                var raw=original,entry=originalEntry;entry[key]=value;raw["entries"]=[entry]
+                var raw=original,entry=originalEntry;entry[key]=value;raw["behaviorEntries"]=[entry]
                 XCTAssertThrowsError(try ObservationArchive.decode(data(raw)),"\(key): \(value)")
             }
-            var raw=original,entry=originalEntry;entry.removeValue(forKey:key);raw["entries"]=[entry]
+            var raw=original,entry=originalEntry;entry.removeValue(forKey:key);raw["behaviorEntries"]=[entry]
             XCTAssertThrowsError(try ObservationArchive.decode(data(raw)))
         }
-        var raw=original;raw["entries"]=[originalEntry,originalEntry]
+        var raw=original;raw["behaviorEntries"]=[originalEntry,originalEntry]
         XCTAssertThrowsError(try ObservationArchive.decode(data(raw)))
         XCTAssertThrowsError(try ObservationArchive(entries:[entry(count:0)]).validate())
         XCTAssertThrowsError(try ObservationArchive(entries:Array(repeating:entry(),count:ObservationArchive.maximumEntries+1)).validate())
-        raw["entries"]=Array(repeating:originalEntry,count:ObservationArchive.maximumEntries+1)
+        raw["behaviorEntries"]=Array(repeating:originalEntry,count:ObservationArchive.maximumEntries+1)
         XCTAssertThrowsError(try ObservationArchive.decode(data(raw)))
+    }
+
+    func testVersionThreePreservesUnknownBehaviorAndChecksOptionalCompatibilityMirror() throws {
+        let future=ObservationEntry(species:.treeSparrow,behavior:"future_Behavior",firstSeen:date,lastSeen:date,
+                                    automaticCount:2,previewCount:3,userCount:4)
+        // Unknown aggregate history is retained without inventing a discovery
+        // record or treating its ID as a currently supported behavior.
+        let archive=ObservationArchive(entries:[future],speciesRecords:[])
+        var raw=try object(archive)
+        let decoded=try ObservationArchive.decode(data(raw))
+        XCTAssertEqual(decoded,archive);XCTAssertEqual(decoded.entries,[future])
+        XCTAssertNil(BehaviorKind(rawValue:future.behavior))
+        XCTAssertTrue(decoded.speciesRecords.isEmpty)
+        XCTAssertFalse(decoded.requiresMigration)
+        let canonical=try XCTUnwrap(raw["behaviorEntries"] as? [[String:Any]])
+        raw["entries"]=canonical
+        XCTAssertEqual(try ObservationArchive.decode(data(raw)),archive)
+        raw["entries"]=[]
+        XCTAssertThrowsError(try ObservationArchive.decode(data(raw))) { error in
+            XCTAssertTrue(error.localizedDescription.contains("inconsistent compatibility entries"))
+        }
+        XCTAssertEqual(try ObservationArchive.decode(JSONEncoder().encode(decoded)),archive)
     }
 
     func testNonfiniteDateViaCustomDecoderAndExactByteBoundary() throws {
         var raw=try object(.init(entries:[entry()]))
-        var entry=try XCTUnwrap(raw["entries"] as? [[String:Any]])[0]
+        var entry=try XCTUnwrap(raw["behaviorEntries"] as? [[String:Any]])[0]
         let decoder=JSONDecoder()
         decoder.nonConformingFloatDecodingStrategy = .convertFromString(positiveInfinity:"Infinity",negativeInfinity:"-Infinity",nan:"NaN")
         for symbol in ["NaN","Infinity","-Infinity"] {
-            entry["lastSeen"]=symbol;raw["entries"]=[entry]
+            entry["lastSeen"]=symbol;raw["behaviorEntries"]=[entry]
             XCTAssertThrowsError(try decoder.decode(ObservationArchive.self,from:data(raw)))
         }
         let archive=ObservationArchive(entries:[self.entry()])

@@ -24,16 +24,32 @@ public struct ProbabilityDistribution: Codable, Equatable {
         entries += SpeciesCatalog.standard.species.filter { !present.contains($0.id) }
             .map { ProbabilityEntry(id:$0.id,points:0,locked:false) }
     }
-    public mutating func allocateNewSpecies(_ ids:[SpeciesID], catalog:SpeciesCatalog) {
+    /// Explicit opt-in only. The budget is a share of the entire 10,000-point
+    /// distribution, funded exclusively by unlocked existing species.
+    public func newSpeciesAllocationAvailable(_ ids:[SpeciesID]) -> Int {
+        guard isValid else {return 0}
+        let fresh=Set(ids)
+        return entries.filter{!fresh.contains($0.id) && !$0.locked}.reduce(0){$0+$1.points}
+    }
+    @discardableResult public mutating func allocateNewSpecies(_ ids:[SpeciesID], catalog:SpeciesCatalog,
+                                                               budgetPoints:Int = 2_000) -> Bool {
         let fresh=Set(ids)
         let added=entries.indices.filter{fresh.contains(entries[$0].id)}
-        let old=entries.indices.filter{!fresh.contains(entries[$0].id)}
-        guard !added.isEmpty else {return}
-        let budget=Int((10000*Double(added.count)/Double(entries.count)).rounded())
-        let newPoints=Self.apportion(budget,amounts:added.map{catalog.profile(entries[$0].id).weight})
-        let oldPoints=Self.apportion(10000-budget,amounts:old.map{Double(entries[$0].points)})
+        let old=entries.indices.filter{!fresh.contains(entries[$0].id) && !entries[$0].locked}
+        let available=newSpeciesAllocationAvailable(ids)
+        // Reject as a unit, including repeated allocation or manually edited
+        // recipients. Never silently replace an existing user decision.
+        guard isValid, !added.isEmpty, added.count==fresh.count,
+              (1...10_000).contains(budgetPoints), budgetPoints<=available,
+              added.allSatisfy({entries[$0].points==0 && !entries[$0].locked}) else {return false}
+        let weights=added.compactMap {index in catalog.species.first{$0.id==entries[index].id}?.weight}
+        guard weights.count==added.count, weights.allSatisfy({$0.isFinite && (0...1_000_000).contains($0)}),
+              weights.contains(where:{$0>0}) else {return false}
+        let newPoints=Self.apportion(budgetPoints,amounts:weights)
+        let oldPoints=Self.apportion(available-budgetPoints,amounts:old.map{Double(entries[$0].points)})
         for (i,n) in zip(added,newPoints) {entries[i].points=n}
         for (i,n) in zip(old,oldPoints) {entries[i].points=n}
+        return true
     }
     public var isValid: Bool {
         entries.count == SpeciesID.allCases.count && Set(entries.map(\.id)) == Set(SpeciesID.allCases) &&
@@ -229,6 +245,15 @@ public struct BirdSettings: Codable {
             }
         }
         value.perchDefaultsVersion=1
+        // Refresh descriptive metadata without replacing user size, speed,
+        // animation timing or the exact stored probability distribution.
+        value.catalog.species=value.catalog.species.map { old in
+            let current=SpeciesCatalog.standard.profile(old.id)
+            return SpeciesProfile(id:old.id,name:current.name,englishName:current.englishName,
+                scientificName:current.scientificName,appearanceNotes:current.appearanceNotes,
+                adultLengthCM:old.adultLengthCM,weight:old.weight,flapFPS:old.flapFPS,
+                speed:old.speed,perchMin:old.perchMin,perchMax:old.perchMax,weightBasis:current.weightBasis)
+        }
         value.catalog.species += added
         try value.probabilities.includeNewSpecies()
         _ = try SpeciesCatalog.decode(JSONEncoder().encode(value.catalog))

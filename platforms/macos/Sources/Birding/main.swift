@@ -36,6 +36,10 @@ if let path=argument("--verify-soak-smoke") {
         exit(passed ? 0:1)
     } catch {fputs("Desktop soak inspection: \(error)\n",stderr);exit(1)}
 }
+if let path=argument("--export-behavior-fixtures") {
+    do {try SharedBehaviorExport.export(to:URL(fileURLWithPath:path));exit(0)}
+    catch {fputs("Behavior fixture export failed: \(error)\n",stderr);exit(1)}
+}
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
 if let path = argument("--export-pose-previews") {
@@ -212,6 +216,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             } catch {print(error);exit(1)}
         }
         if let path = argument("--verify-birds") { ExpandedVerification.run(to:URL(fileURLWithPath:path)); return }
+        if let path = argument("--verify-observations") { ObservationVerification.run(to:URL(fileURLWithPath:path)); return }
+        if let path = argument("--verify-fixed-perch-settings") {
+            let folder=URL(fileURLWithPath:path)
+            var checks:[String:Bool]=[:]
+            do {
+                try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+                try FixedPerchSettingsVerification.run(into:&checks,folder:folder)
+                let passed = !checks.isEmpty && checks.values.allSatisfy{$0}
+                saveJSON(["passed":passed,"checks":checks],to:folder.appendingPathComponent("report.json"))
+                print("Fixed perch settings: \(passed ? "PASS":"FAIL") — \(checks.count) checks")
+                exit(passed ? 0:1)
+            } catch {
+                saveJSON(["passed":false,"error":error.localizedDescription,"checks":checks],
+                         to:folder.appendingPathComponent("report.json"))
+                print(error);exit(1)
+            }
+        }
         if let path = argument("--verify-settings") { SettingsVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--fixture") {
             fixture = FixtureController(folder:URL(fileURLWithPath:path)); fixture?.start()

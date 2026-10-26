@@ -83,6 +83,11 @@ final class BehaviorRuntime {
         runs[id]=run
     }
     func start(_ execution:BehaviorExecution,source:BehaviorSource,in engine:BehaviorEngine) -> BehaviorResult {
+        guard execution.participants.allSatisfy({id in
+            guard let bird=engine.bird(id) else {return true}
+            return !SpeciesBehaviorProfile.profile(for:bird.profile.id).isExpansionSpecies ||
+                engine.supportsBehavior(execution.kind,bird:bird)
+        }) else {return .rejected(.unavailableBird)}
         guard !execution.participants.contains(where:{owners[$0] != nil}),
               Set(execution.habitatReservations).count==execution.habitatReservations.count,
               habitatReservations.isDisjoint(with:execution.habitatReservations),
@@ -118,6 +123,13 @@ final class BehaviorRuntime {
     func validate(in engine:BehaviorEngine,where matches:(BehaviorExecution)->Bool = {_ in true}) {
         for id in runs.keys.sorted() {
             guard let run=runs[id],matches(run.execution) else {continue}
+            guard run.execution.participants.allSatisfy({participant in
+                guard let bird=engine.bird(participant) else {return true}
+                return !SpeciesBehaviorProfile.profile(for:bird.profile.id).isExpansionSpecies ||
+                    engine.supportsBehavior(run.execution.kind,bird:bird)
+            }) else {
+                finish(id,result:.failed(.unavailableBird),in:engine);continue
+            }
             captureObservationSpecies(id,in:engine)
             guard run.execution.habitatReservations.allSatisfy({engine.habitatObjects.objects[$0] != nil}) else {
                 finish(id,result:.failed(.targetInvalid),in:engine);continue
@@ -180,10 +192,15 @@ final class BehaviorRuntime {
         switch result {
         case .completed:
             let event=engine.emit(.completed,run:id,kind:run.execution.kind,source:run.source,participants:run.execution.participants)
-            if run.execution.kind != .relocate,!run.observationSpecies.isEmpty {
+            let supportedSpecies=run.observationSpecies.filter {species in
+                let profile=SpeciesBehaviorProfile.profile(for:species)
+                return !profile.isExpansionSpecies ||
+                    (profile.allows(run.execution.kind) && profile.hasReviewedContent(for:run.execution.kind))
+            }
+            if run.execution.kind != .relocate,!supportedSpecies.isEmpty {
                 engine.observationObserver?(BehaviorObservation(sequence:event.sequence,simulationTime:event.time,
                     kind:run.execution.kind,source:run.source,
-                    species:run.observationSpecies.sorted{$0.rawValue<$1.rawValue},runID:id.rawValue))
+                    species:supportedSpecies.sorted{$0.rawValue<$1.rawValue},runID:id.rawValue))
             }
         case .cancelled(let reason):
             run.execution.cancel(reason,in:engine)

@@ -82,7 +82,7 @@ final class FoodTrayVisitExecution:BehaviorExecution {
     func start(in engine:BehaviorEngine) {}
     func validate(in engine:BehaviorEngine)->BehaviorCompletion? {
         guard engine.settings.foodTrayEnabled else {return .cancelled(.settingsChanged)}
-        guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
+        guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         guard let bird=engine.bird(plan.id) else {return .failed(.missingBird)}
         guard FoodTrayVisitPlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}
         guard plan.geometryValid(in:engine),bird.motionRevision==revision,!bird.isDeparting,

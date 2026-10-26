@@ -58,7 +58,7 @@ struct ChasePlan {
                   requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
                   engine.hasUsablePerch(bird),!engine.pointerNear(bird),
                   let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}),
-                  !host.isHabitat,host.isGround || host.layer==0,
+                  host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,
                   Geometry.distance(bird.position,Geometry.foot(on:host,fraction:bird.fraction,edge:.top,
                       scale:engine.spriteScale(for:bird)))<0.001 else {return nil}
             if source == .automatic {
@@ -172,7 +172,7 @@ final class ChaseExecution:BehaviorExecution {
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {
         // Quiet rhythm stops new automatic opportunities, not a scene in flight.
         guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:.preview) else {return .cancelled(.settingsChanged)}
-        guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
+        guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         for (index,id) in participants.enumerated() {
             guard let bird=engine.bird(id) else {return .failed(.missingBird)}
             guard ChasePlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}

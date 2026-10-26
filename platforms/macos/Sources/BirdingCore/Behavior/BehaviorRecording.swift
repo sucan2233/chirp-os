@@ -26,8 +26,10 @@ public struct RecordedSurface:Codable,Equatable {
     public var isGround:Bool
     public var isFixedPerch:Bool?
     public var habitatKind:HabitatSurfaceKind?
-    init(_ surface:Surface) {id=surface.id;pid=surface.pid;layer=surface.layer;rect=RecordedRect(surface.rect);isGround=surface.isGround;isFixedPerch=surface.isFixedPerch;habitatKind=surface.habitatKind}
-    var value:Surface {Surface(id:id,pid:pid,rect:rect.value,layer:layer,isGround:isGround,isFixedPerch:isFixedPerch ?? false,habitatKind:habitatKind)}
+    public var canHostBirds:Bool?
+    public var occludesFlight:Bool?
+    init(_ surface:Surface) {id=surface.id;pid=surface.pid;layer=surface.layer;rect=RecordedRect(surface.rect);isGround=surface.isGround;isFixedPerch=surface.isFixedPerch;habitatKind=surface.habitatKind;canHostBirds=surface.canHostBirds ? nil:false;occludesFlight=surface.occludesFlight ? true:nil}
+    var value:Surface {Surface(id:id,pid:pid,rect:rect.value,layer:layer,isGround:isGround,isFixedPerch:isFixedPerch ?? false,habitatKind:habitatKind,canHostBirds:canHostBirds ?? true,occludesFlight:occludesFlight ?? false)}
 }
 public struct RecordedWorld:Codable,Equatable {
     public var screens,displays:[RecordedRect]
@@ -41,12 +43,13 @@ public struct RecordedWorld:Codable,Equatable {
     public var surfaces:[RecordedSurface]
     public var scale:Double,pointer:RecordedPoint
     public var buttonsDown:Bool
+    public var observationClick:Bool?
     public var localMinuteOfDay:Int?
     public var availableFrames:[String:[String]]?
     public init(_ world:BehaviorWorld) {
         screens=world.screens.map(RecordedRect.init);displays=world.displays.map(RecordedRect.init);displayIDs=world.displayIDs;fixedPerchArtAvailable=world.fixedPerchArtAvailable;foodTrayArtAvailable=world.foodTrayArtAvailable;bathArtAvailable=world.bathArtAvailable;leafCarryArtAvailable=world.leafCarryArtAvailable;insectArtAvailable=world.insectArtAvailable;nestArtAvailable=world.nestArtAvailable
         surfaces=world.surfaces.map(RecordedSurface.init);scale=Double(world.scale);pointer=RecordedPoint(world.pointer)
-        buttonsDown=world.buttonsDown;localMinuteOfDay=world.localMinuteOfDay
+        buttonsDown=world.buttonsDown;observationClick=world.observationClick ? true:nil;localMinuteOfDay=world.localMinuteOfDay
         availableFrames=Dictionary(uniqueKeysWithValues:world.availableFrames.map{($0.key.rawValue,$0.value.sorted())})
     }
     func validated(inheriting previous:BehaviorWorld?=nil) throws -> BehaviorWorld {
@@ -63,10 +66,12 @@ public struct RecordedWorld:Codable,Equatable {
               frames.allSatisfy({SpeciesID(rawValue:$0.key) != nil && $0.value.count<=128 && $0.value.allSatisfy{$0.count<=64}}) else {
             throw BehaviorRecordingError.invalid("invalid world bounds, surfaces or frame manifest")
         }
-        return BehaviorWorld(screens:screens.map(\.value),displays:displays.map(\.value),surfaces:surfaces.map(\.value),
+        var world=BehaviorWorld(screens:screens.map(\.value),displays:displays.map(\.value),surfaces:surfaces.map(\.value),
             scale:scale,pointer:pointer.value,buttonsDown:buttonsDown,
             availableFrames:Dictionary(uniqueKeysWithValues:frames.map{(SpeciesID(rawValue:$0.key)!,Set($0.value))}),
             localMinuteOfDay:localMinuteOfDay,displayIDs:displayIDs ?? [],fixedPerchArtAvailable:fixedPerchArtAvailable ?? true,foodTrayArtAvailable:foodTrayArtAvailable ?? true,bathArtAvailable:bathArtAvailable ?? true,leafCarryArtAvailable:leafCarryArtAvailable ?? true,insectArtAvailable:insectArtAvailable ?? true,nestArtAvailable:nestArtAvailable ?? true)
+        world.observationClick=observationClick ?? false
+        return world
     }
 }
 public struct RecordedSimulationOptions:Codable,Equatable {
@@ -463,7 +468,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=18,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=19,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String

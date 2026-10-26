@@ -35,9 +35,9 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
             + (0...7).map{"fly\($0)"})
     }
 
-    func testAllFortySixSpeciesKeepExactDedicatedPermissionsAndOrder() {
-        XCTAssertEqual(SpeciesID.allCases.count,46)
-        XCTAssertEqual(SpeciesCatalog.standard.species.count,46)
+    func testAllHundredSpeciesKeepExactDedicatedPermissionsAndOrder() {
+        XCTAssertEqual(SpeciesID.allCases.count,100)
+        XCTAssertEqual(SpeciesCatalog.standard.species.count,100)
         XCTAssertEqual(Set(SpeciesCatalog.standard.species.map(\.id)),Set(SpeciesID.allCases))
         XCTAssertEqual(SpeciesBehaviorProfile.dedicatedKinds,dedicated.map{$0.0})
         for (kind,expected) in dedicated {
@@ -67,16 +67,20 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
         }
     }
 
-    func testGenericProductPermissionsRemainAvailableForEverySpecies() throws {
+    func testGenericProductPermissionsRemainAvailableForLegacySpeciesOnly() throws {
         let catalogOrder=SpeciesCatalog.standard.species.map(\.id)
+        let legacy=Array(catalogOrder.prefix(46))
+        XCTAssertEqual(SpeciesBehaviorProfile.legacySpecies,legacy)
         for kind in generic {
-            XCTAssertEqual(SpeciesBehaviorProfile.species(for:kind),catalogOrder,kind.rawValue)
+            let allowed=kind == .relocate ? catalogOrder:legacy
+            XCTAssertEqual(SpeciesBehaviorProfile.species(for:kind),allowed,kind.rawValue)
             for species in SpeciesID.allCases {
-                XCTAssertTrue(SpeciesBehaviorProfile.profile(for:species).allows(kind),"\(species): \(kind)")
+                let supported=allowed.contains(species)
+                XCTAssertEqual(SpeciesBehaviorProfile.profile(for:species).allows(kind),supported,"\(species): \(kind)")
                 let audit=SpeciesSupportAudit(species:species,availableFrames:commonFrames)
                 let entry=try XCTUnwrap(audit.behaviors.first{$0.kind==kind})
-                XCTAssertTrue(entry.productAllowed)
-                XCTAssertTrue(entry.contentSupported,"Existing complete common frames must still support \(species): \(kind)")
+                XCTAssertEqual(entry.productAllowed,supported)
+                XCTAssertEqual(entry.contentSupported,supported,"Unreviewed additions cannot gain managed behavior from frame names: \(species): \(kind)")
                 XCTAssertTrue(entry.missingFrames.isEmpty)
             }
         }
@@ -85,7 +89,7 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
     func testPosePackageIsExactlyTenFramesForOnlyTheTwelveAuthorizedSpecies() {
         XCTAssertEqual(SpeciesBehaviorProfile.poseSpecies,poseSpecies)
         XCTAssertEqual(poseSpecies.count,12)
-        XCTAssertEqual(SpeciesID.allCases.filter{!poseSpecies.contains($0)}.count,34)
+        XCTAssertEqual(SpeciesID.allCases.filter{!poseSpecies.contains($0)}.count,88)
         XCTAssertEqual(PoseClip.frameNames,poseFrames)
         XCTAssertEqual(Set(poseFrames).count,10)
         for species in SpeciesID.allCases {
@@ -148,7 +152,7 @@ final class SpeciesBehaviorProfileTests:XCTestCase {
             XCTAssertTrue(empty.capabilities.isEmpty)
             for kind:BehaviorKind in [.watch,.alert,.rest,.preen,.takeoffPreparation] {
                 let row=try XCTUnwrap(empty.behaviors.first{$0.kind==kind})
-                XCTAssertTrue(row.productAllowed)
+                XCTAssertEqual(row.productAllowed,SpeciesCatalog.standard.species.prefix(46).contains{$0.id == species})
                 XCTAssertFalse(row.contentSupported)
                 XCTAssertFalse(row.missingFrames.isEmpty)
             }

@@ -38,16 +38,22 @@
 - macOS 开发版支持家燕空中捕虫：复用正在普通飞行的居民，拦截独立昆虫后合喙恢复并继续原目标。预览最多等待 10 秒自然起飞；暂停冻结动作，真实捕获并恢复后才记入观察手册。
 - macOS 开发版已实现白眉姬鹟从普通窗口或地面栖点出击捕虫并尝试返回原脚位；原点失效时寻找安全落点，捕获且最终落稳才记入观察手册。本阶段验收通过，不新增固定小栖木资格。
 - 夜鹭会长时间守望、伸颈、抖毛，偶尔“挤洗手液”；大斑啄木鸟会沿窗口侧边停靠、啄击。
-- 菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
-- macOS 开发版新增“观察手册”：行为完成后按鸟种记录首次／最近时间和次数，分别标明自动、手动与预览。支持搜索和来源筛选，数据保存在本地；发现新行为不会弹窗。
+- 合并前版本菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
+- 合并前 macOS 开发版的“观察手册”：行为完成后按鸟种记录首次／最近时间和次数，分别标明自动、手动与预览。支持搜索和来源筛选，数据保存在本地；发现新行为不会弹窗。
 - 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
 - 支持中英文切换、暂停动画和随系统启动。
 
-开发进度（2026-10-25）：M7a珠颈斑鸠求偶已通过阶段验收。M7b/c巢材运输与简化筑巢已实现：用户放置巢台和三根材料，运输与整理分别记录，取消保留已提交进度，不自动补充材料。8张新姿态和6张新道具已导出，46鸟旧像素/索引保持，66份跨率回放及旧20份完整报告一致，78 GIF/7800帧通过。全量核心992项、修正后巢台定向46项和素材347项通过；第八轮候选巢台专项1116项、完整鸟行为4593项及设置2190项全部通过，M7b/c阶段验收通过，累计167张新姿态和16张道具。2026-10-25已保护设置与草稿并安装重启；V03补验7546项通过；8h默认工作负载已自然退出并通过事件、资源清理和偏好隔离审阅。短时单屏已完成全屏切换及关闭后恢复检查；2h人工观察门槛按用户要求取消，窗口跟随、菜单暂停及真实sleep/wake按用户确认保留未验；外接双屏/热插拔因无设备未验收。详细轮次、失败历史和性能口径见[M7b/c验收](docs/M7BC-ACCEPTANCE.md)。
+U 阶段进度（2026-10-26）：已在 `codex/upstream-v07-integration` 接入100种基础内容，合并“观鸟手册”的发现、全部鸟种、行为记录和详情；新增54种不自动取得专用生态动作资格。既有概率与锁定保持，新鸟初始0%，由用户选择分配。观鸟记录与换位分流，保留真实指针的路线安全检查。已生成独立开发候选，核心修订复验、素材和新手册检查通过；完整原生场景仍有路线受阻等保留项，未替换安装版或发布v0.7.0。详细功能、数量、失败轮次与验收边界见[U交付记录](docs/U-INTEGRATION-ACCEPTANCE.md)。下述M6/M7证据属于合并前历史。
 
-当前开发版已更新至M7b/c候选，安装与数据保护证据见[M7d记录](docs/M7D-ACCEPTANCE.md)。M6h状态栏隔离修正后的真实30秒smoke及22项离线检查通过；8h默认工作负载另已完成，2h人工观察时长门槛已按用户要求取消；窗口跟随、菜单暂停及真实睡眠唤醒按用户确认保留未验，物理多屏无设备未验。M6/M7已按用户确认的验收范围完成本次交付，保留上述未验项目，详见[实施进度](docs/IMPLEMENTATION-PROGRESS.md)与[M6h记录](docs/M6H-ACCEPTANCE.md)。
+历史开发进度（2026-10-25）：M7a珠颈斑鸠求偶已通过阶段验收。M7b/c巢材运输与简化筑巢已实现：用户放置巢台和三根材料，运输与整理分别记录，取消保留已提交进度，不自动补充材料。8张新姿态和6张新道具已导出，46鸟旧像素/索引保持，66份跨率回放及旧20份完整报告一致，78 GIF/7800帧通过。全量核心992项、修正后巢台定向46项和素材347项通过；第八轮候选巢台专项1116项、完整鸟行为4593项及设置2190项全部通过，M7b/c阶段验收通过，累计167张新姿态和16张道具。2026-10-25已保护设置与草稿并安装重启；V03补验7546项通过；8h默认工作负载已自然退出并通过事件、资源清理和偏好隔离审阅。短时单屏已完成全屏切换及关闭后恢复检查；2h人工观察门槛按用户要求取消，窗口跟随、菜单暂停及真实sleep/wake按用户确认保留未验；外接双屏/热插拔因无设备未验收。详细轮次、失败历史和性能口径见[M7b/c验收](docs/M7BC-ACCEPTANCE.md)。
+
+当前已安装开发版保持M7b/c候选；本轮U候选另存独立路径。历史安装与数据保护证据见[M7d记录](docs/M7D-ACCEPTANCE.md)。M6h状态栏隔离修正后的真实30秒smoke及22项离线检查通过；8h默认工作负载另已完成，2h人工观察时长门槛已按用户要求取消；窗口跟随、菜单暂停及真实睡眠唤醒按用户确认保留未验，物理多屏无设备未验。M6/M7已按用户确认的验收范围完成本次交付，保留上述未验项目，详见[实施进度](docs/IMPLEMENTATION-PROGRESS.md)与[M6h记录](docs/M6H-ACCEPTANCE.md)。
 
 ### 鸟种 / Bird species
+
+下表为原46种基线。U阶段已扩展至100种，完整候选目录见 [`shared/species.json`](shared/species.json)；新增54种清单见[扩种清单](docs/species-expansion-100.json)，验收边界见U交付记录。
+
+The table lists the original 46 species. The U integration contains 100 species; see the U delivery record for candidate validation and remaining native checks.
 
 | 中文 | English |
 | --- | --- |
@@ -82,7 +88,7 @@
 | 池鹭 | Chinese Pond Heron |
 | 白眉姬鹟 | Yellow-rumped Flycatcher |
 | 黄眉柳莺 | Yellow-browed Warbler |
-| 大山雀 | Great Tit |
+| 大山雀 | Japanese Tit |
 | 黑水鸡 | Common Moorhen |
 | 大斑啄木鸟 | Great Spotted Woodpecker |
 | 棕头鸦雀 | Vinous-throated Parrotbill |
@@ -106,7 +112,7 @@
 
 启动后稍等片刻，小鸟就会陆续飞入。点击 macOS 菜单栏或右键点击 Windows 系统托盘中的小鸟图标，即可调整设置或退出。Windows 图标可能位于托盘的隐藏图标区域。更新前请先退出正在运行的版本。
 
-启动时发现新增鸟种，会询问是恢复所有默认概率、按新旧鸟种数量比例分配，还是保留原概率并手动设置。手动模式会直接定位到第一种新鸟；按数量分配会缩放锁定项，但保留锁定状态。体型按成年鸟代表体长进行非线性缩放（红耳鹎 1×、苍鹭 2.5×），部分配色采用雄鸟或繁殖羽；动作经过像素化简化。
+历史发行版会在启动时提示新增鸟种。U阶段保留旧概率与锁定值、新54种初始0%，通过设置内提示由用户分配份额；不沿用会缩放锁定值的按数量分配。体型按成年鸟代表体长进行非线性缩放（红耳鹎 1×、苍鹭 2.5×），部分配色采用雄鸟或繁殖羽；动作经过像素化简化。
 
 macOS 版本使用 Developer ID 签名并经过 Apple 公证。Windows 版本尚未使用发布者证书签名，首次打开可能遇到系统安全提示。
 
@@ -138,12 +144,14 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - macOS encounters: a small bird may circle a stationary pointer at a safe distance when there is room; moving or clicking ends the visit. Loose flocks of 3–5 birds of one species can also pass across the upper screen without affecting resident counts.
 - Bird Settings → Interaction has separate encounter switches, Low/Medium/High frequency, and previews. Low (default) attempts one of the encounters every 3–6 minutes, skipping unsuitable opportunities. Pause and sleep do not accumulate events.
 - Night herons watch, stretch, shake and occasionally leave a fleeting dropping; woodpeckers cling to and peck window sides.
-- Open “Field guide” for a grid of all species; choose Rest, Flight, Flapping, Gliding, Landing, Preening or Other from the fixed action bar.
-- macOS development builds include an Observation journal: completed behaviors are grouped by species with first/last recorded dates and separate natural, manual, and preview counts. Search and filter by source; records stay local and discoveries do not trigger pop-ups.
+- In the pre-integration version, open “Field guide” for a grid of all species; choose Rest, Flight, Flapping, Gliding, Landing, Preening or Other from the fixed action bar.
+- Pre-integration macOS development builds include an Observation journal: completed behaviors are grouped by species with first/last recorded dates and separate natural, manual, and preview counts. Search and filter by source; records stay local and discoveries do not trigger pop-ups.
 - Hourly update checks download and verify new releases in the background. A notification opens release notes and installation confirmation; a red dot and menu entry remain if you postpone.
 - Chinese and English menus, animation pause, and launch at login.
 
-Development status (2026-10-25): M7a Spotted Dove courtship passed stage acceptance. M7b/c nest delivery and building are implemented: a user-placed platform holds exactly three twigs, delivery and arrangement complete as separate visits, and cancellation preserves committed progress without replenishment. Eight poses and six props are exported; all 46 legacy pixel/index sets, 66 cross-rate replay reports, 20 full legacy reports, and 78 GIFs/7,800 frames passed. The full core suite passed 992 tests; after corrections, 46 nest-related tests and 347 art checks passed. The eighth candidate passed all 1,116 nest checks, 4,593 full bird checks, and 2,190 settings checks. M7b/c stage acceptance is complete, bringing the total to 167 new poses and 16 props. The development app was updated and restarted on October 25, 2026, with saved settings and the current draft checked and preserved. The expanded V03 verification passed 7,546 checks. The real eight-hour default workload ended naturally and passed event, cleanup, and preference-isolation review. Focused single-screen checks covered fullscreen transitions and recovery after closing the test window. The user waived the two-hour human-observation gate; window following, menu pause/resume, and real sleep/wake remain explicitly unverified with the user’s acceptance for this delivery. External-monitor and hot-plug checks are recorded as untested because no external display is available. See the [M7b/c evidence](docs/M7BC-ACCEPTANCE.md).
+U integration status (October 26, 2026): the isolated development candidate contains 100 species and one Birding Handbook. Existing preferences and locks remain intact; new species require an explicit probability allocation. Observation clicks record visits while pointer-route safety remains active. Core corrective tests, artwork audits and the new handbook checks pass; full native scene acceptance still has blocked routes and unresolved evidence. The candidate is not installed or released as v0.7.0. See the [U delivery record](docs/U-INTEGRATION-ACCEPTANCE.md) for test rounds and limits.
+
+Historical development status (2026-10-25): M7a Spotted Dove courtship passed stage acceptance. M7b/c nest delivery and building are implemented: a user-placed platform holds exactly three twigs, delivery and arrangement complete as separate visits, and cancellation preserves committed progress without replenishment. Eight poses and six props are exported; all 46 legacy pixel/index sets, 66 cross-rate replay reports, 20 full legacy reports, and 78 GIFs/7,800 frames passed. The full core suite passed 992 tests; after corrections, 46 nest-related tests and 347 art checks passed. The eighth candidate passed all 1,116 nest checks, 4,593 full bird checks, and 2,190 settings checks. M7b/c stage acceptance is complete, bringing the total to 167 new poses and 16 props. The development app was updated and restarted on October 25, 2026, with saved settings and the current draft checked and preserved. The expanded V03 verification passed 7,546 checks. The real eight-hour default workload ended naturally and passed event, cleanup, and preference-isolation review. Focused single-screen checks covered fullscreen transitions and recovery after closing the test window. The user waived the two-hour human-observation gate; window following, menu pause/resume, and real sleep/wake remain explicitly unverified with the user’s acceptance for this delivery. External-monitor and hot-plug checks are recorded as untested because no external display is available. See the [M7b/c evidence](docs/M7BC-ACCEPTANCE.md).
 
 The installed development app now includes M7b/c; see the [installation evidence](docs/M7D-ACCEPTANCE.md). After the status-item isolation correction, the isolated production desktop completed a real 30-second smoke and all 22 offline checks. The separate eight-hour default-workload soak is complete. The user waived the two-hour observation gate. Window following, menu pause/resume, and real sleep/wake remain unverified with the user’s explicit acceptance; physical multi-monitor checks lack equipment. M6/M7 delivery is complete within this agreed acceptance scope, with these limitations recorded; see the [progress record](docs/IMPLEMENTATION-PROGRESS.md) and [M6h evidence](docs/M6H-ACCEPTANCE.md).
 
@@ -155,7 +163,7 @@ The installed development app now includes M7b/c; see the [installation evidence
 
 Birds begin arriving shortly after launch. Use the macOS menu bar icon or right-click the Windows tray icon for settings and quit. The Windows icon may be in the hidden-icons area. Quit the running version before updating.
 
-When new species are detected at startup, choose default probabilities, allocation by species count, or manual configuration. Manual mode jumps to the first new species. Count-based allocation scales locked values but retains their lock state. Sizes use compressed adult-length ratios (bulbul 1×, Grey Heron 2.5×); some designs show males or breeding plumage, with stylized pixel animation.
+Existing releases prompt for new species at startup. U integration is implementing preserved probabilities and locked values, zero initial shares for the 54 additions, and explicit allocation in settings. Sizes use compressed adult-length ratios (bulbul 1×, Grey Heron 2.5×); some designs show males or breeding plumage, with stylized pixel animation.
 
 The macOS app is Developer ID-signed and notarized by Apple. Windows builds are not publisher-signed, so a system security prompt may appear on first launch.
 

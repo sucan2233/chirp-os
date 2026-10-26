@@ -12,7 +12,7 @@ final class NestRecordingTests:XCTestCase {
     func testHandwrittenCarryAndBuildFixturesKeepIndependentTransactionsPauseCompletionAndCleanupAtAllRates() throws {
         for name in ["nest-material-carry","nest-build"] {
             let log=try fixture(name)
-            XCTAssertEqual(log.simulationVersion,18);XCTAssertNil(log.expected)
+            XCTAssertEqual(log.simulationVersion,19)
             func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
                 var value=log;value.inputs=Array(log.inputs.prefix(count));return try value.replay(callbackHz:hz)
             }
@@ -70,6 +70,7 @@ final class NestRecordingTests:XCTestCase {
                 }
             }
             let final=try prefix(log.inputs.count)
+            XCTAssertEqual(try XCTUnwrap(log.expected),final)
             XCTAssertEqual(final.runs,0);XCTAssertEqual(final.leases,0);XCTAssertEqual(final.reservations,0)
             XCTAssertEqual(final.habitatReservations,0);XCTAssertTrue(final.props.isEmpty);XCTAssertTrue(final.habitats.isEmpty)
             XCTAssertNil(final.nests);XCTAssertNil(final.hasNestPlacement);XCTAssertNil(final.sceneFocusID)
@@ -108,7 +109,7 @@ final class NestRecordingTests:XCTestCase {
         F.clear(e)
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
         let expected=try XCTUnwrap(log.expected)
-        XCTAssertEqual(log.simulationVersion,18);XCTAssertNil(log.failure);XCTAssertNil(log.fixtureBirds)
+        XCTAssertEqual(log.simulationVersion,19);XCTAssertNil(log.failure);XCTAssertNil(log.fixtureBirds)
         XCTAssertEqual(expected.events.filter{$0.kind=="nestMaterialCarry" && $0.type=="completed"}.map(\.source),["user"])
         XCTAssertEqual(expected.events.filter{$0.kind=="nestBuild" && $0.type=="completed"}.map(\.source),["preview"])
         for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),expected)}

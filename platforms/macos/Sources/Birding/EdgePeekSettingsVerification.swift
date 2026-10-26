@@ -155,6 +155,8 @@ enum EdgePeekSettingsVerification {
 
     private static func isolatedDesktop(preferences:UserDefaults,folder:URL) -> DesktopController {
         let d=DesktopController();d.preferences=preferences;d.automaticPopulation=false
+        // These controls test saved settings and preview gates, not live mouse input.
+        d.pointerButtonsDown={false}
         d.engine.populationEnabled=false;d.engine.ambientEnabled=false;d.engine.autonomousRouting=false
         d.settingsURL=folder.appendingPathComponent("settings.json");d.legacyURL=folder.appendingPathComponent("legacy.json")
         d.visitorMemoryPersistenceEnabled=false;d.visitorMemoryURL=folder.appendingPathComponent("visitors.json")

@@ -2,6 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+# U integration retains the local release version; use CHIRPOS_DEVELOPMENT_BUILD=1 for candidates.
 DEVELOPMENT_BUILD="${CHIRPOS_DEVELOPMENT_BUILD:-0}"
 [[ "$DEVELOPMENT_BUILD" == 0 || "$DEVELOPMENT_BUILD" == 1 ]] || { printf 'CHIRPOS_DEVELOPMENT_BUILD must be 0 or 1\n' >&2; exit 1; }
 swift build -c release

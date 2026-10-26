@@ -2,22 +2,23 @@ import AppKit
 import BirdingCore
 
 extension BirdArt {
-    func topPixel(frame:String) -> Int {
-        for y in 0..<48 { if (0..<48).contains(where:{contains(frame:frame,x:$0,y:y)}) {return y} }
-        return 0
-    }
+    func topPixel(frame:String) -> Int {topPixels[frame] ?? 0}
     func contains(frame:String,x:Int,y:Int) -> Bool {
-        guard (0..<48).contains(x),(0..<48).contains(y),let image=frames[frame],
-              let data=image.dataProvider?.data,let bytes=CFDataGetBytePtr(data) else {return false}
-        let px=min(image.width-1,x*image.width/48),py=min(image.height-1,y*image.height/48)
-        return bytes[py*image.bytesPerRow+px*4+3]>0
+        guard (0..<48).contains(x),(0..<48).contains(y),let mask=hitMasks[frame] else {return false}
+        return mask[y*48+x]
     }
+}
+struct MouseEventIdentity:Equatable {
+    let timestamp:TimeInterval
+    let number:Int
+    let window:Int
+    init(_ event:NSEvent) {timestamp=event.timestamp;number=event.eventNumber;window=event.windowNumber}
 }
 extension DesktopController {
     // Use the same visible sprite pixels for hovering and clicking, including
     // mirroring, species size, hops, and foreground-window occlusion.
-    func birdSnapshot(at point:CGPoint) -> BirdRenderState? {
-        let snapshot=renderSnapshot(),immersion=engine.bathImmersionSnapshot()
+    func birdSnapshot(at point:CGPoint,synchronize:Bool=true) -> BirdRenderState? {
+        let snapshot=synchronize ? renderSnapshot():engine.renderSnapshot(),immersion=engine.bathImmersionSnapshot()
         let baths=engine.habitatSnapshot().filter{$0.kind == .bath}
         // The visible foreground basin wall also occludes hit targets. Use its
         // authored alpha, exactly as the layer renderer does, at the same scale.
@@ -43,7 +44,9 @@ extension DesktopController {
     func bird(at point:CGPoint) -> Bird? {birdSnapshot(at:point).flatMap{engine.bird($0.id)}}
     func updateHover(now:Double, at suppliedPoint:CGPoint? = nil) {
         let hit=birdSnapshot(at:suppliedPoint ?? pointerPosition)
-        hoveredID=hoverTracker.update(hit.flatMap{$0.hoverable ? $0.id:nil},now:now,delay:settings.hoverDelay)
+        cameraID=observationsEnabled && !paused ? hit?.id:nil
+        if observationsEnabled {hoverTracker=HoverTracker<BirdID>();hoveredID=nil}
+        else {hoveredID=hoverTracker.update(hit.flatMap{$0.hoverable ? $0.id:nil},now:now,delay:settings.hoverDelay)}
     }
     @discardableResult
     func relocateBird(at point:CGPoint) -> Bool {
@@ -53,18 +56,31 @@ extension DesktopController {
         return true
     }
     func handleMouseDown(_ event:NSEvent) {
-        // CGEvent locations already use the desktop's top-left coordinates.
-        // Relocate before cancelling pointer visits so the clicked bird keeps priority.
-        guard let point=event.cgEvent?.location else {return}
-        relocateBird(at:point)
-        // Render/hit-test snapshots may resample the live pointer. Bind the
-        // stimulus to this event after those reads and before issuing the command.
+        let identity=MouseEventIdentity(event)
+        guard identity != lastRoutedMouseEvent,let point=event.cgEvent?.location else {return}
+        lastRoutedMouseEvent=identity
+        // Route local monitor and interactive view callbacks through one latch.
+        // Ordinary application controls must never click a bird underneath them.
+        if let window=NSApp.window(withWindowNumber:event.windowNumber),!(window is OverlayPanel) {
+            observationClickHeld=false;syncWorld(at:point,buttonsDown:true);return
+        }
+        let recording=observationsEnabled && !event.modifierFlags.contains(.option)
+        // Classify before sampling the newly pressed physical button. Hit testing
+        // itself must not validate a running action with an unclassified click.
+        observationClickHeld=recording && !paused && !observationMenuOpen && NSApp.modalWindow == nil && birdSnapshot(at:point,synchronize:false) != nil
+        if recording {
+            if observationClickHeld {photograph(at:point)}
+        } else {
+            relocateBird(at:point)
+        }
         syncWorld(at:point,buttonsDown:true)
-        engine.handle(.pointerClick)
+        if !recording {engine.handle(.pointerClick)}
     }
     private func handleMouseEvent(_ event:NSEvent) {
-        if event.type == .leftMouseUp {syncWorld(at:event.cgEvent?.location,buttonsDown:false)}
-        else {handleMouseDown(event)}
+        if event.type == .leftMouseUp {
+            observationClickHeld=false;cameraPressed=false
+            syncWorld(at:event.cgEvent?.location,buttonsDown:false)
+        } else {handleMouseDown(event)}
     }
     func startMouseMonitoring() {
         stopMouseMonitoring()

@@ -194,10 +194,41 @@ enum NestMaterialVerification {
         // Fixture reuse retains lifetime counters, including a departure caused
         // by an earlier host-invalid case. This visit must not change them.
         let arrivalsBefore=d.arrivalCount,departuresBefore=d.departureCount
+        var observedPhase="admission",lastActiveFrame=bird.frameName,lastActiveRevision=bird.motionRevision
+        func liveDiagnostics()->[String:Any] {
+            let surfaces:[[String:Any]]=d.engine.world.surfaces.map {host in
+                ["id":host.id,"pid":host.pid,"rect":NSStringFromRect(host.rect),"layer":host.layer,
+                 "canHostBirds":host.canHostBirds,"occludesFlight":host.occludesFlight]
+            }
+            return ["simulationTime":d.engine.time,"pointer":NSStringFromPoint(d.engine.world.pointer),
+                    "livePointer":NSStringFromPoint(d.pointerPosition),"buttonsDown":d.engine.world.buttonsDown,
+                    "physicalPressedMouseButtons":NSEvent.pressedMouseButtons,
+                    "phase":observedPhase,"phaseBasis":"last observed frame, material state and flight state; not private execution phase",
+                    "lastActiveFrame":lastActiveFrame,"lastActiveMotionRevision":lastActiveRevision,
+                    "birdMotionRevision":bird.motionRevision,"birdState":String(describing:bird.state),
+                    "birdFoot":NSStringFromPoint(bird.position),"birdHostID":bird.hostID.map{$0 as Any} ?? NSNull(),
+                    "paused":d.paused,"layout":f.layout,"surfaces":surfaces]
+        }
         guard let run=f.start(kind,source:source),let start=d.engine.events.last(where:{$0.runID==run && $0.type == .started}) else {
             checks[key+"RealCommandAndNativePreviewStart"]=false
-            evidence.append(["case":key,"layout":f.layout,"reason":d.engine.events.last?.reason?.rawValue ?? "none"]);return false
+            evidence.append(["case":key,"layout":f.layout,"reason":d.engine.events.last?.reason?.rawValue ?? "none",
+                "failureContext":liveDiagnostics()]);return false
         }
+        var failureContext:[String:Any]?
+        let previousEventObserver=d.engine.eventObserver
+        d.engine.eventObserver={event in
+            if event.runID==run,(event.type == .failed || event.type == .cancelled),failureContext==nil {
+                // Capture the world used by validation at the terminal callback,
+                // before any later render, GIF IO or recovery stepping resamples it.
+                var context=liveDiagnostics()
+                context["eventSequence"]=event.sequence;context["terminalTime"]=event.time
+                context["terminal"]=event.type.rawValue;context["reason"]=event.reason?.rawValue ?? "none"
+                context["captureStage"]="terminal callback after production cancellation/recovery; lastActive fields precede it"
+                failureContext=context
+            }
+            previousEventObserver?(event)
+        }
+        defer {d.engine.eventObserver=previousEventObserver}
         checks[key+"RealCommandAndNativePreviewStart"]=start.source==source && start.participants==[id] && d.engine.leasedBirdCount==1
         let output=folder.appendingPathComponent(key+"journey",isDirectory:true)
         if capture {try FileManager.default.createDirectory(at:output,withIntermediateDirectories:true)}
@@ -217,6 +248,15 @@ enum NestMaterialVerification {
         for tick in 0..<Int((limit+1)*120) {
             guard d.engine.behavior(of:bird)==kind,let nest=d.engine.nestSnapshot().first,
                   let state=d.engine.renderSnapshot().first(where:{$0.id==id}) else {break}
+            lastActiveFrame=state.frameName;lastActiveRevision=bird.motionRevision
+            let committed=build ? nest.progress>initial.progress:nest.delivered>initial.delivered
+            if committed {
+                observedPhase=bird.state == .flying ? "departure":(bird.hostID==f.host.id ? "settle":"afterCommit")
+            } else if build {
+                observedPhase=state.frameName.hasPrefix("nest") ? "build/"+state.frameName:"approach"
+            } else if nest.attached>0 {
+                observedPhase=bird.state == .flying ? "carry":(state.frameName=="carryPlace" ? "place":"pickup")
+            } else {observedPhase=bird.state == .flying ? "approach":"pickup"}
             let props=d.engine.propSnapshot().filter{$0.kind == .twigToken};f.view.updateSprites();frames.insert(state.frameName)
             conservation = conservation && conserved(nest) && nest.progress==nest.arranged
             identities = identities && Set(nest.materials.map(\.id))==previousIDs && d.birds.count==1 && d.birds.first === originalBird &&
@@ -334,6 +374,7 @@ enum NestMaterialVerification {
         let duration=(ends.first?.time ?? .infinity)-start.time-paused
         let delta=zip(beforeCounts,counts(after)).map{$0.1-$0.0},expected=source == .automatic ? [1,0,0]:(source == .preview ? [0,1,0]:[0,0,1])
         let completed=ends.count==1 && ends.first?.type == .completed
+        if !completed,failureContext==nil {failureContext=liveDiagnostics()}
         checks[key+"FullRouteAndHardDeadline"]=completed && duration<=limit+1.0/120+1e-6 && bird.state == .perched &&
             bird.hostID==f.host.id && f.d.surfaces.contains(where:{$0.id==bird.hostID})
         let required=build ? SpeciesBehaviorProfile.nestBuildFrameNames:SpeciesBehaviorProfile.nestCarryFrameNames
@@ -379,6 +420,7 @@ enum NestMaterialVerification {
             "geometryInvariants":["anchor":anchor,"layer":layerGeometry,"pickup":pickupContinuous,"delivery":deliveryContinuous,"continuous":continuous],
             "motionSpeedLimit":motionSpeedLimit,"maxMotionDelta":maxMotionDelta,"maxFootStep":maxFootStep,
             "firstMotionViolation":firstMotionViolation as Any? ?? NSNull(),
+            "failureContext":failureContext as Any? ?? NSNull(),
             "populationBefore":["arrivals":arrivalsBefore,"departures":departuresBefore],
             "populationAfter":["arrivals":d.arrivalCount,"departures":d.departureCount],
             "materialConservation":conservation,"materialAndBirdIdentitiesStable":identities,
@@ -486,7 +528,7 @@ enum NestMaterialVerification {
             case "click":
                 if let state=d.engine.renderSnapshot().first,let p=InsectCatchVerification.visiblePoint(state,in:d) {
                     hit=d.bird(at:p) === bird
-                    if hit,let cg=CGEvent(mouseEventSource:nil,mouseType:.leftMouseDown,mouseCursorPosition:p,mouseButton:.left),let event=NSEvent(cgEvent:cg) {
+                    if hit,let event=NativeVerificationInput.leftDown(at:p) {
                         d.handleMouseDown(event)
                         replacement=d.engine.events.first{$0.sequence>sequence && $0.kind == .relocate && $0.type == .started && $0.participants==[id]}?.runID
                         relocated=replacement != nil

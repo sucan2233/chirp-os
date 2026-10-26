@@ -9,10 +9,13 @@ public struct Surface: Equatable {
     public var rect: CGRect // Quartz desktop coordinates: y grows downward.
     public let layer: Int
     public let isGround: Bool
+    public let canHostBirds: Bool
+    public let occludesFlight: Bool
     public let habitatKind:HabitatSurfaceKind?
     public var isFixedPerch:Bool {habitatKind == .fixedPerch}
     public var isHabitat:Bool {habitatKind != nil}
-    public init(id: UInt32, pid: Int32 = 0, rect: CGRect, layer: Int = 0, isGround: Bool = false, isFixedPerch:Bool = false,habitatKind:HabitatSurfaceKind?=nil) {
+    public init(id: UInt32, pid: Int32 = 0, rect: CGRect, layer: Int = 0, isGround: Bool = false, isFixedPerch:Bool = false,habitatKind:HabitatSurfaceKind?=nil,canHostBirds:Bool=true,occludesFlight:Bool=false) {
+        self.canHostBirds=canHostBirds;self.occludesFlight=occludesFlight
         self.id = id; self.pid = pid; self.rect = rect; self.layer = layer; self.isGround = isGround; self.habitatKind=habitatKind ?? (isFixedPerch ? .fixedPerch:nil)
     }
 }
@@ -28,9 +31,11 @@ public enum Geometry {
     public static func blockers(on host:Surface,surfaces:[Surface]) -> [Surface] {
         // Ground birds share the floating overlay with birds in flight. Normal
         // windows cannot invalidate this last-resort ledge, but utility panels can.
-        if host.isGround || host.isHabitat { return surfaces.filter { !$0.isGround && !$0.isHabitat && $0.layer>0 } }
+        if host.isGround || host.isHabitat { return surfaces.filter { !$0.isGround && !$0.isHabitat && ($0.layer>0 || $0.occludesFlight) } }
         guard let depth=surfaces.firstIndex(where:{$0.id==host.id}) else { return [] }
-        return surfaces.prefix(depth).filter { !$0.isGround && !$0.isHabitat }
+        return surfaces.enumerated().filter { index,surface in
+            !surface.isGround && !surface.isHabitat && (index<depth || (surface.occludesFlight && surface.id != host.id))
+        }.map(\.element)
     }
     // Sequential subtraction, not even-odd clipping: overlapping occluders stay opaque.
     public static func subtract(_ rect: CGRect, _ blocker: CGRect) -> [CGRect] {
@@ -52,7 +57,7 @@ public enum Geometry {
     }
     public static func isLandingVisible(on hostID: UInt32, at foot: CGPoint,
                                         surfaces: [Surface], scale: CGFloat) -> Bool {
-        guard let host = surfaces.first(where: { $0.id == hostID }) else { return false }
+        guard let host = surfaces.first(where: { $0.id == hostID }),host.canHostBirds else { return false }
         let area = landingFootprint(at: foot, scale: scale)
         return !blockers(on:host,surfaces:surfaces).contains {
             !$0.rect.intersection(area).isEmpty && !$0.rect.intersection(area).isNull
@@ -61,7 +66,7 @@ public enum Geometry {
     // Continuous foot-position intervals, clipped by screens, occluders and reservations.
     public static func landingRanges(on host: Surface, surfaces: [Surface], screen: CGRect,
                                      scale: CGFloat, occupied: [CGRect] = []) -> [ClosedRange<CGFloat>] {
-        guard surfaces.contains(where: { $0.id == host.id }) else { return [] }
+        guard host.canHostBirds,surfaces.contains(where: { $0.id == host.id }) else { return [] }
         let y = foot(on:host,fraction:0.5,edge:.top,scale:scale).y, half = 29 * scale
         guard y - 39 * scale >= screen.minY, y + 9 * scale <= screen.maxY else { return [] }
         let lo = max(perchX(0, rect: host.rect), screen.minX + half)
@@ -89,7 +94,7 @@ public enum Geometry {
     }
     public static func sideRanges(on host:Surface, edge:PerchEdge, surfaces:[Surface], screen:CGRect,
                                   scale:CGFloat, occupied:[CGRect]) -> [ClosedRange<CGFloat>] {
-        guard !host.isGround, surfaces.contains(where:{$0.id==host.id}) else { return [] }
+        guard host.canHostBirds,!host.isGround, surfaces.contains(where:{$0.id==host.id}) else { return [] }
         let x=edge == .left ? host.rect.minX:host.rect.maxX
         guard x-29*scale >= screen.minX, x+29*scale <= screen.maxX else { return [] }
         let lo=max(host.rect.minY+42,screen.minY+39*scale)
@@ -578,7 +583,7 @@ public final class Bird {
                                   spriteScale:CGFloat,expectedRevision:UInt64) -> Bool {
         guard let old=coordinatedMotion,old.tracksHost,!isDeparting,!destinationInvalidated,
               motionRevision==expectedRevision,spriteScale==old.scale,edge == .top,
-              !host.isHabitat,host.isGround || host.layer==0,
+              host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,
               fraction.isFinite,(0...1).contains(fraction),
               Geometry.distance(position,route.position(at:0))<0.001,
               Geometry.distance(Geometry.foot(on:host,fraction:fraction,edge:.top,scale:spriteScale),
@@ -635,7 +640,7 @@ public final class Bird {
                               spriteScale:CGFloat,expectedRevision:UInt64) -> Bool {
         guard state == .flying,!isDeparting,motionRevision==expectedRevision,
               spriteScale.isFinite,spriteScale>0,fraction.isFinite,(0...1).contains(fraction),
-              !host.isHabitat,host.isGround || host.layer==0,
+              host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,
               Geometry.distance(position,leg.path.point(0))<0.001,
               Geometry.distance(Geometry.foot(on:host,fraction:fraction,edge:.top,scale:spriteScale),leg.path.point(1))<0.001,
               leg.timing.duration.isFinite,leg.timing.duration>0,
@@ -702,13 +707,13 @@ public final class Bird {
     public func updateHost(surfaces: [Surface], sampleDT: Double, spriteScale: CGFloat = 1) {
         guard let id = hostID else { return }
         if let motion=coordinatedMotion {
-            guard let host=surfaces.first(where:{$0.id==id && $0.pid==hostPID}),
+            guard let host=surfaces.first(where:{$0.id==id && $0.pid==hostPID && $0.canHostBirds}),
                   (motion.tracksHost ? host.isGround==motion.host.isGround:host==motion.host),
                   spriteScale==motion.scale else {cancelCoordinatedFlight();return}
             return
         }
         if let hop=sideHopMotion {
-            guard let host=surfaces.first(where:{$0.id==id && $0.pid==hostPID}),
+            guard let host=surfaces.first(where:{$0.id==id && $0.pid==hostPID && $0.canHostBirds}),
                   updateSideHopHost(host,spriteScale:spriteScale) else {cancelSideHop();return}
             let delta=Geometry.distance(host.rect.origin,hop.host.rect.origin)
             if !host.isGround,sampleDT<0.20,delta>8,delta/max(0.016,sampleDT)>950 {cancelSideHop()}
@@ -716,7 +721,7 @@ public final class Bird {
         }
         // Window IDs can be reused between samples, including the first landing
         // frame. Reject a different owner before calculating or adopting its feet.
-        guard let host = surfaces.first(where: { $0.id == id && $0.pid == hostPID }) else { flee(); return }
+        guard let host = surfaces.first(where: { $0.id == id && $0.pid == hostPID && $0.canHostBirds }) else { flee(); return }
         let point = Geometry.foot(on:host,fraction:fraction,edge:edge,scale:spriteScale)
         if state == .flying && !Geometry.isLandingVisible(on: id, at: point, surfaces: surfaces, scale: spriteScale) {
             // Stay exactly where we are until the controller chooses a new route.
@@ -836,7 +841,7 @@ public final class Bird {
             return Geometry.blockers(on:host,surfaces:surfaces).map(\.rect)
         }
         // Every flight is above normal windows; menus / utility panels still cover it.
-        return surfaces.filter { !$0.isGround && $0.layer > 0 }.map(\.rect)
+        return surfaces.filter { !$0.isGround && ($0.layer > 0 || $0.occludesFlight) }.map(\.rect)
     }
     public var hopOffset: CGFloat {
         guard state == .perched, edge == .top else { return 0 }

@@ -550,6 +550,7 @@ public final class BehaviorEngine {
         guard !free.isEmpty else {return reject(.leafPlay,source,.busy)}
         let supported=free.filter {id in
             guard let bird=bird(id) else {return false}
+            guard supportsBehavior(.leafPlay,bird:bird) else {return false}
             guard source != .automatic || perchPlanner.automaticWeight(id,kind:.leafPlay)>0 else {return false}
             return LeafPlayPlan.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? [])
         }
@@ -585,7 +586,8 @@ public final class BehaviorEngine {
         guard !encounterUnavailable,scheduledEncounter == nil else {return reject(.pointerVisit,source,.busy)}
         guard !world.buttonsDown,let screen=world.screens.first(where:{$0.contains(world.pointer)}) else {return reject(.pointerVisit,source,.noSpace)}
         let candidates=birds.filter {bird in
-            bird.state == .perched && bird.edge == .top && !bird.isDeparting && behavior(of:bird)==nil &&
+            supportsBehavior(.pointerVisit,bird:bird) &&
+                bird.state == .perched && bird.edge == .top && !bird.isDeparting && behavior(of:bird)==nil &&
                 spriteScale(for:bird)<=1.8 && bird.position.x>=screen.minX && bird.position.x<=screen.maxX &&
                 bird.position.y>=screen.minY && bird.position.y<=screen.maxY
         }
@@ -635,6 +637,7 @@ public final class BehaviorEngine {
         let candidates=order.filter {id in
             guard let record=records[id],record.visible,record.role == .resident else {return false}
             let bird=record.bird
+            guard supportsBehavior(.socialGreeting,bird:bird) else {return false}
             guard bird.state == .perched,bird.edge == .top,!bird.isDeparting,
                   !bird.needsDestination,bird.perchDuration-bird.stateTime>6 else {return false}
             if runtime.owners[id] != nil {reasons.append(.busy);return false}
@@ -669,11 +672,12 @@ public final class BehaviorEngine {
         }
         return result
     }
-    private func socialMotionCandidates() -> [BirdID] {
+    private func socialMotionCandidates(_ kind:BehaviorKind) -> [BirdID] {
         order.filter {id in
             guard let record=records[id],record.visible,record.role == .resident else {return false}
             let bird=record.bird
-            return bird.state == .perched && bird.edge == .top && !bird.isDeparting &&
+            return supportsBehavior(kind,bird:bird) &&
+                bird.state == .perched && bird.edge == .top && !bird.isDeparting &&
                 !bird.needsDestination && bird.perchDuration-bird.stateTime>3 &&
                 runtime.owners[id]==nil && hasUsablePerch(bird) && !pointerNear(bird) &&
                 SocialMotionPlan.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? [])
@@ -684,7 +688,7 @@ public final class BehaviorEngine {
         guard BehaviorDefinitions.definition(for:action.behavior).isEnabled(settings:settings,source:source) else {return reject(action.behavior,source,.disabled)}
         guard !encounterUnavailable,scheduledEncounter==nil else {return reject(action.behavior,source,.busy)}
         guard !world.buttonsDown else {return reject(action.behavior,source,.userInput)}
-        let ids=socialMotionCandidates()
+        let ids=socialMotionCandidates(action.behavior)
         guard ids.count>=2 else {
             let settled=birds.filter{role(of:$0) == .resident && !$0.isDeparting && $0.state == .perched && $0.edge == .top}
             let reason:BehaviorReason
@@ -996,7 +1000,7 @@ public final class BehaviorEngine {
             let settled=available.contains {bird in
                 bird.state == .perched && bird.edge == .top && !bird.needsDestination &&
                     world.surfaces.contains {$0.id==bird.hostID && $0.pid==bird.hostPID &&
-                        !$0.isHabitat && ($0.isGround || $0.layer==0)}
+                        $0.canHostBirds && !$0.isHabitat && ($0.isGround || $0.layer==0)}
             }
             return reject(.insectCatch,source,settled ? .noSpace:.unavailableBird)
         }
@@ -1437,8 +1441,9 @@ public final class BehaviorEngine {
     private func requestSocialEncounter() {
         // All social clips share this one opportunity; adding a clip does not
         // create another clock or make noticeable events more frequent.
-        let ids=socialMotionCandidates()
-        let available=SocialMotionKind.allCases.filter{!SocialMotionPlanner.candidates($0,ids:ids,in:self).isEmpty}
+        let available=SocialMotionKind.allCases.filter{
+            !SocialMotionPlanner.candidates($0,ids:socialMotionCandidates($0.behavior),in:self).isEmpty
+        }
         let chase=BehaviorDefinitions.definition(for:.chase).isEnabled(settings:settings,source:.automatic) &&
             !ChasePlan.candidates(in:self).isEmpty
         let together=BehaviorDefinitions.definition(for:.travelTogether).isEnabled(settings:settings,source:.automatic) &&
@@ -1452,8 +1457,14 @@ public final class BehaviorEngine {
         else if allopreening,choice==available.count+(chase ? 1:0)+(together ? 1:0) {_=requestAllopreening(source:.automatic)}
         else {_=requestSocialGreeting(.automatic)}
     }
+    /// Product/content approval is separate from actual frames and live geometry.
+    func supportsBehavior(_ kind:BehaviorKind,bird:Bird) -> Bool {
+        let profile=SpeciesBehaviorProfile.profile(for:bird.profile.id)
+        return profile.allows(kind) && profile.hasReviewedContent(for:kind)
+    }
     func supports(_ action:PerchActionKind,bird:Bird) -> Bool {
-        action.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? [])
+        supportsBehavior(action.behavior,bird:bird) &&
+            action.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? [])
     }
     func pointerNear(_ bird:Bird) -> Bool {
         Geometry.distance(world.pointer,bird.position)<max(100,72*spriteScale(for:bird))
@@ -1466,6 +1477,7 @@ public final class BehaviorEngine {
             Geometry.isLandingVisible(on:hostID,at:bird.position,surfaces:world.surfaces,scale:spriteScale(for:bird))
     }
     private func perchRejection(_ action:PerchActionKind,bird:Bird) -> BehaviorReason? {
+        guard supportsBehavior(action.behavior,bird:bird) else {return .unavailableBird}
         guard !bird.isDeparting,bird.state == .perched,bird.edge == .top,role(of:bird) == .resident,
               !bird.needsDestination,bird.perchDuration-bird.stateTime>7 else {return .unavailableBird}
         guard behavior(of:bird)==nil else {return .busy}

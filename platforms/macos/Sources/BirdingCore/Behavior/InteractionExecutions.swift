@@ -77,7 +77,7 @@ final class PointerVisitExecution:BehaviorExecution {
         // World synchronization also precedes commands and render snapshots.
         // Consume sampled input only on a simulation step, preserving the
         // encounter lease and explicit-click priority between steps.
-        if engine.world.buttonsDown {return .cancelled(.userInput)}
+        if engine.world.interruptingButtonsDown {return .cancelled(.userInput)}
         if followsPointer {
             guard engine.world.pointer.x.isFinite,engine.world.pointer.y.isFinite,
                   screen.contains(engine.world.pointer) else {return .cancelled(.noSpace)}

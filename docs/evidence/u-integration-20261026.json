@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-26",
+  "scope": "macOS U integration; development candidate, not installed or released",
+  "baseline": "53680ae5738cdd5caabe460c4bf25e7090659ada",
+  "upstream": "6d2a9e2cd3bf68120b6335b9df092f5b2468ed69",
+  "candidate": {
+    "path": "dist/U-20261026/ChirpOS Dev.app",
+    "binarySHA256": "a322c6675e1d2707811f2810506a65e393dd467addf76637706d3856f45a6b89",
+    "bundleID": "dev.birding.desktop.development",
+    "version": "0.6.0",
+    "build": "60",
+    "adHocStrictSignatureVerified": true
+  },
+  "sourceDiffStatistics": {
+    "macOS源码": {
+      "files": 60,
+      "added": 2409,
+      "deleted": 326
+    },
+    "测试与验证器": {
+      "files": 45,
+      "added": 1555,
+      "deleted": 219
+    },
+    "Windows源码（未验）": {
+      "files": 13,
+      "added": 572,
+      "deleted": 103
+    },
+    "构建与素材脚本": {
+      "files": 3,
+      "added": 434,
+      "deleted": 0
+    }
+  },
+  "assets": {
+    "species": 100,
+    "addedSpecies": 54,
+    "addedBaseSlots": 1836,
+    "localExtraSlotsPreserved": 187,
+    "totalBirdSlots": 3587,
+    "newSpeciesDistinctImagesSummedWithinSpecies": 1244,
+    "auditChecks": 390,
+    "auditPassed": true,
+    "changedLegacyBaseFrames": 1012,
+    "changedLocalExtraFrames": 7,
+    "changedExtraPixels": 43
+  },
+  "replays": {
+    "scenarios": 22,
+    "simulationVersion": 19,
+    "callbackRates": [
+      30,
+      60,
+      120
+    ],
+    "crossRateComparisonsPassed": true,
+    "independentSemantics": "covered by corrective XCTest suites"
+  },
+  "coreTests": {
+    "fullRound": {
+      "methods": 1024,
+      "failedMethods": 12,
+      "failedAssertions": 88,
+      "seconds": 601.608
+    },
+    "correctiveRound": {
+      "methods": 63,
+      "failedMethods": 0,
+      "seconds": 109.379
+    },
+    "remainingMethodsUsingFirstRoundEvidence": 961,
+    "notASingleAllGreenFullRun": true
+  },
+  "observations": {
+    "checks": 25,
+    "passed": true
+  },
+  "settings": {
+    "firstRoundChecks": 2233,
+    "firstRoundFailedChecks": 17,
+    "secondRoundChecks": 2245,
+    "secondRoundFailures": [
+      "fixedPerchPreviewRejection-saved-on-empty-birds-en"
+    ],
+    "fixedPerchFinalChecks": 142,
+    "fixedPerchFinalPassed": true,
+    "scope": "All observed failures corrected and rechecked across rounds; not one full all-green run"
+  },
+  "desktopSmoke": {
+    "wallSeconds": 30.141682624991518,
+    "reason": "durationReached",
+    "offlineChecks": 22,
+    "offlinePassed": true,
+    "peakRSSBytes": 231047168,
+    "naturalEndBirds": 7,
+    "sessionCPUSeconds": 1.407083,
+    "maximumTickGapSeconds": 0.03230208333116025,
+    "eventCounts": {
+      "birdRemoved/none/automatic/removed": 7,
+      "cancelled/rest/automatic/shutdown": 1,
+      "completed/preen/automatic/none": 2,
+      "started/preen/automatic/none": 2,
+      "started/rest/automatic/none": 1
+    },
+    "allDynamicResourcesReleased": true,
+    "allLayersReleased": true,
+    "preferencesIsolated": true,
+    "logicalDisplayCount": 2,
+    "physicalMultiMonitorAccepted": false,
+    "manualObservationEstablished": false
+  },
+  "lookupBenchmark": {
+    "cachedOpaqueCount": 119141,
+    "cachedSeconds": 0.011978083348367363,
+    "decodedPixelBytes": 65364512,
+    "directOpaqueCount": 119141,
+    "directSeconds": 0.1355585416604299,
+    "frames": 3587,
+    "logicalMaskEntries": 8264448,
+    "queries": 688704,
+    "species": 100
+  },
+  "userProtection": {
+    "filesUnchanged": true,
+    "changedFiles": [],
+    "installedBinaryUnchanged": true
+  },
+  "fullNativeSceneAcceptance": {
+    "passed": false,
+    "reason": "Live-pointer route restrictions plus unresolved journey/start evidence; synthetic click identities repaired, full scene suite not repeated",
+    "remaining": [
+      "2x nest routes",
+      "earlier nest targetInvalid journeys without complete failure-time input evidence",
+      "gift 0.5x right initial start",
+      "physical window following",
+      "real menu pause/resume",
+      "real system sleep/wake",
+      "physical monitor hotplug",
+      "Windows build/native/behavior parity"
+    ]
+  }
+}

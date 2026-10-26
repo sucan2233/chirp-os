@@ -3,13 +3,19 @@ import BirdingCore
 
 extension BirdArt {
     static func exportShared(to folder:URL) throws {
+        let previousPigmentCheck=BirdPainter.verifyPigmentBounds
+        BirdPainter.verifyPigmentBounds=true
+        defer {BirdPainter.verifyPigmentBounds=previousPigmentCheck}
         try FileManager.default.createDirectory(at:folder.appendingPathComponent("art"),withIntermediateDirectories:true)
         let catalog = SpeciesCatalog.standard
+        var frameSizes:[String:Int]=[:]
         try JSONEncoder().encode(catalog).write(to:folder.appendingPathComponent("species.json"))
         for profile in catalog.species {
             let art = BirdArt(species:profile.id)
+            try art.validateHitCaches()
             let names=Self.names(for:profile.id)
             let size=art.frames["stand"]!.width
+            frameSizes[profile.id.rawValue]=size
             let ctx = CGContext(data:nil,width:size*names.count,height:size,bitsPerComponent:8,bytesPerRow:0,
                                 space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue)!
             ctx.interpolationQuality = .none
@@ -52,9 +58,9 @@ extension BirdArt {
         // Includes catch-only flycatcher, magpie carry and both dove courtship roles,
         // without changing the atlas/prop schema or historical frame prefixes.
         let poseClips=Self.poseMetadata
-        let metadata:[String:Any] = ["schemaVersion":2,"logicalFrameSize":48,"frameSizes":Dictionary(uniqueKeysWithValues:catalog.species.map{($0.id.rawValue,BirdArt(species:$0.id).frames["stand"]!.width)}),"footAnchor":[29,39],"frames":names,
+        let metadata:[String:Any] = ["schemaVersion":2,"logicalFrameSize":48,"frameSizes":frameSizes,"footAnchor":[29,39],"frames":names,
                                     "speciesFrames":Dictionary(uniqueKeysWithValues:catalog.species.filter{Self.names(for:$0.id) != names}.map{($0.id.rawValue,Self.names(for:$0.id))}),
-                                    "poseClips":poseClips,"poseClock":"owningBehaviorSimulationAge","source":"platforms/macos/Sources/Birding/{PixelArt,SpeciesArt,DetailedBirdArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt,NestArt}.swift; platforms/macos/Sources/BirdingCore/Behavior/{CourtshipArtGeometry,NestArtGeometry,TwigGeometry}.swift"]
+                                    "poseClips":poseClips,"poseClock":"owningBehaviorSimulationAge","source":"platforms/macos/Sources/Birding/{PixelArt,SpeciesArt,DetailedBirdArt,ExpansionBirdArt,M6cPoseGeometry,BathArt,CarryArt,InsectArt,NestArt}.swift; platforms/macos/Sources/BirdingCore/Behavior/{CourtshipArtGeometry,NestArtGeometry,TwigGeometry}.swift"]
         try JSONSerialization.data(withJSONObject:metadata,options:[.prettyPrinted,.sortedKeys]).write(to:folder.appendingPathComponent("art/manifest.json"))
     }
 }

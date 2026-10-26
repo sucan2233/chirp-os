@@ -97,7 +97,7 @@ final class SocialGreetingExecution:BehaviorExecution {
     }
 
     func advance(_ dt:Double,in engine:BehaviorEngine) -> BehaviorCompletion? {
-        if engine.world.buttonsDown {return .cancelled(.userInput)}
+        if engine.world.interruptingButtonsDown {return .cancelled(.userInput)}
         for id in participants {
             guard let bird=engine.bird(id) else {return .failed(.missingBird)}
             if engine.pointerNear(bird) {return .cancelled(.pointerNearby)}

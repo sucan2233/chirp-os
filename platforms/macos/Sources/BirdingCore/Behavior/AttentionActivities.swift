@@ -84,7 +84,7 @@ public final class AttentionExecution:BehaviorExecution {
         }
         // Input remains actionable while animation is paused, just like invalid
         // hosts and frame manifests. Validation never advances age or facing.
-        if engine.world.buttonsDown {return .cancelled(.userInput)}
+        if engine.world.interruptingButtonsDown {return .cancelled(.userInput)}
         return nil
     }
 

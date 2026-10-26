@@ -143,7 +143,7 @@ struct LeafCarryPlan {
                   !bird.isSideHopping,!bird.isCoordinatedFlying,abs(engine.baseHop(for:id,bird:bird))<0.001,
                   requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []),
                   let host=engine.world.surfaces.first(where:{$0.id==bird.hostID && $0.pid==bird.hostPID}),
-                  !host.isHabitat,host.isGround || host.layer==0,engine.hasUsablePerch(bird) else {return false}
+                  host.canHostBirds,!host.isHabitat,host.isGround || host.layer==0,engine.hasUsablePerch(bird) else {return false}
             return source != .automatic || engine.perchPlanner.automaticWeight(id,kind:.leafCarry)>0
         }.sorted{engine.id(of:$0)!<engine.id(of:$1)!}.prefix(8)
         var result:[Self]=[]
@@ -301,7 +301,7 @@ final class LeafCarryExecution:BehaviorExecution {
     }
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {
         guard engine.settings.leafCarryEnabled else {return .cancelled(.settingsChanged)}
-        guard !engine.world.buttonsDown else {return .cancelled(.userInput)}
+        guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         guard let bird=engine.bird(plan.id) else {return .failed(.missingBird)}
         guard plan.worldValid(in:engine),LeafCarryPlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}
         guard !hostFailed,let revision,bird.motionRevision==revision,!bird.isDeparting,

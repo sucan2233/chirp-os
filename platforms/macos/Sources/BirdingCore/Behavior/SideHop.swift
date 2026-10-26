@@ -243,7 +243,7 @@ final class SideHopExecution:LedgeTraversalExecution {
         guard let bird=engine.bird(plan.id) else {return .failed(.missingBird)}
         guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:source) else {return .cancelled(.settingsChanged)}
         guard SideHopPlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}
-        if engine.world.buttonsDown {return .cancelled(.userInput)}
+        if engine.world.interruptingButtonsDown {return .cancelled(.userInput)}
         guard let revision else {return invalid(.startRejected,in:engine)}
         guard bird.motionRevision==revision else {return invalid(.motionRevisionChanged,in:engine)}
         guard !bird.isDeparting,bird.edge == .top,bird.hostID==plan.host.id,!bird.needsDestination,
@@ -286,6 +286,7 @@ final class SideHopExecution:LedgeTraversalExecution {
 extension BehaviorEngine {
     private func sideHopRejection(_ id:BirdID,source:BehaviorSource) -> BehaviorReason? {
         guard let bird=bird(id) else {return .missingBird}
+        guard supportsBehavior(.sideHop,bird:bird) else {return .unavailableBird}
         guard birds.contains(where:{$0 === bird}),role(of:bird) == .resident,!bird.isDeparting else {return .unavailableBird}
         guard runtime.owners[id]==nil else {return .busy}
         guard bird.state == .perched,bird.edge == .top,!bird.needsDestination,

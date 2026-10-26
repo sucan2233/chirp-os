@@ -9,7 +9,7 @@ final class FlycatcherInsectCatchRecordingTests:XCTestCase {
         let root=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let log=try BehaviorInputLog.load(from:root.appendingPathComponent("shared/behavior-fixtures/v1/flycatcher-insect-catch.json"))
-        XCTAssertEqual(log.simulationVersion,18);XCTAssertNil(log.expected)
+        XCTAssertEqual(log.simulationVersion,19)
         func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
             var input=log;input.inputs=Array(log.inputs.prefix(count));return try input.replay(callbackHz:hz)
         }
@@ -50,6 +50,7 @@ final class FlycatcherInsectCatchRecordingTests:XCTestCase {
         XCTAssertEqual(cancelled.insect?.waypoints,next.waypoints)
         XCTAssertEqual(cancelled.runs,0);XCTAssertEqual(cancelled.leases,0);XCTAssertEqual(cancelled.reservations,0)
         let final=try prefix(log.inputs.count)
+        XCTAssertEqual(try XCTUnwrap(log.expected),final)
         XCTAssertEqual(final.events.filter{$0.kind=="insectCatch" && $0.type=="started"}.count,2)
         XCTAssertEqual(final.events.filter{$0.kind=="insectCatch" && $0.type=="completed"}.count,1)
         XCTAssertEqual(final.events.filter{$0.kind=="insectCatch" && $0.type=="cancelled"}.map(\.reason),["userInput"])
@@ -115,7 +116,7 @@ final class FlycatcherInsectCatchRecordingTests:XCTestCase {
         XCTAssertEqual(Common.terminals(e,run).map(\.type),[.completed])
         XCTAssertEqual(bird.state,.perched);XCTAssertEqual(bird.position,foot)
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(log.simulationVersion,18);XCTAssertNotNil(log.expected);XCTAssertNil(log.failure)
+        XCTAssertEqual(log.simulationVersion,19);XCTAssertNotNil(log.expected);XCTAssertNil(log.failure)
         XCTAssertEqual(log.inputs.filter{$0.command?.name=="insectCatch"}.map{$0.command?.species},[F.species.rawValue,F.species.rawValue])
         for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),log.expected)}
         // This is a complete real recording, including its real expected report;

@@ -135,7 +135,7 @@ enum NestBuildVerification {
         _=try InsectCatchVerification.snapshot(f.view,around:f.crop,to:folder.appendingPathComponent("third-commit-before-exit-actual-layer.png"))
         let visibleComplete=nest.completed && f.controls.nestStatus.stringValue.contains(d.t("巢台完成","Nest platform complete"))
         let hit=d.bird(at:p) === bird,sequenceBeforeClick=d.engine.events.last?.sequence ?? 0
-        if hit,let cg=CGEvent(mouseEventSource:nil,mouseType:.leftMouseDown,mouseCursorPosition:p,mouseButton:.left),let event=NSEvent(cgEvent:cg) {d.handleMouseDown(event)}
+        if hit,let event=NativeVerificationInput.leftDown(at:p) {d.handleMouseDown(event)}
         let ends=NestMaterialVerification.terminal(d.engine,run)
         checks["nestBuildNativeFinalCommitClickKeepsCompleteButNoObservation"]=visibleComplete && hit &&
             d.engine.events.contains{$0.sequence>sequenceBeforeClick && $0.kind == .relocate && $0.type == .started} &&

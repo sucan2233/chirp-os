@@ -2,6 +2,25 @@
 
 行为扩展与架构规划见 [行为与互动引擎设计](BEHAVIOR-ENGINE-DESIGN.md)：包含动作储备、现有架构评估、运行时边界、迁移路线与验收标准。macOS M0–M4 实际范围、迁移桥和验收状态见文档第 16–19 节；M5a 落叶道具场景见第 20 节。整个引擎的完成审计不能只依据单个场景通过；共享夹具、能力与配置版本、跨平台对齐仍须逐项验收。
 
+## U阶段整合（独立开发候选）
+
+2026-10-26，`codex/upstream-v07-integration` 已整合上游100种目录与统一观鸟手册，范围见[冻结方案](UPSTREAM-V0.7-INTEGRATION-PLAN.md)。原46种保留187追加帧；新54种仅开放审核后的基础能力。构建、核心修订复验、素材与手册检查证据见[交付记录](U-INTEGRATION-ACCEPTANCE.md)；完整原生场景仍有限制，Windows行为未对齐。
+
+全部代码完成后统一编译、生成资源、测试和验收。当前 macOS 构建保留本地 `CFBundleShortVersionString=0.6.0`、`CFBundleVersion=60`，候选显式使用 `CHIRPOS_DEVELOPMENT_BUILD=1` 的独立标识。上游0.7.0只是整合来源，不作为本地发行号；最终发布版本由本地交付另定，候选不宣称已公证或已发布。
+
+共享场景导出 API 位于 `Birding/SharedBehaviorExport.swift`：`SharedBehaviorExport.export(to: URL) throws`。CLI 接入 `--export-behavior-fixtures <目录>` 后，主代理使用统一构建生成的二进制执行下列步骤；不要用旧二进制或改旧JSON版本号代替重新导出：
+
+```bash
+# 所有实现完成后，统一执行；此段不代表已执行或通过。
+CHIRPOS_DEVELOPMENT_BUILD=1 ./scripts/build.sh
+.build/release/Birding --export-behavior-fixtures shared/behavior-fixtures/v1
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./scripts/test.sh
+```
+
+导出器从源码中的22份手写场景构造当前100种设置、明确场景概率和输入边界，先比较30/60/120Hz报告，再保存全部文件，不写入反向生成的 `expected`。核心测试继续独立验证完成、取消、坐标和资源释放；导出成功不能替代这些语义检查。`--export-shared` 只导出素材/能力清单，与回放导出分开；parity检查应在本轮共享素材导出后统一执行。
+
+模拟版本由18升至19，文件格式仍为1。旧v18录制必须拒绝，使用对应历史提交重放；旧fixture JSON在统一导出之前也会被拒绝，这不是允许测试跳过或放宽解码的理由。`Surface.canHostBirds` 默认true、`occludesFlight` 默认false；`BehaviorWorld.observationClick` 默认false。记录点击仍保留物理 `buttonsDown` 以抑制新行为，但不触发执行取消。相关字段必须进入世界录制与去重，不能只改桌面输入而漏掉回放。
+
 ## 项目结构 / Layout
 
 | 目录 / Directory | 内容 / Contents |
@@ -99,9 +118,9 @@ macOS 行为统一从 `BirdingCore/Behavior/BehaviorEngine` 进入：平台先�
 
 ### 屏幕外飞入验收
 
-常驻鸟在完整飞入路线规划成功后才加入引擎，规划失败不发布鸟、不增加抵达计数，后续可以重试。核心测试覆盖所有 46 鸟种的左右屏外起点、连续位移、多个屏幕布局、首只及后续常驻鸟、延迟出场的过境鸟群；绘制验收检查实际 CALayer 首次可见时跨越屏幕边缘，避免只验证记录的起点坐标。
+常驻鸟在完整飞入路线规划成功后才加入引擎，规划失败不发布鸟、不增加抵达计数，后续可以重试。合并前核心测试覆盖原46鸟种的左右屏外起点、连续位移、多个屏幕布局、首只及后续常驻鸟、延迟出场的过境鸟群；绘制验收检查实际 CALayer 首次可见时跨越屏幕边缘，避免只验证记录的起点坐标。
 
-本轮统一验收：XCTest 139/139、鸟 UI 55/55、设置 73/73、数量与飞入 12/12、桌面 13/13、更新器 17/17、发布脚本 11/11；物种数据校验通过。上述飞入验收使用受控窗口场景，不能排除其他应用透明浮窗被按矩形遮挡后造成的延迟可见现象；这类现场遮挡仍需独立复现。
+历史飞入阶段验收（不是U阶段）：XCTest 139/139、鸟 UI 55/55、设置 73/73、数量与飞入 12/12、桌面 13/13、更新器 17/17、发布脚本 11/11；物种数据校验通过。上述飞入验收使用受控窗口场景，不能排除其他应用透明浮窗被按矩形遮挡后造成的延迟可见现象；这类现场遮挡仍需独立复现。
 
 ## Windows
 
@@ -135,8 +154,8 @@ Windows 桌面检查 / Windows desktop checks: run `ChirpOS.exe --self-test`, or
 
 ## 美术 / Artwork
 
-像素绘制定义位于 `platforms/macos/Sources/Birding/PixelArt.swift` 、`SpeciesArt.swift` 和 `DetailedBirdArt.swift`。修改后在 Mac 上导出共用资源，并提交 `shared/` 的变化。
-Artwork is defined in `platforms/macos/Sources/Birding/PixelArt.swift` `SpeciesArt.swift` and `DetailedBirdArt.swift`. Export on Mac after editing, and commit the updated `shared/` assets.
+像素绘制定义位于 `platforms/macos/Sources/Birding/PixelArt.swift` 、`SpeciesArt.swift` 、`DetailedBirdArt.swift` 和 `ExpansionBirdArt.swift`。修改后在 Mac 上导出共用资源，并提交 `shared/` 的变化。
+Artwork is defined in `platforms/macos/Sources/Birding/PixelArt.swift` `SpeciesArt.swift` `DetailedBirdArt.swift`, and `ExpansionBirdArt.swift`. Export on Mac after editing, and commit the updated `shared/` assets.
 
 ```bash
 ./scripts/export-shared.sh
@@ -184,3 +203,20 @@ GitHub Actions uses repository secrets: `MACOS_SIGNING_IDENTITY`, `MACOS_NOTARY_
 Windows release assets are always ZIP archives containing ChirpOS.exe, LICENSE.txt,
 README.md, and Verify-Windows.cmd. Both shell and PowerShell builds read the version
 from ChirpOS.csproj. Extract the archive before launching the executable.
+
+## 统一观鸟手册 / Birding Handbook（U阶段候选）
+
+macOS目标是一个“观鸟手册”入口，包含我的发现、全部鸟种、行为记录和统一详情。手动到访记录与自然/主动行为完成分别计数，预览保留历史但不解锁发现；浏览目录和取消/失败不计完成。模式开关不改变用户概率、锁定、尺寸、生态开关或设置草稿，也不驱离现有居民。
+
+观鸟模式普通左键记录本次到访，Option+左键换位且不记录；普通模式保留换位。到访身份跨换位、窗口和模式变化保持，离场再入场才是新访。暂停、拖动、菜单或上层窗口遮挡时不接受新记录；点击记录不打断已有行为，物理按键仍抑制新行为准入。
+
+统一档案为设置旁的 `observations.json` v3。本地v1/v2行为记录及可识别的上游 `life-list.json` 按来源迁移，旧源先备份，成功标记防重复导入。未知版本、损坏或保存失败不得用空档覆盖。档案写入、锁、迁移标记和退出收尾均须独立隔离验证；development bundle ID并不自动隔离用户文件。具体迁移实现和验收以本轮代码与报告为准。
+
+The macOS U integration targets one Birding Handbook with separate manual visit and completed-behavior counts. Preview history does not unlock discoveries. Observation mode preserves user settings and active residents. The v3 archive imports supported legacy sources once with backup and failure protection; validation rounds and remaining native limitations are documented in U-INTEGRATION-ACCEPTANCE.md.
+
+```bash
+# 仅在本轮全部实现并统一构建后执行；隔离个人记录。
+.build/release/Birding --verify-observations .build/u-observation-check
+```
+
+原生检查需覆盖点击分流、到访去重、暂停、拖动、真实像素/水线/窗口遮挡、保存失败与恢复。历史M6/M7通过结果不替代本轮回归；Windows保留上游内容不等于已经采用上述macOS手册合同。

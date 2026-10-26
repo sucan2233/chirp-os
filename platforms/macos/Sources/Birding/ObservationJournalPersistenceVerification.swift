@@ -27,6 +27,7 @@ enum ObservationJournalPersistenceVerification {
             missing.saveAttempts==0 && missingLogs.isEmpty && !files.fileExists(atPath:missingURL.path)
         try journal.restore(archive)
         missing.flush(from:journal,now:92)
+        try settle(missing)
         let stored=try ObservationArchive.load(from:missingURL)
         let restored=ObservationJournal()
         let reload=ObservationJournalPersistence(url:missingURL,enabled:true,arguments:["Birding"],log:{_ in})
@@ -39,10 +40,14 @@ enum ObservationJournalPersistenceVerification {
             entry?.firstSeen==firstSeen && entry?.lastSeen==lastSeen &&
             entry?.automaticCount==2 && entry?.previewCount==3 && entry?.userCount==1 && entry?.totalCount==6
         let object=try JSONSerialization.jsonObject(with:Data(contentsOf:missingURL)) as? [String:Any]
-        checks["observationPersistenceSavesVersionTwoEnvelope"]=(object?["formatVersion"] as? Int)==2 &&
-            (object?["entries"] as? [Any])?.count==1
+        checks["observationPersistenceSavesVersionThreeEnvelope"]=(object?["formatVersion"] as? Int)==3 &&
+            (object?["entries"] as? [Any])?.count==1 &&
+            (object?["behaviorEntries"] as? [Any])?.count==1 &&
+            (object?["speciesRecords"] as? [Any])?.count==1 &&
+            (object?["writerProgress"] as? [Any])?.count==1
 
         try checkMigration(into:&checks,root:root,archive:archive)
+        try checkLifeListMigration(into:&checks,root:root,archive:archive)
         try checkDesktop(into:&checks,root:root)
         try checkProtectedFiles(into:&checks,root:root,archive:archive)
         try checkModes(into:&checks,root:root,userURL:userURL)
@@ -50,79 +55,165 @@ enum ObservationJournalPersistenceVerification {
     }
 
     private static func checkMigration(into checks:inout [String:Bool],root:URL,archive:ObservationArchive) throws {
-        for (name,source) in [("Populated",archive),("Empty",ObservationArchive())] {
-            let legacy=try envelope(source,version:1)
-            for terminating in [false,true] {
-                let mode=terminating ? "Exit":"Periodic"
-                let url=root.appendingPathComponent("migration-\(name)-\(mode).json")
+        for version in [1,2] {
+            for (name,source) in [("Populated",archive),("Empty",ObservationArchive())] {
+                let legacy=try envelope(source,version:version)
+                let expected=try ObservationArchive.decode(legacy)
+                for terminating in [false,true] {
+                    let mode=terminating ? "Exit":"Periodic"
+                    let prefix="observationPersistenceV\(version)\(name)\(mode)"
+                    let url=root.appendingPathComponent("migration-v\(version)-\(name)-\(mode).json")
+                    try legacy.write(to:url,options:.atomic)
+                    let journal=ObservationJournal()
+                    var logs:[String]=[]
+                    let persistence=ObservationJournalPersistence(url:url,enabled:true,arguments:["Birding"],log:{logs.append($0)})
+                    persistence.load(into:journal,now:0)
+                    let baseline=journal.archive,revision=journal.revision
+                    let loadedBytes=try Data(contentsOf:url)
+                    let backups=URL(fileURLWithPath:url.path+".backups",isDirectory:true)
+                    let backupFiles=try FileManager.default.contentsOfDirectory(at:backups,includingPropertiesForKeys:nil)
+                    let preserved=try backupFiles.contains{try Data(contentsOf:$0)==legacy}
+                    checks[prefix+"LoadPreservesBytesInBackup"]=baseline==expected && baseline.entries==source.entries &&
+                        baseline.formatVersion==3 && !persistence.writesDisabled && persistence.saveAttempts==0 &&
+                        preserved && loadedBytes != legacy && logs.isEmpty
+                    persistence.persistIfNeeded(from:journal,now:29.999)
+                    try settle(persistence)
+                    let beforeDeadline=try Data(contentsOf:url)
+                    checks[prefix+"MigrationCommitsBeforeRuntimeSave"]=persistence.saveAttempts==0 &&
+                        beforeDeadline==loadedBytes && !baseline.requiresMigration
+                    if terminating {persistence.flush(from:journal,now:29.999,terminating:true)}
+                    else {persistence.persistIfNeeded(from:journal,now:30)}
+                    try settle(persistence)
+                    let storedBytes=try Data(contentsOf:url)
+                    let stored=try ObservationArchive.decode(storedBytes)
+                    let object=try JSONSerialization.jsonObject(with:storedBytes) as? [String:Any]
+                    checks[prefix+"MigratesWithoutNewObservations"]=persistence.successfulSaves==0 &&
+                        persistence.saveAttempts==0 && (object?["formatVersion"] as? Int)==3 &&
+                        !stored.requiresMigration && stored==expected && journal.archive==baseline &&
+                        journal.revision==revision && logs.isEmpty
+                    persistence.persistIfNeeded(from:journal,now:60)
+                    try settle(persistence)
+                    persistence.flush(from:journal,now:61,terminating:true)
+                    try settle(persistence)
+                    let unchanged=try Data(contentsOf:url)
+                    checks[prefix+"MigrationWritesOnlyOnce"]=persistence.saveAttempts==0 && unchanged==storedBytes
+                    let restored=ObservationJournal()
+                    let reload=ObservationJournalPersistence(url:url,enabled:true,arguments:["Birding"],log:{logs.append($0)})
+                    reload.load(into:restored,now:0)
+                    reload.persistIfNeeded(from:restored,now:30)
+                    reload.flush(from:restored,now:31,terminating:true)
+                    try settle(reload)
+                    checks[prefix+"ReloadIsClean"]=restored.archive==expected &&
+                        !reload.writesDisabled && reload.saveAttempts==0 && logs.isEmpty
+                }
+                // Migration is already committed at startup. A future replacement
+                // must still survive subsequent pending runtime increments/retries.
+                let url=root.appendingPathComponent("migration-v\(version)-\(name)-future-replacement.json")
                 try legacy.write(to:url,options:.atomic)
                 let journal=ObservationJournal()
                 var logs:[String]=[]
                 let persistence=ObservationJournalPersistence(url:url,enabled:true,arguments:["Birding"],log:{logs.append($0)})
                 persistence.load(into:journal,now:0)
+                journal.observe(observation(sequence:1,source:.user),at:lastSeen.addingTimeInterval(1))
                 let baseline=journal.archive,revision=journal.revision
-                let loadedBytes=try Data(contentsOf:url)
-                checks["observationPersistenceV1\(name)\(mode)LoadPreservesBytes"]=baseline==source &&
-                    baseline.formatVersion==2 && !persistence.writesDisabled && persistence.saveAttempts==0 &&
-                    loadedBytes==legacy && logs.isEmpty
-                persistence.persistIfNeeded(from:journal,now:29.999)
-                let beforeDeadline=try Data(contentsOf:url)
-                checks["observationPersistenceV1\(name)\(mode)MigrationWaitsForSave"]=persistence.saveAttempts==0 &&
-                    beforeDeadline==legacy
-                if terminating {persistence.flush(from:journal,now:29.999,terminating:true)}
-                else {persistence.persistIfNeeded(from:journal,now:30)}
-                let storedBytes=try Data(contentsOf:url)
-                let stored=try ObservationArchive.decode(storedBytes)
-                let object=try JSONSerialization.jsonObject(with:storedBytes) as? [String:Any]
-                checks["observationPersistenceV1\(name)\(mode)MigratesWithoutNewObservations"]=persistence.successfulSaves==1 &&
-                    persistence.saveAttempts==1 && (object?["formatVersion"] as? Int)==2 &&
-                    !stored.requiresMigration && stored==source && journal.archive==baseline &&
-                    journal.revision==revision && logs.isEmpty
-                persistence.persistIfNeeded(from:journal,now:60)
-                persistence.flush(from:journal,now:61,terminating:true)
-                let unchanged=try Data(contentsOf:url)
-                checks["observationPersistenceV1\(name)\(mode)MigrationWritesOnlyOnce"]=persistence.saveAttempts==1 &&
-                    unchanged==storedBytes
-                let restored=ObservationJournal()
-                let reload=ObservationJournalPersistence(url:url,enabled:true,arguments:["Birding"],log:{logs.append($0)})
-                reload.load(into:restored,now:0)
-                reload.persistIfNeeded(from:restored,now:30)
-                reload.flush(from:restored,now:31,terminating:true)
-                checks["observationPersistenceV1\(name)\(mode)ReloadIsClean"]=restored.archive==source &&
-                    !reload.writesDisabled && reload.saveAttempts==0 && logs.isEmpty
+                let future=try envelope(source,version:ObservationArchive.currentVersion+1)
+                try future.write(to:url,options:.atomic)
+                persistence.persistIfNeeded(from:journal,now:30);try settle(persistence)
+                persistence.flush(from:journal,now:59.999);try settle(persistence)
+                let preserved=try Data(contentsOf:url)
+                checks["observationPersistenceV\(version)\(name)MigrationPreservesFutureReplacement"]=persistence.saveAttempts==1 &&
+                    persistence.successfulSaves==0 && persistence.saveFailed && logs.count==1 &&
+                    preserved==future && journal.archive==baseline && journal.revision==revision
+                persistence.persistIfNeeded(from:journal,now:60);try settle(persistence)
+                persistence.flush(from:journal,now:61,terminating:true);try settle(persistence)
+                let retried=try Data(contentsOf:url)
+                checks["observationPersistenceV\(version)\(name)MigrationRetryAndExitPreserveFuture"]=persistence.saveAttempts==3 &&
+                    persistence.successfulSaves==0 && persistence.saveFailed && logs.count==1 &&
+                    retried==future && journal.archive==baseline && journal.revision==revision
             }
-
-            // Migration itself is a pending write, even without a new event.
-            // A newer process may replace the file after our v1 load.
-            let url=root.appendingPathComponent("migration-\(name)-future-replacement.json")
-            try legacy.write(to:url,options:.atomic)
-            let journal=ObservationJournal()
-            var logs:[String]=[]
-            let persistence=ObservationJournalPersistence(url:url,enabled:true,arguments:["Birding"],log:{logs.append($0)})
-            persistence.load(into:journal,now:0)
-            let baseline=journal.archive,revision=journal.revision
-            let future=try envelope(source,version:ObservationArchive.currentVersion+1)
-            try future.write(to:url,options:.atomic)
-            persistence.persistIfNeeded(from:journal,now:30)
-            persistence.flush(from:journal,now:59.999)
-            let preserved=try Data(contentsOf:url)
-            checks["observationPersistenceV1\(name)MigrationPreservesFutureReplacement"]=persistence.saveAttempts==1 &&
-                persistence.successfulSaves==0 && persistence.saveFailed && logs.count==1 &&
-                preserved==future && journal.archive==baseline && journal.revision==revision
-            persistence.persistIfNeeded(from:journal,now:60)
-            persistence.flush(from:journal,now:61,terminating:true)
-            let retried=try Data(contentsOf:url)
-            checks["observationPersistenceV1\(name)MigrationRetryAndExitPreserveFuture"]=persistence.saveAttempts==3 &&
-                persistence.successfulSaves==0 && persistence.saveFailed && logs.count==1 &&
-                retried==future && journal.archive==baseline && journal.revision==revision
         }
     }
-
     private static func envelope(_ archive:ObservationArchive,version:Int) throws -> Data {
         let encoded=try JSONEncoder().encode(archive)
         var object=try JSONSerialization.jsonObject(with:encoded) as? [String:Any] ?? [:]
+        if version<=2 {object=Dictionary(uniqueKeysWithValues:object.filter{$0.key=="entries"}.map{($0.key,$0.value)})}
         object["formatVersion"]=version
         return try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])
+    }
+    private static func settle(_ persistence:ObservationJournalPersistence) throws {
+        // False also denotes an expected IO failure; only a still-running worker
+        // is an infrastructure failure. Individual checks assert success/failure.
+        _=persistence.waitForPendingSaves(timeout:3)
+        guard !persistence.isSaving else {
+            throw NSError(domain:"ObservationJournalPersistenceVerification",code:2,
+                          userInfo:[NSLocalizedDescriptionKey:"Timed out waiting for observation save worker"])
+        }
+    }
+
+    private static func checkLifeListMigration(into checks:inout [String:Bool],root:URL,archive:ObservationArchive) throws {
+        let files=FileManager.default,folder=root.appendingPathComponent("legacy-import")
+        try files.createDirectory(at:folder,withIntermediateDirectories:true)
+        let url=folder.appendingPathComponent("observations.json"),source=folder.appendingPathComponent("life-list.json")
+        let legacy=try envelope(archive,version:2)
+        let life=Data(#"{"enabled":false,"introductionVersion":1,"records":{"treeSparrow":{"count":7,"firstRecordedAt":"2025-01-01T00:00:00Z"}}}"#.utf8)
+        try legacy.write(to:url);try life.write(to:source)
+        try files.setAttributes([.modificationDate:Date(timeIntervalSinceNow:-10)],ofItemAtPath:source.path)
+        let journal=ObservationJournal()
+        let persistence=ObservationJournalPersistence(url:url,enabled:true,arguments:["Birding"],legacySourceInactive:{true},log:{_ in})
+        persistence.load(into:journal,now:0)
+        let record=journal.archive.speciesRecord(for:.treeSparrow)
+        checks["observationPersistenceLifeListImportsKnownModeAndManualHistory"]=persistence.importedModePreference==false &&
+            record?.manualCount==7 && record?.manualFirstRecordedAt != nil && record?.manualLastRecordedAt==nil &&
+            record?.firstDiscoveredAt != nil && record?.lastDiscoveredAt==nil &&
+            journal.archive.entries==archive.entries && journal.revision>0 && !persistence.writesDisabled
+        let backups=URL(fileURLWithPath:url.path+".backups",isDirectory:true)
+        let backupURLs=try files.contentsOfDirectory(at:backups,includingPropertiesForKeys:nil)
+        let backupBytes=try backupURLs.map{try Data(contentsOf:$0)}
+        let original=try Data(contentsOf:source)
+        checks["observationPersistenceMigrationBacksUpBothExactSources"]=backupBytes.contains(legacy) && backupBytes.contains(life) &&
+            original==life && journal.archive.migration.lifeList != nil &&
+            persistence.sidecarURLs.allSatisfy{$0.path.hasPrefix(folder.path+"/")}
+        let changed=Data(#"{"enabled":true,"records":{"treeSparrow":{"count":70,"firstRecordedAt":"2025-01-01T00:00:00Z"}}}"#.utf8)
+        try changed.write(to:source)
+        try files.setAttributes([.modificationDate:Date(timeIntervalSinceNow:-10)],ofItemAtPath:source.path)
+        let restarted=ObservationJournal()
+        let reload=ObservationJournalPersistence(url:url,enabled:true,arguments:["Birding"],legacySourceInactive:{true},log:{_ in})
+        reload.load(into:restarted,now:0)
+        checks["observationPersistenceLifeListChangedHashCannotImportTwice"]=restarted.archive==journal.archive &&
+            reload.importedModePreference==false && restarted.archive.speciesRecord(for:.treeSparrow)?.manualCount==7
+
+        for invalid in [false,true] {
+            let pendingFolder=root.appendingPathComponent(invalid ? "invalid-life-list":"active-life-list")
+            try files.createDirectory(at:pendingFolder,withIntermediateDirectories:true)
+            let pendingURL=pendingFolder.appendingPathComponent("observations.json"),pendingSource=pendingFolder.appendingPathComponent("life-list.json")
+            try archive.save(to:pendingURL)
+            let pendingBytes=invalid ? Data(#"{"enabled":true,"futureField":1,"records":{}}"#.utf8):life
+            try pendingBytes.write(to:pendingSource)
+            try files.setAttributes([.modificationDate:Date(timeIntervalSinceNow:-10)],ofItemAtPath:pendingSource.path)
+            let live=ObservationJournal()
+            let pending=ObservationJournalPersistence(url:pendingURL,enabled:true,arguments:["Birding"],legacySourceInactive:{invalid},log:{_ in})
+            pending.load(into:live,now:0)
+            let retained=try Data(contentsOf:pendingSource)
+            let baseline=live.archive
+            let accepted=live.recordManual(species:.treeSparrow,at:lastSeen)
+            pending.flush(from:live,now:1);try settle(pending)
+            let saved=try ObservationArchive.load(from:pendingURL)
+            checks["observationPersistenceLifeList\(invalid ? "Invalid":"Active")SourceRemainsPending"]=baseline==archive &&
+                pending.importIssue != nil && pending.importedModePreference==nil && !pending.writesDisabled &&
+                saved.migration.lifeList==nil && retained==pendingBytes && accepted &&
+                saved.speciesRecord(for:.treeSparrow)?.manualCount==1 && saved.entries==archive.entries
+        }
+        let failedURL=root.appendingPathComponent("backup-failure.json")
+        try legacy.write(to:failedURL)
+        let blocker=URL(fileURLWithPath:failedURL.path+".backups")
+        try Data("preserve backup blocker".utf8).write(to:blocker)
+        let readOnly=ObservationJournal()
+        let failed=ObservationJournalPersistence(url:failedURL,enabled:true,arguments:["Birding"],log:{_ in})
+        failed.load(into:readOnly,now:0)
+        failed.flush(from:readOnly,now:1);try settle(failed)
+        let preserved=try Data(contentsOf:failedURL)
+        checks["observationPersistenceFailedMigrationStaysReadableWithoutOverwritingSource"]=failed.writesDisabled &&
+            readOnly.archive.entries==archive.entries && preserved==legacy && failed.saveAttempts==0
     }
 
     private static func checkDesktop(into checks:inout [String:Bool],root:URL) throws {
@@ -191,14 +282,22 @@ enum ObservationJournalPersistenceVerification {
         checks["observationPersistenceNoImmediateOrPerFrameWrites"]=persistence?.saveAttempts==0 &&
             !files.fileExists(atPath:d.observationJournalURL.path)
         d.persistObservationJournalIfNeeded(now:30)
+        if let persistence {try settle(persistence)}
         let periodic=try ObservationArchive.load(from:d.observationJournalURL)
         checks["observationPersistenceDirtyArchiveSavesAtThirtySeconds"]=persistence?.successfulSaves==1 && periodic==dirty
         for frame in 1801...5400 {d.persistObservationJournalIfNeeded(now:Double(frame)/60)}
-        d.flushObservationJournal()
-        checks["observationPersistenceUnchangedArchiveSkipsPeriodicAndExitWrites"]=persistence?.saveAttempts==1
+        persistence?.flush(from:d.observationJournal,now:91)
+        if let persistence {try settle(persistence)}
+        let cleanExitJournal=ObservationJournal()
+        let cleanExit=ObservationJournalPersistence(url:d.observationJournalURL,enabled:true,arguments:["Birding"],log:{_ in})
+        cleanExit.load(into:cleanExitJournal,now:0)
+        cleanExit.flush(from:cleanExitJournal,now:1,terminating:true);try settle(cleanExit)
+        checks["observationPersistenceUnchangedArchiveSkipsPeriodicAndExitWrites"]=persistence?.saveAttempts==1 &&
+            cleanExit.saveAttempts==0 && !cleanExitJournal.acceptingRecords
         _ = d.observationJournal.observe(observation(sequence:10_000,source:.user),at:lastSeen)
         let finalArchive=d.observationJournal.archive
         d.flushObservationJournal()
+        if let persistence {try settle(persistence)}
         let exitSaved=try ObservationArchive.load(from:d.observationJournalURL)
         d.flushObservationJournal()
         checks["observationPersistenceExitFlushSavesDirtyArchiveOnce"]=finalArchive != dirty &&
@@ -252,6 +351,7 @@ enum ObservationJournalPersistenceVerification {
             let dirty=running.archive
             try bytes.write(to:replacementURL,options:.atomic)
             replacement.persistIfNeeded(from:running,now:30)
+            try settle(replacement)
             for frame in 1..<1800 {
                 let now=30+Double(frame)/60
                 replacement.persistIfNeeded(from:running,now:now)
@@ -262,6 +362,7 @@ enum ObservationJournalPersistenceVerification {
                 replacement.successfulSaves==0 && replacement.saveFailed && retryLogs.count==1 &&
                 firstBytes==bytes && running.archive==dirty
             replacement.persistIfNeeded(from:running,now:60)
+            try settle(replacement)
             let retriedBytes=try Data(contentsOf:replacementURL)
             checks["observationPersistence\(name)RetryDoesNotOverwriteOrSpamLogs"]=replacement.saveAttempts==2 &&
                 replacement.successfulSaves==0 && retryLogs.count==1 && retriedBytes==bytes && running.archive==dirty
@@ -271,7 +372,7 @@ enum ObservationJournalPersistenceVerification {
     private static func checkModes(into checks:inout [String:Bool],root:URL,userURL:URL) throws {
         let flags=["--record-behavior","--record-behavior=isolated.json","--replay-behavior","--replay-behavior=isolated.json",
                    "--verify-settings","--verify-anything","--verify-settings=isolated","--stress-behavior","--stress-other",
-                   "--stress-behavior=73","--integration","--integration=isolated","--fixture","--fixture=isolated"]
+                   "--stress-behavior=73","--soak-desktop","--desktop-soak","--integration","--integration=isolated","--fixture","--fixture=isolated"]
         for (index,flag) in flags.enumerated() {
             let url=root.appendingPathComponent("disabled-\(index).json")
             let sentinel=Data("untouched isolated observation sentinel".utf8)
@@ -299,6 +400,7 @@ enum ObservationJournalPersistenceVerification {
             isolatedOverride.load(into:isolated,now:0)
             _ = isolated.observe(observation(sequence:1,source:.preview),at:firstSeen)
             isolatedOverride.flush(from:isolated,now:1)
+            try settle(isolatedOverride)
             let overridden=try ObservationArchive.load(from:isolatedOverride.url)
             checks["observationPersistenceExplicitIsolatedOverrideAllowed-\(index)"]=isolatedOverride.enabled &&
                 !isolatedOverride.writesDisabled && isolatedOverride.successfulSaves==1 && overridden==isolated.archive
@@ -327,6 +429,7 @@ enum ObservationJournalPersistenceVerification {
         // A file as the parent forces IO failure even with elevated privileges.
         try sentinel.write(to:blocker)
         persistence.persistIfNeeded(from:journal,now:30)
+        try settle(persistence)
         for frame in 1..<1800 {
             let now=30+Double(frame)/60
             persistence.persistIfNeeded(from:journal,now:now)
@@ -337,6 +440,7 @@ enum ObservationJournalPersistenceVerification {
             persistence.successfulSaves==0 && persistence.saveFailed && logs.count==1 &&
             retained==sentinel && journal.archive==dirty
         persistence.persistIfNeeded(from:journal,now:60)
+        try settle(persistence)
         let retried=try Data(contentsOf:blocker)
         checks["observationPersistencePersistentIOFailureRetriesWithoutLogSpam"]=persistence.saveAttempts==2 &&
             persistence.successfulSaves==0 && logs.count==1 && retried==sentinel
@@ -345,11 +449,13 @@ enum ObservationJournalPersistenceVerification {
         checks["observationPersistenceRecoveryStillRespectsRetryDeadline"]=persistence.saveAttempts==2 &&
             !files.fileExists(atPath:url.path)
         persistence.persistIfNeeded(from:journal,now:90)
+        try settle(persistence)
         let recovered=try ObservationArchive.load(from:url)
         checks["observationPersistenceIOFailureRecoversAtNextBoundedRetry"]=persistence.saveAttempts==3 &&
             persistence.successfulSaves==1 && !persistence.saveFailed && !persistence.writesDisabled &&
             recovered==dirty && journal.archive==dirty
         persistence.persistIfNeeded(from:journal,now:120);persistence.flush(from:journal,now:121)
+        try settle(persistence)
         checks["observationPersistenceRecoveredCleanArchiveSkipsWrites"]=persistence.saveAttempts==3 && logs.count==1
     }
 
