@@ -9,8 +9,14 @@ enum SharedBehaviorExport {
     private static let flight = (0...7).map {"fly\($0)"} + (0...2).map {"land\($0)"}
     private static let common = ["stand","blink","preen0","preen1","idle0","idle1","idle2"] + flight
     private static let carry = ["carryLook","carryLower","carryGrip","carryPlace"]
-    private static let catchFrames = ["stand","blink"] + flight + (0...2).map {"glide\($0)"}
-        + (0...2).map {"bank\($0)"} + ["bound","catchOpen","catchClose","catchRecover"]
+    private static let catchFrames:[String] = {
+        var frames=["stand","blink"]
+        frames.append(contentsOf:flight)
+        frames.append(contentsOf:(0...2).map {"glide\($0)"})
+        frames.append(contentsOf:(0...2).map {"bank\($0)"})
+        frames.append(contentsOf:["bound","catchOpen","catchClose","catchRecover"])
+        return frames
+    }()
     private static func point(_ x:Double,_ y:Double)->Object {["x":x,"y":y]}
     private static func rect(_ x:Double,_ y:Double,_ w:Double,_ h:Double)->Object {
         ["x":x,"y":y,"width":w,"height":h]
@@ -126,7 +132,12 @@ enum SharedBehaviorExport {
         s.world["surfaces"]=[surface(71,1640,400,240,160),surface(72,1640,640,240,160)]
         s.birds=[bird(.treeSparrow,71,0.5,origin:point(100,400)),bird(.treeSparrow,72,0.5,origin:point(120,640))]
         s.inputs=[advance(24),preview("travelTogether"),advance(30),pause(true),advance(60),pause(false),advance(600),preview("travelTogether")];result.append(s)
-        let preenFrames=["stand"] + flight + ["Give","Receive"].flatMap {role in (0...2).map {"allopreen\(role)\($0)"}}
+        var preenFrames=["stand"]
+        preenFrames.append(contentsOf:flight)
+        let pairedPreenFrames:[String]=["Give","Receive"].flatMap { role -> [String] in
+            (0...2).map {"allopreen\(role)\($0)"}
+        }
+        preenFrames.append(contentsOf:pairedPreenFrames)
         s=Scene("allopreening",species:.barnSwallow,host:surface(61,300,450,800,180),frames:preenFrames)
         s.settings.perchActions=false;s.world["pointer"]=point(1400,50)
         s.birds=[bird(.barnSwallow,61,0.2206703910614525),bird(.barnSwallow,61,0.388268156424581)]
@@ -140,8 +151,14 @@ enum SharedBehaviorExport {
             s.inputs=[advance(bath ? 270:18),command(bath ? "placeBath":"placeFoodTray",["point":point(1300,700)]),
                       preview(bath ? "bathVisit":"foodTrayVisit"),advance(90),pause(true),advance(60),pause(false),advance(1200)];result.append(s)
         }
+        var leafCarryFrames=["stand","blink","shake"]
+        leafCarryFrames.append(contentsOf:flight)
+        leafCarryFrames.append(contentsOf:(0...2).map {"glide\($0)"})
+        leafCarryFrames.append(contentsOf:(0...2).map {"bank\($0)"})
+        leafCarryFrames.append("bound")
+        leafCarryFrames.append(contentsOf:carry)
         s=Scene("leaf-carry",seed:971,size:(2400,1500),host:surface(971,200,1100,2000,180),
-                frames:["stand","blink","shake"] + flight + (0...2).map {"glide\($0)"} + (0...2).map {"bank\($0)"} + ["bound"] + carry,fraction:0.15,quiet:true)
+                frames:leafCarryFrames,fraction:0.15,quiet:true)
         s.inputs=[advance(270),command("placeCarryLeaf",["point":point(1200,1100)]),preview("leafCarry"),advance(15),pause(true),advance(60),pause(false),advance(900),
                   command("placeCarryLeaf",["point":point(700,1100)]),preview("leafCarry"),pause(true),advance(90),command("removeCarryLeaf"),pause(false),advance(600),
                   command("placeCarryLeafAfter",["delay":3]),command("cancelCarryLeafPlacement"),advance(120),command("clearCurrentScene")];result.append(s)
@@ -175,8 +192,12 @@ enum SharedBehaviorExport {
         s.settings.socialInteractions=true;s.settings.ambientFrequency = .high;s.world["displayIDs"]=["court-display"]
         s.birds=[bird(.spottedDove,2701,0.29123173277661796),bird(.spottedDove,2701,0.395615866388309,right:false)]
         s.inputs=[advance(303),preview("courtshipDisplay"),advance(42),pause(true),advance(60),pause(false),advance(90),advance(303),preview("courtshipDisplay"),advance(21),pause(true),advance(60),command("remove",["target":"1"]),pause(false),advance(30)];result.append(s)
+        var nestFrames=["stand","blink"]
+        nestFrames.append(contentsOf:flight)
+        nestFrames.append(contentsOf:carry)
+        nestFrames.append(contentsOf:["nestPlace","nestAdjust0","nestAdjust1","nestSettle"])
         for build in [false,true] {
-            s=Scene(build ? "nest-build":"nest-material-carry",species:.spottedDove,seed:3701,size:(2400,2200),host:surface(3701,200,1700,2000,180),frames:["stand","blink"] + flight + carry + ["nestPlace","nestAdjust0","nestAdjust1","nestSettle"],fraction:0.16075156576200417,quiet:true)
+            s=Scene(build ? "nest-build":"nest-material-carry",species:.spottedDove,seed:3701,size:(2400,2200),host:surface(3701,200,1700,2000,180),frames:nestFrames,fraction:0.16075156576200417,quiet:true)
             s.settings.ambientFrequency = .high;s.world["displayIDs"]=["nest-display-0"]
             s.inputs=[advance(303),command("placeNest",["point":point(1400,1700)])]
             if build {

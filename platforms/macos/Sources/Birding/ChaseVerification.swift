@@ -126,8 +126,14 @@ enum ChaseVerification {
             // bottom of the shared ring 110*scale above these two feet.
             // Include radius 270, complete sprite extents, and sweep padding.
             let width=560*scale,height:CGFloat=100
-            let candidates=[work.minX+16+30*scale,work.maxX-width-16-30*scale].flatMap { x in
-                [work.minY+16+460*scale,work.maxY-height-20].map { y in
+            let leftX:CGFloat=work.minX+16+30*scale
+            let rightX:CGFloat=work.maxX-width-16-30*scale
+            let topY:CGFloat=work.minY+16+460*scale
+            let bottomY:CGFloat=work.maxY-height-20
+            let candidateXs:[CGFloat]=[leftX,rightX]
+            let candidateYs:[CGFloat]=[topY,bottomY]
+            let candidates:[CGRect]=candidateXs.flatMap { x -> [CGRect] in
+                candidateYs.map { y -> CGRect in
                     CGRect(x:x,y:y,width:width,height:height)
                 }
             }

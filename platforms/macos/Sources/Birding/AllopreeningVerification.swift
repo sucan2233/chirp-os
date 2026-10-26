@@ -135,8 +135,12 @@ enum AllopreeningVerification {
                 CGRect(x:rect.midX-(gap/2+40)*scale,y:rect.minY-64*scale,
                     width:(gap+80)*scale,height:80*scale)
             }
-            let candidates=[work.minX+16,work.maxX-width-16].flatMap {x in
-                [work.minY+16+64*scale,work.maxY-height-16].map{y in
+            let candidateXs:[CGFloat]=[work.minX+16,work.maxX-width-16]
+            let topY:CGFloat=work.minY+16+64*scale
+            let bottomY:CGFloat=work.maxY-height-16
+            let candidateYs:[CGFloat]=[topY,bottomY]
+            let candidates:[CGRect]=candidateXs.flatMap { x -> [CGRect] in
+                candidateYs.map { y -> CGRect in
                     CGRect(x:x.rounded(),y:y.rounded(),width:width,height:height)
                 }
             }

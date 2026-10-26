@@ -152,10 +152,15 @@ enum CourtshipSettingsVerification {
         checks[key+"SingleSourceSpeciesAndNoPairPromise"]=help.stringValue.contains(w.language.courtshipSupport) &&
             preview.stringValue.contains(w.language.courtshipRequirement) &&
             help.stringValue.contains(w.t("不推断性别、永久配偶或繁殖成功","no sex, permanent pairing or breeding success"))
-        checks[key+"RealWrappingAndNoOverlaps"]=doc.subviews.enumerated().allSatisfy {i,view in
+        let noOverlaps=doc.subviews.enumerated().allSatisfy {i,view in
             doc.bounds.contains(view.frame) && doc.subviews.dropFirst(i+1).allSatisfy{!view.frame.intersects($0.frame)}
-        } && [help,preview].allSatisfy {$0.cell?.wraps==true && $0.cell?.usesSingleLineMode==false &&
-            ($0.cell?.cellSize(forBounds:CGRect(x:0,y:0,width:$0.frame.width,height:10000)).height ?? .infinity)<=$0.frame.height}
+        }
+        let wrappingValid=[help,preview].allSatisfy { field in
+            let bounds=CGRect(x:0,y:0,width:field.frame.width,height:10000)
+            let height:CGFloat=field.cell?.cellSize(forBounds:bounds).height ?? .infinity
+            return field.cell?.wraps==true && field.cell?.usesSingleLineMode==false && height<=field.frame.height
+        }
+        checks[key+"RealWrappingAndNoOverlaps"]=noOverlaps && wrappingValid
         try SettingsVerification.snapshot(w.window!,to:folder.appendingPathComponent("courtship-controls-"+w.language.rawValue+".png"))
     }
     private static func journal(into checks:inout [String:Bool],folder:URL) throws {
