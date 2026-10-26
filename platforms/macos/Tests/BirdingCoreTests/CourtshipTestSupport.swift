@@ -20,9 +20,19 @@ enum CourtshipTestSupport {
         let dx:CGFloat=negative ? -3000*scale:0,dy:CGFloat=negative ? -2600*scale:0
         let screen=CGRect(x:dx,y:dy,width:2400*scale,height:2200*scale)
         let host=Surface(id:2701,pid:42,rect:CGRect(x:200*scale+dx,y:1700*scale+dy,width:2000*scale,height:180*scale),isGround:ground)
-        let size=scale*s.catalog.profile(.spottedDove).relativeScale
-        let separation=gap ?? (58*size+60*scale)
-        let xs:[CGFloat]=right ? [800*scale+dx,800*scale+dx+separation]:[1400*scale+dx,1400*scale+dx-separation]
+        let size:CGFloat=scale*s.catalog.profile(.spottedDove).relativeScale
+        let defaultSeparation:CGFloat=58*size+60*scale
+        let separation:CGFloat=gap ?? defaultSeparation
+        let firstX:CGFloat
+        let secondX:CGFloat
+        if right {
+            firstX=800*scale+dx
+            secondX=firstX+separation
+        } else {
+            firstX=1400*scale+dx
+            secondX=firstX-separation
+        }
+        let xs:[CGFloat]=[firstX,secondX]
         var surfaces=[host],birds:[Bird]=[]
         for (index,kind) in species.enumerated() {
             let x=xs[index%2]
