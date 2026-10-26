@@ -20,6 +20,12 @@ extension BirdArt {
                       let data=try? JSONEncoder().encode(clip),let object=try? JSONSerialization.jsonObject(with:data) else {continue}
                 clips[kind.rawValue]=object
             }
+            for variant in 0...1 {
+                if let clip=LivelyMotion.clip(species:species,variant:variant),
+                   let data=try? JSONEncoder().encode(clip),let object=try? JSONSerialization.jsonObject(with:data) {
+                    clips["signature.v\(variant)"]=object
+                }
+            }
             if let clip=PoseClip.edgePeek(species:species),
                let data=try? JSONEncoder().encode(clip),let object=try? JSONSerialization.jsonObject(with:data) {
                 clips[BehaviorKind.edgePeek.rawValue]=object
@@ -51,7 +57,7 @@ extension BirdArt {
             let carry=profile.allows(.leafCarry) || profile.allows(.visitorGift)
             let courtship=CourtshipArtGeometry.species.contains(species)
             let nesting=profile.allows(.nestMaterialCarry) || profile.allows(.nestBuild)
-            var anchorNames=profile.poseFrameNames
+            var anchorNames=profile.poseFrameNames + LivelyMotion.frameNames(for:species)
             if SpeciesBehaviorProfile.peekSpecies.contains(species) {anchorNames += Self.peekNames}
             if profile.allows(.bathVisit) {anchorNames += Self.bathNames}
             if carry {anchorNames += Self.carryNames}
@@ -74,6 +80,11 @@ extension BirdArt {
                     let anchor=PoseClip.beakAnchor(species:species,frame:name)
                     return (name,[anchor.x,anchor.y])
                 })]
+            if !LivelyMotion.frameNames(for:species).isEmpty {
+                let window=LivelyMotion.window(species)
+                entry["signaturePolicy"]=["cycle":window.cycle,"start":window.start,"duration":window.duration,
+                    "sideOnly":LivelyMotion.isSideMotion(species),"recordsObservation":false,"variants":2] as [String:Any]
+            }
             if courtship {
                 entry["courtshipBeakAnchors"]=Dictionary(uniqueKeysWithValues:(Self.courtshipNames+["stand"]).compactMap {name -> (String,[Double])? in
                     guard let point=CourtshipArtGeometry.billAnchor(species:species,frame:name) else {return nil}

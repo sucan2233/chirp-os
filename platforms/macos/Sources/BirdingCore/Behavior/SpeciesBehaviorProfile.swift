@@ -32,13 +32,18 @@ public struct SpeciesBehaviorProfile {
             (supportsSidePerching ? []:["cling0","cling1","peck0","peck1"])
         return Dictionary(uniqueKeysWithValues:names.map{($0,"stand")})
     }
+    public static let expansionPilotSpecies:[SpeciesID] = [.eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret]
+    public static let expansionPilotKinds:Set<BehaviorKind> = [.watch,.alert,.rest,.takeoffPreparation]
+    public var isExpansionPilot:Bool {Self.expansionPilotSpecies.contains(species)}
     public var reviewedCapabilities:Set<BirdCapability> {
-        isExpansionSpecies ? [.standing,.blinking,.flight,.landing]:Set(BirdCapability.allCases)
+        guard isExpansionSpecies else {return Set(BirdCapability.allCases)}
+        let base:Set<BirdCapability> = [.standing,.blinking,.flight,.landing]
+        return isExpansionPilot ? base.union([.observationPose,.alertPose,.restPose,.takeoffPose]):base
     }
     public func hasReviewedContent(for kind:BehaviorKind) -> Bool {
         // Base preen/idle drawings are still usable by the decorative scheduler.
         // A complete managed behavior needs its own review before it can count.
-        !isExpansionSpecies || kind == .relocate
+        !isExpansionSpecies || kind == .relocate || (isExpansionPilot && Self.expansionPilotKinds.contains(kind))
     }
     public static let dedicatedKinds:[BehaviorKind] = [.edgePeek,.chase,.travelTogether,.allopreening,.fixedPerchVisit,.foodTrayVisit,.bathVisit,.leafCarry,.insectCatch,.visitorGift,.courtshipDisplay,.nestMaterialCarry,.nestBuild]
     private static let permissions:[BehaviorKind:[SpeciesID]] = [
@@ -60,7 +65,8 @@ public struct SpeciesBehaviorProfile {
         .lightVentedBulbul,.azureWingedMagpie,.mallard,.blackHeadedGull,.blackCollaredStarling]
     public static let poseSpecies:[SpeciesID] = [.treeSparrow,.spottedDove,.barnSwallow,.nightHeron,
         .lightVentedBulbul,.redWhiskeredBulbul,.chineseBlackbird,.magpieRobin,.swinhoesWhiteEye,
-        .azureWingedMagpie,.redBilledLeiothrix,.littleOwl]
+        .azureWingedMagpie,.redBilledLeiothrix,.littleOwl,
+        .greatTit,.orientalMagpie,.greatSpottedWoodpecker,.mallard,.littleEgret] + expansionPilotSpecies
     public static let catchFrameNames=["catchOpen","catchClose","catchRecover"]
     public static let courtshipFrameNames=["courtRaise","courtBow0","courtBow1","courtBowRecover","courtObserve"]
     public static let carryFrameNames=["carryLook","carryLower","carryGrip","carryPlace"]
@@ -74,17 +80,21 @@ public struct SpeciesBehaviorProfile {
         if kind == .flockPass {return ambientFlockSpecies}
         if let allowed=permissions[kind] {return allowed}
         let catalog=SpeciesCatalog.standard.species.map(\.id)
-        return kind == .relocate ? catalog:catalog.filter{legacySpeciesSet.contains($0)}
+        return catalog.filter{profile(for:$0).allows(kind)}
     }
     public func allows(_ kind:BehaviorKind) -> Bool {
         if kind == .flockPass {return Self.ambientFlockSpecies.contains(species)}
         if let allowed=Self.permissions[kind] {return allowed.contains(species)}
-        return kind == .relocate || Self.legacySpeciesSet.contains(species)
+        return kind == .relocate || Self.legacySpeciesSet.contains(species) ||
+            (isExpansionPilot && Self.expansionPilotKinds.contains(kind))
     }
     /// Dedicated artwork augments the existing behavior contract; admission,
     /// live validation and support export must all use this species-level set.
     public func requiredFrames(for kind:BehaviorKind) -> Set<String> {
-        let base=BehaviorDefinitions.definition(for:kind).requiredFrames
+        var base=BehaviorDefinitions.definition(for:kind).requiredFrames
+        if isExpansionPilot,Self.expansionPilotKinds.contains(kind) {
+            base.formUnion(poseClip(for:kind,duration:1)?.requiredFrames ?? [])
+        }
         return kind == .edgePeek && Self.peekSpecies.contains(species)
             ? base.union(Self.peekFrameNames):base
     }
@@ -129,7 +139,7 @@ public struct SpeciesSupportAudit:Codable {
         }
         poseFrames=profile.poseFrameNames
         missingPoseFrames=poseFrames.filter{!availableFrames.contains($0)}
-        contentReview=ContentReview(cohort:profile.isExpansionSpecies ? "upstream-v0.7-base":"local-46",
+        contentReview=ContentReview(cohort:profile.isExpansionPilot ? "expansion-e0-partial":(profile.isExpansionSpecies ? "upstream-v0.7-base":"local-46"),
             fallbackFrames:profile.frameFallbacks,sidePerching:profile.supportsSidePerching,
             managedBehaviorReviewPending:profile.isExpansionSpecies)
     }

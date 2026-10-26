@@ -82,7 +82,7 @@ final class ExpansionTests:XCTestCase {
         let night=Set((0..<300).map{GalleryPose.frame(.nightHeron,age:Double($0)/30,fps:20,action:.other)})
         for frame in ["stretch","shake","poop0","poop1"] {XCTAssertTrue(night.contains(frame),frame)}
         let wood=Set((0..<150).map{GalleryPose.frame(.greatSpottedWoodpecker,age:Double($0)/30,fps:24,action:.other)})
-        XCTAssertTrue(wood.contains("cling0") && wood.contains("peck0") && wood.contains("peck1"))
+        XCTAssertEqual(wood,Set(["cling0","sideBrace","sideDraw","sideTap","sideRecover"]))
         for i in 0..<300 {
             let t=Double(i)/30
             XCTAssertEqual(GalleryPose.frame(.blackKite,age:t,fps:20,action:.other), GalleryPose.frame(.blackKite,age:t,fps:20,action:.resting))

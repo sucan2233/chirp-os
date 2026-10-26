@@ -201,7 +201,9 @@ final class BehaviorDefinitionTests:XCTestCase {
                     "\(species): \(fixture.kind)")
                 if !legacySpecies.contains(species) {
                     let behavior=audit.behaviors.first{$0.kind == fixture.kind}
-                    XCTAssertEqual(behavior?.productAllowed,fixture.kind == .relocate,
+                    let pilot:Set<SpeciesID> = [.eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret]
+                    let reviewed:Set<BehaviorKind> = [.watch,.alert,.rest,.takeoffPreparation]
+                    XCTAssertEqual(behavior?.productAllowed,fixture.kind == .relocate || (pilot.contains(species) && reviewed.contains(fixture.kind)),
                         "Expansion permission: \(species): \(fixture.kind)")
                     XCTAssertEqual(behavior?.contentSupported,fixture.kind == .relocate,
                         "Expansion content: \(species): \(fixture.kind)")

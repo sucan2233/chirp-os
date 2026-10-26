@@ -74,7 +74,8 @@ final class BirdArt {
             (SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch) ? catchNames : []) +
             (CourtshipArtGeometry.species.contains(species) ? courtshipNames : []) +
             (SpeciesBehaviorProfile.profile(for:species).allows(.nestMaterialCarry) ? nestCarryNames : []) +
-            (SpeciesBehaviorProfile.profile(for:species).allows(.nestBuild) ? nestBuildNames : [])
+            (SpeciesBehaviorProfile.profile(for:species).allows(.nestBuild) ? nestBuildNames : []) +
+            LivelyMotion.frameNames(for:species)
     }
     let frames: [String: CGImage]
     let species: SpeciesID

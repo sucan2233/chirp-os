@@ -32,7 +32,9 @@ expected_extras = {'barnSwallow': contact_frames, 'swinhoesWhiteEye': contact_fr
 pose_frames = ['lookNear', 'lookFar', 'alertRise', 'alertHold', 'alertRelax', 'restLower', 'restTuck', 'restWake', 'takeoffCrouch', 'takeoffPush']
 for bird in ('treeSparrow', 'spottedDove', 'barnSwallow', 'nightHeron',
              'lightVentedBulbul', 'redWhiskeredBulbul', 'chineseBlackbird', 'magpieRobin',
-             'swinhoesWhiteEye', 'azureWingedMagpie', 'redBilledLeiothrix', 'littleOwl'):
+             'swinhoesWhiteEye', 'azureWingedMagpie', 'redBilledLeiothrix', 'littleOwl',
+             'greatTit', 'orientalMagpie', 'greatSpottedWoodpecker', 'mallard', 'littleEgret',
+             'eurasianGreatTit', 'whiteWagtail', 'indianWhiteEye', 'crestedMyna', 'eurasianNuthatch', 'greatEgret'):
     expected_extras[bird] = expected_extras.get(bird, []) + pose_frames
 for bird in ('lightVentedBulbul', 'magpieRobin'):
     expected_extras[bird] = expected_extras[bird] + ['peekLower', 'peekLook', 'peekRecover']
@@ -47,12 +49,28 @@ courtship_frames = ['courtRaise', 'courtBow0', 'courtBow1', 'courtBowRecover', '
 expected_extras['spottedDove'] += courtship_frames
 nest_build_frames = ['nestPlace', 'nestAdjust0', 'nestAdjust1', 'nestSettle']
 expected_extras['spottedDove'] += carry_frames + nest_build_frames
+signature_frames = {
+    'greatTit': ['inspectLean', 'inspectDown', 'inspectLift', 'inspectSettle'],
+    'orientalMagpie': ['tailPoise', 'tailBalance', 'tailCounter', 'tailSettle'],
+    'greatSpottedWoodpecker': ['sideBrace', 'sideDraw', 'sideTap', 'sideRecover'],
+    'mallard': ['wingLook', 'wingReach', 'wingSmooth', 'wingRecover'],
+    'littleEgret': ['neckPoise', 'neckReach', 'neckObserve', 'neckRecover'],
+    'magpieRobin': ['tailReady', 'tailLift', 'tailPulse', 'tailRecover'],
+    'eurasianGreatTit': ['inspectLean', 'inspectDown', 'inspectLift', 'inspectSettle'],
+    'whiteWagtail': ['tailPoise', 'tailLift', 'tailFall', 'tailSettle'],
+    'indianWhiteEye': ['gleanReady', 'gleanReach', 'gleanRecoil', 'gleanSettle'],
+    'crestedMyna': ['peckReady', 'peckLower', 'peckLift', 'peckSettle'],
+    'eurasianNuthatch': ['sideBrace', 'sideReach', 'sideProbe', 'sideRecover'],
+    'greatEgret': ['neckPoise', 'neckReach', 'neckObserve', 'neckRecover'],
+}
+for bird, names in signature_frames.items():
+    expected_extras[bird] += names
 assert set(specific) == set(expected_extras), 'Optional poses advertised for the wrong species'
 for bird, names in specific.items():
     assert names == frames + expected_extras[bird], f'Invalid species frame order: {bird}'
 
-assert sum(len(names) - len(frames) for names in specific.values()) == 187, 'Local appended poses were lost or expanded'
-assert sum(len(specific.get(bird, frames)) for bird in ids) == 3587, 'U atlas frame-slot budget differs'
+assert sum(len(names) - len(frames) for names in specific.values()) == 345, 'Local appended poses were lost or expanded'
+assert sum(len(specific.get(bird, frames)) for bird in ids) == 3745, 'M8a/E0 atlas frame-slot budget differs'
 
 support = json.loads((ROOT / 'shared/species-support.json').read_text())
 assert {row['species'] for row in support} == ids, 'Missing species support audit'
@@ -64,6 +82,15 @@ assert flycatcher['poseFrames'] == [], 'Catch-only flycatcher was added to the b
 assert len(specific['yellowRumpedFlycatcher']) == 37, 'Flycatcher must append exactly three frames after the common 34'
 metadata = manifest['poseClips']
 assert set(metadata) == set(expected_extras), 'Pose/catch metadata omits a delivered species or expands scope'
+assert sum(bool(row['poseFrames']) for row in support) == 23
+for bird, names in signature_frames.items():
+    for variant in range(2):
+        clip = metadata[bird]['clips'][f'signature.v{variant}']
+        assert [f['name'] for f in clip['frames']] == names
+        assert clip['maximumLoops'] == 1
+        assert clip['foot'] == {'x': 29, 'y': 39}
+    assert metadata[bird]['signaturePolicy']['recordsObservation'] is False
+
 assert set(metadata['yellowRumpedFlycatcher']['clips']) == {'insectCatchRecovery'}, 'Flycatcher exported unprovided clips'
 transport_frames = [f'fly{i}' for i in range(8)] + [f'land{i}' for i in range(3)] + [f'glide{i}' for i in range(3)] + [f'bank{i}' for i in range(3)] + ['bound', 'stand']
 for bird in ('barnSwallow', 'yellowRumpedFlycatcher'):

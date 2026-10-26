@@ -62,7 +62,7 @@ final class BathRecordingTests:XCTestCase {
         XCTAssertEqual(e.handle(.placeBathAfter(2)),.scheduled)
         advance(0.5);e.handle(.pause(true));advance(3)
         var log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(log.simulationVersion,19);XCTAssertNotNil(log.expected)
+        XCTAssertEqual(log.simulationVersion,20);XCTAssertNotNil(log.expected)
         for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),log.expected)}
         e.handle(.pause(false));advance(1.6)
         XCTAssertEqual(e.habitatSnapshot().count,1)
@@ -120,7 +120,7 @@ final class BathRecordingTests:XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let file=root.appendingPathComponent("shared/behavior-fixtures/v1/bath.json")
         let original=try BehaviorInputLog.load(from:file)
-        XCTAssertEqual(original.simulationVersion,19)
+        XCTAssertEqual(original.simulationVersion,20)
         var boundaries:[BehaviorReplayReport]=[]
         for count in 1...original.inputs.count {
             var prefix=original;prefix.inputs=Array(original.inputs.prefix(count))

@@ -2791,7 +2791,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -2805,7 +2809,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "littleEgret"
   },
@@ -4441,7 +4454,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -4455,7 +4472,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "orientalMagpie"
   },
@@ -5830,7 +5856,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -5844,7 +5874,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "mallard"
   },
@@ -8863,7 +8902,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -8877,7 +8920,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "greatTit"
   },
@@ -9413,7 +9465,11 @@
       "preening",
       "greeting",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
       "cohort" : "local-46",
@@ -9427,7 +9483,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "greatSpottedWoodpecker"
   },
@@ -13064,12 +13129,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "rest",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -13120,20 +13185,20 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "watch",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "alert",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -13144,12 +13209,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "takeoffPreparation",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -13292,10 +13357,14 @@
       "standing",
       "blinking",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
-      "cohort" : "upstream-v0.7-base",
+      "cohort" : "expansion-e0-partial",
       "fallbackFrames" : {
         "cling0" : "stand",
         "cling1" : "stand",
@@ -13313,7 +13382,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "crestedMyna"
   },
@@ -14464,12 +14542,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "rest",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -14520,20 +14598,20 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "watch",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "alert",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -14544,12 +14622,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "takeoffPreparation",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -14692,10 +14770,14 @@
       "standing",
       "blinking",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
-      "cohort" : "upstream-v0.7-base",
+      "cohort" : "expansion-e0-partial",
       "fallbackFrames" : {
         "cling0" : "stand",
         "cling1" : "stand",
@@ -14713,7 +14795,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "greatEgret"
   },
@@ -16424,12 +16515,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "rest",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -16480,20 +16571,20 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "watch",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "alert",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -16504,12 +16595,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "takeoffPreparation",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -16652,10 +16743,14 @@
       "standing",
       "blinking",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
-      "cohort" : "upstream-v0.7-base",
+      "cohort" : "expansion-e0-partial",
       "fallbackFrames" : {
         "poop0" : "stand",
         "poop1" : "stand",
@@ -16669,7 +16764,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "eurasianNuthatch"
   },
@@ -17260,12 +17364,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "rest",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -17316,20 +17420,20 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "watch",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "alert",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -17340,12 +17444,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "takeoffPreparation",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -17488,10 +17592,14 @@
       "standing",
       "blinking",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
-      "cohort" : "upstream-v0.7-base",
+      "cohort" : "expansion-e0-partial",
       "fallbackFrames" : {
         "cling0" : "stand",
         "cling1" : "stand",
@@ -17509,7 +17617,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "eurasianGreatTit"
   },
@@ -19220,12 +19337,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "rest",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -19276,20 +19393,20 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "watch",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "alert",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -19300,12 +19417,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "takeoffPreparation",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -19448,10 +19565,14 @@
       "standing",
       "blinking",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
-      "cohort" : "upstream-v0.7-base",
+      "cohort" : "expansion-e0-partial",
       "fallbackFrames" : {
         "cling0" : "stand",
         "cling1" : "stand",
@@ -19469,7 +19590,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "indianWhiteEye"
   },
@@ -20620,12 +20750,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "rest",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -20676,20 +20806,20 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "watch",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "alert",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -20700,12 +20830,12 @@
         "productAllowed" : false
       },
       {
-        "contentSupported" : false,
+        "contentSupported" : true,
         "kind" : "takeoffPreparation",
         "missingFrames" : [
 
         ],
-        "productAllowed" : false
+        "productAllowed" : true
       },
       {
         "contentSupported" : false,
@@ -20848,10 +20978,14 @@
       "standing",
       "blinking",
       "flight",
-      "landing"
+      "landing",
+      "observationPose",
+      "alertPose",
+      "restPose",
+      "takeoffPose"
     ],
     "contentReview" : {
-      "cohort" : "upstream-v0.7-base",
+      "cohort" : "expansion-e0-partial",
       "fallbackFrames" : {
         "cling0" : "stand",
         "cling1" : "stand",
@@ -20869,7 +21003,16 @@
 
     ],
     "poseFrames" : [
-
+      "lookNear",
+      "lookFar",
+      "alertRise",
+      "alertHold",
+      "alertRelax",
+      "restLower",
+      "restTuck",
+      "restWake",
+      "takeoffCrouch",
+      "takeoffPush"
     ],
     "species" : "whiteWagtail"
   },

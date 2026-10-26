@@ -36,6 +36,7 @@ enum ObservationJournalUIVerification {
         let activeSettings = try encoder.encode(d.settings), draft = try encoder.encode(settings.draft)
         let preferencesBefore = preferences.persistentDomain(forName: suite)
 
+        verifyGalleryPreviewCapabilities(desktop:d,into:&checks)
         let w = ObservationJournalWindow(desktop: d)
         guard let window = w.window else { throw NSError(domain: "ObservationJournalUIVerification", code: 3) }
         defer { window.close(); settings.cancel() }

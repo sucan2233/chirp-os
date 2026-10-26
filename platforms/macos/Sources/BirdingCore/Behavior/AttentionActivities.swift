@@ -79,7 +79,7 @@ public final class AttentionExecution:BehaviorExecution {
                   let cut=$0.rect.intersection(area)
                   return !cut.isNull && !cut.isEmpty
               }) else {return .failed(.targetInvalid)}
-        guard plan.kind.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {
+        guard SpeciesBehaviorProfile.profile(for:bird.profile.id).requiredFrames(for:kind).isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {
             return .failed(.missingFrames)
         }
         // Input remains actionable while animation is paused, just like invalid

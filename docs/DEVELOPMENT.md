@@ -220,3 +220,20 @@ The macOS U integration targets one Birding Handbook with separate manual visit 
 ```
 
 原生检查需覆盖点击分流、到访去重、暂停、拖动、真实像素/水线/窗口遮挡、保存失败与恢复。历史M6/M7通过结果不替代本轮回归；Windows保留上游内容不等于已经采用上述macOS手册合同。
+
+### M8a / E0 首批动作验证
+
+完成本批全部代码后，统一构建隔离候选（不替换已装版）：
+
+```sh
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CHIRPOS_DEVELOPMENT_BUILD=1 CHIRPOS_APP_PATH="$PWD/dist/M8A-E0-20261026/ChirpOS Dev.app" ./scripts/build.sh
+.build/release/Birding --export-shared "$PWD/shared"
+.build/release/Birding --export-behavior-fixtures "$PWD/shared/behavior-fixtures/v1"
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./scripts/test.sh
+python3 scripts/audit-pilot-art.py --output docs/evidence/m8a-e0-art-20261026.json
+python3 scripts/audit-expansion-capabilities.py --output docs/evidence/e0-capability-audit-20261026.json
+.build/release/Birding --verify-pilot-motion "$PWD/.build/m8a-e0-evidence/native"
+.build/release/Birding --export-pose-previews "$PWD/.build/m8a-e0-evidence/previews"
+```
+
+`--verify-pilot-motion`使用隔离手册/档案路径及真实AppKit控件，不要求用户移动鼠标或改变已装版；它不等于真实睡眠、多屏或桌面场景全回归。预览包括pilot的before、signature.v0/v1与基础动作，三尺度双朝向。`test-species-parity.py`继续保护旧跨平台时序和共享图集契约；新的macOS特色调度未据此宣称Windows同步。原始54种盘点JSON保留为历史，更新审计禁止覆盖该路径。

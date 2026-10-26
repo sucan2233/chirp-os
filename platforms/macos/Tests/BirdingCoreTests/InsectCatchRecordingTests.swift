@@ -10,7 +10,7 @@ final class InsectCatchRecordingTests:XCTestCase {
     }
 
     func testHandwrittenFixturePreservesActualCancellationPauseContactAndRestorationAtAllCallbackRates() throws {
-        let log=try sharedFixture();XCTAssertEqual(log.simulationVersion,19)
+        let log=try sharedFixture();XCTAssertEqual(log.simulationVersion,20)
         func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
             var input=log;input.inputs=Array(log.inputs.prefix(count));return try input.replay(callbackHz:hz)
         }
@@ -117,7 +117,7 @@ final class InsectCatchRecordingTests:XCTestCase {
         for hz in [30,60,120] {XCTAssertEqual(try pending.replay(callbackHz:hz),report)}
         e.handle(.cancelInsectCatchPreview);e.handle(.pause(false));e.handle(.clearInsect)
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(log.simulationVersion,19);XCTAssertNotNil(log.expected)
+        XCTAssertEqual(log.simulationVersion,20);XCTAssertNotNil(log.expected)
         for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),log.expected)}
         XCTAssertEqual(log.expected?.events.filter{$0.kind=="insectCatch" && $0.type=="rejected"}.map(\.reason),["noSpecies"])
         _=e.startInsectCatchFixture(species:.barnSwallow,trajectory:try F.missTrajectory(in:e))

@@ -4,7 +4,12 @@ import XCTest
 final class PoseClipTests:XCTestCase {
     private let species:[SpeciesID] = [.treeSparrow,.spottedDove,.barnSwallow,.nightHeron,
         .lightVentedBulbul,.redWhiskeredBulbul,.chineseBlackbird,.magpieRobin,
-        .swinhoesWhiteEye,.azureWingedMagpie,.redBilledLeiothrix,.littleOwl]
+        .swinhoesWhiteEye,.azureWingedMagpie,.redBilledLeiothrix,.littleOwl,
+        .greatTit,.orientalMagpie,.greatSpottedWoodpecker,.mallard,.littleEgret,
+        .eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret]
+    private let expansionPilot:[SpeciesID] = [.eurasianGreatTit,.whiteWagtail,.indianWhiteEye,
+        .crestedMyna,.eurasianNuthatch,.greatEgret]
+    private var legacyPoseSpecies:[SpeciesID] {species.filter{!expansionPilot.contains($0)}}
     private let kinds:[BehaviorKind] = [.watch,.alert,.rest,.takeoffPreparation]
     private let poseFrames:Set<String> = ["lookNear","lookFar","alertRise","alertHold","alertRelax",
         "restLower","restTuck","restWake","takeoffCrouch","takeoffPush"]
@@ -26,9 +31,10 @@ final class PoseClipTests:XCTestCase {
         let engine=BehaviorEngine(seed:seed,settings:settings)
         engine.populationEnabled=false;engine.ambientEnabled=false;engine.autonomousRouting=false
         var surfaces=[host,target]
-        if topOnly {
+        if topOnly || species == .greatSpottedWoodpecker || species == .eurasianNuthatch {
             // Wide 120-point windows support top landings without entering the
-            // woodpecker planner's side-route branch (window height >= 180).
+            // side-perching planner branch (window height >= 180). All ten
+            // base poses, including woodpecker and nuthatch, are top-only.
             for index in surfaces.indices {surfaces[index].rect.size.height=120}
         }
         engine.updateWorld(BehaviorWorld(screens:[screen],displays:[screen],surfaces:surfaces,scale:scale,
@@ -61,7 +67,7 @@ final class PoseClipTests:XCTestCase {
         return id
     }
 
-    private func start(_ kind:BehaviorKind,in engine:BehaviorEngine,source:BehaviorSource = .preview) throws -> BehaviorRunID {
+    private func request(_ kind:BehaviorKind,in engine:BehaviorEngine,source:BehaviorSource = .preview) throws -> BehaviorResult {
         let bird=engine.birds[0],id=try XCTUnwrap(engine.id(of:bird))
         if kind == .watch {
             var world=engine.world
@@ -77,7 +83,11 @@ final class PoseClipTests:XCTestCase {
             // eligibility, then uses the command gate, selection and runtime.
             engine.perchPlanner.rhythms[id]?.disturbance=0.5
         }
-        return try started(engine.handle(command(kind,source)))
+        return engine.handle(command(kind,source))
+    }
+
+    private func start(_ kind:BehaviorKind,in engine:BehaviorEngine,source:BehaviorSource = .preview) throws -> BehaviorRunID {
+        try started(request(kind,in:engine,source:source))
     }
 
     private func duration(_ engine:BehaviorEngine,_ run:BehaviorRunID) throws -> Double {
@@ -303,7 +313,7 @@ final class PoseClipTests:XCTestCase {
     }
 
     func testEachMissingOptionalFrameFallsBackToLegacyWithoutChangingEventsOrRandomness() throws {
-        for bird in species {
+        for bird in legacyPoseSpecies {
             for kind in kinds {
                 let missingByKind:[BehaviorKind:[String]] = [
                     .watch:["lookNear","lookFar"],.alert:["alertRise","alertHold","alertRelax"],
@@ -326,7 +336,7 @@ final class PoseClipTests:XCTestCase {
         }
     }
 
-    func testNearWatchStillNeedsTheFarFrameAndCanFallbackWithoutMovingFeet() throws {
+    func testNearWatchNeedsFarFrameAndOnlyLegacyCanFallbackWithoutMovingFeet() throws {
         for bird in species {
             for complete in [false,true] {
                 let engine=fixture(bird),model=engine.birds[0],origin=model.position
@@ -334,12 +344,68 @@ final class PoseClipTests:XCTestCase {
                 world.pointer=CGPoint(x:origin.x+40*engine.spriteScale(for:model),y:origin.y)
                 if !complete {world.availableFrames[bird]?.remove("lookFar")}
                 engine.updateWorld(world)
+                if !complete && expansionPilot.contains(bird) {
+                    XCTAssertEqual(engine.handle(.attention(.watch,.preview)),.rejected(.missingFrames))
+                    XCTAssertEqual(engine.activeRunCount,0);XCTAssertEqual(engine.leasedBirdCount,0)
+                    XCTAssertEqual(model.position,origin)
+                    continue
+                }
                 let run=try started(engine.handle(.attention(.watch,.preview)))
                 advance(engine,seconds:0.3)
                 XCTAssertEqual(engine.renderSnapshot().first?.frameName,complete ? "lookNear":"stand")
                 XCTAssertEqual(model.position,origin)
                 advance(engine,seconds:3)
                 released(engine,run,type:.completed)
+            }
+        }
+    }
+
+    func testExpansionPilotRejectsEveryMissingRequiredPoseAndFailsOnLiveLoss() throws {
+        let required:[BehaviorKind:[String]] = [
+            .watch:["lookNear","lookFar"],.alert:["alertRise","alertHold","alertRelax"],
+            .rest:["restLower","restTuck","restWake"],.takeoffPreparation:["takeoffCrouch","takeoffPush"]]
+        for bird in expansionPilot {
+            for kind in kinds {
+                for missing in try XCTUnwrap(required[kind]) {
+                    let context="\(bird): \(kind): missing \(missing)"
+                    for source:BehaviorSource in [.preview,.automatic] {
+                        let engine=fixture(bird),origin=engine.birds[0].position
+                        var observations:[BehaviorObservation]=[]
+                        engine.observationObserver={observations.append($0)}
+                        var world=engine.world
+                        world.availableFrames[bird]?.remove(missing);engine.updateWorld(world)
+                        XCTAssertEqual(try request(kind,in:engine,source:source),.rejected(.missingFrames),context)
+                        XCTAssertEqual(engine.activeRunCount,0,context)
+                        XCTAssertEqual(engine.leasedBirdCount,0,context)
+                        XCTAssertEqual(engine.reservedLandingCount,0,context)
+                        XCTAssertEqual(engine.residentCount,1,context)
+                        XCTAssertEqual(engine.arrivalCount,0,context)
+                        XCTAssertEqual(engine.birds[0].position,origin,context)
+                        XCTAssertTrue(observations.isEmpty,context)
+                        XCTAssertFalse(engine.events.contains{$0.type == .started},context)
+                    }
+
+                    let live=fixture(bird),model=live.birds[0],origin=model.position
+                    var observations:[BehaviorObservation]=[]
+                    live.observationObserver={observations.append($0)}
+                    let run=try start(kind,in:live)
+                    advance(live,seconds:0.2);live.handle(.pause(true))
+                    let clock=live.time
+                    var world=live.world
+                    world.availableFrames[bird]?.remove(missing);live.updateWorld(world)
+                    released(live,run,type:.failed,reason:.missingFrames)
+                    XCTAssertEqual(live.time,clock,context)
+                    XCTAssertEqual(live.activeRunCount,0,context)
+                    XCTAssertEqual(live.leasedBirdCount,0,context)
+                    XCTAssertEqual(model.position,origin,context)
+                    XCTAssertTrue(observations.isEmpty,context)
+                    // Restoring the manifest cannot revive a terminated owner.
+                    world.availableFrames[bird]?.insert(missing);live.updateWorld(world)
+                    live.handle(.pause(false));advance(live,seconds:0.3)
+                    released(live,run,type:.failed,reason:.missingFrames)
+                    XCTAssertEqual(live.events.filter{$0.type == .started}.count,1,context)
+                    XCTAssertTrue(observations.isEmpty,context)
+                }
             }
         }
     }
@@ -676,7 +742,9 @@ final class PoseClipTests:XCTestCase {
     }
 
     func testEnhancedAndLegacyRunsKeepEventsObservationCountsAndFlightRandomStreamIdentical() throws {
-        for bird in species {
+        // E0 cannot admit the legacy-only control: its four reviewed behaviors
+        // require the authored frames. The original 46 retain optional fallback.
+        for bird in legacyPoseSpecies {
             for source:BehaviorSource in [.preview,.automatic] {
                 let engine=fixture(bird),control=fixture(bird,enhanced:false)
                 let journal=ObservationJournal(),baseline=ObservationJournal()
@@ -758,9 +826,11 @@ final class PoseClipTests:XCTestCase {
     }
 
     func testUnlistedSpeciesKeepOldPresentationEvenWithInjectedEnhancementFrames() throws {
-        XCTAssertEqual(species.count,12)
+        XCTAssertEqual(species.count,23)
+        XCTAssertEqual(Set(species).count,23)
+        XCTAssertEqual(legacyPoseSpecies.count,17)
         let legacy=SpeciesCatalog.standard.species.prefix(46).map(\.id)
-        XCTAssertEqual(legacy.filter{!species.contains($0)}.count,34)
+        XCTAssertEqual(legacy.filter{!species.contains($0)}.count,29)
         for bird in legacy where !species.contains(bird) {
             for kind in kinds {
                 // Takeoff preparation requires a top-edge destination for every

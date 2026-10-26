@@ -18,6 +18,14 @@ public enum GalleryPose {
         case .landing: return "land\(min(2,Int(t.truncatingRemainder(dividingBy:1.6)/0.14)))"
         case .preening: return "preen\(Int(t*3)%2)"
         case .other:
+            if let frame = LivelyMotion.previewFrame(species: id, age: t) { return frame }
+            if id == .eurasianNuthatch { return t.truncatingRemainder(dividingBy:4) < 2 ? "cling0" : "peck\(Int(t*4)%2)" }
+            // Expansion idle artwork is decorative, including peck/bow/watch/scan.
+            // Showing it here never grants a managed or collectible behavior.
+            if SpeciesBehaviorProfile.profile(for: id).isExpansionSpecies {
+                let motion = SpeciesBehavior.motion(id)
+                return "idle\([0,1,2,1][Int(t*motion.rate)%4])"
+            }
             if id == .nightHeron {
                 let u=t.truncatingRemainder(dividingBy:8)
                 if u < 2 { return "stretch" }
@@ -25,10 +33,8 @@ public enum GalleryPose {
                 if u < 4 { return "poop\(Int(u*6)%2)" }
                 return "stand"
             }
-            if id == .eurasianNuthatch { return t.truncatingRemainder(dividingBy:4) < 2 ? "cling0" : "peck\(Int(t*4)%2)" }
             if id == .greatSpottedWoodpecker { return t.truncatingRemainder(dividingBy:4) < 2 ? "cling0" : "peck\(Int(t*12)%2)" }
-            // These species have distinct perched actions in the art atlas.
-            // General watching, scanning and head-bobbing stay at rest here.
+            // Preserve the legacy non-pilot gallery choices.
             switch SpeciesBehavior.motion(id).action {
             case .tail, .probe, .dabble, .call, .glean, .rock, .hammer, .crack, .stalk, .wing:
                 let motion=SpeciesBehavior.motion(id)

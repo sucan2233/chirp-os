@@ -113,6 +113,7 @@ final class BehaviorRuntime {
         let id=BehaviorRunID(rawValue:nextID);nextID+=1
         runs[id]=Run(id:id,source:source,execution:execution)
         for bird in execution.participants {
+            engine.prepareLivelyHandoff(bird)
             owners[bird]=id;engine.perchPlanner.didStart(bird,kind:execution.kind)
         }
         execution.start(in:engine)

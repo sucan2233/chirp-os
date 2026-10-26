@@ -2,6 +2,8 @@ import XCTest
 @testable import BirdingCore
 
 final class U2IntegrationTests:XCTestCase {
+    private let pilots:Set<SpeciesID> = [.eurasianGreatTit,.whiteWagtail,.indianWhiteEye,.crestedMyna,.eurasianNuthatch,.greatEgret]
+    private let pilotKinds:Set<BehaviorKind> = [.watch,.alert,.rest,.takeoffPreparation]
     private var expansion:[SpeciesID] {
         SpeciesID.allCases.filter{SpeciesBehaviorProfile.profile(for:$0).isExpansionSpecies}
     }
@@ -10,7 +12,7 @@ final class U2IntegrationTests:XCTestCase {
             .union(["breathe","stretch","shake","poop0","poop1","cling0","cling1","peck0","peck1"])
     }
 
-    func testNewCatalogDoesNotGrantManagedActionsEvenWithEveryFrameInjected() {
+    func testNewCatalogOnlyGrantsExplicitlyReviewedPilotActionsEvenWithEveryFrameInjected() {
         XCTAssertEqual(SpeciesCatalog.standard.species.count,100)
         XCTAssertEqual(Set(SpeciesBehaviorProfile.legacySpecies).count,46)
         XCTAssertEqual(expansion.count,54)
@@ -19,12 +21,14 @@ final class U2IntegrationTests:XCTestCase {
         for id in expansion {
             let profile=SpeciesBehaviorProfile.profile(for:id)
             let audit=SpeciesSupportAudit(species:id,availableFrames:everyFrame)
-            XCTAssertEqual(Set(audit.capabilities),[.standing,.blinking,.flight,.landing],id.rawValue)
-            XCTAssertTrue(profile.poseFrameNames.isEmpty)
+            let base:Set<BirdCapability> = [.standing,.blinking,.flight,.landing]
+            XCTAssertEqual(Set(audit.capabilities),pilots.contains(id) ? base.union([.observationPose,.alertPose,.restPose,.takeoffPose]):base,id.rawValue)
+            XCTAssertEqual(profile.poseFrameNames,pilots.contains(id) ? PoseClip.frameNames:[])
             XCTAssertTrue(audit.contentReview?.managedBehaviorReviewPending == true)
             for kind in BehaviorDefinitions.all.map(\.kind) {
-                XCTAssertEqual(profile.allows(kind),kind == .relocate,"\(id): \(kind)")
-                XCTAssertEqual(audit.behaviors.first{$0.kind==kind}?.contentSupported,kind == .relocate)
+                let expected=kind == .relocate || (pilots.contains(id) && pilotKinds.contains(kind))
+                XCTAssertEqual(profile.allows(kind),expected,"\(id): \(kind)")
+                XCTAssertEqual(audit.behaviors.first{$0.kind==kind}?.contentSupported,expected)
             }
             XCTAssertEqual(profile.frameFallbacks["stretch"],"stand")
             XCTAssertEqual(profile.frameFallbacks["shake"],"stand")
@@ -97,17 +101,20 @@ final class U2IntegrationTests:XCTestCase {
         return e
     }
 
-    func testAllNewSpeciesRejectRealGenericRequestsAndProduceNoObservations() throws {
+    func testAllNewSpeciesRejectUnreviewedRequestsAndProduceNoObservations() throws {
         for species in expansion {
             let e=engine(species)
             var observations:[BehaviorObservation]=[]
             e.observationObserver={observations.append($0)}
-            let commands:[EngineCommand]=[.perchAction(.rest,.preview),.perchAction(.preen,.user),
-                .attention(.watch,.preview),.attention(.alert,.user),.sideHop(.preview),.prepareTakeoff(.preview),
+            var commands:[EngineCommand]=[.perchAction(.preen,.user),.sideHop(.preview),
                 .pointerVisit(.user),.socialGreeting(.preview),.leafPlay(at:CGPoint(x:1100,y:400),source:.user)]
+            if !pilots.contains(species) {
+                commands += [.perchAction(.rest,.preview),.attention(.watch,.preview),
+                             .attention(.alert,.user),.prepareTakeoff(.preview)]
+            }
             for command in commands {XCTAssertFalse(e.handle(command).accepted,species.rawValue)}
             for kind in SocialMotionKind.allCases {XCTAssertFalse(e.handle(.socialMotion(kind,.preview)).accepted)}
-            e.ambientEnabled=true
+            e.ambientEnabled = !pilots.contains(species)
             for _ in 0..<600 {e.advance(BehaviorEngine.step)}
             XCTAssertEqual(e.activeRunCount,0)
             XCTAssertTrue(observations.isEmpty)
@@ -131,7 +138,7 @@ final class U2IntegrationTests:XCTestCase {
     func testRuntimeRejectsBypassBeforeExecutingOrLeasingNewBirds() throws {
         let e=engine(.eurasianNuthatch),id=try XCTUnwrap(e.id(of:e.birds[0]))
         let revision=e.birds[0].motionRevision
-        for definition in BehaviorDefinitions.all where definition.kind != .relocate {
+        for definition in BehaviorDefinitions.all where definition.kind != .relocate && !pilotKinds.contains(definition.kind) {
             let probe=Probe(id,definition.kind)
             XCTAssertEqual(e.runtime.start(probe,source:.preview,in:e),.rejected(.unavailableBird))
             XCTAssertEqual(probe.starts,0)

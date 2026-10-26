@@ -42,6 +42,9 @@ if let path=argument("--export-behavior-fixtures") {
 }
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
+if let path = argument("--verify-pilot-motion") {
+    exit(PilotMotionVerification.run(to:URL(fileURLWithPath:path)))
+}
 if let path = argument("--export-pose-previews") {
     do {try BirdArt.exportPosePreviews(to:URL(fileURLWithPath:path));exit(0)}
     catch {fputs("Pose preview export failed: \(error)\n",stderr);exit(1)}

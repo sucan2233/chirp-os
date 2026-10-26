@@ -4,15 +4,28 @@ import BirdingCore
 
 extension BirdArt {
     /// Presentation-only looping reference. Production timing remains in the
-    /// owning execution; the short stand interval illustrates current-state release.
+    /// owning execution; the short stand/cling interval illustrates current-state release.
     static func exportPosePreviews(to folder:URL) throws {
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
-        for species in Self.poseExportSpecies {
+        let existingSpecies=Self.poseExportSpecies
+        let exportSpecies=existingSpecies+LivelyMotion.species.filter{!existingSpecies.contains($0)}
+        for species in exportSpecies {
             let art=BirdArt(species:species),profile=SpeciesBehaviorProfile.profile(for:species)
             let bird=SpeciesCatalog.standard.profile(species)
             let giftLeaf=profile.allows(.visitorGift) ? CarryArt.leafImage():nil
+            var sideTrackIDs=Set<String>()
             var tracks:[PoseClip]=[(BehaviorKind.watch,2.0),(.alert,1.5),(.rest,4),(.takeoffPreparation,0.45)].compactMap {
                 profile.poseClip(for:$0.0,duration:$0.1,lookingFar:true)
+            }
+            let signatures=(0..<2).compactMap{LivelyMotion.clip(species:species,variant:$0)}
+            if !signatures.isEmpty {
+                let side=LivelyMotion.isSideMotion(species)
+                if let before=legacyIdlePreview(species:species,side:side) {
+                    tracks.append(before)
+                    if side {sideTrackIDs.insert(before.id)}
+                }
+                tracks += signatures
+                if side {sideTrackIDs.formUnion(signatures.map(\.id))}
             }
             if let peek=PoseClip.edgePeek(species:species) {tracks.append(peek)}
             if let bath=PoseClip.bath(species:species) {tracks.append(bath)}
@@ -70,12 +83,18 @@ extension BirdArt {
                     context.translateBy(x:0,y:CGFloat(height));context.scaleBy(x:1,y:-1)
                     for (i,clip) in tracks.enumerated() {
                         let age=time.truncatingRemainder(dividingBy:clip.duration+0.35)
-                        let frame=clip.sample(at:age)?.name ?? "stand"
+                        let side=sideTrackIDs.contains(clip.id)
+                        let frame=clip.sample(at:age)?.name ?? (side ? "cling0":"stand")
                         let isNest=clip.id=="\(species.rawValue).nestMaterial.preview" || clip.id=="\(species.rawValue).nestBuild"
                         let center=CGFloat(i*cell+cell/2),direction:CGFloat=right ? 1:-1
                         let foot=CGPoint(x:center-(isNest ? (5*scale+11*size)*direction:0),y:footY)
                         context.setStrokeColor(NSColor.gray.withAlphaComponent(0.4).cgColor)
-                        context.move(to:CGPoint(x:CGFloat(i*cell+8),y:foot.y));context.addLine(to:CGPoint(x:CGFloat((i+1)*cell-8),y:foot.y));context.strokePath()
+                        if side {
+                            context.move(to:CGPoint(x:foot.x,y:8));context.addLine(to:foot)
+                        } else {
+                            context.move(to:CGPoint(x:CGFloat(i*cell+8),y:foot.y));context.addLine(to:CGPoint(x:CGFloat((i+1)*cell-8),y:foot.y))
+                        }
+                        context.strokePath()
                         if clip.id=="\(species.rawValue).nestBuild" {
                             let contact=CGPoint(x:center,y:foot.y)
                             drawNestPreviewAsset(NestArt.image(),at:contact,anchor:NestArtGeometry.nestAnchor,scale:scale,in:context)
@@ -107,7 +126,8 @@ extension BirdArt {
                             context.draw(leaf,in:CGRect(x:0,y:0,width:16,height:16));context.restoreGState()
                         }
                         context.saveGState();context.translateBy(x:CGFloat(i*cell+8),y:CGFloat(height-10));context.scaleBy(x:1,y:-1)
-                        ("\(clip.id.dropFirst(species.rawValue.count+1))\n\(frame)" as NSString).draw(at:.zero,withAttributes:[.font:NSFont.monospacedSystemFont(ofSize:10,weight:.regular),.foregroundColor:NSColor(calibratedWhite:0.2,alpha:1)])
+                        let trackLabel=String(clip.id.dropFirst(species.rawValue.count+1))+(side ? " / side":"")
+                        ("\(trackLabel)\n\(frame)" as NSString).draw(at:.zero,withAttributes:[.font:NSFont.monospacedSystemFont(ofSize:10,weight:.regular),.foregroundColor:NSColor(calibratedWhite:0.2,alpha:1)])
                         context.restoreGState()
                     }
                     if courtPair,let initiator=courtInitiator,let observer=courtObserver {
@@ -130,6 +150,18 @@ extension BirdArt {
                 guard CGImageDestinationFinalize(destination) else {throw NSError(domain:"PosePreviewExport",code:2)}
             }}
         }
+    }
+    /// Capture the old scheduler's active time window at the GIF's 20 Hz,
+    /// including the side-specific window and frames. This is artwork evidence
+    /// only: the unused beak field is a placeholder, not a contact anchor.
+    private static func legacyIdlePreview(species:SpeciesID,side:Bool) -> PoseClip? {
+        let window=LivelyMotion.window(species),step=0.05
+        let frames=(0..<Int(ceil(window.duration/step))).map {index in
+            let offset=Double(index)*step
+            let name=SpeciesBehavior.frame(species,age:window.start+offset,side:side) ?? (side ? "cling0":"stand")
+            return PoseClip.Frame(name:name,duration:min(step,window.duration-offset),beak:PoseClip.footAnchor)
+        }
+        return PoseClip(id:"\(species.rawValue).before",frames:frames)
     }
     /// Pose illustration only: no real transport route, stock mutation or run
     /// completion is implied by these independently looping source panels.

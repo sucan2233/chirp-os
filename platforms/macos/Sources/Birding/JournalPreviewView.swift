@@ -21,13 +21,19 @@ final class JournalPreviewView: NSView {
     }
     func reset() {age = 0; previousTime = nil; needsDisplay = true}
 
+    /// Shared by drawing and native verification; sampling never advances time.
+    func frameName(at age: Double) -> String {
+        guard !silhouette, let profile, let action else {return "stand"}
+        return GalleryPose.frame(profile.id, age: age, fps: profile.flapFPS,
+                                 action: action, speedMultiplier: profile.speed)
+    }
+
     override func draw(_ dirtyRect: NSRect) {
-        guard let art, let profile, let context = NSGraphicsContext.current?.cgContext else {return}
-        let pose = action.map {GalleryPose.frame(profile.id, age: age, fps: profile.flapFPS,
-                                                action: $0, speedMultiplier: profile.speed)} ?? "stand"
+        guard let art, profile != nil, let context = NSGraphicsContext.current?.cgContext else {return}
+        let pose = frameName(at: age)
         context.saveGState()
         if silhouette {context.beginTransparencyLayer(auxiliaryInfo: nil)}
-        art.draw(name: silhouette ? "stand" : pose, at: CGPoint(x: bounds.midX + 10, y: 88),
+        art.draw(name: pose, at: CGPoint(x: bounds.midX + 10, y: 88),
                  scale: 2, right: true, context: context)
         if silhouette {
             context.setBlendMode(.sourceIn); context.setFillColor(NSColor.secondaryLabelColor.cgColor)

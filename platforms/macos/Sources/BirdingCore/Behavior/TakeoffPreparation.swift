@@ -63,7 +63,7 @@ extension BehaviorEngine {
         guard birds.contains(where:{$0 === bird}),role(of:bird) == .resident,
               bird.state == .perched,bird.edge == .top,!bird.isDeparting else {return .unavailableBird}
         guard runtime.owners[id]==nil else {return .busy}
-        guard TakeoffPreparationExecution.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? []) else {
+        guard SpeciesBehaviorProfile.profile(for:bird.profile.id).requiredFrames(for:.takeoffPreparation).isSubset(of:world.availableFrames[bird.profile.id] ?? []) else {
             return .missingFrames
         }
         guard let host=world.surfaces.first(where:{$0.id==bird.hostID}),host.isGround || host.layer==0,
@@ -125,7 +125,7 @@ final class TakeoffPreparationExecution:BehaviorExecution {
         guard let bird=engine.bird(id) else {return .failed(.missingBird)}
         guard engine.settings.perchActions,engine.settings.takeoffPreparationEnabled else {return .cancelled(.settingsChanged)}
         if engine.world.interruptingButtonsDown {return .cancelled(.userInput)}
-        guard Self.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}
+        guard SpeciesBehaviorProfile.profile(for:bird.profile.id).requiredFrames(for:.takeoffPreparation).isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}
         guard let anchor,let destination=landingReservations.first,
               bird.motionRevision==anchor.revision,bird.state == .perched,bird.edge == .top,!bird.isDeparting,
               bird.hostID==anchor.source.hostID,bird.fraction==anchor.source.fraction,

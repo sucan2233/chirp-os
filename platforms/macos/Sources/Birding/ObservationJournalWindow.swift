@@ -28,7 +28,7 @@ final class ObservationJournalWindow: NSWindowController, NSTableViewDataSource,
     private(set) var renderedSpecies: [SpeciesID] = []
     private(set) var selectedSpecies: SpeciesID?
     private(set) var selectedView: ViewMode = .discoveries
-    private var supportedCache: [SpeciesID: [BehaviorKind]] = [:]
+    private var supportCache: [SpeciesID: SpeciesSupportAudit] = [:]
     private var restoringSelection = false
 
     unowned let desktop: DesktopController
@@ -245,13 +245,20 @@ final class ObservationJournalWindow: NSWindowController, NSTableViewDataSource,
         } else {return}
         updateDetail()
     }
-    private func supportedBehaviors(_ species: SpeciesID) -> [BehaviorKind] {
-        if let cached = supportedCache[species] {return cached}
+    private func supportAudit(_ species: SpeciesID) -> SpeciesSupportAudit {
+        if let cached = supportCache[species] {return cached}
         let frames = Set(desktop.arts[species]?.frames.keys.map {$0} ?? [])
         let audit = SpeciesSupportAudit(species: species, availableFrames: frames)
-        let supported = audit.behaviors.filter {$0.kind != .relocate && $0.contentSupported}.map(\.kind)
-        supportedCache[species] = supported
-        return supported
+        supportCache[species] = audit
+        return audit
+    }
+    private func supportedBehaviors(_ species: SpeciesID) -> [BehaviorKind] {
+        supportAudit(species).behaviors.filter {$0.kind != .relocate && $0.contentSupported}.map(\.kind)
+    }
+    private func noCollectibleActionsText(_ species: SpeciesID) -> String {
+        supportAudit(species).capabilities.contains(.standing)
+            ? desktop.t("基础素材可预览 · 暂无可收集动作", "Basic art available · No collectible actions yet")
+            : desktop.t("素材待补齐 · 暂无可收集动作", "Artwork incomplete · No collectible actions yet")
     }
     private func observedBehaviorCount(_ species: SpeciesID) -> Int {
         let supported = Set(supportedBehaviors(species).map(\.rawValue))
@@ -275,9 +282,15 @@ final class ObservationJournalWindow: NSWindowController, NSTableViewDataSource,
         } else if let manual = record?.manualFirstRecordedAt {
             lines.append(desktop.t("手动首次记录：", "First manual record: ") + dateFormatter.string(from: manual))
         } else {lines.append(record == nil ? desktop.t("尚未发现", "Undiscovered") : desktop.t("已发现，日期未知", "Discovered, date unknown"))}
-        lines.append(desktop.t("手动记录 \(record?.manualCount ?? 0) 次 · 动作 \(observedBehaviorCount(species)) / \(supportedBehaviors(species).count)",
-                               "\(record?.manualCount ?? 0) manual records · Actions \(observedBehaviorCount(species)) / \(supportedBehaviors(species).count)"))
-        cell.textField?.maximumNumberOfLines = 3
+        let supported = supportedBehaviors(species)
+        if supported.isEmpty {
+            lines.append(desktop.t("手动记录 \(record?.manualCount ?? 0) 次", "\(record?.manualCount ?? 0) manual records"))
+            lines.append(noCollectibleActionsText(species))
+        } else {
+            lines.append(desktop.t("手动记录 \(record?.manualCount ?? 0) 次 · 动作 \(observedBehaviorCount(species)) / \(supported.count)",
+                                   "\(record?.manualCount ?? 0) manual records · Actions \(observedBehaviorCount(species)) / \(supported.count)"))
+        }
+        cell.textField?.maximumNumberOfLines = 4
         cell.textField?.stringValue = lines.joined(separator: "\n")
         cell.textField?.toolTip = cell.textField?.stringValue
         if let sprite = desktop.arts[species]?.frames["stand"] {
@@ -330,7 +343,15 @@ final class ObservationJournalWindow: NSWindowController, NSTableViewDataSource,
         } else {lines.append(desktop.t("尚未发现。浏览资料与素材预览不会解锁。", "Undiscovered. Browsing and art previews do not unlock discoveries."))}
         let supported = supportedBehaviors(species)
         let entries = desktop.observationJournal.archive.entries.filter {$0.species == species}
-        lines += ["", desktop.t("已观察动作 \(observedBehaviorCount(species)) / \(supported.count)", "Observed actions \(observedBehaviorCount(species)) / \(supported.count)")]
+        if supported.isEmpty {
+            lines += ["", noCollectibleActionsText(species),
+                      desktop.t("可浏览已有素材，也可手动记录发现。现有闲置画面不代表已开放对应行为；无需补齐动作进度。",
+                                "Browse existing art or record a manual discovery. Idle artwork does not mean the corresponding behavior is available; there is no action progress to complete yet.")]
+        } else {
+            lines += ["", desktop.t("已观察动作 \(observedBehaviorCount(species)) / \(supported.count)", "Observed actions \(observedBehaviorCount(species)) / \(supported.count)"),
+                      desktop.t("仅下列通过内容审核且素材完整的动作计入收集；真实完成后才记录。其他素材预览不表示已开放对应行为。",
+                                "Only the reviewed actions below with complete artwork count toward collection, after real completion. Other art previews do not imply that those behaviors are available.")]
+        }
         for kind in supported {
             let entry = entries.first {$0.behavior == kind.rawValue}
             let observed = (entry?.automaticCount ?? 0) > 0 || (entry?.userCount ?? 0) > 0
@@ -419,8 +440,13 @@ final class ObservationJournalWindow: NSWindowController, NSTableViewDataSource,
         for (i, title) in [desktop.t("我的发现", "My discoveries"), desktop.t("全部鸟种", "All species"), desktop.t("行为记录", "Behavior records")].enumerated() {viewSelector.setLabel(title, forSegment: i)}
         viewSelector.setAccessibilityLabel(desktop.t("手册视图", "Handbook view"))
         showUndiscovered.title = desktop.t("显示未发现", "Show undiscovered")
-        for (i, title) in [desktop.t("静态", "Still"), desktop.t("休息", "Rest"), desktop.t("飞行", "Flight"), desktop.t("习性", "Other")].enumerated() {previewAction.setLabel(title, forSegment: i)}
+        for (i, title) in [desktop.t("静态", "Still"), desktop.t("休息", "Rest"), desktop.t("飞行", "Flight"), desktop.t("其他", "Other")].enumerated() {previewAction.setLabel(title, forSegment: i)}
         previewAction.setAccessibilityLabel(desktop.t("素材预览（不计进度）", "Art preview (no progress)"))
+        let previewHelp = desktop.t("“其他”播放已有特色或闲置素材，不表示已开放对应行为。预览不解锁鸟种或动作。",
+                                    "Other plays existing signature or idle artwork; it does not imply the corresponding behavior is available. Previews unlock neither species nor actions.")
+        previewAction.toolTip = previewHelp
+        previewAction.setAccessibilityHelp(previewHelp)
+        previewView.toolTip = previewHelp
         let locale = Locale(identifier: desktop.language == .chinese ? "zh_CN" : "en_US")
         dateFormatter.locale = locale; dateFormatter.dateStyle = .medium; dateFormatter.timeStyle = .none
         timeFormatter.locale = locale; timeFormatter.dateStyle = .none; timeFormatter.timeStyle = .short

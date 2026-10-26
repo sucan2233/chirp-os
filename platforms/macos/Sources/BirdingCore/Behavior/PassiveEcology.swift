@@ -86,7 +86,7 @@ extension BehaviorEngine {
                 current:run.execution.kind,currentSource:run.source)
             if !canInterrupt {return .busy}
         }
-        guard action.requiredFrames.isSubset(of:world.availableFrames[bird.profile.id] ?? []) else {return .missingFrames}
+        guard SpeciesBehaviorProfile.profile(for:bird.profile.id).requiredFrames(for:action.behavior).isSubset(of:world.availableFrames[bird.profile.id] ?? []) else {return .missingFrames}
         guard hasUsablePerch(bird) else {return .noSpace}
         guard !world.buttonsDown else {return .userInput}
         if source == .automatic {

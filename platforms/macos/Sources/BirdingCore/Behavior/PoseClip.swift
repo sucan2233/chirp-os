@@ -206,6 +206,8 @@ public struct PoseClip:Codable,Equatable {
     }
     /// Logical canvas anchors track the editable species drawing, never bitmap size.
     public static func beakAnchor(species:SpeciesID,frame:String) -> Anchor {
+        if let anchor=M8PilotArtGeometry.beakAnchor(species:species,frame:frame) {return anchor}
+        if let anchor=ExpansionPilotArtGeometry.beakAnchor(species:species,frame:frame) {return anchor}
         if let anchor=NestPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=CourtshipPoseAnchors.anchor(species:species,frame:frame) {return anchor}
         if let anchor=CatchPoseAnchors.anchor(species:species,frame:frame) {return anchor}

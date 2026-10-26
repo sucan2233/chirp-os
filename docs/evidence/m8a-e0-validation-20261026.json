@@ -1,0 +1,368 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-26",
+  "milestone": "M8a + E0 pilot",
+  "baseline": "18ce36f",
+  "branch": "codex/m8a-e0-lively-motion",
+  "scope": {
+    "species": 12,
+    "newFrames": 158,
+    "M8aFrames": 74,
+    "E0Frames": 84,
+    "poseSpecies": 23,
+    "totalFrames": 3745,
+    "signatureClips": 12,
+    "timingVariantsPerClip": 2
+  },
+  "sourceChanges": {
+    "productionSwift": {
+      "files": 25,
+      "addedLines": 1424,
+      "deletedLines": 42
+    },
+    "swiftTests": {
+      "files": 17,
+      "addedLines": 399,
+      "deletedLines": 56
+    },
+    "tools": {
+      "files": 3,
+      "addedLines": 461,
+      "deletedLines": 25
+    }
+  },
+  "builds": {
+    "successfulRounds": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "finalDurationSeconds": 95.9,
+    "strictSignaturePassed": true,
+    "candidate": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/dist/M8A-E0-20261026/ChirpOS Dev.app",
+    "installed": false,
+    "pushed": false
+  },
+  "tests": {
+    "round1": {
+      "tests": 1041,
+      "assertionFailures": 195,
+      "unexpected": 0,
+      "failedMethods": 22,
+      "passedMethods": 1019,
+      "seconds": 545.725
+    },
+    "round2": {
+      "tests": 79,
+      "failures": 0,
+      "seconds": 104.921
+    },
+    "allInitiallyFailedMethodsRecovered": true,
+    "singleFullGreenRun": false,
+    "recoveredMethods": [
+      {
+        "previous": "BathRecordingTests testActualCurrentVersionRecordingPreservesPlacementPauseClearingAndArtLossAtEveryRate",
+        "current": "BathRecordingTests testActualCurrentVersionRecordingPreservesPlacementPauseClearingAndArtLossAtEveryRate",
+        "passedRound2": true
+      },
+      {
+        "previous": "BathRecordingTests testSharedBathFixturePreservesOriginalFeetTwoUsesAndOneFocusAcrossEveryInputBoundaryAndRate",
+        "current": "BathRecordingTests testSharedBathFixturePreservesOriginalFeetTwoUsesAndOneFocusAcrossEveryInputBoundaryAndRate",
+        "passedRound2": true
+      },
+      {
+        "previous": "BehaviorDefinitionTests testSpeciesSpecificContactFramesDoNotAdvertiseUnsupportedBirdCapabilities",
+        "current": "BehaviorDefinitionTests testSpeciesSpecificContactFramesDoNotAdvertiseUnsupportedBirdCapabilities",
+        "passedRound2": true
+      },
+      {
+        "previous": "CourtshipRecordingTests testRealProductionRecordingPreservesSourceSuccessCancellationAndRejectsVersionSixteenEnvelope",
+        "current": "CourtshipRecordingTests testRealProductionRecordingPreservesSourceSuccessCancellationAndRejectsVersionSixteenEnvelope",
+        "passedRound2": true
+      },
+      {
+        "previous": "CourtshipRecordingTests testTwentiethHandwrittenFixtureKeepsFeetPauseCompletionAndGroupRemovalAtEveryBoundary",
+        "current": "CourtshipRecordingTests testTwentiethHandwrittenFixtureKeepsFeetPauseCompletionAndGroupRemovalAtEveryBoundary",
+        "passedRound2": true
+      },
+      {
+        "previous": "FlycatcherInsectCatchRecordingTests testProductionCurrentVersionRecordingCompletesWithoutInjectionAndRejectsTheActualVersionFourteenEnvelope",
+        "current": "FlycatcherInsectCatchRecordingTests testProductionCurrentVersionRecordingCompletesWithoutInjectionAndRejectsTheActualVersionFourteenEnvelope",
+        "passedRound2": true
+      },
+      {
+        "previous": "FlycatcherInsectCatchRecordingTests testSharedEighteenthFixturePreservesRealReturnPausedCancellationAndIndependentInsectAtEveryBoundary",
+        "current": "FlycatcherInsectCatchRecordingTests testSharedEighteenthFixturePreservesRealReturnPausedCancellationAndIndependentInsectAtEveryBoundary",
+        "passedRound2": true
+      },
+      {
+        "previous": "FoodTrayTests testSharedFoodTrayFixtureCompletesWithPauseAndPersistentObjectAtAllReplayRates",
+        "current": "FoodTrayTests testSharedFoodTrayFixtureCompletesWithPauseAndPersistentObjectAtAllReplayRates",
+        "passedRound2": true
+      },
+      {
+        "previous": "HabitatObjectTests testClampedPlacementCommandsAndPendingPauseReplayAtEveryCallbackRate",
+        "current": "HabitatObjectTests testClampedPlacementCommandsAndPendingPauseReplayAtEveryCallbackRate",
+        "passedRound2": true
+      },
+      {
+        "previous": "HabitatObjectTests testClearLeafPreservesPlacedTrayAndPendingPlacementWhileClearPropsRemovesBoth",
+        "current": "HabitatObjectTests testClearLeafPreservesPlacedTrayAndPendingPlacementWhileClearPropsRemovesBoth",
+        "passedRound2": true
+      },
+      {
+        "previous": "HabitatObjectTests testReplayReportsCapturePlacementObjectAndCapabilityChangesAtEveryBoundary",
+        "current": "HabitatObjectTests testReplayReportsCapturePlacementObjectAndCapabilityChangesAtEveryBoundary",
+        "passedRound2": true
+      },
+      {
+        "previous": "InsectCatchRecordingTests testActualRecordingKeepsPendingSpeciesAndDeadlineAndRejectsFixtureMutation",
+        "current": "InsectCatchRecordingTests testActualRecordingKeepsPendingSpeciesAndDeadlineAndRejectsFixtureMutation",
+        "passedRound2": true
+      },
+      {
+        "previous": "InsectCatchRecordingTests testHandwrittenFixturePreservesActualCancellationPauseContactAndRestorationAtAllCallbackRates",
+        "current": "InsectCatchRecordingTests testHandwrittenFixturePreservesActualCancellationPauseContactAndRestorationAtAllCallbackRates",
+        "passedRound2": true
+      },
+      {
+        "previous": "LeafCarryRecordingTests testRealCurrentVersionRecordingReplaysPendingPlacementPauseClearAndArtLoss",
+        "current": "LeafCarryRecordingTests testRealCurrentVersionRecordingReplaysPendingPlacementPauseClearAndArtLoss",
+        "passedRound2": true
+      },
+      {
+        "previous": "LeafCarryRecordingTests testSharedHandwrittenFixtureFreezesTheWholeEntityThenSeparatesCompletionFromPausedCancellation",
+        "current": "LeafCarryRecordingTests testSharedHandwrittenFixtureFreezesTheWholeEntityThenSeparatesCompletionFromPausedCancellation",
+        "passedRound2": true
+      },
+      {
+        "previous": "NestRecordingTests testHandwrittenCarryAndBuildFixturesKeepIndependentTransactionsPauseCompletionAndCleanupAtAllRates",
+        "current": "NestRecordingTests testHandwrittenCarryAndBuildFixturesKeepIndependentTransactionsPauseCompletionAndCleanupAtAllRates",
+        "passedRound2": true
+      },
+      {
+        "previous": "NestRecordingTests testRealProductionRecordingReplaysAllFieldsAndRejectsItsIntactVersionSeventeenEnvelope",
+        "current": "NestRecordingTests testRealProductionRecordingReplaysAllFieldsAndRejectsItsIntactVersionSeventeenEnvelope",
+        "passedRound2": true
+      },
+      {
+        "previous": "U2IntegrationTests testAllNewSpeciesRejectRealGenericRequestsAndProduceNoObservations",
+        "current": "U2IntegrationTests testAllNewSpeciesRejectUnreviewedRequestsAndProduceNoObservations",
+        "passedRound2": true
+      },
+      {
+        "previous": "U2IntegrationTests testNewCatalogDoesNotGrantManagedActionsEvenWithEveryFrameInjected",
+        "current": "U2IntegrationTests testNewCatalogOnlyGrantsExplicitlyReviewedPilotActionsEvenWithEveryFrameInjected",
+        "passedRound2": true
+      },
+      {
+        "previous": "U2IntegrationTests testRuntimeRejectsBypassBeforeExecutingOrLeasingNewBirds",
+        "current": "U2IntegrationTests testRuntimeRejectsBypassBeforeExecutingOrLeasingNewBirds",
+        "passedRound2": true
+      },
+      {
+        "previous": "VisitorGiftRecordingTests testNineteenthHandwrittenFixtureRestoresMemoryBeforeResidentsAndPreservesFullResultsAtEveryBoundary",
+        "current": "VisitorGiftRecordingTests testNineteenthHandwrittenFixtureRestoresMemoryBeforeResidentsAndPreservesFullResultsAtEveryBoundary",
+        "passedRound2": true
+      },
+      {
+        "previous": "VisitorGiftRecordingTests testProductionRecordingReplaysPlatformDenialGrantAndLateResultsAndRejectsRealVersionFifteen",
+        "current": "VisitorGiftRecordingTests testProductionRecordingReplaysPlatformDenialGrantAndLateResultsAndRejectsRealVersionFifteen",
+        "passedRound2": true
+      }
+    ]
+  },
+  "native": {
+    "checks": 584,
+    "passed": 584,
+    "maximumRSSBytes": 439795712,
+    "peakMemoryFootprintBytes": 331613360,
+    "measurementScope": "isolated full-artwork AppKit handbook verifier; not steady-state app performance"
+  },
+  "art": {
+    "checks": 4953,
+    "passed": true,
+    "oldSlotsIdentical": 3587,
+    "newDistinctWithinSpecies": 158,
+    "addedRGBABytes": 3152128
+  },
+  "previews": {
+    "gifCount": 144,
+    "decodedFrames": 14400,
+    "scales": [
+      0.5,
+      1,
+      2
+    ],
+    "directions": [
+      "left",
+      "right"
+    ],
+    "visualReview": "Both six-species contact sheets, representative native preview frames including small/large sizes and both directions; wagtail tail adjusted twice. Not a claim of manual inspection of all 14400 frames."
+  },
+  "replay": [
+    {
+      "file": "shared/behavior-fixtures/v1/activity-rhythm.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/allopreening.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/attention.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/bath.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/chase.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/courtship-display.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/edge-peek.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/fixed-perch.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/flycatcher-insect-catch.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/food-tray.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/insect-catch.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/interruptions.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/leaf-carry.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/leaf.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/nest-build.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/nest-material-carry.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/returning-visitor.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/side-hop.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/social.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/takeoff-preparation.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/travel-together.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    },
+    {
+      "file": "shared/behavior-fixtures/v1/visitor-gift.json",
+      "simulationVersion": 20,
+      "sameExpectedReportAsBaseline": true
+    }
+  ],
+  "logs": [
+    {
+      "file": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/m8a-e0-evidence/build-round1.log",
+      "sha256": "8c3d61f1de4a7b471753d8a1b8aec92d1dd1db2fbab10937e73c2594b3d6d27b"
+    },
+    {
+      "file": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/m8a-e0-evidence/build-round2.log",
+      "sha256": "760082f049d9c74bf6de1d7cc0562bfdb6445f6e3a00754276f18c99bd90d136"
+    },
+    {
+      "file": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/m8a-e0-evidence/build-round3.log",
+      "sha256": "ef350c1557fe502bfd33fc49ae7924f158a9fe853d3b789b146b5334e207be71"
+    },
+    {
+      "file": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/m8a-e0-evidence/build-round4.log",
+      "sha256": "71380da60bbed8c82545fa100f81bcb0b06d81a6a3229099802239b9f1b54822"
+    },
+    {
+      "file": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/m8a-e0-evidence/tests-round1.log",
+      "sha256": "7e74a5240267ef97357da3f5c590ddc7874ada40d6941390f378d46f9fa9fcb3"
+    },
+    {
+      "file": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/m8a-e0-evidence/tests-round2.log",
+      "sha256": "4e52680943a4f0cf620c2ca93dd68eb65604edb13920c10fe5248f3c7624fe8b"
+    },
+    {
+      "file": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/m8a-e0-evidence/native-final.log",
+      "sha256": "d99d9e982af967fa484379050165bf0306035d4a5ec9bdcf7cbfc8ecdbd8e95c"
+    },
+    {
+      "file": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/m8a-e0-evidence/export-shared-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/m8a-e0-evidence/export-fixtures.log",
+      "sha256": "54ad2808c7bacb95a04623944d99087e7996f5de250ffb5df8e587185b5a564a"
+    },
+    {
+      "file": "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/m8a-e0-evidence/parity-final.log",
+      "sha256": "70f620a758fd136000531240316fa366a5c3e039b2e726deeea26ccb0edd0f35"
+    }
+  ],
+  "remainingUntested": [
+    "U native nest 2x pointer route, earlier targetInvalid diagnosis and gift 0.5x startup evidence",
+    "real window following",
+    "status menu pause/resume",
+    "real sleep/wake",
+    "external display/hotplug hardware",
+    "Windows build and signature-motion runtime",
+    "same-machine fixed-bird-count before/after CPU p95 and sustained memory comparison"
+  ],
+  "nextScope": "M8b 8 species / 32 signature frames; E1 remains candidate, M9 not implemented"
+}
