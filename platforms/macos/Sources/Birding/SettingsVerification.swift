@@ -24,7 +24,16 @@ enum SettingsVerification {
             checks["statusItemAutosaveIsolatedFromProduction"] = d.isolatedSession && status.autosaveName != "ChirpOS.Main"
             d.status.isVisible=false;d.restoreStatusItem()
             checks["reopenRestoresSameStatusItemAndMenu"] = d.status === status && status.isVisible && status.autosaveName == isolatedStatusName && status.menu?.items.contains{$0.action == #selector(DesktopController.showSpeciesSettings)} == true
-            checks["developmentBuildIdentifiedInMenu"] = !d.isDevelopmentBuild || status.menu?.items.first?.title == "啾啾测试版 · 本地开发"
+            checks["developmentBuildIdentifiedInMenu"] = !d.isDevelopmentBuild || status.menu?.items.first?.title == "\(AppBranding.chineseName) · 本地开发"
+            if AppBranding.isPro {
+                checks["proUsesLocalDevelopmentChannel"] = d.isDevelopmentBuild
+                checks["proChineseMenuBranding"] = d.appName == "啾啾 Pro" && status.menu?.items.first?.title == "啾啾 Pro · 本地开发" && status.menu?.items.contains { $0.title == "退出啾啾 Pro" } == true
+                checks["proChineseStatusBranding"] = status.button?.toolTip == "啾啾 Pro · 桌面观鸟"
+                d.language = .english; d.makeMenu()
+                checks["proEnglishMenuBranding"] = d.appName == "ChirpOS Pro" && status.menu?.items.first?.title == "ChirpOS Pro · Local build" && status.menu?.items.contains { $0.title == "Quit ChirpOS Pro" } == true
+                checks["proEnglishStatusBranding"] = status.button?.toolTip == "ChirpOS Pro · Desktop Birdwatching"
+                d.language = .chinese; d.makeMenu()
+            }
             checks["loginInitiallyOff"] = d.loginItem?.state == .off && d.loginItem?.title == "随系统启动" && login.registerCalls == 0
             d.toggleLoginItem()
             checks["loginEnable"] = login.registerCalls == 1 && d.loginItem?.state == .on

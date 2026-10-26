@@ -3,10 +3,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 # U integration retains the local release version; use CHIRPOS_DEVELOPMENT_BUILD=1 for candidates.
+PRO_BUILD="${CHIRPOS_PRO_BUILD:-0}"
+[[ "$PRO_BUILD" == 0 || "$PRO_BUILD" == 1 ]] || { printf 'CHIRPOS_PRO_BUILD must be 0 or 1\n' >&2; exit 1; }
 DEVELOPMENT_BUILD="${CHIRPOS_DEVELOPMENT_BUILD:-0}"
 [[ "$DEVELOPMENT_BUILD" == 0 || "$DEVELOPMENT_BUILD" == 1 ]] || { printf 'CHIRPOS_DEVELOPMENT_BUILD must be 0 or 1\n' >&2; exit 1; }
+if [[ "$PRO_BUILD" == 1 ]]; then DEVELOPMENT_BUILD=1; fi
 swift build -c release
-APP="${CHIRPOS_APP_PATH:-$ROOT/dist/ChirpOS.app}"
+DEFAULT_APP="$ROOT/dist/ChirpOS.app"
+if [[ "$PRO_BUILD" == 1 ]]; then DEFAULT_APP="$ROOT/dist/ChirpOS Pro.app"; fi
+APP="${CHIRPOS_APP_PATH:-$DEFAULT_APP}"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$ROOT/Assets"
 cp .build/release/Birding "$APP/Contents/MacOS/Birding.new"
 mv -f "$APP/Contents/MacOS/Birding.new" "$APP/Contents/MacOS/Birding"
@@ -35,6 +40,11 @@ if [[ "$DEVELOPMENT_BUILD" == 1 ]]; then
     /usr/libexec/PlistBuddy -c 'Set :CFBundleDisplayName ChirpOS Dev' "$APP/Contents/Info.plist"
     /usr/libexec/PlistBuddy -c 'Add :ChirpOSDevelopmentBuild bool true' "$APP/Contents/Info.plist"
 fi
+if [[ "$PRO_BUILD" == 1 ]]; then
+    /usr/libexec/PlistBuddy -c 'Set :CFBundleName ChirpOS Pro' "$APP/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c 'Set :CFBundleDisplayName ChirpOS Pro' "$APP/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c 'Add :ChirpOSProBuild bool true' "$APP/Contents/Info.plist"
+fi
 "$ROOT/.build/release/Birding" --export-icon "$ROOT/Assets"
 "$ROOT/.build/release/Birding" --export-icon "$ROOT/.build/AppIcon-macOS" --macos-mask
 rm -rf "$APP/Contents/Resources/Birding_BirdingCore.bundle"
@@ -61,6 +71,10 @@ for language in en zh-Hans zh-Hant; do
     if [[ "$DEVELOPMENT_BUILD" == 1 ]]; then
         name="ChirpOS Dev"
         if [[ "$language" != en ]]; then name="啾啾测试版"; fi
+    fi
+    if [[ "$PRO_BUILD" == 1 ]]; then
+        name="ChirpOS Pro"
+        if [[ "$language" != en ]]; then name="啾啾 Pro"; fi
     fi
     printf '"CFBundleName" = "%s";\n"CFBundleDisplayName" = "%s";\n' "$name" "$name" > "$APP/Contents/Resources/$language.lproj/InfoPlist.strings"
 done

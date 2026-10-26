@@ -140,7 +140,8 @@ final class DesktopController: NSObject {
     var lastRoutedMouseEvent:MouseEventIdentity?
     var lifeListURL:URL {settingsURL.deletingLastPathComponent().appendingPathComponent("life-list.json")}
     var preferences = UserDefaults.standard
-    var isDevelopmentBuild:Bool {Bundle.main.object(forInfoDictionaryKey:"ChirpOSDevelopmentBuild") as? Bool == true}
+    var isDevelopmentBuild:Bool {AppBranding.isDevelopment}
+    var appName:String {t(AppBranding.chineseName,AppBranding.englishName)}
     var language = AppLanguage.chinese
     var gallery:SpeciesGallery?
     var updater:UpdateController?
@@ -440,14 +441,14 @@ final class DesktopController: NSObject {
             status.isVisible=true
         }
         // Template artwork remains legible in light, dark and tinted menu bars.
-        let icon=NSImage(systemSymbolName:"bird.fill",accessibilityDescription:t("啾啾","ChirpOS"))
+        let icon=NSImage(systemSymbolName:"bird.fill",accessibilityDescription:appName)
             ?? NSImage(cgImage:art.frames["stand"]!,size:NSSize(width:18,height:18))
         icon.size=NSSize(width:18,height:18);icon.isTemplate=true
         status.button?.image = updater?.decorate(icon) ?? icon
         status.button?.imageScaling = .scaleProportionallyDown
-        status.button?.toolTip = updater?.pending.map { t("啾啾 · 更新 \($0.release.version) 已就绪","ChirpOS · Update \($0.release.version) ready") }
-            ?? (isDevelopmentBuild ? t("啾啾测试版 · 桌面观鸟","ChirpOS Dev · Desktop Birdwatching"):t("啾啾 · 桌面观鸟","ChirpOS · Desktop Birdwatching"))
-        status.button?.setAccessibilityLabel(isDevelopmentBuild ? t("啾啾测试版菜单","ChirpOS Dev menu"):t("啾啾菜单","ChirpOS menu"))
+        status.button?.toolTip = updater?.pending.map { t("\(appName) · 更新 \($0.release.version) 已就绪","\(appName) · Update \($0.release.version) ready") }
+            ?? t("\(appName) · 桌面观鸟","\(appName) · Desktop Birdwatching")
+        status.button?.setAccessibilityLabel(t("\(appName)菜单","\(appName) menu"))
         let menu = NSMenu()
         menu.delegate = self
         statusLine = NSMenuItem(title: t("桌面鸟群 · 等待第一只鸟飞来","Birds · Waiting for the first arrival"), action: nil, keyEquivalent: "")
@@ -475,15 +476,15 @@ final class DesktopController: NSObject {
         add(menu,language.switchTitle,#selector(toggleLanguage),"")
         add(menu,t("打开项目说明","Open README"),#selector(openReadme),"")
         updater?.addMenuItems(to:menu)
-        add(menu,t("退出啾啾","Quit ChirpOS"),#selector(quit),"q")
+        add(menu,t("退出\(appName)","Quit \(appName)"),#selector(quit),"q")
         status.menu = menu
         updateStatusLine()
-        if isDevelopmentBuild {menu.insertItem(NSMenuItem(title:t("啾啾测试版 · 本地开发","ChirpOS Dev · Local build"),action:nil,keyEquivalent:""),at:0)}
+        if isDevelopmentBuild {menu.insertItem(NSMenuItem(title:t("\(appName) · 本地开发","\(appName) · Local build"),action:nil,keyEquivalent:""),at:0)}
         let main=NSMenu()
         let application=NSMenuItem();main.addItem(application);application.submenu=NSMenu()
         add(application.submenu!,t("观鸟手册…","Birdwatching handbook…"),#selector(showObservationJournal),"j")
         application.submenu!.addItem(.separator())
-        add(application.submenu!,t("退出啾啾","Quit ChirpOS"),#selector(quit),"q")
+        add(application.submenu!,t("退出\(appName)","Quit \(appName)"),#selector(quit),"q")
         let editItem=NSMenuItem(title:t("编辑","Edit"),action:nil,keyEquivalent:"")
         let edit=NSMenu(title:editItem.title);editItem.submenu=edit;main.addItem(editItem)
         for (title,action,key) in [(t("撤销","Undo"),"undo:","z"),(t("剪切","Cut"),"cut:","x"),(t("复制","Copy"),"copy:","c"),(t("粘贴","Paste"),"paste:","v"),(t("全选","Select All"),"selectAll:","a")] {

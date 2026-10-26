@@ -1,0 +1,12 @@
+PASS valid local configuration
+PASS missing config fails without build
+PASS missing identity fails
+PASS notary failure fails closed
+PASS environment overrides local configuration
+PASS reject non-Developer-ID identity
+PASS explicit ad-hoc skips credentials
+PASS unknown options fail
+PASS interactive fallback 'n'
+PASS interactive fallback ''
+PASS interactive fallback 'y'
+11 release preflight and fallback checks passed.

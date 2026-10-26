@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "bundleIdentifier": "dev.birding.desktop.development",
+  "name": "ChirpOS Pro",
+  "localizedNames": [
+    "ChirpOS Pro",
+    "啾啾 Pro"
+  ],
+  "developmentChannel": true,
+  "proBuild": true,
+  "comparedAppFiles": 12,
+  "zipContentsIdentical": true,
+  "dmgContentsIdentical": true,
+  "dmgApplicationsLink": true,
+  "extractedSignaturesValid": true,
+  "architecture": "arm64",
+  "releasePreflightChecksPassed": 11,
+  "nativeSettingsChecksPassed": 3169,
+  "releaseBuildSeconds": 91.89,
+  "scope": "Functional validation and precommit package content/signature checks. Final archive hashes and source revision are generated into dist/pro after committing; no installed app replaced."
+}

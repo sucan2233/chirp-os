@@ -37,13 +37,13 @@ with tempfile.TemporaryDirectory() as tmp:
     check('explicit ad-hoc skips credentials',{'CHIRPOS_RELEASE_CONFIG':str(tmp/'missing')},['--ad-hoc','--check'],0)
     check('unknown options fail',{},['--unknown'],2)
     fake_bash = tools / 'bash'
-    fake_bash.write_text('#!/bin/bash\n[ -z "$CHIRPOS_SIGNING_IDENTITY" ] || exit 74\n[ "$CHIRPOS_DEVELOPMENT_BUILD" = 0 ] || exit 75\necho ADHOC_BUILD_REQUESTED\nexit 73\n')
+    fake_bash.write_text('#!/bin/bash\n[ -z "$CHIRPOS_SIGNING_IDENTITY" ] || exit 74\n[ "$CHIRPOS_DEVELOPMENT_BUILD" = 0 ] || exit 75\n[ "$CHIRPOS_PRO_BUILD" = 0 ] || exit 76\necho ADHOC_BUILD_REQUESTED\nexit 73\n')
     fake_bash.chmod(0o755)
     for reply, expected in [('n',1),('',1),('y',73)]:
         master, slave = pty.openpty()
         try:
             proc = subprocess.Popen(['/bin/bash',str(root/'scripts/release-macos.sh')],
-                env={**env,'CI':'','CHIRPOS_RELEASE_CONFIG':str(tmp/'missing'),'CHIRPOS_DEVELOPMENT_BUILD':'1'},
+                env={**env,'CI':'','CHIRPOS_RELEASE_CONFIG':str(tmp/'missing'),'CHIRPOS_DEVELOPMENT_BUILD':'1','CHIRPOS_PRO_BUILD':'1'},
                 stdin=slave,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
             os.write(master,(reply+'\n').encode())
             out, err = proc.communicate(timeout=10)

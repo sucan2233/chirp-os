@@ -24,7 +24,7 @@ extension BirdArt {
                 ctx.saveGState(); ctx.translateBy(x:x,y:y); ctx.scaleBy(x:1,y:-1)
                 (text as NSString).draw(at:.zero,withAttributes:[.font:NSFont.systemFont(ofSize:size,weight:.medium),.foregroundColor:NSColor.white]); ctx.restoreGState()
             }
-            label("啾啾 · 鸟种图鉴 / ChirpOS birds",x:24,y:40,size:23)
+            label("\(AppBranding.chineseName) · 鸟种图鉴 / \(AppBranding.englishName) birds",x:24,y:40,size:23)
             label(detail ? "左：习性动作最大幅度 · 右：起始姿势" : "左：站立 / 习性动作 · 右：飞行 · 预览统一放大，实际体型按标注比例",x:24,y:72,size:14)
             for (i,p) in profiles.enumerated() {
                 let cellX = Double((i%5)*240), cellY = Double((i/5)*230)+90
