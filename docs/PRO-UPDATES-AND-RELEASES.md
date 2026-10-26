@@ -96,6 +96,10 @@ GitHub CLI 自身的 [草稿查询实现](https://github.com/cli/cli/blob/trunk/
 
 旧产品标签和既存 artifact 保持不变：发布器接受本地 `INSTALL.txt` 或旧 `安装说明.txt` 中唯一一个，旧名称仅在上传前拷贝为 `INSTALL.txt`。恢复已上传的 `default.txt` 时，先按原构建的六文件完整大小与摘要验证，再按资产 ID 将该说明附件改名为 `INSTALL.txt`，重新读取草稿全量核验后才公开。仅允许这一明确的历史兼容规则；资产缺失、额外文件、重复说明、摘要变化或错误状态均停止。不重新签名、构建或上传安装包。失败信息同步到 Actions annotation，便于通过公开 API 读取具体原因。
 
+**首次发布已完成。** 修复提交 `cb1d388` 推送后，恢复运行 [`40333809147`](https://github.com/sucan2233/chirp-os/actions/runs/40333809147) 全部成功；[`pro-v0.8.5`](https://github.com/sucan2233/chirp-os/releases/tag/pro-v0.8.5) 于 **2026-10-26 21:48:53（Asia/Shanghai）**公开。源码仍为原标签 `0e7741b`，不包含主线后续概率 V2。六附件已匿名重新下载，逐份核对 GitHub 大小/摘要，并确认与原始 artifact 内容一致；公开 ZIP 的 Ed25519、公钥、SHA-256、包路径及 DMG 校验通过。
+
+客户端生产选择器读取真实公开 Releases，验证旧版本 `0.8.0` 能发现 `0.8.5`，当前版本 `0.8.5` 不重复更新，真实签名与归档检查通过。同一云端安装包此前在隔离应用副本上通过暂存、原子替换、回滚及篡改拒绝 9 项检查；27 组离线发布协议回归、34 项签名/发布检查通过。见[发布验收汇总](evidence/pro-release-085-20261026/validation.json)及[隔离替换报告](evidence/pro-release-085-20261026/staging-report.json)。实际桌面退出/重新启动及 Gatekeeper 交互仍未验收，未替换用户当前安装版。
+
 ### 已构建成功、仅发布失败时恢复
 
 1. 打开 Actions 的 **Recover ChirpOS Pro macOS release**，从 `main` 运行，填写原标签及成功归档产物的运行 ID；本次为 `pro-v0.8.5`、`40323236452`。
@@ -119,7 +123,7 @@ bash scripts/package-pro-macos.sh --release
 bash scripts/release-pro-macos.sh
 ```
 
-发布ZIP用于客户端自动下载和替换，DMG用于用户手动安装。ZIP与其`.sig`必须同时发布，文件名须保留生成规则`ChirpOS-Pro-X.Y.Z-macOS-arm64.zip`（或实际构建架构）。本轮macOS优先，Windows的更新与发布仍按原实现单独处理。
+发布ZIP用于客户端自动下载和替换，DMG用于用户手动安装。ZIP与其`.sig`必须同时发布，文件名须保留生成规则`ChirpOS-Pro-X.Y.Z-macOS-arm64.zip`（或实际构建架构）。当前维护范围仅为 macOS / ChirpOS Pro。
 
 `scripts/release-macos.sh`和原`release.yml`保留普通上游版协议，Pro应使用独立入口。无需修改上游仓库，也不会把Pro指向原作者Release。
 
@@ -142,7 +146,7 @@ bash scripts/release-pro-macos.sh
 
 审阅中将助手等待从10秒调整为120秒并检查进程存活，避免Pro重新解压较慢时误取消；助手会从签名ZIP重新创建候选包，不信任先前暂存目录。验证入口解析临时目录的符号链接，生产目标仍保持严格路径限制。
 
-GitHub Secret配置、首次公开Release以及真实“旧客户端→下载→退出→启动新版”的现场验证需要实际发布环境；没有执行这些步骤时不得标记完成。
+GitHub Secret 配对与首次公开 Release 已完成，并通过真实公开包下载验签；真实“旧客户端→下载→退出→启动新版”的桌面现场验证仍保留未验收。
 
 ## 官方资料
 

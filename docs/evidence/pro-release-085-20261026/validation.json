@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-26",
+  "productTag": "pro-v0.8.5",
+  "sourceCommit": "0e7741b4c4a8739191acac9c57e5de655709c617",
+  "publicationFixCommit": "cb1d3883bd3d419467b359d962072b2f0348b802",
+  "sourceRun": 40323236452,
+  "recoveryRun": 40333809147,
+  "coreTests": {
+    "passed": 1102,
+    "failed": 0,
+    "seconds": 179.309
+  },
+  "localRegression": {
+    "protocolTestGroups": 27,
+    "releaseChecks": 34,
+    "yamlShellEmbeddedPython": "passed"
+  },
+  "cloudArtifact": {
+    "id": 12650249241,
+    "archiveSHA256": "f5a5230115669fed06db6339369bcbe8c25858eb558a3c418f852c5fca89ae11",
+    "zipSHA256": "ff52128b5ffaa22288a799d87a0b7ab849e951630458a55619ab85d620562b74",
+    "manifest": "passed",
+    "Ed25519": "passed",
+    "DMG": "passed",
+    "bundleCodeSignature": "passed",
+    "versionArchitectureIdentityProUpdatesPublicKey": "passed",
+    "isolatedStagingReplacementRollbackChecks": 9,
+    "publishedFilesEqualOriginalArtifact": true
+  },
+  "publication": "published and verified",
+  "liveReleaseSelector": {
+    "from0.8.0": "0.8.5 selected",
+    "current0.8.5": "no update",
+    "Ed25519": "passed",
+    "sizeSHA256Archive": "passed"
+  },
+  "liveDesktopUpgrade": "not tested",
+  "gatekeeper": "not tested",
+  "publishedAtUTC": "2026-10-26T13:48:53Z",
+  "releaseID": 424241975,
+  "releaseURL": "https://github.com/sucan2233/chirp-os/releases/tag/pro-v0.8.5",
+  "publishedAssets": [
+    {
+      "name": "BUILD-INFO.txt",
+      "size": 791,
+      "digest": "sha256:306534e31f0a463ef128769d7bc3b7e270bbd715db8af66430da4492c155165d"
+    },
+    {
+      "name": "ChirpOS-Pro-0.8.5-macOS-arm64.dmg",
+      "size": 6490690,
+      "digest": "sha256:0fba45f491054568935a53c086b74f992a003ffb8923710a0eedd46b59c00377"
+    },
+    {
+      "name": "ChirpOS-Pro-0.8.5-macOS-arm64.zip",
+      "size": 5901634,
+      "digest": "sha256:ff52128b5ffaa22288a799d87a0b7ab849e951630458a55619ab85d620562b74"
+    },
+    {
+      "name": "ChirpOS-Pro-0.8.5-macOS-arm64.zip.sig",
+      "size": 89,
+      "digest": "sha256:1c75dfbaa4abde8621c3280c9222dff02c09aaba784f66d6bfe868ec594255bb"
+    },
+    {
+      "name": "INSTALL.txt",
+      "size": 1039,
+      "digest": "sha256:9d14575697f60ab650db7554da09d1afe68760a0d4cdac700dbb3e2ed52a668c"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size": 304,
+      "digest": "sha256:be8033a3d6be2f670c7ee0d2e15e42a264da5c310aa23609924f6f8069293c10"
+    }
+  ]
+}
