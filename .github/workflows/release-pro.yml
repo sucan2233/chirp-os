@@ -79,7 +79,8 @@ jobs:
           set -euo pipefail
           bash -n scripts/build.sh scripts/package-pro-macos.sh scripts/release-pro-macos.sh
           python3 scripts/test-pro-release.py
-          bash scripts/test.sh
+          python3 scripts/test-species-parity.py
+          swift test -c release
 
       - name: Build ad-hoc Pro release with independent update signature
         env:

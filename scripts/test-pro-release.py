@@ -57,8 +57,9 @@ with tempfile.TemporaryDirectory(prefix='chirpos-pro-release-') as tmp:
         run([str(sign),'sign',str(archive),version,str(private),str(public)],success=False)
     check('invalid versions rejected')
     repo=temp/'repo';(repo/'scripts').mkdir(parents=True);(repo/'config').mkdir();(repo/'.local').mkdir();(repo/'docs/releases').mkdir(parents=True)
-    for name in ['release-pro-macos.sh','pro-update-sign.swift','pro-version.txt']:
+    for name in ['release-pro-macos.sh','pro-update-sign.swift']:
         shutil.copyfile(ROOT/'scripts'/name,repo/'scripts'/name)
+    (repo/'scripts/pro-version.txt').write_text('0.8.0\n')
     shutil.copyfile(private,repo/'.local/pro-update-private-key');shutil.copyfile(public,repo/'config/pro-update-public-key.txt')
     (repo/'.gitignore').write_text('.local/\n');(repo/'docs/releases/pro-v0.8.0.md').write_text('Pro 0.8.0 fixture\n')
     run(['git','init','-q'],cwd=repo);run(['git','add','.'],cwd=repo)

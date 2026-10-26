@@ -200,11 +200,21 @@ struct VisitorGiftPlan {
         let handle=min(max(24*worldScale,min(distance*0.3,100*worldScale)),forward*0.75)
         let p=CGPoint(x:start.x,y:start.y-min(80*worldScale,distance*0.35))
         let q=CGPoint(x:releaseStart.x-sign*handle,y:releaseStart.y)
-        let path=FlightPath(points:(0...512).map {i in
-            let t=Double(i)/512,u=1-t
-            return CGPoint(x:start.x*u*u*u+p.x*3*u*u*t+q.x*3*u*t*t+releaseStart.x*t*t*t,
-                y:start.y*u*u*u+p.y*3*u*u*t+q.y*3*u*t*t+releaseStart.y*t*t*t)
-        })
+        // Explicit scalar terms keep type checking bounded on CI's Swift toolchain.
+        let points: [CGPoint] = (0...512).map { i in
+            let t: CGFloat = CGFloat(i) / 512
+            let u: CGFloat = 1 - t
+            let startWeight = u * u * u
+            let firstWeight = 3 * u * u * t
+            let secondWeight = 3 * u * t * t
+            let endWeight = t * t * t
+            let x = start.x * startWeight + p.x * firstWeight
+                + q.x * secondWeight + releaseStart.x * endWeight
+            let y = start.y * startWeight + p.y * firstWeight
+                + q.y * secondWeight + releaseStart.y * endWeight
+            return CGPoint(x: x, y: y)
+        }
+        let path = FlightPath(points: points)
         let cruise=160*Double(worldScale),ramps=cruise*0.4/2+(cruise+speed)*0.3/2
         let fit=min(1,path.length/max(1,ramps))
         guard let entryTiming=FlightTiming(distance:path.length,cruiseSpeed:cruise,initialSpeed:0,finalSpeed:speed,
