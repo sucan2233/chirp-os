@@ -180,6 +180,8 @@ Settings are separate from build caches; removing caches does not reset preferen
 
 ## macOS 发布 / macOS releases
 
+Pro使用独立入口`scripts/release-pro-macos.sh`与`release-pro.yml`，详见[Pro更新与发布](PRO-UPDATES-AND-RELEASES.md)。下面的Developer ID流程属于原普通版发布通道，不是Pro独立更新签名的前置条件。
+
 正式发布统一使用以下入口，默认完成 Developer ID 签名（含时间戳和 Hardened Runtime）、Apple 公证、票据附加及 Gatekeeper 验证，全部成功后才生成发布 ZIP：
 Use the release entry point for Developer ID signing, timestamping, Hardened Runtime, notarization, stapling, and Gatekeeper validation. A release ZIP is produced only after all steps succeed.
 

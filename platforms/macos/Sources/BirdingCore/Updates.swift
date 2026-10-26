@@ -20,31 +20,102 @@ public enum UpdateFailure: LocalizedError {
     public var errorDescription: String? { if case .invalid(let s) = self { return s }; return nil }
 }
 
+public enum UpdateChannel: String, Codable {
+    case legacy, pro
+
+    public var repository: String { self == .pro ? "sucan2233/chirp-os" : "billtt/chirp-os" }
+    public var appName: String { self == .pro ? "ChirpOS Pro.app" : "ChirpOS.app" }
+    public var bundleIdentifier: String { self == .pro ? "dev.birding.desktop.development" : "dev.birding.desktop" }
+    public var assetPrefix: String { self == .pro ? "ChirpOS-Pro" : "ChirpOS" }
+    public var endpoint: URL {
+        URL(string: "https://api.github.com/repos/\(repository)/releases" + (self == .pro ? "?per_page=100" : "/latest"))!
+    }
+}
+
 public struct UpdateRelease: Codable, Equatable {
     public let version, notes, assetName, downloadURL, sha256: String
     public let size: Int64
-    public init(version:String,notes:String,assetName:String,downloadURL:String,sha256:String,size:Int64) {
+    public let signature: String?
+    public init(version:String,notes:String,assetName:String,downloadURL:String,sha256:String,size:Int64,signature:String?=nil) {
         self.version=version;self.notes=notes;self.assetName=assetName;self.downloadURL=downloadURL;self.sha256=sha256;self.size=size
+        self.signature=signature
     }
-    public static let endpoint = URL(string: "https://api.github.com/repos/billtt/chirp-os/releases/latest")!
+    public static let endpoint = UpdateChannel.legacy.endpoint
     public static let maxDownload: Int64 = 512 * 1024 * 1024
-    public static func select(_ data: Data, current: String, platform: String) throws -> Self? {
+    private static let proPlatforms = ["macOS-arm64", "macOS-x86_64"]
+    public static func select(_ data: Data, current: String, platform: String, channel: UpdateChannel = .legacy) throws -> Self? {
         struct Asset: Decodable { let name, browser_download_url, state: String; let digest: String?; let size: Int64 }
         struct Release: Decodable { let tag_name: String; let body: String?; let draft, prerelease: Bool; let assets: [Asset] }
         guard data.count <= 2_000_000, let installed = UpdateVersion(current) else { throw UpdateFailure.invalid("Invalid update metadata") }
-        let release = try JSONDecoder().decode(Release.self, from: data)
-        guard !release.draft, !release.prerelease, let version = UpdateVersion(release.tag_name), version > installed else { return nil }
-        let name = "ChirpOS-\(version.description)-\(platform).zip"
-        let matching = release.assets.filter { $0.name == name && $0.state == "uploaded" }
-        guard matching.count == 1 else { return nil } // A release may not yet contain this platform.
-        let asset = matching[0]
-        let expectedURL = "https://github.com/billtt/chirp-os/releases/download/\(release.tag_name)/\(name)"
-        guard asset.browser_download_url == expectedURL, asset.size > 0, asset.size <= maxDownload,
-              let digest = asset.digest, digest.hasPrefix("sha256:"), validHash(String(digest.dropFirst(7))) else {
-            throw UpdateFailure.invalid("Update package has no valid SHA-256 digest or download URL")
+        if channel == .pro, !proPlatforms.contains(platform) { return nil }
+        let decoder = JSONDecoder()
+        let releases: [Release]
+        if channel == .pro, let list = try? decoder.decode([Release].self, from: data) {
+            releases = list
+        } else {
+            releases = [try decoder.decode(Release.self, from: data)]
         }
-        return Self(version: version.description, notes: String((release.body ?? "").prefix(20000)), assetName: name,
-                    downloadURL: expectedURL, sha256: String(digest.dropFirst(7)).lowercased(), size: asset.size)
+        let candidates = releases.compactMap { release -> (Release, UpdateVersion)? in
+            guard !release.draft, !release.prerelease else { return nil }
+            let text: String
+            if channel == .pro {
+                guard release.tag_name.hasPrefix("pro-v") else { return nil }
+                text = String(release.tag_name.dropFirst(5))
+            } else { text = release.tag_name }
+            guard let version = UpdateVersion(text), version > installed else { return nil }
+            if channel == .pro, release.tag_name != "pro-v\(version.description)" { return nil }
+            return (release, version)
+        }.sorted { $0.1 > $1.1 }
+        var invalid: UpdateFailure?
+        for (release, version) in candidates {
+            let name = "\(channel.assetPrefix)-\(version.description)-\(platform).zip"
+            let matching = release.assets.filter { $0.name == name && $0.state == "uploaded" }
+            guard matching.count == 1 else { continue } // This platform may not be published yet.
+            let asset = matching[0]
+            let expectedURL = "https://github.com/\(channel.repository)/releases/download/\(release.tag_name)/\(name)"
+            guard asset.browser_download_url == expectedURL, asset.size > 0, asset.size <= maxDownload,
+                  let digest = asset.digest, digest.hasPrefix("sha256:"), validHash(String(digest.dropFirst(7))) else {
+                let failure = UpdateFailure.invalid("Update package has no valid SHA-256 digest or download URL")
+                if channel == .legacy { throw failure }
+                invalid = failure; continue
+            }
+            if channel == .pro {
+                let sidecars = release.assets.filter { $0.name == name + ".sig" }
+                guard sidecars.count == 1 else { continue }
+                let sidecar = sidecars[0]
+                guard sidecar.state == "uploaded", sidecar.browser_download_url == expectedURL + ".sig",
+                      (1...1024).contains(sidecar.size) else {
+                    invalid = .invalid("Update signature has no valid size or download URL"); continue
+                }
+            }
+            return Self(version: version.description, notes: String((release.body ?? "").prefix(20000)), assetName: name,
+                        downloadURL: expectedURL, sha256: String(digest.dropFirst(7)).lowercased(), size: asset.size)
+        }
+        if let invalid { throw invalid }
+        return nil
+    }
+    public var signatureURL: String { downloadURL + ".sig" }
+    public var signaturePayload: Data {
+        Data("ChirpOS Pro Update v1\n\(version)\n\(assetName)\n\(size)\n\(sha256)\n".utf8)
+    }
+    public func signed(_ signature: String) -> Self {
+        Self(version: version, notes: notes, assetName: assetName, downloadURL: downloadURL, sha256: sha256, size: size, signature: signature)
+    }
+    /// The caller supplies its pinned key; release metadata must never supply the trust anchor.
+    public func verifySignature(publicKey: String) throws {
+        guard let parsed = UpdateVersion(version), parsed.description == version,
+              size > 0, size <= Self.maxDownload, Self.validHash(sha256), sha256 == sha256.lowercased(),
+              Self.proPlatforms.contains(where: { platform in
+                  let name = "\(UpdateChannel.pro.assetPrefix)-\(version)-\(platform).zip"
+                  return assetName == name && downloadURL == "https://github.com/\(UpdateChannel.pro.repository)/releases/download/pro-v\(version)/\(name)"
+              }) else { throw UpdateFailure.invalid("Invalid signed Pro update metadata") }
+        guard let keyData = Data(base64Encoded: publicKey), keyData.count == 32,
+              let signature, signature.utf8.count <= 1024,
+              let signatureData = Data(base64Encoded: signature.trimmingCharacters(in: .whitespacesAndNewlines)), signatureData.count == 64 else {
+            throw UpdateFailure.invalid("Invalid update signing key or signature")
+        }
+        let key = try Curve25519.Signing.PublicKey(rawRepresentation: keyData)
+        guard key.isValidSignature(signatureData, for: signaturePayload) else { throw UpdateFailure.invalid("Update signature verification failed") }
     }
     public static func validHash(_ value: String) -> Bool { value.count == 64 && value.allSatisfy { $0.isASCII && $0.isHexDigit } }
     public func verify(_ file: URL) throws {
@@ -72,7 +143,7 @@ public struct UpdateJournal: Codable {
 /// Inspect both central and local ZIP names before using the system extractor.
 /// Reject traversal, symbolic links, encrypted/ZIP64 archives and decompression bombs.
 public enum UpdateArchive {
-    @discardableResult public static func validate(_ data: Data) throws -> Int64 {
+    @discardableResult public static func validate(_ data: Data, appName: String = "ChirpOS.app") throws -> Int64 {
         func fail() throws -> Never { throw UpdateFailure.invalid("Unsafe or unsupported update archive") }
         func number(_ offset: Int, _ count: Int) -> UInt64 {
             guard offset >= 0, offset + count <= data.count else { return UInt64.max }
@@ -88,7 +159,7 @@ public enum UpdateArchive {
                 cursor += 4+size
             }
         }
-        guard data.count >= 22 else { try fail() }
+        guard [UpdateChannel.legacy.appName, UpdateChannel.pro.appName].contains(appName), data.count >= 22 else { try fail() }
         var end: Int?
         for i in stride(from: data.count-22, through: max(0,data.count-65557), by: -1) {
             if number(i,4) == 0x06054b50 && i+22+Int(number(i+20,2)) == data.count { end=i; break }
@@ -114,7 +185,7 @@ public enum UpdateArchive {
             guard bytes == data.subdata(in:local+30..<local+30+n), let name=String(data:bytes,encoding:.utf8),
                   !name.contains("\\"), !name.contains(":"), !name.contains("\0"), !name.hasPrefix("/"),
                   !name.split(separator:"/",omittingEmptySubsequences:false).contains(where:{$0 == ".." || $0 == "."}),
-                  name == "ChirpOS.app/" || name.hasPrefix("ChirpOS.app/") || name.hasPrefix("__MACOSX/"),
+                  name.hasPrefix(appName + "/") || name.hasPrefix("__MACOSX/"),
                   names.insert(name).inserted else { try fail() }
             total += size
             guard total <= 1024*1024*1024 else { try fail() }
@@ -128,12 +199,14 @@ public enum UpdateArchive {
 /// Replacement paths are derived from the target and a UUID, never from ZIP entries.
 public struct UpdateReplacement {
     public let target, candidate, backup: URL
-    public init(target: URL, token: String) throws {
-        guard UUID(uuidString:token) != nil, target.isFileURL, target.lastPathComponent == "ChirpOS.app",
+    public init(target: URL, token: String, appName: String = "ChirpOS.app") throws {
+        guard [UpdateChannel.legacy.appName, UpdateChannel.pro.appName].contains(appName),
+              UUID(uuidString:token) != nil, target.isFileURL, target.lastPathComponent == appName,
               target.standardizedFileURL == target.resolvingSymlinksInPath() else { throw UpdateFailure.invalid("Invalid update destination") }
         self.target=target
-        candidate=target.deletingLastPathComponent().appendingPathComponent(".ChirpOS-\(token).new.app")
-        backup=target.deletingLastPathComponent().appendingPathComponent(".ChirpOS-\(token).old.app")
+        let brand = String(appName.dropLast(4))
+        candidate=target.deletingLastPathComponent().appendingPathComponent(".\(brand)-\(token).new.app")
+        backup=target.deletingLastPathComponent().appendingPathComponent(".\(brand)-\(token).old.app")
     }
     public func prepare(from source: URL) throws {
         guard !FileManager.default.fileExists(atPath:candidate.path), !FileManager.default.fileExists(atPath:backup.path) else { throw UpdateFailure.invalid("An update transaction already exists") }

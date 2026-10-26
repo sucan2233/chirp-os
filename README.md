@@ -2,6 +2,8 @@
 
 本项目以 `main` 作为自主维护主分支，开发及上游更新流程见 [维护约定](CONTRIBUTING.md)。
 
+Pro更新与GitHub发布流程见 [更新发布指南](docs/PRO-UPDATES-AND-RELEASES.md)。发布模式使用独立Ed25519签名；普通本地测试包默认不开启更新。
+
 本地 macOS Pro 测试版已包含 M8 与 E0–E5 的百鸟动作增强。运行 `bash scripts/package-pro-macos.sh` 生成 `ChirpOS Pro.app`、ZIP 和可拖放安装的 DMG；安装与数据说明见 [Pro 测试包](docs/PRO-TEST-PACKAGE.md)。下方下载链接为上游普通版历史发行包，不含本分支增强内容。
 
 **下载 / Download**

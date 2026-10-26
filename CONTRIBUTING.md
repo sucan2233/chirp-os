@@ -19,4 +19,4 @@ Git提交使用中文Conventional Commits，例如`feat(动作): 增加物种特
 
 使用`bash scripts/package-pro-macos.sh`生成Pro测试应用、DMG、ZIP及校验信息；详细安装和数据说明见[Pro测试包](docs/PRO-TEST-PACKAGE.md)。保持工作区干净后打包，使`BUILD-INFO.txt`准确记录源码提交。
 
-`scripts/release-macos.sh`保留上游普通版发布协议，不能用于发布本分支Pro成果。独立Pro正式版本、签名公证、远程发行和自动更新通道需另行规划。M9目前仍搁置。
+`scripts/release-macos.sh`保留上游普通版发布协议，不能用于发布本分支Pro成果。Pro独立发布入口为`scripts/release-pro-macos.sh`，工作流为`release-pro.yml`，使用`pro-vX.Y.Z`标签及独立更新密钥。发布前必须提高版本并完成验证，流程见[更新发布指南](docs/PRO-UPDATES-AND-RELEASES.md)。Apple签名公证仍可作为后续分发完善项。M9目前仍搁置。

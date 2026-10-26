@@ -35,7 +35,7 @@ final class UpdateController: NSObject {
         self.desktop=desktop
         let config=URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest=30;config.timeoutIntervalForResource=900
-        config.httpAdditionalHeaders=["User-Agent":"ChirpOS/\(UpdateInstaller.currentVersion)","Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"]
+        config.httpAdditionalHeaders=["User-Agent":"ChirpOS-Pro/\(UpdateInstaller.currentVersion)","Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"]
         session=URLSession(configuration:config)
         super.init()
         journal=(try? UpdateInstaller.read(UpdateJournal.self,at:stateFile)) ?? UpdateJournal()
@@ -80,11 +80,19 @@ final class UpdateController: NSObject {
             guard let self else { return }
             var temporary:String?
             do {
-                let (data,response)=try await session.data(from:UpdateRelease.endpoint)
+                let (data,response)=try await session.data(from:AppBranding.updateChannel.endpoint)
                 guard let response=response as? HTTPURLResponse else { throw UpdateFailure.invalid("Invalid update response") }
                 if response.statusCode != 404 {
                     guard response.statusCode == 200 else { throw UpdateFailure.invalid("Update server returned HTTP \(response.statusCode)") }
-                    if let release=try UpdateRelease.select(data,current:UpdateInstaller.currentVersion,platform:UpdateInstaller.platform) {
+                    if var release=try UpdateRelease.select(data,current:UpdateInstaller.currentVersion,platform:UpdateInstaller.platform,channel:AppBranding.updateChannel) {
+                        if AppBranding.updateChannel == .pro {
+                            guard let signatureURL=URL(string:release.signatureURL) else {throw UpdateFailure.invalid("Invalid update signature URL")}
+                            let (signatureData,signatureResponse)=try await session.data(from:signatureURL)
+                            guard (signatureResponse as? HTTPURLResponse)?.statusCode == 200,signatureData.count<=1024,
+                                  let signature=String(data:signatureData,encoding:.utf8) else {throw UpdateFailure.invalid("Update signature unavailable")}
+                            release=release.signed(signature.trimmingCharacters(in:.whitespacesAndNewlines))
+                            try release.verifySignature(publicKey:UpdateInstaller.trustedPublicKey(in:Bundle.main.bundleURL))
+                        }
                         if pending?.release != release {
                             statusText=desktop?.t("正在下载并校验更新…","Downloading and verifying update…") ?? "";refresh()
                             let token=UUID().uuidString;temporary=token
@@ -96,8 +104,8 @@ final class UpdateController: NSObject {
                             let (file,downloadResponse)=try await session.download(from:URL(string:release.downloadURL)!,delegate:delegate)
                             guard (downloadResponse as? HTTPURLResponse)?.statusCode == 200 else { throw UpdateFailure.invalid("Update download failed") }
                             try FileManager.default.moveItem(at:file,to:root.appendingPathComponent("package.zip"))
-                            let target=Bundle.main.bundleURL
-                            try await Task.detached { try UpdateInstaller.stage(release:release,token:token,target:target) }.value
+                            let target=Bundle.main.bundleURL, verifiedRelease=release
+                            try await Task.detached { try UpdateInstaller.stage(release:verifiedRelease,token:token,target:target) }.value
                             let ready=ReadyUpdate(token:token,release:release)
                             try UpdateInstaller.write(ready,to:UpdateInstaller.base.appendingPathComponent("ready.json"))
                             let previous=pending;temporary=nil
@@ -127,7 +135,7 @@ final class UpdateController: NSObject {
     }
     private func showReadyBubble() {
         guard let pending else { return }
-        showBubble(desktop?.t("啾啾 \(pending.release.version) 已下载并校验，点击查看更新。","ChirpOS \(pending.release.version) is ready. Click to review the update.") ?? "",actionable:true)
+        showBubble(desktop?.t("\(desktop?.appName ?? AppBranding.chineseName) \(pending.release.version) 已下载并校验，点击查看更新。","\(desktop?.appName ?? AppBranding.englishName) \(pending.release.version) is ready. Click to review the update.") ?? "",actionable:true)
     }
     private func announceIfNeeded() {
         guard let pending,journal.announce(pending.release.version) else { return }
@@ -174,8 +182,11 @@ final class UpdateController: NSObject {
             do {
                 try await Task.detached { try UpdateInstaller.prepare(ticket) }.value
                 var helperReady=false
-                for _ in 0..<100 {
+                let helperDeadline=Date().addingTimeInterval(120)
+                while Date()<helperDeadline {
                     if FileManager.default.fileExists(atPath:ticket.root.appendingPathComponent("helper-ready").path) { helperReady=true;break }
+                    if let text=try? String(contentsOf:ticket.root.appendingPathComponent("helper-pid"),encoding:.utf8),
+                       let pid=Int32(text),!UpdateInstaller.alive(pid) {break}
                     try await Task.sleep(nanoseconds:100_000_000)
                 }
                 guard helperReady else {
@@ -191,9 +202,9 @@ final class UpdateController: NSObject {
     }
     func confirmationDialog(for ready:ReadyUpdate) -> NSAlert {
         let desktop=desktop!
-        let alert=NSAlert();alert.messageText=desktop.t("安装啾啾 \(ready.release.version)？","Install ChirpOS \(ready.release.version)?")
+        let alert=NSAlert();alert.messageText=desktop.t("安装\(desktop.appName) \(ready.release.version)？","Install \(desktop.appName) \(ready.release.version)?")
         alert.icon=NSImage(cgImage:desktop.art.frames["stand"]!,size:NSSize(width:64,height:64))
-        alert.informativeText=desktop.t("更新已下载并校验。安装后应用将自动重启，设置会保留。","The update is downloaded and verified. ChirpOS will restart and keep your settings.")
+        alert.informativeText=desktop.t("更新已下载并校验。安装后应用将自动重启，设置会保留。","The update is downloaded and verified. The app will restart and keep your settings.")
         let scroll=NSScrollView(frame:NSRect(x:0,y:0,width:480,height:250));scroll.hasVerticalScroller=true;scroll.borderType = .bezelBorder
         let notes=NSTextView(frame:scroll.bounds);notes.isEditable=false;notes.isRichText=false;notes.font = .systemFont(ofSize:13)
         notes.string=ready.release.notes.isEmpty ? desktop.t("此版本未提供更新说明。","No release notes were provided."):ready.release.notes

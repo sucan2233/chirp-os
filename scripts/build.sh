@@ -8,6 +8,46 @@ PRO_BUILD="${CHIRPOS_PRO_BUILD:-0}"
 DEVELOPMENT_BUILD="${CHIRPOS_DEVELOPMENT_BUILD:-0}"
 [[ "$DEVELOPMENT_BUILD" == 0 || "$DEVELOPMENT_BUILD" == 1 ]] || { printf 'CHIRPOS_DEVELOPMENT_BUILD must be 0 or 1\n' >&2; exit 1; }
 if [[ "$PRO_BUILD" == 1 ]]; then DEVELOPMENT_BUILD=1; fi
+PRO_UPDATES="${CHIRPOS_PRO_UPDATES:-0}"
+[[ "$PRO_UPDATES" == 0 || "$PRO_UPDATES" == 1 ]] || { printf 'CHIRPOS_PRO_UPDATES must be 0 or 1\n' >&2; exit 1; }
+if [[ "$PRO_BUILD" == 1 ]]; then
+    PRO_VERSION="$(cat "$ROOT/scripts/pro-version.txt")"
+    # Base-100 components give 0.8.0 build 800; reject ambiguous/overflowing components.
+    PRO_BUILD_NUMBER="$(python3 - "$PRO_VERSION" <<'PY'
+import re
+import sys
+version = sys.argv[1]
+if not re.fullmatch(r'(0|[1-9][0-9]{0,3})\.(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)', version):
+    sys.exit('Invalid Pro version: expected X.Y.Z (major <= 9999; minor/patch <= 99)')
+major, minor, patch = map(int, version.split('.'))
+number = major * 10000 + minor * 100 + patch
+if number == 0:
+    sys.exit('Pro build number must be positive')
+print(number)
+PY
+)"
+    # Public keys are always embedded when available; enabling updates requires one.
+    PRO_PUBLIC_KEY="$(python3 - "$ROOT/config/pro-update-public-key.txt" "$PRO_UPDATES" <<'PY'
+import base64
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+if not path.is_file():
+    if sys.argv[2] == '1':
+        sys.exit('Pro updates require config/pro-update-public-key.txt')
+    print('')
+else:
+    try:
+        value = path.read_text(encoding='utf-8').strip()
+        raw = base64.b64decode(value, validate=True)
+        if len(raw) != 32 or base64.b64encode(raw).decode() != value:
+            raise ValueError()
+    except (ValueError, UnicodeError):
+        sys.exit('Invalid Pro update public key: expected canonical base64 raw 32-byte key')
+    print(value)
+PY
+)"
+fi
 swift build -c release
 DEFAULT_APP="$ROOT/dist/ChirpOS.app"
 if [[ "$PRO_BUILD" == 1 ]]; then DEFAULT_APP="$ROOT/dist/ChirpOS Pro.app"; fi
@@ -44,6 +84,12 @@ if [[ "$PRO_BUILD" == 1 ]]; then
     /usr/libexec/PlistBuddy -c 'Set :CFBundleName ChirpOS Pro' "$APP/Contents/Info.plist"
     /usr/libexec/PlistBuddy -c 'Set :CFBundleDisplayName ChirpOS Pro' "$APP/Contents/Info.plist"
     /usr/libexec/PlistBuddy -c 'Add :ChirpOSProBuild bool true' "$APP/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $PRO_VERSION" "$APP/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $PRO_BUILD_NUMBER" "$APP/Contents/Info.plist"
+    UPDATES_ENABLED=false
+    if [[ "$PRO_UPDATES" == 1 ]]; then UPDATES_ENABLED=true; fi
+    /usr/libexec/PlistBuddy -c "Add :ChirpOSUpdatesEnabled bool $UPDATES_ENABLED" "$APP/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Add :ChirpOSUpdatePublicKey string $PRO_PUBLIC_KEY" "$APP/Contents/Info.plist"
 fi
 "$ROOT/.build/release/Birding" --export-icon "$ROOT/Assets"
 "$ROOT/.build/release/Birding" --export-icon "$ROOT/.build/AppIcon-macOS" --macos-mask

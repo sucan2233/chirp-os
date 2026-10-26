@@ -1,0 +1,25 @@
+{
+  "checks" : {
+    "confirmationHasNotesAndChoices" : true,
+    "confirmationUsesCurrentProductName" : true,
+    "debugInitiallyHidden" : true,
+    "debugPageSelectable" : true,
+    "laterKeepsUpdateWithoutInstalling" : true,
+    "manualCheckMenuEntry" : true,
+    "nonactivatingBubble" : true,
+    "oneDoubleClickStaysHidden" : true,
+    "pendingMenuEntry" : true,
+    "proChannelPointsToOwnedRepository" : true,
+    "proEnabledBuildHasPinnedKey" : true,
+    "redBadgeChangesIcon" : true,
+    "restartDoesNotRepeatNotification" : true,
+    "simulationClearsBadgeWithoutRealUpdate" : true,
+    "simulationDoesNotChangeJournal" : true,
+    "simulationLaterKeepsPrompt" : true,
+    "simulationLeavesNoJournal" : true,
+    "simulationRestoresRealPending" : true,
+    "simulationUsesNotificationAndBadge" : true,
+    "twoDoubleClicksUnlock" : true
+  },
+  "passed" : true
+}

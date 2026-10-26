@@ -8,9 +8,14 @@ func argument(_ flag:String) -> String? {
 // Ledger race workers never create NSApplication, windows or a controller.
 if let status=GiftLedgerPersistenceVerification.worker() {exit(status)}
 BehaviorStressCLI.runIfRequested()
+if let token=argument("--apply-pro-update") { exit(UpdateInstaller.runHelper(token:token)) }
 if let token=argument("--apply-update") { exit(UpdateInstaller.runHelper(token:token)) }
+if let path=argument("--verify-pro-update-package") {
+    do {try ProUpdateInstallVerification.run(folder:URL(fileURLWithPath:path));exit(0)}
+    catch {print("Pro update staging/replacement: FAIL — \(error)");exit(1)}
+}
 if let path=argument("--verify-update-archive") {
-    do { let expanded=try UpdateArchive.validate(Data(contentsOf:URL(fileURLWithPath:path),options:.mappedIfSafe));print("Update archive structure: PASS (\(expanded) expanded bytes)");exit(0) }
+    do { let expanded=try UpdateArchive.validate(Data(contentsOf:URL(fileURLWithPath:path),options:.mappedIfSafe),appName:AppBranding.updateChannel.appName);print("Update archive structure: PASS (\(expanded) expanded bytes)");exit(0) }
     catch { print("Update archive structure: FAIL — \(error)");exit(1) }
 }
 if let path=argument("--replay-behavior") {
@@ -248,8 +253,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if d.recordingPath != nil,let raw=argument("--record-duration"),let seconds=Double(raw),seconds.isFinite,(1...300).contains(seconds) {
                 Timer.scheduledTimer(withTimeInterval:seconds,repeats:false) {_ in NSApp.terminate(nil)}
             }
-            if !d.isDevelopmentBuild {UpdateInstaller.confirmHealthy(desktop:d)}
-            if !d.isDevelopmentBuild && Bundle.main.bundleURL.pathExtension == "app" && !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {
+            if AppBranding.updatesEnabled {UpdateInstaller.confirmHealthy(desktop:d)}
+            if AppBranding.updatesEnabled && Bundle.main.bundleURL.pathExtension == "app" && !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {
                 d.updater=UpdateController(desktop:d);d.updater?.start();d.makeMenu()
             }
             if let path = argument("--verify-population") {

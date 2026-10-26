@@ -12,7 +12,13 @@ struct UpdateTicket: Codable {
 }
 
 enum UpdateInstaller {
-    static let base = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Birding/Updates",isDirectory:true)
+    // The detached helper has no Bundle.main Info.plist; its explicit entry point
+    // retains the installed app's channel and keeps old upstream tickets separate.
+    static var channel: UpdateChannel { AppBranding.isPro || CommandLine.arguments.contains("--apply-pro-update") ? .pro : .legacy }
+    static var base: URL { FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(channel == .pro ? "Library/Application Support/Birding/ProUpdates" : "Library/Application Support/Birding/Updates",isDirectory:true) }
+    static func makeReplacement(target: URL, token: String) throws -> UpdateReplacement {
+        try UpdateReplacement(target:target,token:token,appName:channel.appName)
+    }
     static func root(_ token: String) -> URL { base.appendingPathComponent(token,isDirectory:true) }
     static func write<T: Encodable>(_ value: T, to url: URL) throws { try JSONEncoder().encode(value).write(to:url,options:.atomic) }
     static func read<T: Decodable>(_ type: T.Type, at url: URL) throws -> T { try JSONDecoder().decode(type,from:Data(contentsOf:url)) }
@@ -28,7 +34,7 @@ enum UpdateInstaller {
         guard UUID(uuidString:token) != nil, root(token).standardizedFileURL == root(token).resolvingSymlinksInPath() else { throw UpdateFailure.invalid("Invalid update ticket") }
         let ticket=try read(UpdateTicket.self,at:root(token).appendingPathComponent("transaction.json"))
         guard ticket.token == token, allowExpired || Date().timeIntervalSince(ticket.created) < 7*86400 else { throw UpdateFailure.invalid("Expired update ticket") }
-        _ = try UpdateReplacement(target:URL(fileURLWithPath:ticket.target),token:token)
+        _ = try makeReplacement(target:URL(fileURLWithPath:ticket.target),token:token)
         return ticket
     }
     @discardableResult static func command(_ path: String, _ args: [String]) throws -> String {
@@ -50,13 +56,36 @@ enum UpdateInstaller {
         }
         return value
     }
-    static func validateApp(_ app: URL, release: UpdateRelease, team: String) throws {
-        guard let bundle=Bundle(url:app), bundle.bundleIdentifier == "dev.birding.desktop",
+    static func trustedPublicKey(in target: URL) throws -> String {
+        guard let bundle=Bundle(url:target),bundle.bundleIdentifier==UpdateChannel.pro.bundleIdentifier,
+              bundle.object(forInfoDictionaryKey:"ChirpOSProBuild") as? Bool == true,
+              bundle.object(forInfoDictionaryKey:"ChirpOSUpdatesEnabled") as? Bool == true,
+              let key=bundle.object(forInfoDictionaryKey:"ChirpOSUpdatePublicKey") as? String,
+              Data(base64Encoded:key)?.count == 32 else {throw UpdateFailure.invalid("Pro update key or channel is missing; install the update-enabled Pro version first.")}
+        try command("/usr/bin/codesign",["--verify","--deep","--strict",target.path])
+        return key
+    }
+    static func validateApp(_ app: URL, release: UpdateRelease, target: URL) throws {
+        guard let bundle=Bundle(url:app), bundle.bundleIdentifier == channel.bundleIdentifier,
               bundle.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String == release.version,
               bundle.executableURL?.lastPathComponent == "Birding" else { throw UpdateFailure.invalid("Update bundle identity/version mismatch") }
-        let requirement="anchor apple generic and identifier \"dev.birding.desktop\" and certificate leaf[subject.OU] = \"\(team)\""
-        try command("/usr/bin/codesign",["--verify","--deep","--strict","-R",requirement,app.path])
-        try command("/usr/sbin/spctl",["--assess","--type","execute",app.path])
+        if channel == .pro {
+            let pinnedKey=try trustedPublicKey(in:target)
+            guard bundle.object(forInfoDictionaryKey:"ChirpOSProBuild") as? Bool == true,
+                  bundle.object(forInfoDictionaryKey:"ChirpOSDevelopmentBuild") as? Bool == true,
+                  bundle.object(forInfoDictionaryKey:"ChirpOSUpdatesEnabled") as? Bool == true,
+                  bundle.object(forInfoDictionaryKey:"ChirpOSUpdatePublicKey") as? String == pinnedKey else {
+                throw UpdateFailure.invalid("Pro update channel or pinned key mismatch")
+            }
+            try command("/usr/bin/codesign",["--verify","--deep","--strict",app.path])
+            // Ed25519 authenticates the publisher without Apple membership.
+            // This does not remove quarantine or suppress OS launch assessment.
+        } else {
+            let signingTeam=try team(of:target)
+            let requirement="anchor apple generic and identifier \"dev.birding.desktop\" and certificate leaf[subject.OU] = \"\(signingTeam)\""
+            try command("/usr/bin/codesign",["--verify","--deep","--strict","-R",requirement,app.path])
+            try command("/usr/sbin/spctl",["--assess","--type","execute",app.path])
+        }
         let architectures=try command("/usr/bin/lipo",["-archs",bundle.executableURL!.path])
         guard architectures.split(whereSeparator:{$0.isWhitespace}).contains(Substring(platform == "macOS-arm64" ? "arm64":"x86_64")) else { throw UpdateFailure.invalid("Update CPU architecture mismatch") }
         if let minimum=bundle.object(forInfoDictionaryKey:"LSMinimumSystemVersion") as? String {
@@ -66,37 +95,44 @@ enum UpdateInstaller {
             }
         }
     }
-    static func stage(release: UpdateRelease, token: String, target: URL) throws {
-        let archive=root(token).appendingPathComponent("package.zip"), extracted=root(token).appendingPathComponent("extracted")
+    static func stage(release: UpdateRelease, token: String, target: URL, stagingRoot: URL? = nil) throws {
+        let folder=stagingRoot ?? root(token)
+        let archive=folder.appendingPathComponent("package.zip"), extracted=folder.appendingPathComponent("extracted")
+        guard let installedText=Bundle(url:target)?.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String,
+              let installed=UpdateVersion(installedText),let incoming=UpdateVersion(release.version),incoming>installed else {
+            throw UpdateFailure.invalid("Update must be newer than the installed version")
+        }
+        if channel == .pro {try release.verifySignature(publicKey:trustedPublicKey(in:target))}
         try release.verify(archive)
-        let expanded=try UpdateArchive.validate(Data(contentsOf:archive,options:.mappedIfSafe))
-        let free=(try FileManager.default.attributesOfFileSystem(forPath:root(token).path)[.systemFreeSize] as? NSNumber)?.int64Value ?? 0
+        let expanded=try UpdateArchive.validate(Data(contentsOf:archive,options:.mappedIfSafe),appName:channel.appName)
+        let free=(try FileManager.default.attributesOfFileSystem(forPath:folder.path)[.systemFreeSize] as? NSNumber)?.int64Value ?? 0
         guard free>expanded*2+50_000_000 else { throw UpdateFailure.invalid("Not enough free space to unpack this update") }
         let fm=FileManager.default
         if fm.fileExists(atPath:extracted.path) { try fm.removeItem(at:extracted) }
         try fm.createDirectory(at:extracted,withIntermediateDirectories:false)
         try command("/usr/bin/ditto",["-x","-k",archive.path,extracted.path])
-        try validateApp(extracted.appendingPathComponent("ChirpOS.app"),release:release,team:team(of:target))
+        try validateApp(extracted.appendingPathComponent(channel.appName),release:release,target:target)
     }
     static func prepare(_ ticket: UpdateTicket) throws {
         let fm=FileManager.default, target=URL(fileURLWithPath:ticket.target)
         guard !target.path.contains("/AppTranslocation/"), !target.path.hasPrefix("/Volumes/"),
-              fm.isWritableFile(atPath:target.deletingLastPathComponent().path) else { throw UpdateFailure.invalid("请将应用移到可写的应用程序目录后安装更新。 / Move ChirpOS to a writable Applications folder first.") }
+              fm.isWritableFile(atPath:target.deletingLastPathComponent().path) else { throw UpdateFailure.invalid("请将应用移到可写的应用程序目录后安装更新。 / Move the app to a writable Applications folder first.") }
         // Re-extract from the checked archive at confirmation time; never trust an old staging tree.
         try stage(release:ticket.release,token:ticket.token,target:target)
-        let replacement=try UpdateReplacement(target:target,token:ticket.token)
-        try replacement.prepare(from:ticket.root.appendingPathComponent("extracted/ChirpOS.app"))
+        let replacement=try makeReplacement(target:target,token:ticket.token)
+        try replacement.prepare(from:ticket.root.appendingPathComponent("extracted/\(channel.appName)"))
         do {
-            try validateApp(replacement.candidate,release:ticket.release,team:team(of:target))
+            try validateApp(replacement.candidate,release:ticket.release,target:target)
             try? fm.removeItem(at:ticket.root.appendingPathComponent("cancel"))
             try? fm.removeItem(at:ticket.root.appendingPathComponent("helper-ready"))
+            try? fm.removeItem(at:ticket.root.appendingPathComponent("helper-pid"))
             try? fm.removeItem(at:ticket.root.appendingPathComponent("healthy.json"))
             try write(ticket,to:ticket.root.appendingPathComponent("transaction.json"))
             let helper=ticket.root.appendingPathComponent("installer")
             if fm.fileExists(atPath:helper.path) { try fm.removeItem(at:helper) }
             try fm.copyItem(at:Bundle.main.executableURL!,to:helper)
             try fm.setAttributes([.posixPermissions:0o700],ofItemAtPath:helper.path)
-            let p=Process();p.executableURL=helper;p.arguments=["--apply-update",ticket.token];try p.run()
+            let p=Process();p.executableURL=helper;p.arguments=[channel == .pro ? "--apply-pro-update":"--apply-update",ticket.token];try p.run()
         } catch {
             try? fm.removeItem(at:replacement.candidate);throw error
         }
@@ -115,10 +151,16 @@ enum UpdateInstaller {
         var ticket:UpdateTicket?, replacement:UpdateReplacement?, launched:NSRunningApplication?, replaced=false
         do {
             let t=try load(token);ticket=t
-            let r=try UpdateReplacement(target:URL(fileURLWithPath:t.target),token:token);replacement=r
-            try t.release.verify(t.root.appendingPathComponent("package.zip"))
-            try validateApp(r.candidate,release:t.release,team:team(of:r.target))
+            let r=try makeReplacement(target:URL(fileURLWithPath:t.target),token:token);replacement=r
             try Data(String(ProcessInfo.processInfo.processIdentifier).utf8).write(to:t.root.appendingPathComponent("helper-pid"),options:.atomic)
+            // Recreate Pro candidates from the authenticated ZIP inside the helper.
+            // A valid ad-hoc signature on an old staging directory proves no origin.
+            if channel == .pro {
+                try stage(release:t.release,token:token,target:r.target)
+                if FileManager.default.fileExists(atPath:r.candidate.path) {try FileManager.default.removeItem(at:r.candidate)}
+                try r.prepare(from:t.root.appendingPathComponent("extracted/\(channel.appName)"))
+            } else {try t.release.verify(t.root.appendingPathComponent("package.zip"))}
+            try validateApp(r.candidate,release:t.release,target:r.target)
             try Data().write(to:t.root.appendingPathComponent("helper-ready"),options:.atomic)
             let deadline=Date().addingTimeInterval(60)
             while alive(t.parentPID) && Date()<deadline && !FileManager.default.fileExists(atPath:t.root.appendingPathComponent("cancel").path) { Thread.sleep(forTimeInterval:0.1) }
@@ -182,7 +224,7 @@ enum UpdateInstaller {
                   let ticket=try? read(UpdateTicket.self,at:root.appendingPathComponent("transaction.json")), ticket.token==root.lastPathComponent,
                   ticket.target==Bundle.main.bundleURL.path, let version=UpdateVersion(ticket.release.version),
                   let current=UpdateVersion(currentVersion), current>=version else { continue }
-            do { try UpdateReplacement(target:Bundle.main.bundleURL,token:ticket.token).complete();clearReady(token:ticket.token);try fm.removeItem(at:root) }
+            do { try makeReplacement(target:Bundle.main.bundleURL,token:ticket.token).complete();clearReady(token:ticket.token);try fm.removeItem(at:root) }
             catch { NSLog("Update cleanup deferred: %@",error.localizedDescription) }
         }
     }
@@ -192,7 +234,7 @@ enum UpdateInstaller {
         for token in (try? FileManager.default.contentsOfDirectory(atPath:base.path)) ?? [] {
             guard let ticket=try? load(token,allowExpired:true),ticket.target==Bundle.main.bundleURL.path,
                   let version=UpdateVersion(ticket.release.version),let current=UpdateVersion(currentVersion),version>current,
-                  let replacement=try? UpdateReplacement(target:Bundle.main.bundleURL,token:token),
+                  let replacement=try? makeReplacement(target:Bundle.main.bundleURL,token:token),
                   !FileManager.default.fileExists(atPath:replacement.backup.path) else { continue }
             let pid=(try? String(contentsOf:ticket.root.appendingPathComponent("helper-pid"),encoding:.utf8)).flatMap{Int32($0)}
             guard pid.map(alive) != true else { continue }

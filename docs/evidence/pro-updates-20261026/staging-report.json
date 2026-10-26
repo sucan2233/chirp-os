@@ -1,0 +1,15 @@
+{
+  "checks" : {
+    "atomicReplacementInstallsCandidate" : true,
+    "authenticatedArchiveStaged" : true,
+    "candidateKeyRotationRejected" : true,
+    "confirmedReplacementRemovesBackup" : true,
+    "corruptArchiveRejected" : true,
+    "failedHealthRollbackRestoresOldApp" : true,
+    "preparePreservesInstalledApp" : true,
+    "rejectedArchivePreservesInstalledApp" : true,
+    "wrongPublisherKeyRejected" : true
+  },
+  "passed" : true,
+  "scope" : "Signed archive, actual app staging and atomic swap\/rollback on disposable copies; no live quit\/relaunch or Gatekeeper interaction."
+}

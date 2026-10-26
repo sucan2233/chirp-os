@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "version": "0.8.0",
+  "proUpdatesEnabled": true,
+  "architecture": "arm64",
+  "appFilesCompared": 12,
+  "zipAndDMGMatch": true,
+  "signatureChecks": true,
+  "packages": {
+    "ChirpOS-Pro-0.8.0-macOS-arm64.zip": {
+      "bytes": 5477969,
+      "sha256": "ca08d985189e720aa19a0907c703227f6b1ca67d24a299a9234d8839b80de052"
+    },
+    "ChirpOS-Pro-0.8.0-macOS-arm64.zip.sig": {
+      "bytes": 89,
+      "sha256": "d5d94904151f996446180b6344b155dc167e266b2a527b402e792b3d224d66c3"
+    },
+    "ChirpOS-Pro-0.8.0-macOS-arm64.dmg": {
+      "bytes": 6035445,
+      "sha256": "74a7729e111c979fa449a5e30ef5888f46154079ddd1d79708100e9f470b2a25"
+    }
+  }
+}

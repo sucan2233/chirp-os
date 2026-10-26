@@ -1,0 +1,126 @@
+{
+  "status": "local-implementation-and-verification-complete; remote-release-not-performed",
+  "version": "0.8.0",
+  "releaseScriptChecks": 30,
+  "legacyReleaseChecks": 11,
+  "nativeUpdateUI": 20,
+  "nativePackageStaging": 9,
+  "zipDMGAndSignatureChecksPassed": true,
+  "workflowYAMLParsed": true,
+  "githubRepository": "sucan2233/chirp-os",
+  "publicRepositoryObserved": true,
+  "publishedReleasesObserved": 0,
+  "privateKeyLocation": ".local/pro-update-private-key (ignored; not included in evidence)",
+  "publicKeySHA256": "347b5b55aef098d748a6cdc7df64891ff90e15c8a9cdcbf20a2f9e1a636c89d4",
+  "unverified": [
+    "GitHub Actions hosted release run",
+    "GitHub secret configuration",
+    "published remote download and live quit/relaunch/health acknowledgement",
+    "Gatekeeper behavior on a fresh machine"
+  ],
+  "steps": [
+    {
+      "step": "key-init",
+      "command": [
+        "swift",
+        "scripts/pro-update-sign.swift",
+        "init",
+        ".local/pro-update-private-key",
+        "config/pro-update-public-key.txt"
+      ],
+      "startedAtUnix": 1793003244.880863,
+      "durationSeconds": 1.431974172592163,
+      "exitCode": 0
+    },
+    {
+      "step": "package-round1",
+      "command": [
+        "bash",
+        "scripts/package-pro-macos.sh",
+        "--release"
+      ],
+      "startedAtUnix": 1793003261.428192,
+      "durationSeconds": 141.6701271533966,
+      "exitCode": 0
+    },
+    {
+      "step": "legacy-release-checks",
+      "command": [
+        "python3",
+        "scripts/test-macos-release.py"
+      ],
+      "startedAtUnix": 1793003275.010758,
+      "durationSeconds": 1.565932035446167,
+      "exitCode": 0
+    },
+    {
+      "step": "containers",
+      "command": [
+        "python3",
+        ".build/pro-update-evidence/verify-containers.py"
+      ],
+      "startedAtUnix": 1793003428.2389472,
+      "durationSeconds": 0.6489987373352051,
+      "exitCode": 0
+    },
+    {
+      "step": "native-update-ui",
+      "command": [
+        "dist/ChirpOS Pro.app/Contents/MacOS/Birding",
+        "--verify-updates",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/pro-update-evidence/ui"
+      ],
+      "startedAtUnix": 1793003455.324485,
+      "durationSeconds": 2.7780051231384277,
+      "exitCode": 0
+    },
+    {
+      "step": "native-staging",
+      "command": [
+        "dist/ChirpOS Pro.app/Contents/MacOS/Birding",
+        "--verify-pro-update-package",
+        "/Users/sucan/sucan/03_Codebase/Personal/chirp-os/.build/pro-update-evidence/staging"
+      ],
+      "startedAtUnix": 1793003428.5286038,
+      "durationSeconds": 1.1273772716522217,
+      "exitCode": 0
+    },
+    {
+      "step": "species-parity",
+      "command": [
+        "python3",
+        "scripts/test-species-parity.py"
+      ],
+      "startedAtUnix": 1793003275.0108008,
+      "durationSeconds": 0.07906627655029297,
+      "exitCode": 0
+    },
+    {
+      "step": "release-script-checks",
+      "command": [
+        "python3",
+        "scripts/test-pro-release.py"
+      ],
+      "startedAtUnix": 1793003252.889819,
+      "durationSeconds": 4.6990320682525635,
+      "exitCode": 0
+    },
+    {
+      "step": "core-tests",
+      "command": [
+        "swift",
+        "test",
+        "-c",
+        "release"
+      ],
+      "startedAtUnix": 1793003428.240232,
+      "durationSeconds": 184.9944519996643,
+      "exitCode": 0
+    }
+  ],
+  "coreTests": {
+    "total": 1102,
+    "failures": 0,
+    "executionSeconds": 64.431
+  }
+}

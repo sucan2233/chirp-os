@@ -1,0 +1,168 @@
+name: Release ChirpOS Pro macOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing Pro tag matching scripts/pro-version.txt (for example pro-v0.8.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-pro-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    env:
+      # User input enters shell scripts through the environment exclusively.
+      RELEASE_TAG: ${{ inputs.tag }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Validate manual input
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Runtime update URLs are pinned to this repository; fork releases are unsupported.
+          [[ "$GH_REPO" == sucan2233/chirp-os ]]
+          [[ "$(uname -m)" == arm64 ]]
+          [[ "$RELEASE_TAG" =~ ^pro-v(0|[1-9][0-9]{0,3})\.(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)$ ]]
+          [[ "$RELEASE_TAG" != pro-v0.0.0 ]]
+          [[ "$GH_REPO" == sucan2233/chirp-os ]]
+          [[ "$(uname -m)" == arm64 ]]
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out existing tag and validate provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_COMMIT="$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}")"
+          git checkout --detach "$SOURCE_COMMIT"
+          VERSION="$(cat scripts/pro-version.txt)"
+          [[ "$RELEASE_TAG" == "pro-v$VERSION" ]]
+          git ls-files --error-unmatch scripts/pro-version.txt config/pro-update-public-key.txt "docs/releases/$RELEASE_TAG.md"
+          [[ -s "docs/releases/$RELEASE_TAG.md" ]]
+          [[ -z "$(git status --porcelain --untracked-files=normal)" ]]
+          printf 'PRO_VERSION=%s\nSOURCE_COMMIT=%s\n' "$VERSION" "$SOURCE_COMMIT" >> "$GITHUB_ENV"
+
+      - name: Refuse existing releases before building
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/pro-existing-releases.json"
+          python3 - "$RUNNER_TEMP/pro-existing-releases.json" <<'PY'
+          import json, os, sys
+          pages = json.load(open(sys.argv[1]))
+          for page in pages:
+              for release in page:
+                  if release['tag_name'] == os.environ['RELEASE_TAG']:
+                      state = 'draft' if release['draft'] else 'published'
+                      sys.exit(f'Refusing to overwrite existing {state} release. Review/delete a failed draft explicitly before retrying.')
+          PY
+
+      - name: Check scripts and test core
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n scripts/build.sh scripts/package-pro-macos.sh scripts/release-pro-macos.sh
+          python3 scripts/test-pro-release.py
+          bash scripts/test.sh
+
+      - name: Build ad-hoc Pro release with independent update signature
+        env:
+          UPDATE_PRIVATE_KEY: ${{ secrets.CHIRPOS_UPDATE_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "$UPDATE_PRIVATE_KEY" ]]
+          export CHIRPOS_UPDATE_PRIVATE_KEY_FILE="$RUNNER_TEMP/chirpos-pro-update-private-key"
+          umask 077
+          trap 'rm -f "$CHIRPOS_UPDATE_PRIVATE_KEY_FILE"' EXIT
+          printf '%s\n' "$UPDATE_PRIVATE_KEY" > "$CHIRPOS_UPDATE_PRIVATE_KEY_FILE"
+          chmod 600 "$CHIRPOS_UPDATE_PRIVATE_KEY_FILE"
+          unset UPDATE_PRIVATE_KEY
+          bash scripts/release-pro-macos.sh --release
+          ARCH="$(uname -m)"
+          [[ "$(lipo -archs 'dist/ChirpOS Pro.app/Contents/MacOS/Birding')" == "$ARCH" ]]
+          case "$ARCH" in arm64|x86_64) ;; *) exit 1 ;; esac
+          printf 'PRO_ARCH=%s\n' "$ARCH" >> "$GITHUB_ENV"
+
+      - name: Create draft, upload assets, verify GitHub digests, then publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          REMOTE_COMMIT="$(gh api "repos/$GH_REPO/commits/$RELEASE_TAG" --jq .sha)"
+          [[ "$REMOTE_COMMIT" == "$SOURCE_COMMIT" ]]
+          [[ "$(git rev-parse HEAD)" == "$SOURCE_COMMIT" ]]
+          [[ "$(cat scripts/pro-version.txt)" == "$PRO_VERSION" ]]
+          cd dist/pro-release
+          NAME="ChirpOS-Pro-$PRO_VERSION-macOS-$PRO_ARCH"
+          ASSETS=("$NAME.zip" "$NAME.zip.sig" "$NAME.dmg" SHA256SUMS.txt BUILD-INFO.txt 安装说明.txt)
+          shasum -a 256 -c SHA256SUMS.txt
+          swift "$GITHUB_WORKSPACE/scripts/pro-update-sign.swift" verify "$NAME.zip" "$PRO_VERSION" "$GITHUB_WORKSPACE/config/pro-update-public-key.txt"
+          # A race with another release fails here; no clobber or existing-release edit.
+          gh release create "$RELEASE_TAG" --repo "$GH_REPO" --verify-tag --draft \
+            --target "$SOURCE_COMMIT" --title "ChirpOS Pro $PRO_VERSION · macOS $PRO_ARCH" \
+            --notes-file "$GITHUB_WORKSPACE/docs/releases/$RELEASE_TAG.md"
+          gh release upload "$RELEASE_TAG" --repo "$GH_REPO" "${ASSETS[@]}"
+          # Hash all uploaded assets locally; API checks below include the mandatory ZIP digest.
+          python3 - "${ASSETS[@]}" > "$RUNNER_TEMP/pro-expected-assets.json" <<'PY'
+          import hashlib, json, pathlib, sys
+          result = {}
+          for name in sys.argv[1:]:
+              path = pathlib.Path(name)
+              sha = hashlib.sha256()
+              with path.open('rb') as f:
+                  for chunk in iter(lambda: f.read(1024 * 1024), b''):
+                      sha.update(chunk)
+              result[name] = {'size': path.stat().st_size, 'digest': 'sha256:' + sha.hexdigest()}
+          json.dump(result, sys.stdout)
+          PY
+          READY=0
+          # Bounded wait for GitHub's asset digest; failure leaves an unpublished draft.
+          for ATTEMPT in 1 2 3 4 5 6; do
+            gh api "repos/$GH_REPO/releases/tags/$RELEASE_TAG" > "$RUNNER_TEMP/pro-uploaded-release.json"
+            if python3 - "$RUNNER_TEMP/pro-expected-assets.json" "$RUNNER_TEMP/pro-uploaded-release.json" <<'PY'
+          import json, os, sys
+          expected = json.load(open(sys.argv[1]))
+          release = json.load(open(sys.argv[2]))
+          if release.get('draft') is not True or release.get('tag_name') != os.environ['RELEASE_TAG']:
+              sys.exit('Expected an unpublished draft for the requested Pro tag')
+          assets = release.get('assets', [])
+          if len(assets) != len(expected) or {a['name'] for a in assets} != set(expected):
+              sys.exit('Uploaded assets do not exactly match the release manifest')
+          for asset in assets:
+              want = expected[asset['name']]
+              if asset.get('state') != 'uploaded' or asset.get('size') != want['size'] or asset.get('digest') != want['digest']:
+                  sys.exit(f"GitHub size/SHA-256 digest is missing or mismatched: {asset['name']}")
+          PY
+            then
+              READY=1
+              break
+            fi
+            if [[ "$ATTEMPT" != 6 ]]; then sleep 10; fi
+          done
+          [[ "$READY" == 1 ]]
+          REMOTE_COMMIT="$(gh api "repos/$GH_REPO/commits/$RELEASE_TAG" --jq .sha)"
+          [[ "$REMOTE_COMMIT" == "$SOURCE_COMMIT" ]]
+          gh release edit "$RELEASE_TAG" --repo "$GH_REPO" --draft=false --latest=false
+
+      - name: Remove temporary signing key
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/chirpos-pro-update-private-key"

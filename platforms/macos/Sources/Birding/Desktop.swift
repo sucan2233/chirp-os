@@ -142,6 +142,10 @@ final class DesktopController: NSObject {
     var preferences = UserDefaults.standard
     var isDevelopmentBuild:Bool {AppBranding.isDevelopment}
     var appName:String {t(AppBranding.chineseName,AppBranding.englishName)}
+    var buildMenuTitle:String {
+        if AppBranding.isPro && AppBranding.updatesEnabled {return "\(appName) \(UpdateInstaller.currentVersion)"}
+        return t("\(appName) · 本地开发","\(appName) · Local build")
+    }
     var language = AppLanguage.chinese
     var gallery:SpeciesGallery?
     var updater:UpdateController?
@@ -479,7 +483,7 @@ final class DesktopController: NSObject {
         add(menu,t("退出\(appName)","Quit \(appName)"),#selector(quit),"q")
         status.menu = menu
         updateStatusLine()
-        if isDevelopmentBuild {menu.insertItem(NSMenuItem(title:t("\(appName) · 本地开发","\(appName) · Local build"),action:nil,keyEquivalent:""),at:0)}
+        if isDevelopmentBuild {menu.insertItem(NSMenuItem(title:buildMenuTitle,action:nil,keyEquivalent:""),at:0)}
         let main=NSMenu()
         let application=NSMenuItem();main.addItem(application);application.submenu=NSMenu()
         add(application.submenu!,t("观鸟手册…","Birdwatching handbook…"),#selector(showObservationJournal),"j")

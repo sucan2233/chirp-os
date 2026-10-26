@@ -7,7 +7,7 @@ enum UpdateVerification {
             try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
             var checks:[String:Bool]=[:]
             let state=folder.appendingPathComponent("notification-state-\(UUID().uuidString).json")
-            let desktop=DesktopController();desktop.makeMenu()
+            let desktop=DesktopController();desktop.isolatedSession=true;desktop.makeMenu()
             let updater=UpdateController(desktop:desktop,stateFile:state);desktop.updater=updater
             let release=UpdateRelease(version:"1.2.3",notes:"更新内容 / What's new\n\n• 更自然的猛禽盘旋\n• 按鸟种调整振翅频率\n• 保留所有现有设置\n\nThis is a local UI fixture. No download or installation occurs.",assetName:"fixture.zip",downloadURL:"",sha256:String(repeating:"0",count:64),size:1)
             let ready=ReadyUpdate(token:UUID().uuidString,release:release)
@@ -21,6 +21,9 @@ enum UpdateVerification {
             checks["redBadgeChangesIcon"] = badge.tiffRepresentation != original.tiffRepresentation
             if let data=badge.tiffRepresentation,let bitmap=NSBitmapImageRep(data:data) { try bitmap.representation(using:.png,properties:[:])!.write(to:folder.appendingPathComponent("update-badge.png")) }
             let dialog=updater.confirmationDialog(for:ready)
+            checks["confirmationUsesCurrentProductName"] = dialog.messageText.contains(desktop.appName)
+            checks["proChannelPointsToOwnedRepository"] = !AppBranding.isPro || AppBranding.updateChannel.repository == "sucan2233/chirp-os"
+            checks["proEnabledBuildHasPinnedKey"] = !AppBranding.isPro || !AppBranding.updatesEnabled || (try? UpdateInstaller.trustedPublicKey(in:Bundle.main.bundleURL)) != nil
             checks["confirmationHasNotesAndChoices"] = dialog.messageText.contains("1.2.3") && dialog.buttons.map(\.title) == ["安装并重启","晚点再说"] && dialog.accessoryView is NSScrollView
             dialog.layout()
             // Cancel the real presentation through its modal response; installation

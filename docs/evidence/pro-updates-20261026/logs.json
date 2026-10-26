@@ -1,0 +1,38 @@
+[
+  {
+    "file": "containers.log.gz",
+    "uncompressedSHA256": "3f915174223df1f6201a671cc9ca13791584014d66393e42d48b59c8fd67debc"
+  },
+  {
+    "file": "key-init.log.gz",
+    "uncompressedSHA256": "f18ffb0888c94e9e3b4fea97956608e05a0025f3a1c5f2abf4db4e08f3ab93bb"
+  },
+  {
+    "file": "legacy-release-checks.log.gz",
+    "uncompressedSHA256": "ac438a6341224153b6b882f1cd49239500e472a63348c8bd07100b9275511ecd"
+  },
+  {
+    "file": "native-staging.log.gz",
+    "uncompressedSHA256": "e5665a7e029d56757b0680111369f9ab2d2f48a63e56bac30e13bf51193f8427"
+  },
+  {
+    "file": "native-update-ui.log.gz",
+    "uncompressedSHA256": "72025d8cbf439805fceffc9a54df5cbc164ed84bced751412d53d5469a7a33e1"
+  },
+  {
+    "file": "package-round1.log.gz",
+    "uncompressedSHA256": "1669f05ea97d42064a8e1ad931034cc34ed3ab28c05665d74a926ca4ee7eaea8"
+  },
+  {
+    "file": "release-script-checks.log.gz",
+    "uncompressedSHA256": "5cb8859eed48c8ffbebad2edb43bcb6c4b64d7311a3e656655ba2abf40a542a8"
+  },
+  {
+    "file": "species-parity.log.gz",
+    "uncompressedSHA256": "70f620a758fd136000531240316fa366a5c3e039b2e726deeea26ccb0edd0f35"
+  },
+  {
+    "file": "core-tests.log.gz",
+    "uncompressedSHA256": "9ab393c0334fb947cf207ec7b18f9237f87670b5b8296c1bb7bee1c069c80dd9"
+  }
+]
