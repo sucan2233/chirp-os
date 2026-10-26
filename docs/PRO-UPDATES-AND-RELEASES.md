@@ -74,6 +74,12 @@ python3 scripts/test-pro-release.py
 
 仅安装或选中 Command Line Tools 时可能报 `no such module 'XCTest'`；上述环境变量只影响这次命令，无需修改系统默认开发目录。
 
+## 0.8.5 云端发布状态（2026-10-26）
+
+运行 `40318109342`（源码 `0e7741b`，标签 `pro-v0.8.5`）已通过完整云端编译及核心测试，随后在签名步骤报告 `Invalid base64 key/signature file ... (expected 32 bytes)`；未创建 Release 或上传资产。仓库 Secret 的格式不符合更新签名协议。随后浏览器设置页仅列出名为 `GITHUB` 的仓库 Secret，未列出目标名称；仍需用户将 `.local/pro-update-private-key` 的原始整行内容填入 `CHIRPOS_UPDATE_PRIVATE_KEY`。不得使用 SSH 私钥，也不要再次编码或添加引号。该本机文件已通过公钥配对检查，但不能据此认定 GitHub Secret 正确。
+
+工作流增加编译前的密钥格式与公钥配对检查（更新后 31 项离线发布检查通过），错误配置会在耗时编译前停止；检查使用临时 0600 文件，不输出密钥内容，退出时删除。修正 Secret 后可对同一未发布标签再次手动运行最新主线工作流，避免覆盖已有发布资产；历史失败记录保留。下载后的独立验签和真实远程升级仍需在首次发布成功后验收。
+
 ## 本地构建与发布材料
 
 ```sh

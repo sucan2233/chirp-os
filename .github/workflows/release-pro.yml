@@ -76,6 +76,21 @@ jobs:
                       sys.exit(f'Refusing to overwrite existing {state} release. Review/delete a failed draft explicitly before retrying.')
           PY
 
+      - name: Validate update signing key before compilation
+        env:
+          UPDATE_PRIVATE_KEY: ${{ secrets.CHIRPOS_UPDATE_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "$UPDATE_PRIVATE_KEY" ]]
+          KEY_FILE="$RUNNER_TEMP/chirpos-pro-update-private-key"
+          umask 077
+          trap 'rm -f "$KEY_FILE"' EXIT
+          printf '%s\n' "$UPDATE_PRIVATE_KEY" > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+          unset UPDATE_PRIVATE_KEY
+          swift scripts/pro-update-sign.swift check-key "$KEY_FILE" config/pro-update-public-key.txt
+
       - name: Check scripts and test core
         shell: bash
         run: |
