@@ -18,6 +18,8 @@
 
 公钥提交在`config/pro-update-public-key.txt`，私钥仅保存在被Git忽略的`.local/pro-update-private-key`。私钥文件权限为0600，不应上传仓库或粘贴到聊天。保留离线备份；丢失或更换密钥会使已安装客户端拒绝新签名，需要另行设计迁移或手动安装。
 
+更新签名密钥与 Git SSH 密钥独立：`ssh-ed25519 AAAA…` 用于 Git 连接认证，其 SSH 私钥不能填入更新 Secret。更新脚本要求 base64 编码的原始 32 字节 Ed25519 私钥，并校验它是否匹配仓库公钥。GitHub 保存 Secret 后不回显内容；保存成功不代表密钥匹配，必须以发布签名步骤及下载后的公钥验签结果为准。
+
 本轮已生成本机密钥并提交对应公钥；你需要备份`.local/pro-update-private-key`并将同一私钥配置到GitHub Secret。新仓库首次生成密钥的命令如下；已有密钥不要重复生成：
 
 ```sh
@@ -51,6 +53,18 @@ GitHub仓库进入 **Settings → Secrets and variables → Actions → New repo
 首次发布只是建立更新源，完整远程升级验收需要至少两个实际版本。不能把0.8.0检测不到比自己更新的版本当作更新失败，也不能把离线替换验证当作远程端到端升级通过。
 
 后续例如从0.8.0到0.8.1：提高版本、补发布说明、提交、推送标签、运行同一工作流。不要覆盖已经公开的版本资产；修复应发更高版本。
+
+首次云端尝试 `pro-v0.8.0` 在 Swift 编译阶段失败，未进入签名或创建 Release；修复访客送礼曲线的类型推断超时后，以 `pro-v0.8.1` 重试，保留原标签。发布流水线改用 `swift test -c release` 运行完整核心测试，避免调试模式下行为仿真的额外耗时。发布脚本测试使用固定的隔离夹具版本，不依赖当前产品版本。
+
+本地复查核心测试应使用完整 Xcode：
+
+```sh
+python3 scripts/test-species-parity.py
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test -c release
+python3 scripts/test-pro-release.py
+```
+
+仅安装或选中 Command Line Tools 时可能报 `no such module 'XCTest'`；上述环境变量只影响这次命令，无需修改系统默认开发目录。
 
 ## 本地构建与发布材料
 
