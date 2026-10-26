@@ -119,6 +119,15 @@ jobs:
           case "$ARCH" in arm64|x86_64) ;; *) exit 1 ;; esac
           printf 'PRO_ARCH=%s\n' "$ARCH" >> "$GITHUB_ENV"
 
+      - name: Preserve verified release assets for recovery
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.tag }}-${{ env.SOURCE_COMMIT }}-verified-assets
+          path: dist/pro-release/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
       - name: Create draft, upload assets, verify GitHub digests, then publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -135,8 +144,10 @@ jobs:
           shasum -a 256 -c SHA256SUMS.txt
           swift "$GITHUB_WORKSPACE/scripts/pro-update-sign.swift" verify "$NAME.zip" "$PRO_VERSION" "$GITHUB_WORKSPACE/config/pro-update-public-key.txt"
           # A race with another release fails here; no clobber or existing-release edit.
+          # The tag already exists and is verified above. Supplying its old commit
+          # as --target unnecessarily triggers workflow-file write checks against main.
           gh release create "$RELEASE_TAG" --repo "$GH_REPO" --verify-tag --draft \
-            --target "$SOURCE_COMMIT" --title "ChirpOS Pro $PRO_VERSION · macOS $PRO_ARCH" \
+            --title "ChirpOS Pro $PRO_VERSION · macOS $PRO_ARCH" \
             --notes-file "$GITHUB_WORKSPACE/docs/releases/$RELEASE_TAG.md"
           gh release upload "$RELEASE_TAG" --repo "$GH_REPO" "${ASSETS[@]}"
           # Hash all uploaded assets locally; API checks below include the mandatory ZIP digest.

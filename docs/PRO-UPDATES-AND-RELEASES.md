@@ -80,6 +80,12 @@ python3 scripts/test-pro-release.py
 
 工作流增加编译前的密钥格式与公钥配对检查（更新后 31 项离线发布检查通过），错误配置会在耗时编译前停止；检查使用临时 0600 文件，不输出密钥内容，退出时删除。修正 Secret 后可对同一未发布标签再次手动运行最新主线工作流，避免覆盖已有发布资产；历史失败记录保留。下载后的独立验签和真实远程升级仍需在首次发布成功后验收。
 
+运行 `40320442787` 已验证 Secret 配对成功、云端核心测试 1102/1102（183.775 秒）及 ZIP/DMG/Ed25519 全部通过。随后在创建草稿 Release 的 API 请求返回 `403 Resource not accessible by integration`，日志显示 `GITHUB_TOKEN` 已有 `Contents: write`；没有创建草稿或上传资产。
+
+GitHub Release API 对显式 `target_commitish` 所指提交与默认分支之间的工作流差异执行额外权限检查，即使标签已经存在。旧发布命令将源码提交重复传入 `--target`；现移除此参数，沿用 `--verify-tag` 及本地/远端标签 SHA 校验，由已存在标签确定发布源码。无需新增个人令牌或扩大权限。参考官方 Releases API 的创建说明：<https://docs.github.com/en/rest/releases/releases#create-a-release>。
+
+签名打包成功后，流水线先保存 `pro-vX.Y.Z-源码SHA-verified-assets` Actions artifact（7 天），再创建 Release；仅包含公开安装包、独立签名和构建说明，不含私钥。发布端失败时可下载已验证材料恢复，避免丢失整轮构建。安装包来源仍是指定标签，主线后续概率系统变更不会进入 0.8.5。
+
 ## 本地构建与发布材料
 
 ```sh
