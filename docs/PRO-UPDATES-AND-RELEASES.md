@@ -92,6 +92,10 @@ GitHub CLI 自身的 [草稿查询实现](https://github.com/cli/cli/blob/trunk/
 
 发布逻辑改为 `scripts/publish-pro-release.py`：保留创建响应中的 Release ID，按 `/releases/{id}` 核对草稿、六资产集合、大小及 SHA-256，之后仍按同一个 ID 公开并复查。普通发布拒绝任何已存在 Release；恢复模式只接受唯一未公开草稿，要求资产全部已上传且与原构建逐字节匹配，不覆盖文件、不删除草稿、不改标签。缺失 digest 最多等待六次，真实 hash 或资产集合不匹配立即停止。正常发布工作流在切换到旧标签前保存当前发布脚本，确保旧产品标签也能使用修复后的发布协议。
 
+恢复运行 `40328974512` 成功取得草稿 ID `424241975`，但六资产清单不匹配。2026-10-26 在 GitHub 实际展开资产确认，上传的中文文件名 `安装说明.txt` 被服务端改成 `default.txt`，其 SHA-256 与原说明文件一致；其他五个文件名称正常。GitHub [资产上传说明](https://docs.github.com/en/rest/releases/assets#upload-a-release-asset) 明确指出特殊字符文件名可能被改写。发布附件现统一采用 ASCII 名称 `INSTALL.txt`，文件内容继续为中文，DMG 内仍保留中文说明名。
+
+旧产品标签和既存 artifact 保持不变：发布器接受本地 `INSTALL.txt` 或旧 `安装说明.txt` 中唯一一个，旧名称仅在上传前拷贝为 `INSTALL.txt`。恢复已上传的 `default.txt` 时，先按原构建的六文件完整大小与摘要验证，再按资产 ID 将该说明附件改名为 `INSTALL.txt`，重新读取草稿全量核验后才公开。仅允许这一明确的历史兼容规则；资产缺失、额外文件、重复说明、摘要变化或错误状态均停止。不重新签名、构建或上传安装包。失败信息同步到 Actions annotation，便于通过公开 API 读取具体原因。
+
 ### 已构建成功、仅发布失败时恢复
 
 1. 打开 Actions 的 **Recover ChirpOS Pro macOS release**，从 `main` 运行，填写原标签及成功归档产物的运行 ID；本次为 `pro-v0.8.5`、`40323236452`。

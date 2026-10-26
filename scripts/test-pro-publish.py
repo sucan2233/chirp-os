@@ -35,16 +35,17 @@ LIST_COMMAND = ['gh', 'api', '--paginate', '--slurp',
 class AssetFixture:
     """Real, nonempty files; expected digests do not use publisher.manifest()."""
 
-    def __init__(self, root, arch):
+    def __init__(self, root, arch, instructions='INSTALL.txt'):
         self.folder = root / 'assets'
         self.folder.mkdir()
         self.stem = f'ChirpOS-Pro-0.8.1-macOS-{arch}'
         self.zip_name = self.stem + '.zip'
+        self.instructions = instructions
         content = {
             self.zip_name: b'Offline ZIP fixture\x00\x01\xff\n',
             self.stem + '.zip.sig': b'Offline signature fixture; no private key\n',
             self.stem + '.dmg': b'Offline DMG fixture\x00\xfe\n',
-            '安装说明.txt': '离线发布测试资产。\n'.encode('utf-8'),
+            instructions: '离线发布测试资产。\n'.encode('utf-8'),
             'BUILD-INFO.txt': ('\n'.join([
                 'Version: 0.8.1', f'Architecture: {arch}',
                 f'Source commit: {SOURCE}', f'Source tag: {TAG}',
@@ -60,8 +61,8 @@ class AssetFixture:
         for name, data in content.items():
             (self.folder / name).write_bytes(data)
         self.expected = {
-            name: {'size': len(data),
-                   'digest': 'sha256:' + hashlib.sha256(data).hexdigest()}
+            ('INSTALL.txt' if name == '安装说明.txt' else name): {
+                'size': len(data), 'digest': 'sha256:' + hashlib.sha256(data).hexdigest()}
             for name, data in content.items()
         }
         self.notes = root / 'release-notes.md'
@@ -85,14 +86,24 @@ class FakeGitHub:
         self.tag_reads = 0
         self.id_reads = 0
         self.read_responses = []
+        self.upload_paths = []
+        self.upload_names = {}
 
     def ready_release(self):
         return {
             'id': RELEASE_ID, 'tag_name': TAG, 'draft': True,
             'prerelease': False,
-            'assets': [dict(name=name, state='uploaded', **metadata)
-                       for name, metadata in sorted(self.fixture.expected.items())],
+            'assets': [dict(id=asset_id, name=name, state='uploaded', **metadata)
+                       for asset_id, (name, metadata) in enumerate(
+                           sorted(self.fixture.expected.items()), start=1001)],
         }
+
+    def use_legacy_instructions(self):
+        instructions = next(asset for asset in self.release['assets']
+                            if asset['name'] == 'INSTALL.txt')
+        instructions['name'] = 'default.txt'
+        self.pages = [[deepcopy(self.release)]]
+        return instructions
 
     def api(self, path, method='GET', payload=None):
         self.events.append(('api', method, path, deepcopy(payload)))
@@ -115,6 +126,17 @@ class FakeGitHub:
         if path == ENDPOINT and method == 'PATCH':
             self.release.update(deepcopy(payload))
             return deepcopy(self.release)
+        if method == 'PATCH' and path.startswith(f'{BASE}/releases/assets/'):
+            if payload != {'name': 'INSTALL.txt'}:
+                raise AssertionError(f'Unexpected asset rename payload: {payload}')
+            matches = [asset for asset in self.release['assets']
+                       if type(asset.get('id')) is int
+                       and path == f"{BASE}/releases/assets/{asset['id']}"
+                       and asset['name'] == 'default.txt']
+            if len(matches) != 1:
+                raise AssertionError(f'Unexpected asset rename target: {path}')
+            matches[0].update(payload)
+            return deepcopy(matches[0])
         raise AssertionError(f'Unexpected offline API request: {method} {path}')
 
     def run(self, command, **kwargs):
@@ -126,16 +148,27 @@ class FakeGitHub:
             return subprocess.CompletedProcess(command, 0, json.dumps(self.pages), '')
         upload_prefix = ['gh', 'release', 'upload', TAG, '--repo', REPOSITORY]
         if command[:6] == upload_prefix:
-            wanted = [str(self.fixture.folder / name)
-                      for name in sorted(self.fixture.expected)]
-            if command[6:] != wanted or kwargs != {'check': True}:
+            paths = [Path(path) for path in command[6:]]
+            if ([path.name for path in paths] != sorted(self.fixture.expected)
+                    or kwargs != {'check': True}):
                 raise AssertionError(f'Unexpected asset upload: {command}, {kwargs}')
+            for path in paths:
+                original = self.fixture.folder / path.name
+                if path.name == 'INSTALL.txt' and self.fixture.instructions == '安装说明.txt':
+                    original = self.fixture.folder / self.fixture.instructions
+                    if path.parent == self.fixture.folder or path.is_symlink():
+                        raise AssertionError(f'Legacy instructions were not staged: {path}')
+                elif path != original:
+                    raise AssertionError(f'Original asset path changed: {path}')
+                if path.read_bytes() != original.read_bytes():
+                    raise AssertionError(f'Upload changed asset bytes: {path}')
+            self.upload_paths = paths
             # Model the upload from actual disk bytes, not the expected manifest.
             self.release['assets'] = [
-                {'name': Path(path).name, 'state': 'uploaded',
-                 'size': Path(path).stat().st_size,
-                 'digest': 'sha256:' + hashlib.sha256(Path(path).read_bytes()).hexdigest()}
-                for path in command[6:]
+                {'id': asset_id, 'name': self.upload_names.get(path.name, path.name),
+                 'state': 'uploaded', 'size': path.stat().st_size,
+                 'digest': 'sha256:' + hashlib.sha256(path.read_bytes()).hexdigest()}
+                for asset_id, path in enumerate(paths, start=1001)
             ]
             return subprocess.CompletedProcess(command, 0)
         raise AssertionError(f'Unexpected offline subprocess: {command}')
@@ -150,10 +183,10 @@ class FakeGitHub:
 
 
 @contextmanager
-def offline_release(*, resume=False, arch='arm64'):
+def offline_release(*, resume=False, arch='arm64', instructions='INSTALL.txt'):
     with tempfile.TemporaryDirectory(prefix='chirpos-publish-offline-') as directory:
         # macOS temporary paths may alias /private/var; publication resolves them.
-        fixture = AssetFixture(Path(directory).resolve(), arch)
+        fixture = AssetFixture(Path(directory).resolve(), arch, instructions)
         fixture.args.resume_draft = resume
         github = FakeGitHub(fixture, resume)
         stdout, stderr = io.StringIO(), io.StringIO()
@@ -178,6 +211,16 @@ class PublishTests(unittest.TestCase):
         case.api.assert_not_called()
         case.run.assert_not_called()
         case.sleep.assert_not_called()
+
+    def assert_no_publication(self, case):
+        self.assertFalse(any(event[2] == ENDPOINT
+                             for event in case.github.requests('PATCH')))
+        self.assertIs(case.github.release['draft'], True)
+        self.assertNotIn('Published and verified', case.stdout.getvalue())
+
+    def assert_no_create_or_upload(self, case):
+        self.assertEqual(case.github.requests('POST'), [])
+        self.assertEqual(case.github.commands(['gh', 'release', 'upload']), [])
 
     def assert_id_reads_only(self, case):
         release_gets = [event[2] for event in case.github.requests('GET')
@@ -240,6 +283,245 @@ class PublishTests(unittest.TestCase):
             ])
             self.assert_id_reads_only(case)
             case.sleep.assert_not_called()
+
+    def test_legacy_local_instructions_uploaded_as_temporary_ascii_copy(self):
+        for arch in ('arm64', 'x86_64'):
+            with self.subTest(arch=arch), offline_release(
+                    arch=arch, instructions='安装说明.txt') as case:
+                folder = case.fixture.folder
+                original = (folder / '安装说明.txt').read_bytes()
+                self.assertEqual(publisher.manifest(folder, TAG, SOURCE, arch),
+                                 case.fixture.expected)
+                publisher.publish(case.args)
+                self.assertEqual(len(case.github.commands(['gh', 'release', 'upload'])), 1)
+                staged = next(path for path in case.github.upload_paths
+                              if path.name == 'INSTALL.txt')
+                self.assertNotEqual(staged.parent, folder)
+                self.assertFalse(staged.parent.exists(), 'Temporary upload copy must be cleaned up')
+                self.assertEqual((folder / '安装说明.txt').read_bytes(), original)
+                self.assertFalse((folder / 'INSTALL.txt').exists())
+                self.assertEqual({path for path in case.github.upload_paths if path != staged},
+                                 {folder / name for name in case.fixture.expected
+                                  if name != 'INSTALL.txt'})
+                self.assertEqual({asset['name'] for asset in case.github.release['assets']},
+                                 set(case.fixture.expected))
+                self.assertEqual(case.github.requests('PATCH'), [
+                    ('api', 'PATCH', ENDPOINT, {'draft': False, 'make_latest': 'false'})])
+                self.assertIs(case.github.release['draft'], False)
+
+    def test_resume_legacy_default_instructions_renames_then_rechecks_before_publish(self):
+        for instructions in ('INSTALL.txt', '安装说明.txt'):
+            with self.subTest(instructions=instructions), offline_release(
+                    resume=True, instructions=instructions) as case:
+                asset = case.github.use_legacy_instructions()
+                asset_id = asset['id']
+                self.assertIs(type(asset_id), int)
+                rename_endpoint = f'{BASE}/releases/assets/{asset_id}'
+                publisher.publish(case.args)
+                self.assert_no_create_or_upload(case)
+                self.assertEqual(case.github.requests('PATCH'), [
+                    ('api', 'PATCH', rename_endpoint, {'name': 'INSTALL.txt'}),
+                    ('api', 'PATCH', ENDPOINT, {'draft': False, 'make_latest': 'false'})])
+                requests = [event for event in case.github.events if event[0] == 'api']
+                rename_index = requests.index(('api', 'PATCH', rename_endpoint,
+                                              {'name': 'INSTALL.txt'}))
+                publish_index = requests.index(('api', 'PATCH', ENDPOINT,
+                                               {'draft': False, 'make_latest': 'false'}))
+                self.assertIn(('api', 'GET', ENDPOINT, None), requests[:rename_index])
+                self.assertEqual(requests[rename_index + 1], ('api', 'GET', ENDPOINT, None))
+                self.assertLess(rename_index + 1, publish_index)
+                self.assertEqual(case.github.id_reads, 3)
+                self.assertEqual(asset['name'], 'INSTALL.txt')
+                self.assertIs(case.github.release['draft'], False)
+                self.assert_id_reads_only(case)
+                case.sleep.assert_not_called()
+
+    def test_default_instructions_migration_requires_resume_draft(self):
+        with offline_release() as case:
+            case.github.upload_names['INSTALL.txt'] = 'default.txt'
+            with self.assertRaises(ValueError):
+                publisher.publish(case.args)
+            self.assert_unpublished(case)
+            self.assertEqual(len(case.github.commands(['gh', 'release', 'upload'])), 1)
+
+    def test_legacy_draft_all_asset_sizes_hashes_and_states_verified_before_rename(self):
+        for name in (
+                'BUILD-INFO.txt', 'INSTALL.txt', 'SHA256SUMS.txt',
+                'ChirpOS-Pro-0.8.1-macOS-arm64.zip',
+                'ChirpOS-Pro-0.8.1-macOS-arm64.zip.sig',
+                'ChirpOS-Pro-0.8.1-macOS-arm64.dmg'):
+            for field, value in (('size', 0), ('digest', 'sha256:' + '0' * 64),
+                                 ('state', 'new')):
+                with self.subTest(name=name, field=field), offline_release(resume=True) as case:
+                    case.github.use_legacy_instructions()
+                    remote_name = 'default.txt' if name == 'INSTALL.txt' else name
+                    asset = next(asset for asset in case.github.release['assets']
+                                 if asset['name'] == remote_name)
+                    asset[field] = value
+                    with self.assertRaises(ValueError):
+                        publisher.publish(case.args)
+                    self.assert_unpublished(case)
+                    self.assert_no_create_or_upload(case)
+                    self.assertEqual(case.github.id_reads, 1)
+                    case.sleep.assert_not_called()
+
+    def test_legacy_draft_missing_duplicate_conflicting_and_extra_aliases_rejected(self):
+        scenarios = ('missing', 'duplicate_default', 'conflicting_ascii',
+                     'extra_ascii', 'extra_chinese', 'extra_default', 'chinese_only')
+        for scenario in scenarios:
+            with self.subTest(scenario=scenario), offline_release(resume=True) as case:
+                document = case.github.use_legacy_instructions()
+                assets = case.github.release['assets']
+                if scenario == 'missing':
+                    assets.remove(next(asset for asset in assets if asset is not document))
+                elif scenario == 'chinese_only':
+                    document['name'] = '安装说明.txt'
+                else:
+                    alias = deepcopy(document)
+                    alias['id'] += 100
+                    alias['name'] = {
+                        'duplicate_default': 'default.txt',
+                        'conflicting_ascii': 'INSTALL.txt',
+                        'extra_ascii': 'INSTALL.txt',
+                        'extra_chinese': '安装说明.txt',
+                        'extra_default': 'default.txt',
+                    }[scenario]
+                    if scenario in ('duplicate_default', 'conflicting_ascii'):
+                        assets.remove(next(asset for asset in assets if asset is not document))
+                    assets.append(alias)
+                with self.assertRaises(ValueError):
+                    publisher.publish(case.args)
+                self.assert_unpublished(case)
+                self.assert_no_create_or_upload(case)
+                case.sleep.assert_not_called()
+
+    def test_legacy_draft_release_identity_and_asset_id_checked_before_rename(self):
+        mutations = [('id', value) for value in (RELEASE_ID + 1, str(RELEASE_ID), True)]
+        mutations += [('tag_name', 'pro-v0.8.2'), ('draft', False), ('prerelease', True)]
+        mutations += [('asset_id', value) for value in (None, 0, -1, '1004', True)]
+        for field, value in mutations:
+            with self.subTest(field=field, value=value), offline_release(resume=True) as case:
+                case.github.use_legacy_instructions()
+                response = deepcopy(case.github.release)
+                if field == 'asset_id':
+                    next(asset for asset in response['assets']
+                         if asset['name'] == 'default.txt')['id'] = value
+                else:
+                    response[field] = value
+                case.github.read_responses = [response]
+                with self.assertRaises(ValueError):
+                    publisher.publish(case.args)
+                self.assert_unpublished(case)
+                self.assert_no_create_or_upload(case)
+
+    def test_legacy_draft_missing_digest_waits_for_all_assets_before_rename(self):
+        for name in ('default.txt', 'BUILD-INFO.txt'):
+            for failures in (1, 5, 6):
+                with self.subTest(name=name, failures=failures), offline_release(resume=True) as case:
+                    document = case.github.use_legacy_instructions()
+                    missing = deepcopy(case.github.release)
+                    next(asset for asset in missing['assets'] if asset['name'] == name).pop('digest')
+                    case.github.read_responses = [deepcopy(missing) for _ in range(failures)]
+                    case.sleep.side_effect = lambda _: self.assert_unpublished(case)
+                    if failures == 6:
+                        with self.assertRaisesRegex(ValueError, 'digests still missing'):
+                            publisher.publish(case.args)
+                        self.assert_unpublished(case)
+                        self.assertEqual(case.github.id_reads, 6)
+                        self.assertEqual(document['name'], 'default.txt')
+                    else:
+                        publisher.publish(case.args)
+                        rename = ('api', 'PATCH', f"{BASE}/releases/assets/{document['id']}",
+                                  {'name': 'INSTALL.txt'})
+                        before_rename = case.github.events[:case.github.events.index(rename)]
+                        self.assertEqual(sum(event[:3] == ('api', 'GET', ENDPOINT)
+                                             for event in before_rename), failures + 1)
+                        self.assertEqual(case.github.id_reads, failures + 3)
+                        self.assertIs(case.github.release['draft'], False)
+                    self.assertEqual(case.sleep.call_args_list, [mock.call(10)] * min(failures, 5))
+                    self.assert_no_create_or_upload(case)
+
+    def test_legacy_draft_bad_metadata_after_rename_blocks_publication(self):
+        mutations = {
+            'id': lambda release: release.update(id=RELEASE_ID + 1),
+            'tag': lambda release: release.update(tag_name='pro-v0.8.2'),
+            'draft': lambda release: release.update(draft=False),
+            'prerelease': lambda release: release.update(prerelease=True),
+            'missing': lambda release: release['assets'].pop(),
+            'extra': lambda release: release['assets'].append(
+                dict(release['assets'][0], id=9999, name='unexpected.txt')),
+            'duplicate': lambda release: release['assets'].__setitem__(
+                -1, deepcopy(release['assets'][0])),
+            'size': lambda release: release['assets'][0].update(size=0),
+            'hash': lambda release: release['assets'][0].update(digest='sha256:' + '0' * 64),
+            'state': lambda release: release['assets'][0].update(state='new'),
+            'rename_not_applied': lambda release: next(
+                asset for asset in release['assets'] if asset['name'] == 'INSTALL.txt').update(
+                    name='default.txt'),
+        }
+        for scenario, mutate in mutations.items():
+            with self.subTest(scenario=scenario), offline_release(resume=True) as case:
+                document = case.github.use_legacy_instructions()
+                bad_response = case.github.ready_release()
+                mutate(bad_response)
+                case.github.read_responses = [deepcopy(case.github.release), bad_response]
+                with self.assertRaises(ValueError):
+                    publisher.publish(case.args)
+                self.assertEqual(case.github.requests('PATCH'), [
+                    ('api', 'PATCH', f"{BASE}/releases/assets/{document['id']}",
+                     {'name': 'INSTALL.txt'})])
+                self.assertEqual(case.github.id_reads, 2)
+                self.assertEqual(case.github.events[-1][:3], ('api', 'GET', ENDPOINT))
+                self.assert_no_publication(case)
+                self.assert_no_create_or_upload(case)
+
+    def test_legacy_draft_rename_api_failure_blocks_publication(self):
+        with offline_release(resume=True) as case:
+            document = case.github.use_legacy_instructions()
+            rename_endpoint = f"{BASE}/releases/assets/{document['id']}"
+
+            def fail_rename(path, method='GET', payload=None):
+                if path == rename_endpoint and method == 'PATCH':
+                    case.github.events.append(('api', method, path, deepcopy(payload)))
+                    raise subprocess.CalledProcessError(1, ['gh', 'api', path], stderr='HTTP 422')
+                return case.github.api(path, method, payload)
+
+            case.api.side_effect = fail_rename
+            with self.assertRaises(subprocess.CalledProcessError):
+                publisher.publish(case.args)
+            self.assert_no_publication(case)
+            self.assert_no_create_or_upload(case)
+            self.assertEqual(case.github.id_reads, 1)
+            self.assertEqual(document['name'], 'default.txt')
+
+    def test_legacy_draft_missing_digest_does_not_hide_another_asset_mismatch(self):
+        with offline_release(resume=True) as case:
+            case.github.use_legacy_instructions()
+            assets = case.github.release['assets']
+            assets[0].pop('digest')
+            assets[-1]['digest'] = 'sha256:' + '0' * 64
+            with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
+                publisher.publish(case.args)
+            self.assert_unpublished(case)
+            self.assert_no_create_or_upload(case)
+            case.sleep.assert_not_called()
+
+    def test_legacy_draft_missing_digest_after_rename_cannot_publish_unverified(self):
+        with offline_release(resume=True) as case:
+            document = case.github.use_legacy_instructions()
+            missing = case.github.ready_release()
+            next(asset for asset in missing['assets'] if asset['name'] == 'INSTALL.txt').pop('digest')
+            case.github.read_responses = [deepcopy(case.github.release)] + [
+                deepcopy(missing) for _ in range(6)]
+            with self.assertRaisesRegex(ValueError, 'digests still missing'):
+                publisher.publish(case.args)
+            self.assertEqual(case.github.requests('PATCH'), [
+                ('api', 'PATCH', f"{BASE}/releases/assets/{document['id']}",
+                 {'name': 'INSTALL.txt'})])
+            self.assertEqual(case.github.id_reads, 7)
+            self.assertEqual(case.sleep.call_args_list, [mock.call(10)] * 5)
+            self.assert_no_publication(case)
+            self.assert_no_create_or_upload(case)
 
     def test_repository_tag_source_and_architecture_rejected_before_io(self):
         invalid = [
@@ -425,6 +707,16 @@ class PublishTests(unittest.TestCase):
                 self.assertEqual(publisher.manifest(case.fixture.folder, TAG, SOURCE, arch),
                                  case.fixture.expected)
                 self.assert_no_remote_calls(case)
+
+    def test_manifest_rejects_both_chinese_and_ascii_instructions_before_remote_io(self):
+        with offline_release() as case:
+            folder = case.fixture.folder
+            (folder / '安装说明.txt').write_bytes((folder / 'INSTALL.txt').read_bytes())
+            with self.assertRaises(ValueError):
+                publisher.manifest(folder, TAG, SOURCE, case.args.arch)
+            with self.assertRaises(ValueError):
+                publisher.publish(case.args)
+            self.assert_no_remote_calls(case)
 
     def test_local_manifest_tampering_rejected_before_remote_io(self):
         scenarios = ('same_size_content', 'checksum_hash', 'checksum_duplicate',

@@ -6,8 +6,10 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -27,7 +29,11 @@ def manifest(folder, tag, source, arch):
     version = tag.removeprefix('pro-v')
     stem = f'ChirpOS-Pro-{version}-macOS-{arch}'
     names = {stem + suffix for suffix in ['.zip', '.zip.sig', '.dmg']}
-    names.update(['SHA256SUMS.txt', 'BUILD-INFO.txt', '安装说明.txt'])
+    names.update(['SHA256SUMS.txt', 'BUILD-INFO.txt'])
+    instructions = [name for name in ['INSTALL.txt', '安装说明.txt'] if (folder / name).exists()]
+    if len(instructions) != 1:
+        raise ValueError('Release folder requires exactly one installation instructions file')
+    names.add(instructions[0])
     if {p.name for p in folder.iterdir()} != names:
         raise ValueError('Release folder must contain exactly the six expected assets')
     expected = {}
@@ -36,7 +42,8 @@ def manifest(folder, tag, source, arch):
         if path.is_symlink() or not path.is_file() or path.stat().st_size == 0:
             raise ValueError(f'Invalid release asset: {name}')
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
-        expected[name] = {'size': path.stat().st_size, 'digest': 'sha256:' + digest}
+        remote_name = 'INSTALL.txt' if name == '安装说明.txt' else name
+        expected[remote_name] = {'size': path.stat().st_size, 'digest': 'sha256:' + digest}
     sums = {}
     for line in (folder / 'SHA256SUMS.txt').read_text().splitlines():
         match = re.fullmatch(r'([0-9a-f]{64}) [ *](.+)', line)
@@ -64,7 +71,8 @@ def check_release(release, release_id, tag, expected, *, draft):
         raise ValueError('Unexpected release identity or publication state')
     assets = release.get('assets', [])
     if len(assets) != len(expected) or {a['name'] for a in assets} != set(expected):
-        raise ValueError('Uploaded assets do not exactly match the release manifest')
+        raise ValueError(f"Uploaded assets do not exactly match the release manifest: "
+                         f"expected={sorted(expected)}, actual={sorted(a['name'] for a in assets)}")
     ready = True
     for asset in assets:
         want = expected[asset['name']]
@@ -116,11 +124,36 @@ def publish(args):
     endpoint = f'{base}/releases/{release_id}'
     print(f'Verifying draft release ID {release_id} for {args.tag}', flush=True)
     if not args.resume_draft:
-        subprocess.run(['gh', 'release', 'upload', args.tag, '--repo', REPOSITORY,
-                        *[str(folder / n) for n in sorted(expected)]], check=True)
+        # Older source tags used Chinese names, which GitHub turns into default.txt.
+        # Stage only that sidecar under a portable name; signed ZIP/DMG stay intact.
+        with tempfile.TemporaryDirectory(prefix='chirpos-release-instructions-') as temporary:
+            paths = {n: folder / n for n in expected}
+            if not paths['INSTALL.txt'].exists():
+                paths['INSTALL.txt'] = Path(temporary) / 'INSTALL.txt'
+                shutil.copyfile(folder / '安装说明.txt', paths['INSTALL.txt'])
+            subprocess.run(['gh', 'release', 'upload', args.tag, '--repo', REPOSITORY,
+                            *[str(paths[n]) for n in sorted(expected)]], check=True)
     # /releases/tags/{tag} only returns published releases. Drafts must use ID.
     for attempt in range(6):
-        if check_release(api(endpoint), release_id, args.tag, expected, draft=True):
+        current = api(endpoint)
+        legacy = [a for a in current.get('assets', []) if a.get('name') == 'default.txt']
+        if args.resume_draft and legacy:
+            # Recover only the observed GitHub rename. Authenticate all six bytes
+            # against the original artifact before changing any remote metadata.
+            normalized = {**current, 'assets': [
+                {**a, 'name': 'INSTALL.txt'} if a.get('name') == 'default.txt' else a
+                for a in current.get('assets', [])]}
+            ready = check_release(normalized, release_id, args.tag, expected, draft=True)
+            if ready:
+                asset_id = legacy[0].get('id')
+                if type(asset_id) is not int or asset_id <= 0:
+                    raise ValueError('Invalid legacy installation instructions asset ID')
+                check_tag()
+                api(f'{base}/releases/assets/{asset_id}', 'PATCH', {'name': 'INSTALL.txt'})
+                ready = check_release(api(endpoint), release_id, args.tag, expected, draft=True)
+        else:
+            ready = check_release(current, release_id, args.tag, expected, draft=True)
+        if ready:
             break
         if attempt == 5:
             raise ValueError('GitHub asset digests still missing; draft remains unpublished')
@@ -144,6 +177,9 @@ def main():
         publish(parser.parse_args())
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
         print(f'Pro publication failed: {error}', file=sys.stderr)
+        if os.environ.get('GITHUB_ACTIONS') == 'true':
+            message = str(error).replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+            print(f'::error title=Pro publication failed::{message}', file=sys.stderr)
         if isinstance(error, subprocess.CalledProcessError) and error.stderr:
             print(error.stderr, file=sys.stderr)
         return 1
