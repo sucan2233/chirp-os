@@ -43,7 +43,7 @@ final class NestAdmissionTests:XCTestCase {
         for cause in ["probability","fixed","side","young","transient","moving","buttons"] {
             let e=try F.prepared(),bird=e.birds[0],actual=bird.position;var world=e.world
             switch cause {
-            case "probability":var s=e.settings;let index=try XCTUnwrap(s.probabilities.entries.firstIndex{$0.id == .spottedDove});s.probabilities.adjust(at:index,to:0);e.applySettings(s)
+            case "probability":var s=e.settings;let index=try XCTUnwrap(s.probabilities.entries.firstIndex{$0.id == .spottedDove});s.probabilities.setManualWeight(at:index,to:0);e.applySettings(s)
             case "fixed":
                 let perch=Surface(id:3790,pid:42,rect:CGRect(x:300,y:1200,width:400,height:1),isFixedPerch:true)
                 world.surfaces.append(perch);bird.perch(on:perch,spriteScale:e.spriteScale(for:bird));bird.tick(2)

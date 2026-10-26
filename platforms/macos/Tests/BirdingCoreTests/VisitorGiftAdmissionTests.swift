@@ -38,7 +38,7 @@ final class VisitorGiftAdmissionTests:XCTestCase {
             case "perches":var s=e.settings;s.fixedPerchesEnabled=false;e.applySettings(s);reason = .disabled
             case "probability":
                 var s=e.settings;let index=try XCTUnwrap(s.probabilities.entries.firstIndex{$0.id==F.species})
-                s.probabilities.adjust(at:index,to:0);e.applySettings(s);reason = .disabled
+                s.probabilities.setManualWeight(at:index,to:0);e.applySettings(s);reason = .disabled
             case "noBird":e.handle(.remove(try XCTUnwrap(e.id(of:bird))));reason = .noSpecies
             case "noLeaf":e.handle(.removeCarryLeaf);F.advance(e,0.3)
             case "noReceiver":var s=e.settings;s.fixedPerches=[];e.applySettings(s)

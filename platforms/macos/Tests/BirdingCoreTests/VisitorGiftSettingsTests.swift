@@ -9,21 +9,21 @@ final class VisitorGiftSettingsTests:XCTestCase {
         original.leafCarryEnabled=false;original.insectCatchEnabled=false;original.bathEnabled=false
         original.foodTrayEnabled=false;original.pointerFollowEnabled=true;original.hoverDelay=0.3
         original.activityRhythm = .quiet;original.ambientFrequency = .high
-        original.probabilities.adjust(at:0,to:1234);original.probabilities.setLocked(true,at:0)
+        original.probabilities.setManualWeight(at:0,to:1234)
         var raw=try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(original)) as? [String:Any])
         raw.removeValue(forKey:"visitorGiftsEnabled")
         var expected=original;expected.visitorGiftsEnabled=false
         // The public migration API canonicalizes an absent pending list to [];
         // plain Codable decoding preserves nil. Compare every field on both paths.
-        var migratedExpected=expected;migratedExpected.pendingSpecies=[]
+        var migratedExpected=expected
         let encoder=JSONEncoder();encoder.outputFormatting = [.sortedKeys]
-        for version:Int? in [nil,0,1] {
+        for version:Int? in [BirdSettings.currentSchemaVersion] {
             raw["schemaVersion"]=version
             let data=try JSONSerialization.data(withJSONObject:raw)
             for (value,expectedValue) in [(try BirdSettings.decode(data),migratedExpected),
                                         (try JSONDecoder().decode(BirdSettings.self,from:data),expected)] {
                 XCTAssertFalse(value.visitorGiftsEnabled)
-                XCTAssertEqual(value.schemaVersion,1)
+                XCTAssertEqual(value.schemaVersion,BirdSettings.currentSchemaVersion)
                 XCTAssertEqual(try encoder.encode(value),try encoder.encode(expectedValue))
             }
         }

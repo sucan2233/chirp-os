@@ -26,7 +26,7 @@ enum ObservationVerification {
             d.pointerButtonsDown={false}
             d.loadObservationJournal();d.loadObservationMode()
             checks["manualModeDefaultsOff"] = !d.observationsEnabled
-            d.settings.probabilities.adjust(at:0,to:8000)
+            d.settings.probabilities.setManualWeight(at:0,to:8000)
             d.settings.catalog.species[0].speed=0.5
             let encoder=JSONEncoder();encoder.outputFormatting=[.sortedKeys]
             let original=try encoder.encode(d.settings)

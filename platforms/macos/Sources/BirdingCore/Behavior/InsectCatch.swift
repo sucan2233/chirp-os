@@ -47,7 +47,7 @@ struct InsectCatchPlan {
     static func candidates(in engine:BehaviorEngine,species:SpeciesID,source:BehaviorSource) -> [InsectCatchPlan] {
         guard species == .barnSwallow,!engine.paused,!engine.world.buttonsDown,
               source != .automatic || engine.ambientEnabled,
-              engine.settings.probabilities.entries.contains(where:{$0.id==species && $0.points>0}),
+              engine.settings.probabilities.participates(species),
               engine.world.insectArtAvailable,engine.insects.current==nil,
               BehaviorDefinitions.definition(for:.insectCatch).isEnabled(settings:engine.settings,source:source),
               engine.world.scale.isFinite,engine.world.scale>0,
@@ -293,7 +293,7 @@ final class InsectCatchExecution:InsectCatchMotionExecution {
         guard !startFailed else {return .failed(.targetInvalid)}
         guard let bird=engine.bird(plan.id) else {return .failed(.missingBird)}
         guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:.preview),
-              engine.settings.probabilities.entries.contains(where:{$0.id==plan.species && $0.points>0}) else {return .cancelled(.settingsChanged)}
+              engine.settings.probabilities.participates(plan.species) else {return .cancelled(.settingsChanged)}
         guard engine.world.insectArtAvailable,InsectCatchPlan.requiredFrames.isSubset(of:engine.world.availableFrames[plan.species] ?? []),
               PoseClip.insectCatchRecovery(species:plan.species) != nil,
               InsectCatchPlan.requiredFrames.allSatisfy({PoseClip.catchBeakAnchor(species:plan.species,frame:$0) != nil}) else {return .failed(.missingFrames)}

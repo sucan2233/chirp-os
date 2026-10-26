@@ -127,7 +127,7 @@ enum ExpandedVerification {
         d.engine.handle(.cancelAmbient(.sleep))
         checks["screenAndSleepCleanupRemovesTransientBirds"] = !d.ambientBusy && d.engine.pendingCount == 0 && d.birds.count == 1
         var solo=d.catalog;solo.species=[d.catalog.profile(.commonKestrel)]
-        d.settings.probabilities=ProbabilityDistribution(catalog:solo)
+        for entry in d.settings.probabilities.entries { d.settings.probabilities.setWeight(entry.id == .commonKestrel ? 1 : 0, for: entry.id) }; d.settings.probabilities.manualAdjustmentEnabled=true
         checks["flockRespectsDisabledSpecies"] = !d.startFlockPass()
     }
     static func checkRelocation(into checks:inout [String:Bool],host:Surface) {

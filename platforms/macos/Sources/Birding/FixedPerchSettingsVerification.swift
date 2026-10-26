@@ -101,13 +101,13 @@ enum FixedPerchSettingsVerification {
         w.cancelFixedPerchCapture()
 
         w.hoverDelayField.stringValue="0.75";w.detailFields[0][2].stringValue="1.5"
-        w.locks[0].performClick(nil)
+        w.manualAdjustmentButton.performClick(nil)
         for language:AppLanguage in [.chinese,.english] {
             d.language=language
             let suffix=language == .chinese ? "zh":"en"
             try checkCancellation(w,suffix:"relocalize-"+suffix,checks:&checks) {w.relocalize()}
             checks["fixedPerchLanguageRebuildPreservesRawEdits-"+suffix] = w.hoverDelayField.stringValue=="0.75" &&
-                w.detailFields[0][2].stringValue=="1.5" && w.draft.probabilities.entries[0].locked &&
+                w.detailFields[0][2].stringValue=="1.5" && w.draft.probabilities.manualAdjustmentEnabled &&
                 w.draft.fixedPerches==beforeInvalid && w.selectedFixedPerchSlot==3
             try checkLayout(w,suffix:suffix+"-placed",folder:evidence,checks:&checks)
             set(w.fixedPerchesButton,to:false)
@@ -124,7 +124,7 @@ enum FixedPerchSettingsVerification {
         checks["fixedPerchSaveAppliesAndReloadsAllAnchors"] = saved.fixedPerches==beforeInvalid &&
             d.settings.fixedPerches==saved.fixedPerches && reloaded.settings.fixedPerches==saved.fixedPerches &&
             saved.fixedPerchesEnabled && saved.hoverDelay==0.75 && saved.catalog.species[0].speed==1.5 &&
-            saved.probabilities.entries[0].locked && !saved.perchActions && !saved.socialInteractions
+            saved.probabilities.manualAdjustmentEnabled && !saved.perchActions && !saved.socialInteractions
         w.fixedPerchesButton.state = .off;w.save()
         let native=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
         checks["fixedPerchSaveReadsNativeCheckboxWithoutLosingPositions"] = !native.fixedPerchesEnabled &&
@@ -197,7 +197,7 @@ enum FixedPerchSettingsVerification {
         return d
     }
     private static func settingsData(_ settings:BirdSettings) throws -> Data {
-        var value=settings;value.pendingSpecies=[]
+        let value=settings
         let encoder=JSONEncoder();encoder.outputFormatting = .sortedKeys
         return try encoder.encode(value)
     }

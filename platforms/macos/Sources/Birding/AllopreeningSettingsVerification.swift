@@ -21,7 +21,7 @@ enum AllopreeningSettingsVerification {
         let d=isolatedDesktop(preferences:preferences,folder:evidence)
         let defaults=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
         checks["allopreeningDefaultsOnWithoutWriting"] = defaults.allopreeningEnabled && defaults.socialInteractions &&
-            defaults.schemaVersion==1 && !FileManager.default.fileExists(atPath:d.settingsURL.path)
+            defaults.schemaVersion==BirdSettings.currentSchemaVersion && !FileManager.default.fileExists(atPath:d.settingsURL.path)
         let cancelled=SpeciesSettingsWindow(desktop:d);cancelled.showWindow(nil)
         configure(cancelled,master:false,child:false)
         checks["allopreeningOnlyEditsDraft"] = !cancelled.draft.allopreeningEnabled &&
@@ -37,7 +37,7 @@ enum AllopreeningSettingsVerification {
             w.allopreeningButton.state == .on && w.allopreeningButton.isEnabled
         w.tabs.selectTabViewItem(at:2)
         w.hoverDelayField.stringValue="0.25";w.detailFields[0][2].stringValue="1.25"
-        w.sliders[0].doubleValue=35;w.sliderChanged(w.sliders[0]);w.locks[0].performClick(nil)
+        w.manualAdjustmentButton.performClick(nil);w.fields[0].stringValue="350";w.controlTextDidEndEditing(Notification(name:NSControl.textDidEndEditingNotification,object:w.fields[0]))
         set(w.chaseButton,to:false);set(w.travelTogetherButton,to:false)
         for child in [false,true] {
             configure(w,master:true,child:child)
@@ -63,7 +63,7 @@ enum AllopreeningSettingsVerification {
             checks["allopreeningSaveAndReload-master-\(master)-child-\(child)"] =
                 saved.socialInteractions==master && saved.allopreeningEnabled==child &&
                 w.allopreeningButton.isEnabled==master && expected==active && active==stored && stored==restarted &&
-                saved.hoverDelay==0.25 && saved.catalog.species[0].speed==1.25 && saved.probabilities.entries[0].locked &&
+                saved.hoverDelay==0.25 && saved.catalog.species[0].speed==1.25 && saved.probabilities.manualAdjustmentEnabled &&
                 !saved.chaseEnabled && !saved.travelTogetherEnabled
         }
         configure(w,master:true,child:true)
@@ -81,7 +81,7 @@ enum AllopreeningSettingsVerification {
             checks["allopreeningLanguageRebuildKeepsDraftAndRawEdits-"+suffix] =
                 w.draft.allopreeningEnabled && !d.settings.allopreeningEnabled &&
                 w.allopreeningButton.state == .on && w.hoverDelayField.stringValue=="0.75" &&
-                w.detailFields[0][2].stringValue=="1.5" && w.draft.probabilities.entries[0].locked
+                w.detailFields[0][2].stringValue=="1.5" && w.draft.probabilities.manualAdjustmentEnabled
             for master in [true,false] {
                 configure(w,master:master,child:true)
                 try checkLayout(w,suffix:suffix+(master ? "-enabled":"-master-off"),folder:evidence,checks:&checks)
@@ -148,7 +148,7 @@ enum AllopreeningSettingsVerification {
         return d
     }
     private static func settingsData(_ settings:BirdSettings) throws -> Data {
-        var value=settings;value.pendingSpecies=[]
+        let value=settings
         let encoder=JSONEncoder();encoder.outputFormatting = .sortedKeys
         return try encoder.encode(value)
     }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Protect the separately compiled desktop timelines and atlas contract from drift."""
+"""Protect macOS species coverage and exported resource contracts from drift."""
 import json
 import importlib.util
 import math
@@ -29,18 +29,20 @@ finally:
 expansion_contract, all_signatures, expansion_appended, _, _ = expansion_audit.load_contract(ROOT / 'scripts/expansion-art-contract.json')
 
 swift = (ROOT / 'platforms/macos/Sources/BirdingCore/SpeciesBehavior.swift').read_text()
-csharp = (ROOT / 'platforms/windows/ChirpOS.Core/SpeciesBehavior.cs').read_text()
 source = json.loads((ROOT / 'platforms/macos/Sources/BirdingCore/Resources/species.json').read_text())
 shared = json.loads((ROOT / 'shared/species.json').read_text())
 assert source == shared, 'Shared catalog is stale'
+weight_research = json.loads((ROOT / 'docs/research/species-weights-v2.json').read_text())
+expected_weights = {bird['id']: bird['proposedWeight'] for bird in weight_research['species']}
+assert {bird['id']: bird['weight'] for bird in source['species']} == expected_weights, 'Runtime defaults differ from researched preset'
+assert sum(expected_weights.values()) == 5358 and all(w > 0 for w in expected_weights.values()), 'Every bird must have a positive default'
 ids = {bird['id'] for bird in source['species']}
 assert len(source['species']) == len(ids) == 100, 'U catalog must contain 100 unique species'
 swift_rows = re.findall(r'case \.(\w+): return Motion\(action: \.(\w+), cycle: ([\d.]+), start: ([\d.]+), duration: ([\d.]+), rate: ([\d.]+), hop: ([\d.]+)\)', swift)
-cs_rows = re.findall(r'"(\w+)" => new\("(\w+)", ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+)\)', csharp)
 def normalized(rows):
     return {row[0]: (row[1], *map(float, row[2:])) for row in rows}
-assert set(normalized(swift_rows)) == ids, 'Missing Swift species schedule'
-assert normalized(swift_rows) == normalized(cs_rows), 'Windows schedule differs from macOS'
+assert len(swift_rows) == len(ids) and set(normalized(swift_rows)) == ids, 'Missing or duplicate macOS species schedule'
+assert all(math.isfinite(float(value)) and float(value) >= 0 for row in swift_rows for value in row[2:]), 'Invalid species timing'
 manifest = json.loads((ROOT / 'shared/art/manifest.json').read_text())
 art_source = (ROOT / 'platforms/macos/Sources/Birding/PixelArt.swift').read_text()
 frames = re.findall(r'"([a-z]+\d*)"', re.search(r'static let names = \[(.*?)\]', art_source).group(1))
@@ -299,7 +301,7 @@ for row in support:
 
 recording_source = (ROOT / 'platforms/macos/Sources/BirdingCore/Behavior/BehaviorRecording.swift').read_text()
 version_match = re.search(r'\bengineVersion\s*=\s*(\d+)', recording_source)
-assert version_match and int(version_match.group(1)) == 22, 'Expansion simulation version must be 22; fixtures must be re-exported from source'
+assert version_match and int(version_match.group(1)) == 23, 'Probability V2 simulation version must be 23; fixtures must be re-exported from source'
 
 prop_manifest = json.loads((ROOT / 'shared/art/props/manifest.json').read_text())
 leaf = prop_manifest['leafToken']
@@ -338,12 +340,10 @@ expected_props.update(insect['files'])
 expected_props.update(progress['files'])
 assert len(expected_props) == 16 and {p.name for p in (ROOT / 'shared/art/props').glob('*.png')} == expected_props, 'Prop asset budget differs'
 assert all((ROOT / 'shared/art' / f'{id}.png').is_file() for id in ids)
-print(f'PASS: {len(ids)} matching species schedules and {len(frames)} shared frame names')
+print(f'PASS: {len(ids)} macOS species schedules and {len(frames)} shared frame names')
 
 flight_swift = (ROOT / 'platforms/macos/Sources/BirdingCore/FlightBehavior.swift').read_text()
-flight_cs = (ROOT / 'platforms/windows/ChirpOS.Core/FlightBehavior.cs').read_text()
 swift_flights = re.findall(r'case \.(\w+): return Motion\(style: \.(\w+), transit: ([\d.]+), cycle: ([\d.]+), powered: ([\d.]+), rate: ([\d.]+), wave: ([\d.]+), orbit: ([\d.]+), period: ([\d.]+)\)', flight_swift)
-cs_flights = re.findall(r'"(\w+)" => new\("(\w+)", ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+)\)', flight_cs)
-assert set(normalized(swift_flights)) == ids, 'Missing explicit flight profile'
-assert normalized(swift_flights) == normalized(cs_flights), 'Flight timing differs between platforms'
-print(f'PASS: {len(ids)} matching flight profiles')
+assert len(swift_flights) == len(ids) and set(normalized(swift_flights)) == ids, 'Missing or duplicate macOS flight profile'
+assert all(math.isfinite(float(value)) and float(value) >= 0 for row in swift_flights for value in row[2:]), 'Invalid flight timing'
+print(f'PASS: {len(ids)} macOS flight profiles')

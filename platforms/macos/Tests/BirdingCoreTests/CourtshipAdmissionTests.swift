@@ -34,10 +34,10 @@ final class CourtshipAdmissionTests:XCTestCase {
                 var settings=e.settings
                 if cause=="onlyOtherSpecies" {
                     let index=try XCTUnwrap(settings.probabilities.entries.firstIndex{$0.id == .treeSparrow})
-                    settings.probabilities.adjust(at:index,to:10000)
+                    for entry in settings.probabilities.entries { settings.probabilities.setWeight(0, for: entry.id) }; settings.probabilities.setManualWeight(at:index,to:1)
                 } else {
                     let index=try XCTUnwrap(settings.probabilities.entries.firstIndex{$0.id==F.species})
-                    settings.probabilities.adjust(at:index,to:0)
+                    settings.probabilities.setManualWeight(at:index,to:0)
                 }
                 e.applySettings(settings)
             }

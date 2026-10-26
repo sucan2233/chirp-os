@@ -114,7 +114,7 @@ final class PerchActivityPlanner {
         rhythm.previousFast=stimulus.fastPass;rhythm.previousClick=stimulus.click
         if approached,!stimulus.click,!stimulus.fastPass,rhythm.disturbance<0.6,
            automaticWeight(id,kind:.sideHop)>0,
-           rhythm.ecologyRandom.unit()<(0.3+0.5*rhythm.temperament.boldness)*(1-0.35*rhythm.familiarity) {
+           RandomChoice.chance((0.3+0.5*rhythm.temperament.boldness)*(1-0.35*rhythm.familiarity), using: rhythm.ecologyRandom.unit) {
             rhythm.hopOpportunityRemaining=0.5
         }
         if !stimulus.near || stimulus.click || stimulus.fastPass {rhythm.hopOpportunityRemaining=0}
@@ -128,7 +128,7 @@ final class PerchActivityPlanner {
             }
         } else if entered && !stimulus.click && !stimulus.fastPass && !stimulus.near,
                   automaticWeight(id,kind:.watch)>0,
-                  rhythm.ecologyRandom.unit()<min(0.9,rhythm.temperament.curiosity+0.1*rhythm.familiarity) {
+                  RandomChoice.chance(min(0.9,rhythm.temperament.curiosity+0.1*rhythm.familiarity), using: rhythm.ecologyRandom.unit) {
             rhythm.pendingAttention = .watch;rhythm.attentionRemaining=0.5
         }
         if !stimulus.inAttentionRange && rhythm.pendingAttention == .watch {
@@ -230,7 +230,7 @@ final class PerchActivityPlanner {
         }
         if rhythm.landings != bird.landedCount {
             rhythm.landings=bird.landedCount;rhythm.landingAge=0
-            rhythm.pendingPreen=rhythm.random.unit()<0.65
+            rhythm.pendingPreen=RandomChoice.chance(0.65, using: rhythm.random.unit)
         }
         guard enabled else {rhythm.quiet=0;rhythm.pendingPreen=false;return nil}
         guard bird.state == .perched,!bird.isDeparting,bird.edge == .top else {rhythm.quiet=0;return nil}

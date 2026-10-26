@@ -68,7 +68,7 @@ final class InsectCatchSchedulingTests:XCTestCase {
             settings.pointerVisits=true;settings.flockPasses=true;settings.socialInteractions=true
             settings.ambientLeafPlayEnabled=false;settings.insectCatchEnabled = condition != "disabled"
             if condition == "zeroProbability",let index=settings.probabilities.entries.firstIndex(where:{$0.id == .barnSwallow}) {
-                settings.probabilities.adjust(at:index,to:0)
+                settings.probabilities.setManualWeight(at:index,to:0)
             }
             let e=BehaviorEngine(seed:seed,settings:settings)
             e.populationEnabled=false;e.ambientEnabled=true;e.autonomousRouting=false

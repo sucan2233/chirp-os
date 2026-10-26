@@ -79,7 +79,7 @@ final class FlycatcherInsectCatchLifecycleTests:XCTestCase {
             case "disabled":var s=e.settings;s.insectCatchEnabled=false;e.applySettings(s)
             case "speciesDisabled":
                 var s=e.settings;let index=try XCTUnwrap(s.probabilities.entries.firstIndex{$0.id==F.species})
-                s.probabilities.adjust(at:index,to:0);e.applySettings(s)
+                s.probabilities.setManualWeight(at:index,to:0);e.applySettings(s)
             case "art":var w=e.world;w.insectArtAvailable=false;e.updateWorld(w)
             case "frames":var w=e.world;w.availableFrames[F.species]?.remove("catchRecover");e.updateWorld(w)
             case "clear":e.handle(.clearInsect)

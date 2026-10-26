@@ -67,10 +67,9 @@ final class PointerFollowSettingsTests: XCTestCase {
         settings.pointerFollowEnabled=true
         settings.hoverDelay=0.25;settings.pointerVisits=false;settings.flockPasses=false
         settings.socialInteractions=false;settings.perchActions=false;settings.ambientFrequency = .high
-        settings.probabilities.adjust(at:0,to:1234)
-        settings.probabilities.setLocked(true,at:0)
+        settings.probabilities.setManualWeight(at:0,to:1234)
         settings.catalog.species[0].speed=1.25
-        settings.pendingSpecies=[.nightHeron]
+
         return settings
     }
 
@@ -84,6 +83,5 @@ final class PointerFollowSettingsTests: XCTestCase {
         XCTAssertEqual(actual.probabilities,expected.probabilities,file:file,line:line)
         XCTAssertEqual(actual.catalog.species,expected.catalog.species,file:file,line:line)
         XCTAssertEqual(actual.perchDefaultsVersion,expected.perchDefaultsVersion,file:file,line:line)
-        XCTAssertEqual(actual.pendingSpecies,expected.pendingSpecies,file:file,line:line)
     }
 }

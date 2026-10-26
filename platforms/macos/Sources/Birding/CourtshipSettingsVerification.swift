@@ -105,7 +105,7 @@ enum CourtshipSettingsVerification {
         try f.install()
         var v=d.settings
         guard let index=v.probabilities.entries.firstIndex(where:{$0.id == .spottedDove}) else {throw failure("No dove probability")}
-        v.probabilities.adjust(at:index,to:0);d.settings=v
+        v.probabilities.setManualWeight(at:index,to:0);d.settings=v
         rejected("saved-zero-probability",.noSpecies)
         try f.install();d.paused=true;rejected("paused",.paused);d.paused=false
         try f.install();v=d.settings;v.courtshipEnabled=false;d.settings=v
@@ -194,7 +194,7 @@ enum CourtshipSettingsVerification {
     }
     private static func set(_ button:NSButton,_ enabled:Bool) {if (button.state == .on) != enabled {button.performClick(nil)}}
     private static func canonical(_ settings:BirdSettings) throws -> Data {
-        var value=settings;value.pendingSpecies=[]
+        let value=settings
         let encoder=JSONEncoder();encoder.outputFormatting = .sortedKeys;return try encoder.encode(value)
     }
     private static func failure(_ text:String)->NSError {NSError(domain:"CourtshipSettingsVerification",code:1,userInfo:[NSLocalizedDescriptionKey:text])}

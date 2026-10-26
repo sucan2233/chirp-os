@@ -1,4 +1,5 @@
 param([ValidateSet('win-arm64','win-x64')][string]$Runtime='win-arm64')
+# ARCHIVED: Windows is no longer maintained in this fork. See platforms/windows/README.md.
 $ErrorActionPreference='Stop'
 $Root=Split-Path $PSScriptRoot -Parent
 Push-Location $Root

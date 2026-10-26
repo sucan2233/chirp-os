@@ -65,7 +65,7 @@ struct CourtshipDisplayPlan {
     }
     private static func speciesEnabled(in engine:BehaviorEngine) -> Bool {
         SpeciesBehaviorProfile.profile(for:.spottedDove).allows(.courtshipDisplay) &&
-            engine.settings.probabilities.entries.contains{$0.id == .spottedDove && $0.points>0}
+            engine.settings.probabilities.participates(.spottedDove)
     }
     private static func clipsValid(_ a:PoseClip,_ b:PoseClip) -> Bool {
         let initiatorFrames=Set(a.frames.filter{$0.duration>0}.map(\.name))
@@ -218,7 +218,7 @@ final class CourtshipDisplayExecution:LedgeTraversalExecution {
         // Switching to quiet stops new automatic opportunities; an accepted
         // display can finish. Feature/species disabling still cancels now.
         guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:.preview),
-              engine.settings.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0})
+              engine.settings.probabilities.participates(.spottedDove)
         else {return .cancelled(.settingsChanged)}
         guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         for (index,id) in participants.enumerated() {

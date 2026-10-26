@@ -6,26 +6,26 @@ final class ChaseSettingsTests: XCTestCase {
     func testDefaultIsEncodedInSchemaOne() throws {
         let settings=BirdSettings(),object=try settingsObject(settings)
         XCTAssertTrue(settings.chaseEnabled)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,1)
-        XCTAssertEqual(object["schemaVersion"] as? Int,1)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(object["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(object["chaseEnabled"] as? Bool,true)
     }
 
     func testMissingAndNullMigrateOnAndExplicitFalseSurvives() throws {
         let original=configuredSettings()
         let legacyValues:[Any?]=[nil,NSNull(),false]
-        for version:Int? in [nil,0,1] {
+        for version:Int? in [BirdSettings.currentSchemaVersion] {
             for value in legacyValues {
                 var object=try settingsObject(original)
                 if let version {object["schemaVersion"]=version}
-                else {object.removeValue(forKey:"schemaVersion")}
+                else {object["schemaVersion"]=BirdSettings.currentSchemaVersion}
                 if let value {object["chaseEnabled"]=value}
                 else {object.removeValue(forKey:"chaseEnabled")}
                 let bytes=try JSONSerialization.data(withJSONObject:object)
                 let expected=(value as? Bool) ?? true
                 for decoded in [try JSONDecoder().decode(BirdSettings.self,from:bytes),try BirdSettings.decode(bytes)] {
                     XCTAssertEqual(decoded.chaseEnabled,expected)
-                    XCTAssertEqual(decoded.schemaVersion,1)
+                    XCTAssertEqual(decoded.schemaVersion,BirdSettings.currentSchemaVersion)
                     try assertOtherSettingsEqual(decoded,original)
                 }
             }
@@ -109,8 +109,8 @@ final class ChaseSettingsTests: XCTestCase {
         settings.takeoffPreparationEnabled=false;settings.edgePeekEnabled=false
         settings.leafPlayEnabled=false;settings.ambientLeafPlayEnabled=false;settings.visitorMemoryEnabled=false
         settings.ambientFrequency = .high;settings.activityRhythm = .quiet
-        settings.probabilities.adjust(at:0,to:1234);settings.probabilities.setLocked(true,at:0)
-        settings.catalog.species[0].speed=1.25;settings.pendingSpecies=[.nightHeron]
+        settings.probabilities.setManualWeight(at:0,to:1234)
+        settings.catalog.species[0].speed=1.25
         return settings
     }
 

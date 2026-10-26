@@ -103,7 +103,7 @@ public struct AmbientScheduler {
         remaining=interval.lowerBound+(interval.upperBound-interval.lowerBound)*intervalDraw
         guard !busy,!buttonsDown,userInputRemaining<=0 else {return nil}
         if let focus=sceneFocus {
-            if sceneUnit()<0.7 {
+            if RandomChoice.chance(0.7, using: { sceneUnit() }) {
                 // A failed/closed/cooling focus opportunity is discarded. It
                 // never falls through and never creates a second opportunity.
                 guard canAttemptScene(focus) else {return nil}
@@ -114,20 +114,25 @@ public struct AmbientScheduler {
                 }
             }
         } else {
-            let daily=sceneUnit()
-            if daily<0.08 {return insectEnabled && canAttemptInsectCatch ? .insectCatch:nil}
-            if daily<0.12 {return courtshipEnabled && socialEnabled && canAttemptCourtship ? .courtshipDisplay:nil}
-            if daily<0.13 {return giftEnabled ? .visitorGift:nil}
+            // Keep disabled/cooling slots: selecting one consumes this opportunity.
+            let weights = [8.0, 4.0, 1.0, 87.0]
+            let daily = try? WeightedChoice(Array(weights.indices), weight: { weights[$0] }).choose(unit: sceneUnit())
+            switch daily {
+            case 0: return insectEnabled && canAttemptInsectCatch ? .insectCatch:nil
+            case 1: return courtshipEnabled && socialEnabled && canAttemptCourtship ? .courtshipDisplay:nil
+            case 2: return giftEnabled ? .visitorGift:nil
+            default: break
+            }
         }
         // Reserve a small share of existing opportunities, never a second timer.
         // Failed leaf plans are discarded instead of falling through to another event.
-        if leafEnabled && (leafRandom.map{$0()} ?? random())<0.1 {return .leafPlay}
+        if leafEnabled && RandomChoice.chance(0.1, using: { leafRandom?() ?? random() }) {return .leafPlay}
         var choices: [AmbientEvent] = []
         if pointerEnabled && stationaryTime >= 3 { choices.append(.pointerVisit) }
         if flockEnabled { choices.append(.flockPass) }
         if socialEnabled { choices.append(.socialGreeting) }
         guard !choices.isEmpty else { return nil }
-        return choices[min(choices.count - 1, Int(random() * Double(choices.count)))]
+        return RandomChoice.index(count: choices.count, using: random).map { choices[$0] }
     }
 }
 

@@ -45,7 +45,7 @@ enum InsectCatchSettingsVerification {
         defer {w.cancel();d.settingsWindow=nil;d.engine.handle(.cancelAmbient(.shutdown))}
         var disabledSpecies=fixtureSettings
         guard let swallow=disabledSpecies.probabilities.entries.firstIndex(where:{$0.id == .barnSwallow}) else {throw failure("Missing swallow probability")}
-        disabledSpecies.probabilities.adjust(at:swallow,to:0)
+        disabledSpecies.probabilities.setManualWeight(at:swallow,to:0)
         try d.applySettings(disabledSpecies)
         w.previewInsectCatchButton.performClick(nil)
         checks["insectCatchSettingsSavedZeroProbabilityRejectsExistingResident"]=d.engine.events.last?.reason == .noSpecies &&
@@ -58,7 +58,7 @@ enum InsectCatchSettingsVerification {
         flycatcher.perch(on:host,spriteScale:d.spriteScale(for:flycatcher));flycatcher.perchDuration=600
         let flycatcherOrigin=flycatcher.position,flycatcherRevision=flycatcher.motionRevision
         d.birds=[flycatcher];d.syncWorld(buttonsDown:false)
-        var disabledFlycatcher=fixtureSettings;disabledFlycatcher.probabilities.adjust(at:flycatcherIndex,to:0)
+        var disabledFlycatcher=fixtureSettings;disabledFlycatcher.probabilities.setManualWeight(at:flycatcherIndex,to:0)
         try d.applySettings(disabledFlycatcher);w.previewFlycatcherInsectCatchButton.performClick(nil)
         checks["insectCatchSettingsSavedZeroProbabilityRejectsExistingFlycatcher"]=d.engine.events.last?.reason == .noSpecies &&
             !d.engine.hasInsectCatchPreview && d.engine.activeRunCount==0 && d.engine.insectSnapshot()==nil &&

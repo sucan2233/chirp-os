@@ -19,14 +19,14 @@ final class DebugUnlockView:NSView {
 final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     unowned let desktop: DesktopController
     var draft: BirdSettings
-    var sliders:[NSSlider] = [], fields:[NSTextField] = [], locks:[NSButton] = []
+    var fields:[NSTextField] = [], shares:[NSTextField] = []
+    var manualAdjustmentButton:NSButton!
+    var resetProbabilityButton:NSButton!
+    var probabilityEditor:NSScrollView!
+    private var probabilitySummary:NSTextField!
     var detailFields:[[NSTextField]] = []
     var message: NSTextField!
     var tabs: NSTabView!
-    private var newSpeciesNotice:NSTextField!
-    private var newSpeciesBudget:NSTextField!
-    private var allocateSpeciesButton:NSButton!
-    private var keepSpeciesButton:NSButton!
     var hoverDelaySlider:NSSlider!
     var hoverDelayField:NSTextField!
     var pointerVisitsButton:NSButton!
@@ -161,7 +161,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         cancelVisitorGiftRequest()
         cancelNestPlacement()
         let selected = tabs?.indexOfTabViewItem(tabs!.selectedTabViewItem!) ?? 0
-        sliders=[]; fields=[]; locks=[]; detailFields=[]
+        fields=[]; shares=[]; detailFields=[]
         let root = SettingsContentView(frame:NSRect(x:0,y:0,width:840,height:690)); root.wantsLayer=true; window!.contentView = root
         window!.title = t("鸟种设置","Bird Settings")
         label(t("让哪些鸟来做客？","Which birds should visit?"),NSRect(x:26,y:22,width:760,height:35),in:root,size:25)
@@ -174,38 +174,35 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         let unlock=DebugUnlockView(frame:NSRect(x:790,y:10,width:40,height:44))
         unlock.unlock={ [weak self] in self?.debugEnabled=true;self?.debugButton.isHidden=false };root.addSubview(unlock)
         tabs=NSTabView(frame:NSRect(x:30,y:156,width:780,height:440));tabs.tabViewType = .noTabsNoBorder;root.addSubview(tabs)
-        let probabilityView = SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:CGFloat(110+draft.catalog.species.count*47)))
-        let first = NSTabViewItem(identifier:"probabilities"); first.label=t("出现概率","Arrival probabilities"); first.view=scroll(probabilityView); tabs.addTabViewItem(first)
-        label(t("鸟种","Species"),NSRect(x:20,y:14,width:240,height:23),in:probabilityView)
-        label(t("概率（%）","Probability (%)"),NSRect(x:294,y:14,width:305,height:23),in:probabilityView)
+        let probabilityPage = SettingsContentView(frame:NSRect(x:0,y:0,width:780,height:440))
+        let first = NSTabViewItem(identifier:"probabilities"); first.label=t("出现概率","Arrival probabilities")
+        first.view=probabilityPage; tabs.addTabViewItem(first)
+        manualAdjustmentButton=NSButton(checkboxWithTitle:t("手动调整概率","Customize arrival weights"),target:self,action:#selector(manualAdjustmentChanged))
+        manualAdjustmentButton.frame=NSRect(x:20,y:10,width:330,height:28)
+        manualAdjustmentButton.identifier=NSUserInterfaceItemIdentifier("manualProbabilityAdjustment")
+        probabilityPage.addSubview(manualAdjustmentButton)
+        resetProbabilityButton=button(t("重置为系统默认值","Reset to System Defaults"),#selector(resetProbabilities),NSRect(x:420,y:8,width:330,height:32),in:probabilityPage)
+        probabilitySummary=label("",NSRect(x:20,y:52,width:730,height:58),in:probabilityPage,size:12)
+        let probabilityView = SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:CGFloat(50+draft.catalog.species.count*47)))
+        probabilityEditor=scroll(probabilityView);probabilityEditor.frame=NSRect(x:0,y:114,width:780,height:326)
+        probabilityEditor.identifier=NSUserInterfaceItemIdentifier("probabilityEditor")
+        probabilityPage.addSubview(probabilityEditor)
+        label(t("鸟种","Species"),NSRect(x:20,y:12,width:300,height:23),in:probabilityView)
+        label(t("相对权重","Relative weight"),NSRect(x:360,y:12,width:160,height:23),in:probabilityView)
+        label(t("计算占比","Calculated share"),NSRect(x:560,y:12,width:170,height:23),in:probabilityView)
         for (i,entry) in draft.probabilities.entries.enumerated() {
             let y = CGFloat(44+i*47)
             let icon = NSImageView(frame:NSRect(x:16,y:y,width:38,height:38))
             icon.image = NSImage(cgImage:desktop.arts[entry.id]!.frames["stand"]!,size:NSSize(width:38,height:38)); probabilityView.addSubview(icon)
-            label(language.name(entry.id),NSRect(x:62,y:y+8,width:222,height:26),in:probabilityView)
-            let slider = NSSlider(value:0,minValue:0,maxValue:100,target:self,action:#selector(sliderChanged(_:)))
-            slider.isContinuous=true; slider.tag=i; slider.frame=NSRect(x:290,y:y+8,width:236,height:24)
-            slider.setAccessibilityLabel(language.name(entry.id)+t(" 概率"," probability")); probabilityView.addSubview(slider); sliders.append(slider)
-            let field = NSTextField(frame:NSRect(x:542,y:y+7,width:72,height:25)); field.tag=i; field.delegate=self; field.alignment = .right
-            field.setAccessibilityLabel(language.name(entry.id)+t(" 概率百分比"," probability percentage")); probabilityView.addSubview(field); fields.append(field)
-            label("%",NSRect(x:620,y:y+10,width:20,height:20),in:probabilityView)
-            let lock = NSButton(checkboxWithTitle:t("锁定","Lock"),target:self,action:#selector(lockChanged(_:)))
-            lock.tag=i; lock.frame=NSRect(x:657,y:y+7,width:95,height:25); probabilityView.addSubview(lock); locks.append(lock)
+            label(language.name(entry.id),NSRect(x:62,y:y+8,width:290,height:26),in:probabilityView)
+            let field=NSTextField(frame:NSRect(x:360,y:y+7,width:150,height:25))
+            field.tag=i;field.delegate=self;field.alignment = .right
+            field.setAccessibilityLabel(language.name(entry.id)+t(" 相对权重"," relative weight"))
+            probabilityView.addSubview(field);fields.append(field)
+            let share=label("",NSRect(x:560,y:y+8,width:170,height:26),in:probabilityView)
+            share.setAccessibilityLabel(language.name(entry.id)+t(" 计算占比"," calculated share"));shares.append(share)
         }
-        label(t("总计 100.00% · 锁定项不变；其他未锁定项按原比例分配，均为零时平均分配。\n默认频率是游戏权重；新增鸟种仅在你明确分配后启用。","Total 100.00% · Locked values stay fixed. Other unlocked values redistribute proportionally, or equally when all are zero. Defaults are game weights. New species require explicit allocation."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*47),width:710,height:54),in:probabilityView,size:12)
-        for view in probabilityView.subviews {view.frame.origin.y += 160}
-        probabilityView.frame.size.height += 160
-        newSpeciesNotice=label("",NSRect(x:20,y:12,width:710,height:66),in:probabilityView,size:12)
-        newSpeciesNotice.identifier=NSUserInterfaceItemIdentifier("newSpeciesNotice")
-        newSpeciesBudget=NSTextField(frame:NSRect(x:20,y:84,width:70,height:26))
-        newSpeciesBudget.stringValue="20";newSpeciesBudget.alignment = .right
-        newSpeciesBudget.setAccessibilityLabel(t("分给新鸟的总概率百分比","Total percentage allocated to new species"))
-        probabilityView.addSubview(newSpeciesBudget)
-        label("%",NSRect(x:96,y:88,width:24,height:24),in:probabilityView)
-        allocateSpeciesButton=button(t("给新鸟分配份额","Allocate to new species"),#selector(allocatePendingSpecies),NSRect(x:130,y:80,width:260,height:32),in:probabilityView)
-        keepSpeciesButton=button(t("保留手动设置","Keep manual settings"),#selector(keepPendingSpecies),NSRect(x:410,y:80,width:290,height:32),in:probabilityView)
-        label(t("仅修改草稿；保存并应用后生效。可直接在下方逐种调整。","Edits the draft; Save & Apply to activate. You can also edit each species below."),NSRect(x:20,y:122,width:710,height:30),in:probabilityView,size:12)
-        let detailView = SettingsContentView(frame:probabilityView.frame)
+        let detailView = SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:CGFloat(110+draft.catalog.species.count*45)))
         let second = NSTabViewItem(identifier:"behavior"); second.label=t("体型与动作","Size & behavior"); second.view=scroll(detailView); tabs.addTabViewItem(second)
         let titles = [t("体长 cm","Length cm"),t("振翅 次/秒","Beats / sec"),t("飞速 倍率","Speed ×"),t("最短停留 秒","Min perch s"),t("最长停留 秒","Max perch s")]
         label(t("鸟种","Species"),NSRect(x:20,y:14,width:235,height:25),in:detailView)
@@ -370,7 +367,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         message.maximumNumberOfLines=0;message.lineBreakMode = .byWordWrapping
         message.cell?.usesSingleLineMode=false;message.cell?.isScrollable=false;message.cell?.wraps=true
         _=button(t("全部恢复默认","Restore All Defaults"),#selector(resetDefaults),NSRect(x:22,y:642,width:180,height:30),in:root)
-        root.subviews.last?.toolTip=t("重置所有鸟种概率、体型和生态偏好，并解除所有锁定；保存后生效。","Resets all probabilities, sizes and ecology preferences, and clears all locks; save to apply.")
+        root.subviews.last?.toolTip=t("重置所有鸟种权重、体型和生态偏好；保存后生效。","Resets all weights, sizes and ecology preferences; save to apply.")
         _=button(t("取消","Cancel"),#selector(cancel),NSRect(x:562,y:642,width:100,height:30),in:root)
         let save=button(t("保存并应用","Save & Apply"),#selector(save),NSRect(x:672,y:642,width:144,height:30),in:root); save.keyEquivalent="\r"
         refresh()
@@ -1000,7 +997,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     func courtshipPreviewMessage(_ reason:BehaviorReason)->String {
         switch reason {
         case .disabled,.settingsChanged:return t("请先保存并开启双鸟互动与求偶展示。","Save and enable Two-bird interactions and Courtship displays first.")
-        case .noSpecies:return t("请启用所需鸟种并保存，概率须大于0；预览只使用已有居民。 ","Enable the required species with a probability above zero and save; preview uses existing residents only. ")+language.courtshipSupport
+        case .noSpecies:return t("请将所需鸟种权重设为正值并保存；预览只使用已有居民。 ","Set a positive weight for the required species and save; preview uses existing residents only. ")+language.courtshipSupport
         case .noCompanion,.missingBird,.unavailableBird:return language.courtshipRequirement
         case .noSpace,.targetInvalid:return t("双方转身、鞠躬或间隔空间不足；请等待更开阔且无遮挡的普通顶部边缘或地面，并移开鼠标。","Not enough clear room for both birds to turn and bow with a safe gap. Wait for a clearer normal top or ground edge and move the pointer away.")
         case .missingFrames:return t("求偶展示五帧不完整，无法预览。 ","The five courtship frames are incomplete. ")+language.courtshipSupport
@@ -1093,7 +1090,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         switch reason {
         case .disabled,.settingsChanged:return t("请先保存并开启运材与筑巢；此项独立于双鸟互动。","Save and enable nest delivery and building; it is independent of Two-bird interactions.")
         case .noSpecies,.noCompanion,.missingBird,.unavailableBird:
-            return language.nestSupport+t(" 请启用且概率大于0并保存，等待已有居民在普通顶部或地面停稳。"," Enable with probability >0, save, and let an existing resident settle on a normal top or ground edge.")
+            return language.nestSupport+t(" 请将权重设为正值并保存，等待已有居民在普通顶部或地面停稳。"," Set a positive weight, save, and let an existing resident settle on a normal top or ground edge.")
         case .missingFrames:return t("巢台、枝条素材或专用姿态/喙锚不完整。 ","Nest/twig artwork or dedicated poses/bill anchors are incomplete. ")+language.nestSupport
         case .busy:return placing ? language.sceneBusyMessage:t("请等待当前互动、巢台预约或放置结束后再预览。","Wait for the current encounter, nest reservation or placement to finish.")
         case .noSpace,.targetInvalid,.removed:
@@ -1305,78 +1302,63 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     }
     @objc func selectPage(_ sender:NSButton) { window?.makeFirstResponder(nil); tabs.selectTabViewItem(at:sender.tag) }
     func scrollToSpecies(_ id:SpeciesID) {
-        guard let i=draft.probabilities.entries.firstIndex(where:{$0.id==id}),
-              let scroll=tabs.tabViewItems[0].view as? NSScrollView else{return}
+        guard let i=draft.probabilities.entries.firstIndex(where:{$0.id==id}) else {return}
         tabs.selectTabViewItem(at:0);refresh()
-        scroll.contentView.scroll(to:CGPoint(x:0,y:max(0,fields[i].frame.minY-45)))
-        scroll.reflectScrolledClipView(scroll.contentView)
+        guard draft.probabilities.manualAdjustmentEnabled else {
+            window?.makeFirstResponder(manualAdjustmentButton);return
+        }
+        probabilityEditor.contentView.scroll(to:CGPoint(x:0,y:max(0,fields[i].frame.minY-45)))
+        probabilityEditor.reflectScrolledClipView(probabilityEditor.contentView)
         window?.makeFirstResponder(fields[i])
     }
     func refresh() {
+        guard manualAdjustmentButton != nil else {return}
+        let manual=draft.probabilities.manualAdjustmentEnabled, total=draft.probabilities.totalWeight
+        manualAdjustmentButton.state=manual ? .on:.off
+        probabilityEditor.isHidden = !manual
+        resetProbabilityButton.isEnabled=manual || !draft.probabilities.overrides.isEmpty
         for (i,e) in draft.probabilities.entries.enumerated() {
-            sliders[i].doubleValue=Double(e.points)/100; fields[i].stringValue=String(format:"%.2f",Double(e.points)/100)
-            locks[i].state=e.locked ? .on:.off
-            sliders[i].isEnabled=draft.probabilities.canAdjust(i); fields[i].isEnabled=sliders[i].isEnabled
-            let tip=t("可用上限：","Available maximum: ")+String(format:"%.2f%%",Double(draft.probabilities.maximum(at:i))/100)
-            sliders[i].toolTip=tip; fields[i].toolTip=tip
+            fields[i].stringValue=String(format:"%.12g",e.weight);fields[i].isEnabled=manual
+            let percent=total>0 ? 100*e.weight/total:0
+            shares[i].stringValue=total==0 ? "—":percent>0 && percent<0.01 ? "<0.01%":String(format:"%.2f%%",percent)
         }
-        refreshNewSpeciesNotice()
+        probabilitySummary.stringValue = !manual ?
+            t("使用系统默认权重，所有鸟种都有出现机会。勾选后可手动调整，保存后生效。","Using system defaults; every species has a chance to arrive. Check to customize, then save to apply.") :
+            total==0 ? t("当前总权重为 0，新鸟不会入场。可输入正值或重置为系统默认值。","Total weight is 0; no new birds will arrive. Enter a positive weight or reset to system defaults.") :
+            t("相对权重无需合计100；0表示不出现。未手动修改的鸟种跟随系统默认更新。\n取消勾选恢复系统默认并保留手动值；重置会清空手动值。保存后生效。","Weights need not total 100; 0 excludes a species. Unedited species follow system defaults.\nUncheck to use defaults and retain edits; Reset clears edits. Save to apply.")
     }
-    /// Mode changes must not rebuild controls or discard uncommitted edits.
-    func refreshMode() {refreshNewSpeciesNotice()}
-    func refreshNewSpeciesNotice() {
-        guard newSpeciesNotice != nil else {return}
-        let ids=draft.pendingSpecies ?? []
-        let available=draft.probabilities.newSpeciesAllocationAvailable(ids)
-        let share=String(format:"%.2f",Double(available)/100)
-        newSpeciesNotice.stringValue=ids.isEmpty ?
-            t("没有待分配的新鸟。观鸟记录始终使用你的概率、体型与生态设置。","No new species await allocation. Birdwatching always uses your probabilities, sizes and ecology settings."):
-            t("新增 \(ids.count) 种鸟待分配 · 未锁定旧鸟可用 \(share)%\n默认分出总概率的20%；旧鸟按原比例扣除，新鸟按默认游戏权重分配。余额不足时请先解锁或手动调整。","\(ids.count) new species await allocation · \(share)% available from unlocked existing species.\nDefault: 20% of the total, funded proportionally by existing species and distributed by default game weights. Unlock or adjust manually if insufficient.")
-        newSpeciesBudget.isEnabled = !ids.isEmpty
-        allocateSpeciesButton.isEnabled = !ids.isEmpty && available>0
-        keepSpeciesButton.isEnabled = !ids.isEmpty
-    }
-    @objc func allocatePendingSpecies() {
+    /// Mode changes must not discard uncommitted text in unrelated controls.
+    func refreshMode() {}
+    @objc func manualAdjustmentChanged() {
+        let manual=manualAdjustmentButton.state == .on
         window?.makeFirstResponder(nil)
-        guard let percent=number(newSpeciesBudget.stringValue),percent.isFinite,percent>0,percent<=100 else {
-            message.stringValue=t("请输入大于0且不超过100的总概率百分比。","Enter a total percentage greater than 0 and at most 100.");return
-        }
-        let ids=draft.pendingSpecies ?? []
-        guard draft.probabilities.allocateNewSpecies(ids,catalog:.standard,budgetPoints:Int((percent*100).rounded())) else {
-            message.stringValue=t("未分配：旧鸟未锁定余额不足，或新鸟已有概率/锁定。请解锁、减小份额或保留手动设置。","Not allocated: insufficient unlocked balance, or new species already edited/locked. Unlock, lower the share or keep manual settings.");return
-        }
-        draft.pendingSpecies=[];refresh()
-        message.stringValue=t("已保锁分配（尚未保存）；保存并应用后新鸟才会到访。","Allocated with locks preserved (unsaved). Save & Apply to enable new arrivals.")
+        draft.probabilities.manualAdjustmentEnabled=manual
+        refresh();message.stringValue=t("尚未保存","Unsaved changes")
     }
-    @objc func keepPendingSpecies() {
+    @objc func resetProbabilities() {
         window?.makeFirstResponder(nil)
-        draft.pendingSpecies=[];refreshNewSpeciesNotice()
-        message.stringValue=t("已保留当前概率草稿；保存后不再提示新增鸟种。","Current probability draft retained. Save to dismiss the new-species notice.")
+        draft.probabilities.resetToDefaults()
+        refresh();message.stringValue=t("概率已重置为系统默认值（尚未保存）。","Arrival weights reset to system defaults (unsaved).")
     }
     func number(_ s:String) -> Double? {
         Double(s.trimmingCharacters(in:.whitespacesAndNewlines).replacingOccurrences(of:"%",with:"").replacingOccurrences(of:",",with:"."))
     }
     func change(_ i:Int,_ value:Double) {
-        guard value.isFinite else { return }
-        let requested=Int((min(100,max(0,value))*100).rounded())
-        let actual=draft.probabilities.adjust(at:i,to:requested)
-        message.stringValue = actual != requested || value < 0 || value > 100
-            ? t("已限制到可用概率，锁定项保持不变。","Limited to the available probability; locked values were preserved.") : t("尚未保存","Unsaved changes")
+        guard draft.probabilities.manualAdjustmentEnabled,fields.indices.contains(i) else {return}
+        let id=draft.probabilities.entries[i].id
+        if draft.probabilities.setWeight(value,for:id) {
+            message.stringValue=t("尚未保存","Unsaved changes")
+        } else {
+            message.stringValue=t("权重须为0或0.000001–1000000之间的数值。","Use 0 or a weight between 0.000001 and 1000000.")
+        }
         refresh()
     }
-    @objc func sliderChanged(_ sender:NSSlider) { let value=sender.doubleValue; window?.makeFirstResponder(nil); change(sender.tag,value) }
     @objc func hoverDelayChanged(_ sender:NSSlider) {
         let value=(sender.doubleValue*10).rounded()/10
         window?.makeFirstResponder(nil)
         draft.hoverDelay=value;hoverDelaySlider.doubleValue=value
         hoverDelayField.stringValue=String(format:"%g",value)
         message.stringValue=t("尚未保存","Unsaved changes")
-    }
-    @objc func lockChanged(_ sender:NSButton) {
-        let locked=sender.state == .on
-        window?.makeFirstResponder(nil)
-        draft.probabilities.setLocked(locked,at:sender.tag); refresh()
-        message.stringValue=t("尚未保存 · 仅剩一个未锁定项时无法调整概率。","Unsaved changes · Adjustment needs at least two unlocked species.")
     }
     func controlTextDidEndEditing(_ obj:Notification) {
         guard let f=obj.object as? NSTextField else { return }
@@ -1386,8 +1368,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             return
         }
         if f.tag < 100 {
-            guard let value=number(f.stringValue),value.isFinite else {
-                message.stringValue=t("请输入有效的百分比数值。","Enter a valid percentage."); refresh(); return
+            guard let value=Double(f.stringValue.trimmingCharacters(in:.whitespacesAndNewlines).replacingOccurrences(of:",",with:".")),value.isFinite else {
+                message.stringValue=t("请输入有效的权重数值。","Enter a valid weight."); refresh(); return
             }
             change(f.tag,value)
         } else { message.stringValue=t("尚未保存","Unsaved changes") }
@@ -1461,17 +1443,15 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         do { try desktop.applySettings(draft); message.stringValue=t("已保存 · 交互设置立即生效，鸟种参数用于新飞入的小鸟。","Saved · Interaction settings apply now; species settings affect new arrivals.") }
         catch { message.stringValue=t("保存失败，请重试。当前设置未改变。","Could not save. Try again; active settings are unchanged.") }
     }
-    @objc func resetDefaults() { cancelFixedPerchCapture();window?.makeFirstResponder(nil); draft=BirdSettings();selectedFixedPerchSlot=1; build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
+    @objc func resetDefaults() { cancelFixedPerchCapture();window?.makeFirstResponder(nil); draft=BirdSettings();selectedFixedPerchSlot=1; build(); message.stringValue=t("已恢复默认（尚未保存）。","Defaults restored (not saved).") }
     @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement();cancelInsectCatchPreview();cancelVisitorGiftRequest();cancelNestPlacement();window?.close() }
     func relocalize() {
         cancelFixedPerchCapture()
         window?.makeFirstResponder(nil)
         let raw = detailFields.map { $0.map(\.stringValue) }
         let rawDelay=hoverDelayField.stringValue
-        let rawBudget=newSpeciesBudget.stringValue
         build()
         for i in raw.indices { for j in raw[i].indices { detailFields[i][j].stringValue = raw[i][j] } }
         hoverDelayField.stringValue=rawDelay
-        newSpeciesBudget.stringValue=rawBudget
     }
 }

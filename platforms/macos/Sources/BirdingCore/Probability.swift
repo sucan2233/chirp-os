@@ -1,97 +1,88 @@
 import Foundation
 
-// Integer hundredths of a percent keep displayed and stored totals exactly 100.00%.
-public struct ProbabilityEntry: Codable, Equatable {
+public struct ProbabilityEntry: Equatable {
     public let id: SpeciesID
-    public var points: Int
-    public var locked: Bool
+    public let weight: Double
 }
+
+/// Stores only explicit edits. System defaults are always resolved from the shipped catalog.
 public struct ProbabilityDistribution: Codable, Equatable {
-    public private(set) var entries: [ProbabilityEntry]
-    public init(catalog: SpeciesCatalog) {
-        let values = Self.apportion(10_000, amounts:catalog.species.map(\.weight))
-        entries = zip(catalog.species,values).map { ProbabilityEntry(id:$0.0.id,points:$0.1,locked:false) }
+    public static let defaultProfileID = "cn-national-balanced-v2"
+    public static let defaultProfileVersion = 1
+    public static let minimumPositiveWeight = 0.000001
+    public static let maximumWeight = 1_000_000.0
+    public var manualAdjustmentEnabled = false
+    public private(set) var overrides: [String: Double] = [:]
+
+    public init() {}
+    public var entries: [ProbabilityEntry] {
+        SpeciesCatalog.standard.species.map { ProbabilityEntry(id: $0.id,
+            weight: manualAdjustmentEnabled ? (overrides[$0.id.rawValue] ?? $0.weight) : $0.weight) }
     }
-    // Existing percentages and locks remain exact. New species start disabled in
-    // an existing profile until the user adjusts them or restores defaults.
-    public mutating func includeNewSpecies() throws {
-        guard !entries.isEmpty, Set(entries.map(\.id)).count == entries.count,
-              entries.allSatisfy({ (0...10_000).contains($0.points) }),
-              entries.reduce(0, { $0 + $1.points }) == 10_000 else {
-            throw NSError(domain:"BirdSettings",code:2)
-        }
-        let present = Set(entries.map(\.id))
-        entries += SpeciesCatalog.standard.species.filter { !present.contains($0.id) }
-            .map { ProbabilityEntry(id:$0.id,points:0,locked:false) }
+    public func weight(for id: SpeciesID) -> Double {
+        if manualAdjustmentEnabled, let value = overrides[id.rawValue] { return value }
+        return SpeciesCatalog.standard.profile(id).weight
     }
-    /// Explicit opt-in only. The budget is a share of the entire 10,000-point
-    /// distribution, funded exclusively by unlocked existing species.
-    public func newSpeciesAllocationAvailable(_ ids:[SpeciesID]) -> Int {
-        guard isValid else {return 0}
-        let fresh=Set(ids)
-        return entries.filter{!fresh.contains($0.id) && !$0.locked}.reduce(0){$0+$1.points}
+    public func participates(_ id: SpeciesID) -> Bool { weight(for: id) > 0 }
+    public var totalWeight: Double { entries.reduce(0) { $0 + $1.weight } }
+    public func share(for id: SpeciesID) -> Double {
+        let total = totalWeight
+        return total > 0 ? weight(for: id) / total : 0
     }
-    @discardableResult public mutating func allocateNewSpecies(_ ids:[SpeciesID], catalog:SpeciesCatalog,
-                                                               budgetPoints:Int = 2_000) -> Bool {
-        let fresh=Set(ids)
-        let added=entries.indices.filter{fresh.contains(entries[$0].id)}
-        let old=entries.indices.filter{!fresh.contains(entries[$0].id) && !entries[$0].locked}
-        let available=newSpeciesAllocationAvailable(ids)
-        // Reject as a unit, including repeated allocation or manually edited
-        // recipients. Never silently replace an existing user decision.
-        guard isValid, !added.isEmpty, added.count==fresh.count,
-              (1...10_000).contains(budgetPoints), budgetPoints<=available,
-              added.allSatisfy({entries[$0].points==0 && !entries[$0].locked}) else {return false}
-        let weights=added.compactMap {index in catalog.species.first{$0.id==entries[index].id}?.weight}
-        guard weights.count==added.count, weights.allSatisfy({$0.isFinite && (0...1_000_000).contains($0)}),
-              weights.contains(where:{$0>0}) else {return false}
-        let newPoints=Self.apportion(budgetPoints,amounts:weights)
-        let oldPoints=Self.apportion(available-budgetPoints,amounts:old.map{Double(entries[$0].points)})
-        for (i,n) in zip(added,newPoints) {entries[i].points=n}
-        for (i,n) in zip(old,oldPoints) {entries[i].points=n}
+    public static func isValidWeight(_ value: Double) -> Bool {
+        value.isFinite && (value == 0 || (minimumPositiveWeight...maximumWeight).contains(value))
+    }
+    public var isValid: Bool { overrides.allSatisfy { !$0.key.isEmpty && Self.isValidWeight($0.value) } }
+    /// Explicit programmatic/manual edit. Callers control when the manual mode becomes active.
+    @discardableResult public mutating func setWeight(_ weight: Double, for id: SpeciesID) -> Bool {
+        guard Self.isValidWeight(weight) else { return false }
+        overrides[id.rawValue] = weight
         return true
     }
-    public var isValid: Bool {
-        entries.count == SpeciesID.allCases.count && Set(entries.map(\.id)) == Set(SpeciesID.allCases) &&
-        entries.allSatisfy { (0...10_000).contains($0.points) } && entries.reduce(0) { $0+$1.points } == 10_000
+    /// Applies an explicit edit and activates manual mode without redistributing other weights.
+    @discardableResult public mutating func setManualWeight(at index: Int, to weight: Double) -> Bool {
+        guard SpeciesCatalog.standard.species.indices.contains(index),
+              setWeight(weight, for: SpeciesCatalog.standard.species[index].id) else { return false }
+        manualAdjustmentEnabled = true
+        return true
     }
-    public mutating func setLocked(_ locked:Bool, at index:Int) { entries[index].locked = locked }
-    public func maximum(at index:Int) -> Int {
-        10_000 - entries.enumerated().filter { $0.offset != index && $0.element.locked }.reduce(0) { $0+$1.element.points }
+    public mutating func resetToDefaults() { manualAdjustmentEnabled = false; overrides = [:] }
+    public func choose(unit: Double) -> SpeciesID? {
+        try? WeightedChoice(entries, weight: { $0.weight }).choose(unit: unit)?.id
     }
-    public func canAdjust(_ index:Int) -> Bool {
-        !entries[index].locked && entries.indices.contains { $0 != index && !entries[$0].locked }
+    public func choose(using random: () -> Double) -> SpeciesID? {
+        try? WeightedChoice(entries, weight: { $0.weight }).choose(using: random)?.id
     }
-    @discardableResult public mutating func adjust(at index:Int, to requested:Int) -> Int {
-        guard canAdjust(index) else { return entries[index].points }
-        let value = min(maximum(at:index),max(0,requested))
-        let peers = entries.indices.filter { $0 != index && !entries[$0].locked }
-        let remainder = maximum(at:index)-value
-        let amounts = Self.apportion(remainder,amounts:peers.map { Double(entries[$0].points) })
-        entries[index].points = value
-        for (peer,amount) in zip(peers,amounts) { entries[peer].points = amount }
-        return value
-    }
-    // Preserve proportions; distribute equally when every eligible peer is zero.
-    // Largest remainders receive rounding units, with stable index tie breaking.
-    private static func apportion(_ total:Int, amounts:[Double]) -> [Int] {
-        guard !amounts.isEmpty else { return [] }
-        let sum = amounts.reduce(0,+)
-        let exact = amounts.map { sum > 0 ? Double(total)*$0/sum : Double(total)/Double(amounts.count) }
-        var result = exact.map { Int($0.rounded(.down)) }
-        let order = exact.indices.sorted {
-            let a = exact[$0]-Double(result[$0]), b = exact[$1]-Double(result[$1])
-            return a == b ? $0 < $1 : a > b
+    private enum CodingKeys: String, CodingKey { case manualAdjustmentEnabled, overrides }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        manualAdjustmentEnabled = try values.decode(Bool.self, forKey: .manualAdjustmentEnabled)
+        overrides = try values.decode([String: Double].self, forKey: .overrides)
+        guard isValid else {
+            throw DecodingError.dataCorruptedError(forKey: .overrides, in: values, debugDescription: "Invalid relative weight.")
         }
-        for i in order.prefix(max(0,total-result.reduce(0,+))) { result[i] += 1 }
-        return result
     }
-    public func choose(unit:Double = Double.random(in:0..<1)) -> SpeciesID {
-        var ticket = Int(min(1-Double.ulpOfOne,max(0,unit.isFinite ? unit : 0))*10_000)
-        for entry in entries where entry.points > 0 {
-            if ticket < entry.points { return entry.id }; ticket -= entry.points
+}
+
+/// Decode-only legacy contract. There is no legacy probability engine or allocator in V2.
+private struct LegacyProbabilityDistribution: Decodable {
+    struct Entry: Decodable { let id: SpeciesID; let points: Int; let locked: Bool }
+    let entries: [Entry]
+    func validate(catalog: SpeciesCatalog) throws {
+        guard !entries.isEmpty, Set(entries.map(\.id)).count == entries.count,
+              Set(entries.map(\.id)) == Set(catalog.species.map(\.id)),
+              entries.allSatisfy({ (0...10_000).contains($0.points) }),
+              entries.reduce(0, { $0 + $1.points }) == 10_000 else {
+            throw NSError(domain: "BirdSettings", code: 2, userInfo: [NSLocalizedDescriptionKey: "旧概率配置无效，未迁移。"])
         }
-        return entries.last(where: { $0.points > 0 })!.id
+    }
+}
+
+public struct ProbabilityMigration: Codable, Equatable {
+    public let fromSchemaVersion: Int
+    public let strategy: String
+    public init(fromSchemaVersion: Int) {
+        self.fromSchemaVersion = fromSchemaVersion; strategy = "replace-with-system-defaults"
     }
 }
 public enum BirdSettingsVersionError: Error, Equatable, LocalizedError {
@@ -109,7 +100,7 @@ public enum BirdSettingsVersionError: Error, Equatable, LocalizedError {
 }
 
 public struct BirdSettings: Codable {
-    public static let currentSchemaVersion = 1
+    public static let currentSchemaVersion = 2
     public let schemaVersion: Int
     public static let hoverDelayRange:ClosedRange<Double> = 0...10
     public var catalog: SpeciesCatalog
@@ -142,21 +133,22 @@ public struct BirdSettings: Codable {
     public var ambientFrequency: AmbientFrequency = .low
     public var activityRhythm: ActivityRhythmMode = .steady
     public var perchDefaultsVersion: Int? = nil
-    public var pendingSpecies: [SpeciesID]? = nil
+    public var migration: ProbabilityMigration? = nil
     public init(catalog:SpeciesCatalog = .standard) {
         schemaVersion=Self.currentSchemaVersion
-        self.catalog = catalog; probabilities = ProbabilityDistribution(catalog:catalog); perchDefaultsVersion=1
+        self.catalog = catalog; probabilities = ProbabilityDistribution(); perchDefaultsVersion=1
     }
     private enum CodingKeys:String,CodingKey {
         case schemaVersion
-        case catalog,probabilities,hoverDelay,perchDefaultsVersion,pendingSpecies
+        case catalog,hoverDelay,perchDefaultsVersion,migration
+        case probabilities = "speciesProbability"
         case pointerVisits,pointerFollowEnabled,flockPasses,ambientFrequency,perchActions,socialInteractions,leafPlayEnabled
         case passiveAttentionEnabled,ambientLeafPlayEnabled,sideHopEnabled,takeoffPreparationEnabled
         case visitorMemoryEnabled,activityRhythm,edgePeekEnabled,chaseEnabled,travelTogetherEnabled,allopreeningEnabled
         case fixedPerchesEnabled,fixedPerches
         case foodTrayEnabled,bathEnabled,leafCarryEnabled,insectCatchEnabled,visitorGiftsEnabled,courtshipEnabled,nestBuildingEnabled
     }
-    private static func validateSchemaVersion(in values:KeyedDecodingContainer<CodingKeys>) throws {
+    @discardableResult private static func validateSchemaVersion(in values:KeyedDecodingContainer<CodingKeys>) throws -> Int {
         // Absence alone denotes version 0; null and malformed values are not legacy versions.
         let version: Int
         if values.contains(.schemaVersion) {
@@ -165,19 +157,30 @@ public struct BirdSettings: Codable {
         } else { version=0 }
         guard version>=0 else { throw BirdSettingsVersionError.invalidVersion }
         guard version<=currentSchemaVersion else { throw BirdSettingsVersionError.unsupportedVersion(version) }
+        return version
     }
     // Check only the version contract when replacing a file, not its catalog or settings.
     private struct SchemaVersionHeader: Decodable {
+        let version: Int
         init(from decoder:Decoder) throws {
-            try BirdSettings.validateSchemaVersion(in:decoder.container(keyedBy:CodingKeys.self))
+            version = try BirdSettings.validateSchemaVersion(in:decoder.container(keyedBy:CodingKeys.self))
         }
     }
     public init(from decoder:Decoder) throws {
         let values=try decoder.container(keyedBy:CodingKeys.self)
-        try Self.validateSchemaVersion(in:values)
+        let sourceVersion = try Self.validateSchemaVersion(in:values)
         schemaVersion=Self.currentSchemaVersion
         catalog=try values.decode(SpeciesCatalog.self,forKey:.catalog)
-        probabilities=try values.decode(ProbabilityDistribution.self,forKey:.probabilities)
+        if sourceVersion < 2 {
+            enum LegacyKeys: String, CodingKey { case probabilities }
+            let legacy = try decoder.container(keyedBy: LegacyKeys.self)
+            try legacy.decode(LegacyProbabilityDistribution.self, forKey: .probabilities).validate(catalog: catalog)
+            probabilities = ProbabilityDistribution()
+            migration = ProbabilityMigration(fromSchemaVersion: sourceVersion)
+        } else {
+            probabilities = try values.decode(ProbabilityDistribution.self, forKey: .probabilities)
+            migration = try values.decodeIfPresent(ProbabilityMigration.self, forKey: .migration)
+        }
         hoverDelay=try values.decodeIfPresent(Double.self,forKey:.hoverDelay) ?? 1
         pointerVisits=try values.decodeIfPresent(Bool.self,forKey:.pointerVisits) ?? true
         pointerFollowEnabled=try values.decodeIfPresent(Bool.self,forKey:.pointerFollowEnabled) ?? false
@@ -215,7 +218,6 @@ public struct BirdSettings: Codable {
         ambientFrequency=try values.decodeIfPresent(AmbientFrequency.self,forKey:.ambientFrequency) ?? .low
         activityRhythm=try values.decodeIfPresent(ActivityRhythmMode.self,forKey:.activityRhythm) ?? .steady
         perchDefaultsVersion=try values.decodeIfPresent(Int.self,forKey:.perchDefaultsVersion)
-        pendingSpecies=try values.decodeIfPresent([SpeciesID].self,forKey:.pendingSpecies)
         guard hoverDelay.isFinite,Self.hoverDelayRange.contains(hoverDelay) else {
             throw DecodingError.dataCorruptedError(forKey:.hoverDelay,in:values,debugDescription:"Hover delay must be between 0 and 10 seconds.")
         }
@@ -224,10 +226,7 @@ public struct BirdSettings: Codable {
         var value = try JSONDecoder().decode(Self.self,from:data)
         guard Set(value.catalog.species.map(\.id)).count == value.catalog.species.count else { throw NSError(domain:"BirdSettings",code:3) }
         let present = Set(value.catalog.species.map(\.id))
-        guard present == Set(value.probabilities.entries.map(\.id)) else {throw NSError(domain:"BirdSettings",code:4)}
         let added=SpeciesCatalog.standard.species.filter { !present.contains($0.id) }
-        let pending=Set(value.pendingSpecies ?? []).union(added.map(\.id))
-        value.pendingSpecies=SpeciesCatalog.standard.species.map(\.id).filter{pending.contains($0)}
         // Upgrade only old default wingbeat values. User-adjusted rates survive.
         for i in value.catalog.species.indices {
             let id=value.catalog.species[i].id, current=SpeciesCatalog.standard.profile(value.catalog.species[i].id).flapFPS
@@ -246,44 +245,50 @@ public struct BirdSettings: Codable {
         }
         value.perchDefaultsVersion=1
         // Refresh descriptive metadata without replacing user size, speed,
-        // animation timing or the exact stored probability distribution.
+        // animation timing. Probability defaults come exclusively from the current catalog.
         value.catalog.species=value.catalog.species.map { old in
             let current=SpeciesCatalog.standard.profile(old.id)
             return SpeciesProfile(id:old.id,name:current.name,englishName:current.englishName,
                 scientificName:current.scientificName,appearanceNotes:current.appearanceNotes,
-                adultLengthCM:old.adultLengthCM,weight:old.weight,flapFPS:old.flapFPS,
+                adultLengthCM:old.adultLengthCM,weight:current.weight,flapFPS:old.flapFPS,
                 speed:old.speed,perchMin:old.perchMin,perchMax:old.perchMax,weightBasis:current.weightBasis)
         }
         value.catalog.species += added
-        try value.probabilities.includeNewSpecies()
         _ = try SpeciesCatalog.decode(JSONEncoder().encode(value.catalog))
         guard value.probabilities.isValid else { throw NSError(domain:"BirdSettings",code:1) }
         return value
     }
     public func save(to url:URL) throws {
-        // A caller may have fallen back to defaults after load failed. Never overwrite
-        // a configuration whose version this app cannot safely read.
-        if FileManager.default.fileExists(atPath:url.path) {
-            _ = try JSONDecoder().decode(SchemaVersionHeader.self,from:Data(contentsOf:url))
+        let existing = FileManager.default.fileExists(atPath: url.path) ? try Data(contentsOf: url) : nil
+        var previousVersion: Int?
+        if let existing {
+            previousVersion = try JSONDecoder().decode(SchemaVersionHeader.self, from: existing).version
+            // A failed load must never turn into an implicit destructive repair.
+            _ = try Self.decode(existing)
         }
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted,.sortedKeys]
         let data = try encoder.encode(self)
         _ = try Self.decode(data)
         try FileManager.default.createDirectory(at:url.deletingLastPathComponent(),withIntermediateDirectories:true)
+        if let existing, let previousVersion, previousVersion < Self.currentSchemaVersion {
+            let backup = url.appendingPathExtension("pre-probability-v2-" + UUID().uuidString + ".bak")
+            try existing.write(to: backup, options: .withoutOverwriting)
+        }
         try data.write(to:url,options:.atomic)
     }
     public static func load(from url:URL, legacyURL:URL) throws -> BirdSettings {
         if FileManager.default.fileExists(atPath:url.path) { return try decode(Data(contentsOf:url)) }
         if FileManager.default.fileExists(atPath:legacyURL.path) {
             var catalog=try JSONDecoder().decode(SpeciesCatalog.self,from:Data(contentsOf:legacyURL))
-            let original=catalog
+            guard !catalog.species.isEmpty, Set(catalog.species.map(\.id)).count == catalog.species.count else {
+                throw NSError(domain:"BirdSettings",code:3)
+            }
             let ids=Set(catalog.species.map(\.id))
             catalog.species += SpeciesCatalog.standard.species.filter{!ids.contains($0.id)}
             var result=BirdSettings(catalog:try SpeciesCatalog.decode(JSONEncoder().encode(catalog)))
-            result.probabilities=ProbabilityDistribution(catalog:original)
-            try result.probabilities.includeNewSpecies()
-            result.pendingSpecies=catalog.species.map(\.id).filter{!ids.contains($0)}
+            result.migration = ProbabilityMigration(fromSchemaVersion: 0)
             result.perchDefaultsVersion=nil
+            // The original legacy file remains intact as the rollback copy.
             return try decode(JSONEncoder().encode(result))
         }
         return BirdSettings()

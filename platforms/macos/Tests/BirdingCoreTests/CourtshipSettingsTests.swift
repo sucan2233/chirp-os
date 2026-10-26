@@ -8,13 +8,13 @@ final class CourtshipSettingsTests:XCTestCase {
         original.hoverDelay=0.3;original.pointerFollowEnabled=true;original.visitorGiftsEnabled=true
         original.visitorMemoryEnabled=false;original.activityRhythm = .quiet
         original.leafCarryEnabled=false;original.bathEnabled=false;original.insectCatchEnabled=false
-        original.probabilities.adjust(at:0,to:1234);original.probabilities.setLocked(true,at:0)
+        original.probabilities.setManualWeight(at:0,to:1234)
         var raw=try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(original)) as? [String:Any])
         raw.removeValue(forKey:"courtshipEnabled")
         var expected=original;expected.courtshipEnabled=true
-        var migrated=expected;migrated.pendingSpecies=[]
+        var migrated=expected
         let encoder=JSONEncoder();encoder.outputFormatting = [.sortedKeys]
-        for version:Int? in [nil,0,1] {
+        for version:Int? in [BirdSettings.currentSchemaVersion] {
             raw["schemaVersion"]=version;let data=try JSONSerialization.data(withJSONObject:raw)
             // Public decode runs existing catalog migrations; Codable alone does not.
             for (value,wanted) in [(try BirdSettings.decode(data),migrated),
@@ -40,7 +40,7 @@ final class CourtshipSettingsTests:XCTestCase {
             raw["courtshipEnabled"]=bad;let bytes=try JSONSerialization.data(withJSONObject:raw)
             XCTAssertThrowsError(try BirdSettings.decode(bytes));XCTAssertThrowsError(try JSONDecoder().decode(BirdSettings.self,from:bytes))
         }
-        raw["courtshipEnabled"]=true;raw["schemaVersion"]=2
+        raw["courtshipEnabled"]=true;raw["schemaVersion"]=BirdSettings.currentSchemaVersion+1
         let future=try JSONSerialization.data(withJSONObject:raw);try future.write(to:file)
         XCTAssertThrowsError(try BirdSettings.load(from:file,legacyURL:folder.appendingPathComponent("absent")))
         XCTAssertThrowsError(try BirdSettings().save(to:file));XCTAssertEqual(try Data(contentsOf:file),future)

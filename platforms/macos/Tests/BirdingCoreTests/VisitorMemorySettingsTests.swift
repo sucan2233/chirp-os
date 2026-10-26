@@ -6,26 +6,26 @@ final class VisitorMemorySettingsTests: XCTestCase {
     func testNewSettingsEnableMemoryWithoutChangingSchemaVersion() throws {
         let settings=BirdSettings()
         XCTAssertTrue(settings.visitorMemoryEnabled)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,1)
-        XCTAssertEqual(settings.schemaVersion,1)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(settings.schemaVersion,BirdSettings.currentSchemaVersion)
         let object=try settingsObject(settings)
-        XCTAssertEqual(object["schemaVersion"] as? Int,1)
+        XCTAssertEqual(object["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(object["visitorMemoryEnabled"] as? Bool,true)
     }
 
     func testMissingOrNullMemoryMigratesOnForEverySupportedSchema() throws {
         let original=configuredSettings()
-        for version:Int? in [nil,0,1] {
+        for version:Int? in [BirdSettings.currentSchemaVersion] {
             for nullValue in [false,true] {
                 var object=try settingsObject(original)
                 if let version {object["schemaVersion"]=version}
-                else {object.removeValue(forKey:"schemaVersion")}
+                else {object["schemaVersion"]=BirdSettings.currentSchemaVersion}
                 if nullValue {object["visitorMemoryEnabled"]=NSNull()}
                 else {object.removeValue(forKey:"visitorMemoryEnabled")}
                 let data=try JSONSerialization.data(withJSONObject:object)
                 for migrated in [try JSONDecoder().decode(BirdSettings.self,from:data),try BirdSettings.decode(data)] {
                     XCTAssertTrue(migrated.visitorMemoryEnabled)
-                    XCTAssertEqual(migrated.schemaVersion,1)
+                    XCTAssertEqual(migrated.schemaVersion,BirdSettings.currentSchemaVersion)
                     try assertOtherSettingsEqual(migrated,original)
                 }
             }
@@ -50,7 +50,7 @@ final class VisitorMemorySettingsTests: XCTestCase {
                 XCTAssertEqual(saved.visitorMemoryEnabled,enabled)
                 XCTAssertEqual(saved.perchActions,master)
                 XCTAssertEqual(object["visitorMemoryEnabled"] as? Bool,enabled)
-                XCTAssertEqual(object["schemaVersion"] as? Int,1)
+                XCTAssertEqual(object["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)
                 try assertOtherSettingsEqual(saved,original)
             }
         }
@@ -102,8 +102,8 @@ final class VisitorMemorySettingsTests: XCTestCase {
         settings.flockPasses=false;settings.socialInteractions=false;settings.perchActions=false
         settings.passiveAttentionEnabled=false;settings.sideHopEnabled=false;settings.takeoffPreparationEnabled=false
         settings.leafPlayEnabled=false;settings.ambientLeafPlayEnabled=false;settings.ambientFrequency = .high
-        settings.probabilities.adjust(at:0,to:1234);settings.probabilities.setLocked(true,at:0)
-        settings.catalog.species[0].speed=1.25;settings.pendingSpecies=[.nightHeron]
+        settings.probabilities.setManualWeight(at:0,to:1234)
+        settings.catalog.species[0].speed=1.25
         return settings
     }
 

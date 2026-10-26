@@ -19,11 +19,11 @@ final class SpeciesTests: XCTestCase {
     }
     func testWeightedSelectionBoundariesAndDisabledBirds() throws {
         let c = try SpeciesCatalog.decode(data { for i in $0.indices { $0[i]["weight"] = i == 1 ? 1 : (i == 6 ? 3 : 0) } })
-        XCTAssertEqual(c.choose(unit:0).id,.treeSparrow)
-        XCTAssertEqual(c.choose(unit:0.2499).id,.treeSparrow)
-        XCTAssertEqual(c.choose(unit:0.25).id,.longTailedShrike)
-        XCTAssertEqual(c.choose(unit:1).id,.longTailedShrike)
-        let draws = (0..<1000).map { c.choose(unit:Double($0)/1000).id }
+        XCTAssertEqual(c.choose(unit:0)?.id,.treeSparrow)
+        XCTAssertEqual(c.choose(unit:0.2499)?.id,.treeSparrow)
+        XCTAssertEqual(c.choose(unit:0.25)?.id,.longTailedShrike)
+        XCTAssertNil(c.choose(unit:1))
+        let draws = (0..<1000).map { c.choose(unit:Double($0)/1000)?.id }
         XCTAssertEqual(draws.filter{$0 == .treeSparrow}.count,250)
         XCTAssertEqual(draws.filter{$0 == .longTailedShrike}.count,750)
     }

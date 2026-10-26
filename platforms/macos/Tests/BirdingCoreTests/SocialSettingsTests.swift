@@ -30,7 +30,6 @@ final class SocialSettingsTests: XCTestCase {
         XCTAssertEqual(migrated.hoverDelay,1)
         XCTAssertEqual(migrated.probabilities,original.probabilities)
         XCTAssertEqual(migrated.catalog.species,original.catalog.species)
-        XCTAssertEqual(migrated.pendingSpecies,original.pendingSpecies)
     }
 
     func testSocialSwitchSaveAndReloadPreservesOtherSettings() throws {
@@ -77,10 +76,9 @@ final class SocialSettingsTests: XCTestCase {
         var settings=BirdSettings()
         settings.hoverDelay=0.25;settings.pointerVisits=false;settings.flockPasses=false
         settings.perchActions=false;settings.ambientFrequency = .high
-        settings.probabilities.adjust(at:0,to:1234)
-        settings.probabilities.setLocked(true,at:0)
+        settings.probabilities.setManualWeight(at:0,to:1234)
         settings.catalog.species[0].speed=1.25
-        settings.pendingSpecies=[.nightHeron]
+
         return settings
     }
 
@@ -93,6 +91,5 @@ final class SocialSettingsTests: XCTestCase {
         XCTAssertEqual(actual.probabilities,expected.probabilities,file:file,line:line)
         XCTAssertEqual(actual.catalog.species,expected.catalog.species,file:file,line:line)
         XCTAssertEqual(actual.perchDefaultsVersion,expected.perchDefaultsVersion,file:file,line:line)
-        XCTAssertEqual(actual.pendingSpecies,expected.pendingSpecies,file:file,line:line)
     }
 }

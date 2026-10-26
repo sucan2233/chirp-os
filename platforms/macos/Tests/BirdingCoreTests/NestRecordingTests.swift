@@ -12,7 +12,7 @@ final class NestRecordingTests:XCTestCase {
     func testHandwrittenCarryAndBuildFixturesKeepIndependentTransactionsPauseCompletionAndCleanupAtAllRates() throws {
         for name in ["nest-material-carry","nest-build"] {
             let log=try fixture(name)
-            XCTAssertEqual(log.simulationVersion,22)
+            XCTAssertEqual(log.simulationVersion,23)
             func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
                 var value=log;value.inputs=Array(log.inputs.prefix(count));return try value.replay(callbackHz:hz)
             }
@@ -83,7 +83,7 @@ final class NestRecordingTests:XCTestCase {
     func testRealProductionRecordingReplaysAllFieldsAndRejectsItsIntactVersionSeventeenEnvelope() throws {
         var settings=F.settings()
         let index=try XCTUnwrap(settings.probabilities.entries.firstIndex{$0.id==F.species})
-        settings.probabilities.adjust(at:index,to:10000)
+        for entry in settings.probabilities.entries { settings.probabilities.setWeight(0, for: entry.id) }; settings.probabilities.setManualWeight(at:index,to:1)
         let profile=try XCTUnwrap(settings.catalog.species.firstIndex{$0.id==F.species})
         settings.catalog.species[profile].perchMin=120;settings.catalog.species[profile].perchMax=180
         let e=BehaviorEngine(seed:2701,settings:settings,recordInputs:true)
@@ -109,7 +109,7 @@ final class NestRecordingTests:XCTestCase {
         F.clear(e)
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
         let expected=try XCTUnwrap(log.expected)
-        XCTAssertEqual(log.simulationVersion,22);XCTAssertNil(log.failure);XCTAssertNil(log.fixtureBirds)
+        XCTAssertEqual(log.simulationVersion,23);XCTAssertNil(log.failure);XCTAssertNil(log.fixtureBirds)
         XCTAssertEqual(expected.events.filter{$0.kind=="nestMaterialCarry" && $0.type=="completed"}.map(\.source),["user"])
         XCTAssertEqual(expected.events.filter{$0.kind=="nestBuild" && $0.type=="completed"}.map(\.source),["preview"])
         for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),expected)}

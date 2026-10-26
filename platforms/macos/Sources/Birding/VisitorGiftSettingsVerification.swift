@@ -34,14 +34,11 @@ enum VisitorGiftSettingsVerification {
         let decoded=try JSONDecoder().decode(BirdSettings.self,from:legacyData)
         let migrated=try BirdSettings.decode(legacyData)
         var expected=defaults;expected.hoverDelay=0.37;expected.pointerFollowEnabled=true
-        // Codable preserves absent pendingSpecies as nil. The existing public
-        // loader normalizes it to an ordered list, empty for a complete catalog.
-        // Keep both full comparisons: gift migration must change no preference.
-        var normalizedExpected=expected;normalizedExpected.pendingSpecies=[]
+        let normalizedExpected=expected
         let decodedData=try encoded(decoded),expectedData=try encoded(expected)
         let migratedData=try encoded(migrated),normalizedData=try encoded(normalizedExpected)
         checks["visitorGiftSettingsMissingKeyDefaultsOffPreservesExistingValues"] = !decoded.visitorGiftsEnabled &&
-            !migrated.visitorGiftsEnabled && decoded.pendingSpecies==nil && migrated.pendingSpecies==[] &&
+            !migrated.visitorGiftsEnabled &&
             decodedData==expectedData && migratedData==normalizedData
         var fixtureSettings=migrated
         fixtureSettings.perchActions=false;fixtureSettings.passiveAttentionEnabled=false
@@ -128,7 +125,7 @@ enum VisitorGiftSettingsVerification {
                 else if dependency=="perch" {disabled.fixedPerchesEnabled=false}
                 else {
                     guard let index=disabled.probabilities.entries.firstIndex(where:{$0.id == .azureWingedMagpie}) else {throw failure("Missing magpie probability")}
-                    disabled.probabilities.adjust(at:index,to:0)
+                    disabled.probabilities.setManualWeight(at:index,to:0)
                 }
                 try d.applySettings(disabled)
                 reject(w,d:d,reason:.disabled,key:key+"SavedDependencyRejects-"+dependency,into:&checks)

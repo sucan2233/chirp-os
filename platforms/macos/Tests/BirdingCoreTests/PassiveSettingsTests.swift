@@ -143,8 +143,8 @@ final class PassiveSettingsTests: XCTestCase {
         settings.perchActions=false;settings.leafPlayEnabled=false
         settings.hoverDelay=0.25;settings.pointerVisits=false;settings.pointerFollowEnabled=true
         settings.flockPasses=false;settings.socialInteractions=false;settings.ambientFrequency = .high
-        settings.probabilities.adjust(at:0,to:1234);settings.probabilities.setLocked(true,at:0)
-        settings.catalog.species[0].speed=1.25;settings.pendingSpecies=[.nightHeron]
+        settings.probabilities.setManualWeight(at:0,to:1234)
+        settings.catalog.species[0].speed=1.25
         return settings
     }
 
@@ -160,6 +160,5 @@ final class PassiveSettingsTests: XCTestCase {
         XCTAssertEqual(actual.probabilities,expected.probabilities,file:file,line:line)
         XCTAssertEqual(actual.catalog.species,expected.catalog.species,file:file,line:line)
         XCTAssertEqual(actual.perchDefaultsVersion,expected.perchDefaultsVersion,file:file,line:line)
-        XCTAssertEqual(actual.pendingSpecies,expected.pendingSpecies,file:file,line:line)
     }
 }

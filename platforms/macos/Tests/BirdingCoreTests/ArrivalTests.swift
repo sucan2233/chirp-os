@@ -12,7 +12,7 @@ final class ArrivalTests: XCTestCase {
     private func fixture(displays:[CGRect],scale:CGFloat,species:SpeciesID,seed:UInt64=73) -> BehaviorEngine {
         var settings=BirdSettings()
         let index=settings.probabilities.entries.firstIndex{$0.id == species}!
-        settings.probabilities.adjust(at:index,to:10000)
+        for entry in settings.probabilities.entries { settings.probabilities.setWeight(0, for: entry.id) }; settings.probabilities.setManualWeight(at:index,to:1)
         // Exercise the largest supported species setting as well as global zoom.
         let profileIndex=settings.catalog.species.firstIndex{$0.id == species}!
         settings.catalog.species[profileIndex].adultLengthCM=110
@@ -36,6 +36,19 @@ final class ArrivalTests: XCTestCase {
         // not contribute any target movement in these fixtures.
         let waveSpeed=motion.wave*(2 * .pi/motion.cycle + .pi/max(0.001,bird.flightDuration))
         return CGFloat((cruise+waveSpeed)*BehaviorEngine.step)+0.1
+    }
+
+    func testAllZeroWeightsPauseArrivalsUntilDefaultsAreRestored() {
+        var settings=BirdSettings()
+        for entry in settings.probabilities.entries {settings.probabilities.setWeight(0,for:entry.id)}
+        settings.probabilities.manualAdjustmentEnabled=true
+        let engine=BehaviorEngine(seed:73);engine.populationEnabled=false;engine.ambientEnabled=false
+        engine.applySettings(settings)
+        engine.updateWorld(BehaviorWorld(screens:layouts[0],displays:layouts[0]))
+        for _ in 0..<10 {engine.bringInBird()}
+        XCTAssertTrue(engine.birds.isEmpty);XCTAssertEqual(engine.arrivalCount,0)
+        settings.probabilities.resetToDefaults();engine.applySettings(settings);engine.bringInBird()
+        XCTAssertEqual(engine.arrivalCount,1)
     }
 
     func testFailedArrivalDoesNotPublishAnUnplannedBirdAndCanRetry() {

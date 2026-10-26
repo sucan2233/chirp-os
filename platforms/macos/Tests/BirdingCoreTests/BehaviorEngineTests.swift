@@ -248,7 +248,7 @@ final class BehaviorEngineTests:XCTestCase {
         }
         settings.pointerVisits=true;settings.flockPasses=true
         var solo=settings.catalog;solo.species=[solo.profile(.commonKestrel)]
-        settings.probabilities=ProbabilityDistribution(catalog:solo);e.applySettings(settings)
+        for entry in settings.probabilities.entries { settings.probabilities.setWeight(entry.id == .commonKestrel ? 1 : 0, for: entry.id) }; settings.probabilities.manualAdjustmentEnabled=true;e.applySettings(settings)
         for source:BehaviorSource in [.preview,.automatic] {XCTAssertEqual(e.handle(.flockPass(source)),.rejected(.noSpecies))}
         e.updateWorld(BehaviorWorld())
         XCTAssertEqual(e.handle(.relocate(id)),.rejected(.noSpace))

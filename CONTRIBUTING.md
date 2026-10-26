@@ -1,5 +1,9 @@
 # ChirpOS Pro 维护约定
 
+## 平台范围
+
+本分支仅维护 macOS。Windows 源码与旧构建脚本保留为历史参考，不再开发、构建、测试或发布，也不要求与 macOS 同步。`shared/` 仍用于 macOS 资源导出与回放验收；资源检查不依赖 Windows 或 .NET。自动化协作须遵守根目录 [AGENTS.md](AGENTS.md)。
+
 ## 分支与仓库
 
 - `main`：本项目自主维护的主分支，保留M6、M7、上游整合、M8、E0–E5和Pro打包成果，作为后续开发与打包基线。

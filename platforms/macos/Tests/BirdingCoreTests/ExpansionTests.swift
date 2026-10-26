@@ -2,67 +2,6 @@ import XCTest
 @testable import BirdingCore
 
 final class ExpansionTests:XCTestCase {
-    func testOldSettingsPreserveLockedProbabilityAndCustomBehavior() throws {
-        var obj=try JSONSerialization.jsonObject(with:JSONEncoder().encode(BirdSettings())) as! [String:Any]
-        var catalog=obj["catalog"] as! [String:Any]
-        var old=Array((catalog["species"] as! [[String:Any]]).prefix(7));old[0]["adultLengthCM"]=21
-        catalog["species"]=old;obj["catalog"]=catalog
-        var entries=old.map{["id":$0["id"]!,"points":0,"locked":false] as [String:Any]}
-        entries[0]["points"]=10000;entries[0]["locked"]=true;obj["probabilities"]=["entries":entries]
-        let upgraded=try BirdSettings.decode(JSONSerialization.data(withJSONObject:obj))
-        XCTAssertEqual(upgraded.pendingSpecies?.count,93)
-        XCTAssertEqual(upgraded.catalog.species.count,100)
-        XCTAssertEqual(upgraded.catalog.profile(.redWhiskeredBulbul).adultLengthCM,21)
-        XCTAssertEqual(upgraded.probabilities.entries[0].points,10000)
-        XCTAssertTrue(upgraded.probabilities.entries[0].locked)
-        XCTAssertTrue(upgraded.probabilities.entries.dropFirst(7).allSatisfy{$0.points==0 && !$0.locked})
-        XCTAssertTrue(upgraded.probabilities.isValid)
-    }
-
-    func testNewSpeciesAllocationAndPendingPersistence() throws {
-        var settings=BirdSettings()
-        let ids=Array(settings.catalog.species.dropFirst(7).map(\.id))
-        settings.pendingSpecies=ids
-        settings.probabilities.adjust(at:0,to:10000)
-        settings.probabilities.setLocked(true,at:0)
-        let locked=settings.probabilities
-        XCTAssertFalse(settings.probabilities.allocateNewSpecies(ids,catalog:.standard))
-        XCTAssertEqual(settings.probabilities,locked)
-        settings.probabilities.setLocked(false,at:0)
-        XCTAssertTrue(settings.probabilities.allocateNewSpecies(ids,catalog:.standard))
-        settings.probabilities.setLocked(true,at:0)
-        XCTAssertTrue(settings.probabilities.isValid)
-        XCTAssertEqual(settings.probabilities.entries.prefix(7).reduce(0){$0+$1.points},8000)
-        XCTAssertEqual(settings.probabilities.entries.dropFirst(7).reduce(0){$0+$1.points},2000)
-        XCTAssertTrue(settings.probabilities.entries[0].locked)
-        let restored=try BirdSettings.decode(JSONEncoder().encode(settings))
-        XCTAssertEqual(restored.pendingSpecies,ids)
-        settings.pendingSpecies=[]
-        XCTAssertEqual(try BirdSettings.decode(JSONEncoder().encode(settings)).pendingSpecies,[])
-    }
-    func testExisting46SpeciesUpgradeWithoutLosingPreferences() throws {
-        let previous = SpeciesCatalog(species: Array(SpeciesCatalog.standard.species.prefix(46)))
-        let additions = Set(SpeciesCatalog.standard.species.dropFirst(46).map(\.id))
-        var old = BirdSettings(catalog: previous)
-        old.pendingSpecies = []
-        old.probabilities.adjust(at: 0, to: 1234)
-        old.probabilities.setLocked(true, at: 0)
-        let upgraded = try BirdSettings.decode(JSONEncoder().encode(old))
-        XCTAssertEqual(upgraded.catalog.species.count, 100)
-        XCTAssertEqual(additions.count, 54)
-        XCTAssertEqual(Set(upgraded.pendingSpecies ?? []), additions)
-        XCTAssertEqual(Array(upgraded.probabilities.entries.prefix(46)), old.probabilities.entries)
-        XCTAssertTrue(upgraded.probabilities.entries.suffix(54).allSatisfy { $0.points == 0 && !$0.locked })
-        XCTAssertTrue(upgraded.probabilities.isValid)
-        XCTAssertEqual(try BirdSettings.decode(JSONEncoder().encode(upgraded)).pendingSpecies, upgraded.pendingSpecies)
-        var allocated = upgraded
-        XCTAssertTrue(allocated.probabilities.allocateNewSpecies(Array(additions), catalog: .standard))
-        XCTAssertEqual(allocated.probabilities.entries[0], upgraded.probabilities.entries[0])
-        XCTAssertEqual(allocated.probabilities.entries.suffix(54).reduce(0) { $0 + $1.points }, 2000)
-        XCTAssertTrue(allocated.probabilities.isValid)
-        XCTAssertTrue(allocated.probabilities.entries[0].locked)
-    }
-
     func testNationalCatalogAndDistinctTitIdentity() {
         let catalog=SpeciesCatalog.standard
         XCTAssertEqual(catalog.species.count,100)

@@ -3,7 +3,7 @@
 这些 JSON 是引擎输入，采用 Quartz 桌面坐标（向右为 x 正方向，向下为 y 正方向）。它们不依赖 AppKit、窗口标题、桌面截图或用户配置，供 macOS 与后续 Windows 核心运行同一场景。
 
 - `version`：文件格式版本；未知版本拒绝，不能忽略无法理解的事件。
-- `simulationVersion`：U整合当前为19，新增100种默认目录、窗口宿主资格/飞行遮挡分离及观鸟点击分类；文件格式 `version` 仍为1。旧真实录制1–18必须在对应历史提交重放或重新录制，不得改版本标签。仓库22份JSON已从明确场景源码重建为v19，并通过30/60/120Hz一致性检查；旧v18真实录制仍明确拒绝。新的手写场景从 `SharedBehaviorExport.swift` 重建，不读取旧JSON；新 `expected` 仅冻结回归输出，独立语义断言仍负责判断动作是否正确；旧M6/M7结果仅作历史证据。
+- `simulationVersion`：概率 V2 当前为 23，设置 schemaVersion=2。22 份 JSON 已从 `SharedBehaviorExport.swift` 的声明式场景重新导出；种子结果不与 v22 保持一致。文件格式 `version` 仍为 1，旧录制必须用对应引擎回放，不能仅更改版本标签。独立语义断言与 30/60/120Hz 一致性检查负责验收。
 - `seed`、鸟/运行/道具/栖息地对象 ID 使用十进制字符串，避免 JavaScript 等环境丢失 64 位整数精度。
 - `settings`：完整配置或合法的旧格式配置；按 BirdSettings schema 迁移。
 - `initialWorld`、`fixtureBirds`：共享夹具可指定初始表面和已停稳鸟；可选 `flightOrigin` 让鸟从该坐标开始普通直达飞行，仍需 `advance` 输入才能移动和产生速度。生产录制从空引擎开始，不注入或还原任意中途的可变 Bird。

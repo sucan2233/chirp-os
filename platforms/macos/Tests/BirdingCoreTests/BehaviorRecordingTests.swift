@@ -9,7 +9,7 @@ final class BehaviorRecordingTests:XCTestCase {
         // separate contract and must not choose an unreviewed watch candidate.
         var settings=BirdSettings()
         let sparrow=settings.probabilities.entries.firstIndex{$0.id == .treeSparrow}!
-        settings.probabilities.adjust(at:sparrow,to:10_000)
+        for entry in settings.probabilities.entries { settings.probabilities.setWeight(0, for: entry.id) }; settings.probabilities.setManualWeight(at:sparrow,to:1)
         settings.ambientLeafPlayEnabled=false
         let e=BehaviorEngine(seed:UInt64.max-100,settings:settings,recordInputs:record)
         e.populationEnabled=false;e.ambientEnabled=false;e.autonomousRouting=false
@@ -103,17 +103,17 @@ final class BehaviorRecordingTests:XCTestCase {
             XCTAssertThrowsError(try BehaviorInputLog.decode(JSONSerialization.data(withJSONObject:object)))
         }
     }
-    func testCompletedExpansionRecordsVersionTwentyTwoAndRejectsPriorSimulationSemantics() throws {
+    func testRelativeWeightsRecordVersionTwentyThreeAndRejectPriorSimulationSemantics() throws {
         let e=fixture();e.bringInBird();advance(e,1)
         let current=try e.recordedInputs()
         XCTAssertEqual(BehaviorInputLog.currentVersion,1)
-        XCTAssertEqual(BehaviorInputLog.engineVersion,22)
-        XCTAssertEqual(current.simulationVersion,22)
-        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,22)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,23)
+        XCTAssertEqual(current.simulationVersion,23)
+        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,23)
 
         // Exercise the compatibility boundary with a well-formed old envelope.
         // Never promote its version and replay it under the newly expanded lists.
-        for version in [10,11,12,13,14,15,16,17,18,19,20,21] {
+        for version in [10,11,12,13,14,15,16,17,18,19,20,21,22] {
         var old=current;old.simulationVersion=version
         let data=try BehaviorInputLog.encoder().encode(old)
         XCTAssertEqual(old.expected,current.expected)
@@ -262,7 +262,7 @@ final class BehaviorRecordingTests:XCTestCase {
         XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json","food-tray.json","bath.json","leaf-carry.json","insect-catch.json","flycatcher-insect-catch.json","visitor-gift.json","courtship-display.json","nest-material-carry.json","nest-build.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
-            XCTAssertEqual(log.simulationVersion,22,file.lastPathComponent)
+            XCTAssertEqual(log.simulationVersion,23,file.lastPathComponent)
             XCTAssertEqual(try XCTUnwrap(log.expected),reference,file.lastPathComponent)
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
             XCTAssertEqual(try log.replay(callbackHz:120),reference,file.lastPathComponent)

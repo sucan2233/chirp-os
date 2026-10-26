@@ -190,7 +190,7 @@ struct NestVisitSchedule {
     /// Do not repeat owner/cooldown/quiet admission checks inside this function.
     func canBegin(in engine:BehaviorEngine) -> Bool {
         guard engine.settings.nestBuildingEnabled,engine.world.nestArtAvailable,
-              engine.settings.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0}),
+              engine.settings.probabilities.participates(.spottedDove),
               let bird=engine.bird(id),bird.motionRevision==initialRevision,
               engine.runtime.owners[id]==nil || engine.runtime.kind(for:id)==kind,
               NestVisitGeometry.ordinaryResident(bird,in:engine)==origin,bird.position==originFoot,
@@ -210,7 +210,7 @@ struct NestVisitSchedule {
                            target:HabitatObjectID?) -> [Self] {
         guard !engine.paused,!engine.world.buttonsDown,!engine.ambientBusy,
               engine.settings.nestBuildingEnabled,engine.world.nestArtAvailable,
-              engine.settings.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0}),
+              engine.settings.probabilities.participates(.spottedDove),
               BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:source),
               source != .automatic || (engine.ambientEnabled && engine.settings.activityRhythm != .quiet)
         else {return []}

@@ -3,18 +3,18 @@ import XCTest
 
 final class InsectCatchSettingsTests:XCTestCase {
     func testMissingSwitchDefaultsTrueAcrossOldSchemasAndRetainsExistingUserPreferences() throws {
-        XCTAssertTrue(BirdSettings().insectCatchEnabled);XCTAssertEqual(BirdSettings.currentSchemaVersion,1)
+        XCTAssertTrue(BirdSettings().insectCatchEnabled);XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
         var original=BirdSettings();original.insectCatchEnabled=false
         original.hoverDelay=0.3;original.pointerFollowEnabled=true
         original.leafCarryEnabled=false;original.bathEnabled=false;original.foodTrayEnabled=false
         original.activityRhythm = .quiet;original.ambientFrequency = .high
-        original.probabilities.adjust(at:0,to:1234);original.probabilities.setLocked(true,at:0)
+        original.probabilities.setManualWeight(at:0,to:1234)
         var raw=try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(original)) as? [String:Any])
         raw.removeValue(forKey:"insectCatchEnabled")
-        for version:Int? in [nil,0,1] {
+        for version:Int? in [BirdSettings.currentSchemaVersion] {
             raw["schemaVersion"]=version
             let restored=try BirdSettings.decode(JSONSerialization.data(withJSONObject:raw))
-            XCTAssertTrue(restored.insectCatchEnabled);XCTAssertEqual(restored.schemaVersion,1)
+            XCTAssertTrue(restored.insectCatchEnabled);XCTAssertEqual(restored.schemaVersion,BirdSettings.currentSchemaVersion)
             XCTAssertEqual(restored.hoverDelay,original.hoverDelay);XCTAssertEqual(restored.pointerFollowEnabled,original.pointerFollowEnabled)
             XCTAssertEqual(restored.leafCarryEnabled,original.leafCarryEnabled);XCTAssertEqual(restored.bathEnabled,original.bathEnabled)
             XCTAssertEqual(restored.foodTrayEnabled,original.foodTrayEnabled);XCTAssertEqual(restored.probabilities,original.probabilities)

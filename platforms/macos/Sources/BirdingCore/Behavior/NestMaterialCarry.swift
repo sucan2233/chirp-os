@@ -101,7 +101,7 @@ class NestActivityExecution:NestMotionExecution {
     }
     func validate(in engine:BehaviorEngine)->BehaviorCompletion? {
         guard engine.settings.nestBuildingEnabled,
-              engine.settings.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0})
+              engine.settings.probabilities.participates(.spottedDove)
         else {return .cancelled(.settingsChanged)}
         guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         guard engine.world.nestArtAvailable,

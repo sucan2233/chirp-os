@@ -57,7 +57,7 @@ enum SharedBehaviorExport {
             settings=BirdSettings()
             // Scene admission must not depend on the changing national weights.
             let index=settings.probabilities.entries.firstIndex{$0.id == species}!
-            settings.probabilities.adjust(at:index,to:10_000)
+            for entry in settings.probabilities.entries { settings.probabilities.setWeight(0, for: entry.id) }; settings.probabilities.setManualWeight(at:index,to:1)
             settings.ambientLeafPlayEnabled=false
             settings.pointerFollowEnabled = !quiet
             if quiet {

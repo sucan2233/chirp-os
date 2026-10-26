@@ -9,7 +9,7 @@ final class FlycatcherInsectCatchRecordingTests:XCTestCase {
         let root=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let log=try BehaviorInputLog.load(from:root.appendingPathComponent("shared/behavior-fixtures/v1/flycatcher-insect-catch.json"))
-        XCTAssertEqual(log.simulationVersion,22)
+        XCTAssertEqual(log.simulationVersion,23)
         func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
             var input=log;input.inputs=Array(log.inputs.prefix(count));return try input.replay(callbackHz:hz)
         }
@@ -99,7 +99,7 @@ final class FlycatcherInsectCatchRecordingTests:XCTestCase {
     func testProductionCurrentVersionRecordingCompletesWithoutInjectionAndRejectsTheActualVersionFourteenEnvelope() throws {
         var settings=Common.settings()
         let index=try XCTUnwrap(settings.probabilities.entries.firstIndex{$0.id==F.species})
-        settings.probabilities.adjust(at:index,to:10000)
+        for entry in settings.probabilities.entries { settings.probabilities.setWeight(0, for: entry.id) }; settings.probabilities.setManualWeight(at:index,to:1)
         let e=BehaviorEngine(seed:2101,settings:settings,recordInputs:true)
         e.populationEnabled=false;e.ambientEnabled=false;e.autonomousRouting=false
         e.updateWorld(.init(screens:[F.display],displays:[F.display],surfaces:[F.host()],
@@ -116,7 +116,7 @@ final class FlycatcherInsectCatchRecordingTests:XCTestCase {
         XCTAssertEqual(Common.terminals(e,run).map(\.type),[.completed])
         XCTAssertEqual(bird.state,.perched);XCTAssertEqual(bird.position,foot)
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(log.simulationVersion,22);XCTAssertNotNil(log.expected);XCTAssertNil(log.failure)
+        XCTAssertEqual(log.simulationVersion,23);XCTAssertNotNil(log.expected);XCTAssertNil(log.failure)
         XCTAssertEqual(log.inputs.filter{$0.command?.name=="insectCatch"}.map{$0.command?.species},[F.species.rawValue,F.species.rawValue])
         for hz in [30,60,120] {XCTAssertEqual(try log.replay(callbackHz:hz),log.expected)}
         // This is a complete real recording, including its real expected report;

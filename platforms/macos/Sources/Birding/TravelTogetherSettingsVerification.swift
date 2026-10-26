@@ -21,7 +21,7 @@ enum TravelTogetherSettingsVerification {
         let d=isolatedDesktop(preferences:preferences,folder:evidence)
         let defaults=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
         checks["travelTogetherDefaultsOnWithoutWriting"] = defaults.travelTogetherEnabled && defaults.socialInteractions &&
-            defaults.schemaVersion==1 && !FileManager.default.fileExists(atPath:d.settingsURL.path)
+            defaults.schemaVersion==BirdSettings.currentSchemaVersion && !FileManager.default.fileExists(atPath:d.settingsURL.path)
         let cancelled=SpeciesSettingsWindow(desktop:d);cancelled.showWindow(nil)
         configure(cancelled,master:false,child:false)
         checks["travelTogetherOnlyEditsDraft"] = !cancelled.draft.travelTogetherEnabled &&
@@ -37,7 +37,7 @@ enum TravelTogetherSettingsVerification {
             w.travelTogetherButton.state == .on && w.travelTogetherButton.isEnabled
         w.tabs.selectTabViewItem(at:2)
         w.hoverDelayField.stringValue="0.25";w.detailFields[0][2].stringValue="1.25"
-        w.sliders[0].doubleValue=35;w.sliderChanged(w.sliders[0]);w.locks[0].performClick(nil)
+        w.manualAdjustmentButton.performClick(nil);w.fields[0].stringValue="350";w.controlTextDidEndEditing(Notification(name:NSControl.textDidEndEditingNotification,object:w.fields[0]))
         for child in [false,true] {
             configure(w,master:true,child:child)
             let before=try settingsData(w.draft)
@@ -61,7 +61,7 @@ enum TravelTogetherSettingsVerification {
         checks["travelTogetherSaveAndReloadRetainChildWithMasterOff"] = !masterOff.socialInteractions &&
             masterOff.travelTogetherEnabled && !w.travelTogetherButton.isEnabled && expected==active && active==stored &&
             stored==restarted && masterOff.hoverDelay==0.25 && masterOff.catalog.species[0].speed==1.25 &&
-            masterOff.probabilities.entries[0].locked
+            masterOff.probabilities.manualAdjustmentEnabled
         configure(w,master:true,child:true)
         w.travelTogetherButton.state = .off;w.save()
         let native=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
@@ -77,7 +77,7 @@ enum TravelTogetherSettingsVerification {
             checks["travelTogetherLanguageRebuildKeepsDraftAndRawEdits-"+suffix] =
                 w.draft.travelTogetherEnabled && !d.settings.travelTogetherEnabled &&
                 w.travelTogetherButton.state == .on && w.hoverDelayField.stringValue=="0.75" &&
-                w.detailFields[0][2].stringValue=="1.5" && w.draft.probabilities.entries[0].locked
+                w.detailFields[0][2].stringValue=="1.5" && w.draft.probabilities.manualAdjustmentEnabled
             try checkLayout(w,suffix:suffix,folder:evidence,checks:&checks)
             checkRejection(w,reasons:[.disabled],suffix:"saved-child-off-"+suffix,checks:&checks)
             d.paused=true
@@ -136,7 +136,7 @@ enum TravelTogetherSettingsVerification {
         return d
     }
     private static func settingsData(_ settings:BirdSettings) throws -> Data {
-        var value=settings;value.pendingSpecies=[]
+        let value=settings
         let encoder=JSONEncoder();encoder.outputFormatting = .sortedKeys
         return try encoder.encode(value)
     }

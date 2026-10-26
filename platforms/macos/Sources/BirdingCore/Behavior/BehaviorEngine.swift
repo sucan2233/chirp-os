@@ -314,7 +314,7 @@ public final class BehaviorEngine {
         if !value.foodTrayEnabled {pendingFoodTrayPlacement=nil;removeHabitatObjects(reason:.settingsChanged,ids:habitatIDs(.foodTray))}
         if !value.bathEnabled {pendingBathPlacement=nil;removeHabitatObjects(reason:.settingsChanged,ids:habitatIDs(.bath))}
         if !value.nestBuildingEnabled {pendingNestPlacement=nil;removeHabitatObjects(reason:.settingsChanged,ids:habitatIDs(.nest))}
-        if !value.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0}) {
+        if !value.probabilities.participates(.spottedDove) {
             runtime.cancel(where:{$0.kind.isNestActivity},reason:.settingsChanged,in:self)
         }
         if !value.leafCarryEnabled {
@@ -322,7 +322,7 @@ public final class BehaviorEngine {
             removeCarriedObjects(reason:.settingsChanged,ids:carriedObjects.objects.values.filter{!$0.isVisitorGift}.map(\.id))
         }
         if !value.visitorGiftsEnabled || !value.visitorMemoryEnabled || !value.fixedPerchesEnabled ||
-            !value.probabilities.entries.contains(where:{$0.id == .azureWingedMagpie && $0.points>0}) {clearVisitorGifts(reason:.settingsChanged)}
+            !value.probabilities.participates(.azureWingedMagpie) {clearVisitorGifts(reason:.settingsChanged)}
         if !value.fixedPerchesEnabled {runtime.cancel(where:{$0.kind == .fixedPerchVisit},reason:.settingsChanged,in:self)}
         refreshFixedPerches(previous:world.surfaces.filter(\.isFixedPerch))
         refreshHabitatObjects()
@@ -359,7 +359,7 @@ public final class BehaviorEngine {
             runtime.cancel(where:{$0.kind == .watch || $0.kind == .alert},reason:.settingsChanged,in:self)
             resetPerception()
         }
-        if !value.courtshipEnabled || !value.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0}) {
+        if !value.courtshipEnabled || !value.probabilities.participates(.spottedDove) {
             runtime.cancel(where:{$0.kind == .courtshipDisplay},reason:.settingsChanged,in:self)
         }
         if !value.allopreeningEnabled {runtime.cancel(where:{$0.kind == .allopreening},reason:.settingsChanged,in:self)}
@@ -612,17 +612,15 @@ public final class BehaviorEngine {
         guard BehaviorDefinitions.definition(for:.flockPass).isEnabled(settings:settings,source:source) else {return reject(.flockPass,source,.disabled)}
         guard !encounterUnavailable,scheduledEncounter == nil else {return reject(.flockPass,source,.busy)}
         guard let screen=random.element(world.displays) else {return reject(.flockPass,source,.noSpace)}
-        let entries=settings.probabilities.entries.filter{$0.points>0 && AmbientFlock.species.contains($0.id)}
-        let total=entries.reduce(0){$0+$1.points}
-        guard total>0 else {return reject(.flockPass,source,.noSpecies)}
-        var ticket=Int(random.unit()*Double(total))
-        let species=entries.first {entry in
-            if ticket<entry.points {return true};ticket-=entry.points;return false
-        }!.id
+        let entries=settings.probabilities.entries.filter { AmbientFlock.species.contains($0.id) }
+        guard let selected = try? WeightedChoice(entries, weight: { $0.weight }).choose(using: random.unit) else {
+            return reject(.flockPass,source,.noSpecies)
+        }
+        let species = selected.id
         let profile=settings.catalog.profile(species),scale=world.scale*profile.relativeScale
         let left=world.displays.map(\.minX).min()!,right=world.displays.map(\.maxX).max()!
         let corridor=CGRect(x:left,y:screen.minY,width:right-left,height:screen.height)
-        let plans=AmbientFlock.plan(screen:corridor,rightward:random.unit()<0.5,count:3+Int(random.unit()*3),spriteScale:scale,
+        let plans=AmbientFlock.plan(screen:corridor,rightward:RandomChoice.chance(0.5, using: random.unit),count:3+Int(random.unit()*3),spriteScale:scale,
                                     speed:FlightBehavior.cruiseSpeed(species,multiplier:profile.speed),random:random.unit)
         guard !plans.isEmpty else {return reject(.flockPass,source,.noSpace)}
         let members=plans.map {plan -> (BirdID,FlockMemberPlan) in
@@ -669,7 +667,7 @@ public final class BehaviorEngine {
             let reason=([BehaviorReason.pointerNearby,.missingFrames,.busy,.noSpace].first{reasons.contains($0)}) ?? .noCompanion
             return reject(.socialGreeting,source,reason)
         }
-        let reverse=socialRandom.unit()<0.5
+        let reverse=RandomChoice.chance(0.5, using: socialRandom.unit)
         let plan=SocialGreetingPlan(initiator:reverse ? pair.1:pair.0,responder:reverse ? pair.0:pair.1)
         let result=runtime.start(SocialGreetingExecution(plan:plan),source:source,in:self)
         if result.accepted {
@@ -809,7 +807,7 @@ public final class BehaviorEngine {
         (source == .automatic || source == .preview) &&
             BehaviorDefinitions.definition(for:.visitorGift).isEnabled(settings:settings,source:source) &&
             (source != .automatic || ambientEnabled) &&
-            settings.probabilities.entries.contains{$0.id == .azureWingedMagpie && $0.points>0}
+            settings.probabilities.participates(.azureWingedMagpie)
     }
     private func giftAdmissionReason(source:BehaviorSource) -> BehaviorReason? {
         if paused {return .paused}
@@ -925,7 +923,7 @@ public final class BehaviorEngine {
     func recoverFromVisitorGift(_ id:BirdID) {recoverFromInsectCatch(id)}
     private func insectSpeciesEnabled(_ species:SpeciesID) -> Bool {
         SpeciesBehaviorProfile.profile(for:species).allows(.insectCatch) &&
-            settings.probabilities.entries.contains{$0.id==species && $0.points>0}
+            settings.probabilities.participates(species)
     }
     /// Species share one entity, opportunity and resolver pipeline, while each
     /// plan retains its own admission, flight and completion contract.
@@ -1102,7 +1100,7 @@ public final class BehaviorEngine {
         guard !paused else {return reject(kind,source,.paused)}
         guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:settings,source:source),
               source != .automatic || ambientEnabled else {return reject(kind,source,.disabled)}
-        guard settings.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0}) else {return reject(kind,source,.noSpecies)}
+        guard settings.probabilities.participates(.spottedDove) else {return reject(kind,source,.noSpecies)}
         guard !world.buttonsDown else {return reject(kind,source,.userInput)}
         guard !encounterUnavailable,scheduledEncounter==nil,!hasNestPlacement,!hasInsectCatchPreview else {return reject(kind,source,.busy)}
         guard world.nestArtAvailable else {return reject(kind,source,.missingFrames)}
@@ -1400,7 +1398,7 @@ public final class BehaviorEngine {
     private func requestCourtship(source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.courtshipDisplay,source,.paused)}
         guard BehaviorDefinitions.definition(for:.courtshipDisplay).isEnabled(settings:settings,source:source) else {return reject(.courtshipDisplay,source,.disabled)}
-        guard settings.probabilities.entries.contains(where:{$0.id == .spottedDove && $0.points>0}) else {return reject(.courtshipDisplay,source,.noSpecies)}
+        guard settings.probabilities.participates(.spottedDove) else {return reject(.courtshipDisplay,source,.noSpecies)}
         guard !encounterUnavailable,scheduledEncounter==nil else {return reject(.courtshipDisplay,source,.busy)}
         guard !world.buttonsDown else {return reject(.courtshipDisplay,source,.userInput)}
         guard source != .automatic || scheduler.canAttemptCourtship else {return reject(.courtshipDisplay,source,.busy)}
@@ -1548,13 +1546,13 @@ public final class BehaviorEngine {
            foodDepartureAttempts[id] != bird.motionRevision,
            BehaviorDefinitions.definition(for:.foodTrayVisit).isEnabled(settings:settings,source:.automatic) {
             foodDepartureAttempts[id]=bird.motionRevision
-            if foodRandom.unit()<0.25,requestFoodTrayVisit(source:.automatic,target:id).accepted {return}
+            if RandomChoice.chance(0.25, using: foodRandom.unit),requestFoodTrayVisit(source:.automatic,target:id).accepted {return}
         }
         if ambientEnabled,!fixedPerches.isEmpty,bird.state == .perched,
            fixedPerchDepartureAttempts[id] != bird.motionRevision,
            BehaviorDefinitions.definition(for:.fixedPerchVisit).isEnabled(settings:settings,source:.automatic) {
             fixedPerchDepartureAttempts[id]=bird.motionRevision
-            if habitatRandom.unit()<0.15,requestFixedPerchVisit(source:.automatic,target:id).accepted {return}
+            if RandomChoice.chance(0.15, using: habitatRandom.unit),requestFixedPerchVisit(source:.automatic,target:id).accepted {return}
         }
         guard let destination=plan(for:bird) else {return}
         if settings.perchActions,settings.takeoffPreparationEnabled,
@@ -1565,8 +1563,10 @@ public final class BehaviorEngine {
     }
     public func bringInBird() {
         beginRecordingInput(RecordedInput(kind:"arrive"));defer {endRecordingInput()}
-        guard let point=Migration.outsidePoint(screens:world.displays,right:random.unit()<0.5,fraction:random.value(in:0.2...0.75),margin:80*world.scale*3+20) else {return}
-        let bird=Bird(position:point,fraction:random.value(in:0.12...0.88),profile:settings.catalog.profile(settings.probabilities.choose(unit:random.unit())),random:random.unit)
+        guard settings.probabilities.totalWeight > 0 else { return }
+        guard let point=Migration.outsidePoint(screens:world.displays,right:RandomChoice.chance(0.5, using: random.unit),fraction:random.value(in:0.2...0.75),margin:80*world.scale*3+20) else {return}
+        guard let species = settings.probabilities.choose(using: random.unit) else { return }
+        let bird=Bird(position:point,fraction:random.value(in:0.12...0.88),profile:settings.catalog.profile(species),random:random.unit)
         // Publish an arrival only after it has a continuous route from its real
         // offscreen origin. An incomplete display snapshot must not create an
         // unplanned bird that becomes visible before a later routing attempt.
@@ -1577,7 +1577,7 @@ public final class BehaviorEngine {
     public func sendAway(_ bird:Bird) {
         var input=RecordedInput(kind:"depart");input.bird=id(of:bird).map{String($0.rawValue)}
         beginRecordingInput(input);defer {endRecordingInput()}
-        guard let point=Migration.outsidePoint(screens:world.displays,right:random.unit()<0.5,fraction:random.value(in:0.2...0.75),margin:80*world.scale*3+20) else {return}
+        guard let point=Migration.outsidePoint(screens:world.displays,right:RandomChoice.chance(0.5, using: random.unit),fraction:random.value(in:0.2...0.75),margin:80*world.scale*3+20) else {return}
         if let id=id(of:bird) {
             if pendingGift?.request.binding.birdID==id {cancelGiftRequest(.replaced)}
             runtime.cancel(bird:id,reason:.replaced,in:self)

@@ -94,21 +94,25 @@ enum SettingsVerification {
                 checks["invalidHoverDelayRejected-\(invalid)"] = d.settings.hoverDelay == 1 && !FileManager.default.fileExists(atPath:d.settingsURL.path) && (w.tabs.selectedTabViewItem?.identifier as? String) == "interaction"
             }
             w.hoverDelayField.stringValue="0.25"
-            checks["allSpeciesEditable"] = w.sliders.count == SpeciesID.allCases.count && w.fields.count == SpeciesID.allCases.count && w.locks.count == SpeciesID.allCases.count
-            let last=w.sliders.count-1
-            w.sliders[last].doubleValue=3;w.sliderChanged(w.sliders[last])
-            checks["lastSpeciesEditable"] = w.draft.probabilities.entries[last].points == 300
-            checks["scrollableSpeciesPages"] = w.tabs.tabViewItems.allSatisfy { ($0.view as? NSScrollView)?.hasVerticalScroller == true }
-            w.sliders[0].doubleValue=35;w.sliderChanged(w.sliders[0])
-            checks["sliderUpdatesPercentAndTotal"] = w.fields[0].stringValue == "35.00" && w.draft.probabilities.isValid
-            w.locks[0].performClick(nil)
-            checks["lockDisablesSliderAndField"] = !w.sliders[0].isEnabled && !w.fields[0].isEnabled
-            w.fields[1].stringValue="80"
-            w.controlTextDidEndEditing(Notification(name:NSControl.textDidEndEditingNotification,object:w.fields[1]))
-            checks["typedInputClampsAndPreservesLock"] = w.draft.probabilities.entries[0].points==3500 && w.draft.probabilities.entries[1].points==6500
+            checks["defaultProbabilityEditorHidden"] = w.probabilityEditor.isHidden && w.manualAdjustmentButton.state == .off
+            checks["allSpeciesEditable"] = w.fields.count == SpeciesID.allCases.count && w.shares.count == SpeciesID.allCases.count
+            w.manualAdjustmentButton.performClick(nil)
+            checks["manualProbabilityEditorVisible"] = !w.probabilityEditor.isHidden && w.draft.probabilities.manualAdjustmentEnabled
+            let last=w.fields.count-1
+            w.fields[last].stringValue="300"
+            w.controlTextDidEndEditing(Notification(name:NSControl.textDidEndEditingNotification,object:w.fields[last]))
+            checks["lastSpeciesEditable"] = w.draft.probabilities.entries[last].weight == 300
+            let untouched=w.draft.probabilities.entries[2].weight
+            w.fields[0].stringValue="350"
+            w.controlTextDidEndEditing(Notification(name:NSControl.textDidEndEditingNotification,object:w.fields[0]))
             w.fields[1].stringValue="32.25"
             w.controlTextDidEndEditing(Notification(name:NSControl.textDidEndEditingNotification,object:w.fields[1]))
-            checks["typedInputUpdatesSliderAndOtherRows"] = w.sliders[1].doubleValue == 32.25 && w.draft.probabilities.isValid && w.draft.probabilities.entries[2].points > 0
+            checks["independentWeightsAbove100"] = w.draft.probabilities.entries[0].weight == 350 && w.draft.probabilities.entries[1].weight == 32.25 && w.draft.probabilities.entries[2].weight == untouched
+            let manual=w.draft.probabilities.overrides
+            w.manualAdjustmentButton.performClick(nil)
+            checks["uncheckUsesDefaultsAndRetainsEdits"] = w.probabilityEditor.isHidden && w.draft.probabilities.overrides == manual && w.draft.probabilities.entries == ProbabilityDistribution().entries
+            w.manualAdjustmentButton.performClick(nil)
+            checks["recheckRestoresManualEdits"] = w.draft.probabilities.entries[0].weight == 350
             let before=w.draft.probabilities
             w.fields[1].stringValue="NaN"
             w.controlTextDidEndEditing(Notification(name:NSControl.textDidEndEditingNotification,object:w.fields[1]))
@@ -143,7 +147,7 @@ enum SettingsVerification {
             }
             w.save()
             let saved=try BirdSettings.decode(Data(contentsOf:d.settingsURL))
-            checks["saveAndReloadPreserveProbabilitiesLocksAndBehavior"] = saved.probabilities == w.draft.probabilities && saved.catalog.profile(.redWhiskeredBulbul).speed == 1.25
+            checks["saveAndReloadPreserveWeightsAndBehavior"] = saved.probabilities == w.draft.probabilities && saved.catalog.profile(.redWhiskeredBulbul).speed == 1.25
             checks["hoverDelaySavedAndAppliedImmediately"] = saved.hoverDelay == 0.25 && d.settings.hoverDelay == 0.25
             checks["perchSettingSavedAndAppliedImmediately"] = !saved.perchActions && !d.settings.perchActions
             checks["socialSettingSavedAndAppliedImmediately"] = !saved.socialInteractions && !d.settings.socialInteractions
@@ -240,15 +244,16 @@ enum SettingsVerification {
             checks["oldSettingsEnablePerchWithoutLosingOtherEdits"] = migrated.perchActions && migrated.hoverDelay == ambientSaved.hoverDelay && migrated.pointerVisits == ambientSaved.pointerVisits && migrated.flockPasses == ambientSaved.flockPasses && migrated.ambientFrequency == ambientSaved.ambientFrequency && migrated.probabilities == ambientSaved.probabilities && migrated.catalog.species == ambientSaved.catalog.species
             w.tabs.selectTabViewItem(at:0)
             try snapshot(w.window!,to:folder.appendingPathComponent("settings-zh.png"))
-            for i in w.locks.indices where w.locks[i].state == .off { w.locks[i].performClick(nil) }
-            checks["allLockedDisablesAllEditors"] = w.sliders.allSatisfy{!$0.isEnabled} && w.fields.allSatisfy{!$0.isEnabled}
-            if let scroll=w.tabs.tabViewItems[0].view as? NSScrollView, let doc=scroll.documentView {
+            if let scroll=w.probabilityEditor, let doc=scroll.documentView {
                 scroll.contentView.scroll(to:CGPoint(x:0,y:doc.bounds.height-scroll.contentView.bounds.height))
                 scroll.reflectScrolledClipView(scroll.contentView)
-                checks["lastSpeciesReachable"] = doc.visibleRect.maxY >= w.locks.last!.frame.maxY
-                w.tabs.selectTabViewItem(at:0)
+                checks["lastSpeciesReachable"] = doc.visibleRect.maxY >= w.fields.last!.frame.maxY
                 try snapshot(w.window!,to:folder.appendingPathComponent("settings-last.png"))
             }
+            let oldBehavior=w.draft.catalog.species, oldDelay=w.draft.hoverDelay
+            w.resetProbabilityButton.performClick(nil)
+            checks["probabilityResetIsIsolated"] = w.draft.probabilities == ProbabilityDistribution() && w.probabilityEditor.isHidden && w.manualAdjustmentButton.state == .off && w.draft.catalog.species == oldBehavior && w.draft.hoverDelay == oldDelay
+            try snapshot(w.window!,to:folder.appendingPathComponent("settings-default-probabilities.png"))
             for delay in [0.0,10.0] {
                 w.hoverDelayField.stringValue=String(delay);w.save()
                 let boundary=try BirdSettings.decode(Data(contentsOf:d.settingsURL))
@@ -256,7 +261,7 @@ enum SettingsVerification {
             }
             w.resetDefaults()
             checks["ambientDefaultsRestored"] = w.draft.pointerVisits && w.draft.flockPasses && w.draft.ambientFrequency == .low
-            checks["resetRestoresDefaultsAndUnlocks"] = w.draft.probabilities == BirdSettings().probabilities && w.draft.hoverDelay == 1 && w.hoverDelayField.doubleValue == 1
+            checks["resetRestoresDefaults"] = w.draft.probabilities == BirdSettings().probabilities && w.draft.hoverDelay == 1 && w.hoverDelayField.doubleValue == 1
             checks["perchDefaultsRestoredWithoutApplying"] = w.draft.perchActions && w.perchActionsButton.state == .on && !d.settings.perchActions
             checks["socialDefaultsRestoredWithoutApplying"] = w.draft.socialInteractions && w.socialInteractionsButton.state == .on && !d.settings.socialInteractions
             checks["pointerFollowDefaultsRestoredWithoutApplying"] = !w.draft.pointerFollowEnabled && w.pointerFollowButton.state == .off && w.pointerFollowButton.isEnabled && d.settings.pointerFollowEnabled

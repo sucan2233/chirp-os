@@ -1,6 +1,8 @@
 # 开发指南 / Development
 
-行为扩展与架构规划见 [行为与互动引擎设计](BEHAVIOR-ENGINE-DESIGN.md)：包含动作储备、现有架构评估、运行时边界、迁移路线与验收标准。macOS M0–M4 实际范围、迁移桥和验收状态见文档第 16–19 节；M5a 落叶道具场景见第 20 节。整个引擎的完成审计不能只依据单个场景通过；共享夹具、能力与配置版本、跨平台对齐仍须逐项验收。
+本分支仅维护 macOS；Windows 目录和旧脚本仅作历史存档，不纳入开发、构建、测试或发布。历史阶段文档中的 Windows 对齐要求不再适用。仓库协作约定见 [AGENTS.md](../AGENTS.md) 和 [CONTRIBUTING.md](../CONTRIBUTING.md)。概率 V2 的 schema 2 / 模拟引擎 23 与验收结果见 [实施记录](PROBABILITY-SYSTEM-V2-IMPLEMENTATION.md)。
+
+行为扩展与架构规划见 [行为与互动引擎设计](BEHAVIOR-ENGINE-DESIGN.md)：包含动作储备、现有架构评估、运行时边界、迁移路线与验收标准。macOS M0–M4 实际范围、迁移桥和验收状态见文档第 16–19 节；M5a 落叶道具场景见第 20 节。整个引擎的完成审计不能只依据单个场景通过；macOS 共享夹具、能力与配置版本、导出资源契约仍须逐项验收。
 
 ## U阶段整合（独立开发候选）
 
@@ -26,7 +28,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./scripts/test.sh
 | 目录 / Directory | 内容 / Contents |
 | --- | --- |
 | `platforms/macos/` | Swift / AppKit 应用与测试 / App and tests |
-| `platforms/windows/` | C# / WinForms / Win32 应用与测试 / App and tests |
+| `platforms/windows/` | Windows 历史存档，不再维护 / Unsupported archive |
 | `shared/` | 鸟种定义、像素图集和图标 / Species, atlases, and icon |
 | `Assets/` | 文档图片与图标源图 / Documentation images and icon source |
 | `scripts/` | 构建与验证脚本 / Build and verification scripts |
@@ -87,7 +89,7 @@ macOS 行为统一从 `BirdingCore/Behavior/BehaviorEngine` 进入：平台先�
 平台 `ScenePropRenderer` 消费 `ScenePropRenderState`，不决定运动、不安装鼠标处理器。叶片 PNG 随 BirdingCore 资源包复制，`ScenePropAssets` 提供 URL；构建时必须保留 SwiftPM bundle。诊断包含 `sceneProps` 与 `pendingLeafPlay`。
 
 `BehaviorEngine(seed:)` 支持核心场景重放，需同时给定相同配置、初始鸟、世界输入和命令时间线。
-飞行、社交选择和每鸟停栖节奏使用独立随机流，不保证跨版本或 Swift/C# 两端轨迹一致；诊断里的 seed 不能单独重放真实桌面。
+飞行、社交选择和每鸟停栖节奏使用独立随机流，不保证跨版本轨迹一致；诊断里的 seed 不能单独重放真实桌面。
 `--diagnostics <path>` 输出鸟 ID、角色、行为计数和最多 256 条生命周期事件。
 
 `BehaviorEngineTests` 覆盖 30/60/120 Hz 重放、抢占、暂停、宿主失效、移除、预览、超时和资源释放；
@@ -122,35 +124,9 @@ macOS 行为统一从 `BirdingCore/Behavior/BehaviorEngine` 进入：平台先�
 
 历史飞入阶段验收（不是U阶段）：XCTest 139/139、鸟 UI 55/55、设置 73/73、数量与飞入 12/12、桌面 13/13、更新器 17/17、发布脚本 11/11；物种数据校验通过。上述飞入验收使用受控窗口场景，不能排除其他应用透明浮窗被按矩形遮挡后造成的延迟可见现象；这类现场遮挡仍需独立复现。
 
-## Windows
+## Windows 历史存档
 
-需要 .NET 10 SDK。可在 Windows、macOS 或 Linux 上构建。
-Requires .NET 10 SDK. Builds can run on Windows, macOS, or Linux.
-
-```powershell
-# Windows PowerShell
-./scripts/build-windows.ps1 -Runtime win-x64
-# Windows ARM64
-./scripts/build-windows.ps1 -Runtime win-arm64
-```
-
-```bash
-# macOS / Linux
-./scripts/build-windows.sh win-arm64 win-x64
-```
-
-输出 / Outputs: `dist/windows/<runtime>/ChirpOS.exe` and `dist/releases/*.zip`.
-
-Mac 上的 ARM64 构建还会复制到 `~/Downloads/share/ChirpOS.exe`；可用 `CHIRPOS_SHARE_DIR` 指定其他目录。
-On Mac, ARM64 builds also copy to `~/Downloads/share/ChirpOS.exe`; override with `CHIRPOS_SHARE_DIR`.
-
-核心测试 / Core tests:
-
-```bash
-dotnet run --project platforms/windows/ChirpOS.Tests -c Release
-```
-
-Windows 桌面检查 / Windows desktop checks: run `ChirpOS.exe --self-test`, or double-click `Verify-Windows.cmd` in the build directory. Results are saved to `%LOCALAPPDATA%\ChirpOS\self-test.json`.
+Windows 不再属于本分支的交付范围；不要求安装 .NET、执行 Windows 构建或实机验收。旧源码与脚本仅供参考，见 [存档说明](../platforms/windows/README.md)。
 
 ## 美术 / Artwork
 
@@ -173,7 +149,6 @@ See [Automatic updates](AUTO-UPDATE.md) for the protocol, release requirements a
 ## 本地数据 / Local data
 
 - macOS: `~/Library/Application Support/Birding/settings.json`
-- Windows: `%LOCALAPPDATA%\ChirpOS\settings.json`; diagnostics and errors are stored alongside it.
 
 设置与构建缓存分开存储，清理缓存不会重置偏好。
 Settings are separate from build caches; removing caches does not reset preferences.
@@ -202,9 +177,7 @@ Missing or unusable credentials prompt for an ad-hoc fallback in an interactive 
 
 GitHub Actions uses repository secrets: `MACOS_SIGNING_IDENTITY`, `MACOS_NOTARY_PROFILE`, `MACOS_CERTIFICATE_P12_BASE64`, `MACOS_CERTIFICATE_PASSWORD`, `APPLE_API_KEY_P8`, `APPLE_API_KEY_ID`, and `APPLE_API_ISSUER_ID`. Missing credentials stop the workflow. Local Keychain settings are not automatically available to CI.
 
-Windows release assets are always ZIP archives containing ChirpOS.exe, LICENSE.txt,
-README.md, and Verify-Windows.cmd. Both shell and PowerShell builds read the version
-from ChirpOS.csproj. Extract the archive before launching the executable.
+普通版 `release.yml` 仅构建、校验和发布 macOS 包；版本来自 macOS 构建定义，不依赖 Windows 工程。Pro 继续使用独立发布工作流。
 
 ## 统一观鸟手册 / Birding Handbook（U阶段候选）
 
@@ -238,7 +211,7 @@ python3 scripts/audit-expansion-capabilities.py --output docs/evidence/e0-capabi
 .build/release/Birding --export-pose-previews "$PWD/.build/m8a-e0-evidence/previews"
 ```
 
-`--verify-pilot-motion`使用隔离手册/档案路径及真实AppKit控件，不要求用户移动鼠标或改变已装版；它不等于真实睡眠、多屏或桌面场景全回归。预览包括pilot的before、signature.v0/v1与基础动作，三尺度双朝向。`test-species-parity.py`继续保护旧跨平台时序和共享图集契约；新的macOS特色调度未据此宣称Windows同步。原始54种盘点JSON保留为历史，更新审计禁止覆盖该路径。
+`--verify-pilot-motion`使用隔离手册/档案路径及真实AppKit控件，不要求用户移动鼠标或改变已装版；它不等于真实睡眠、多屏或桌面场景全回归。预览包括pilot的before、signature.v0/v1与基础动作，三尺度双朝向。`test-species-parity.py`保留历史名称，检查macOS鸟种时序覆盖、飞行配置与共享图集契约，不读取或比较Windows源码。原始54种盘点JSON保留为历史，更新审计禁止覆盖该路径。
 
 ### M8 完整动作包统一验证
 

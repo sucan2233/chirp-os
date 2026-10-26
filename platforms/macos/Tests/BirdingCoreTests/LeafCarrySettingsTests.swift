@@ -8,21 +8,21 @@ final class LeafCarrySettingsTests:XCTestCase {
         value.pointerVisits=false;value.leafPlayEnabled=false;value.ambientLeafPlayEnabled=false
         value.bathEnabled=false;value.foodTrayEnabled=false;value.fixedPerchesEnabled=false
         value.activityRhythm = .quiet;value.ambientFrequency = .high
-        value.probabilities.adjust(at:0,to:1234);value.probabilities.setLocked(true,at:0)
+        value.probabilities.setManualWeight(at:0,to:1234)
         return value
     }
 
     func testMissingLeafCarrySettingDefaultsTrueWhileOldPreferencesAndSchemaRemainIntact() throws {
         XCTAssertTrue(BirdSettings().leafCarryEnabled)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,1)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
         let original=configured(false)
         var raw=try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(original)) as? [String:Any])
         raw.removeValue(forKey:"leafCarryEnabled")
-        for version:Int? in [nil,0,1] {
+        for version:Int? in [BirdSettings.currentSchemaVersion] {
             raw["schemaVersion"]=version
             let data=try JSONSerialization.data(withJSONObject:raw)
             for restored in [try BirdSettings.decode(data),try JSONDecoder().decode(BirdSettings.self,from:data)] {
-                XCTAssertTrue(restored.leafCarryEnabled);XCTAssertEqual(restored.schemaVersion,1)
+                XCTAssertTrue(restored.leafCarryEnabled);XCTAssertEqual(restored.schemaVersion,BirdSettings.currentSchemaVersion)
                 XCTAssertEqual(restored.hoverDelay,original.hoverDelay)
                 XCTAssertEqual(restored.pointerFollowEnabled,original.pointerFollowEnabled)
                 XCTAssertEqual(restored.pointerVisits,original.pointerVisits)

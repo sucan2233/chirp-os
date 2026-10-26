@@ -1,4 +1,4 @@
-name: Release macOS and Windows
+name: Release macOS (legacy standard edition)
 on:
   workflow_dispatch:
     inputs:
@@ -22,12 +22,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag }}
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
       - name: Validate version
         run: |
-          VERSION=$(sed -n 's/.*<Version>\([^<]*\)<\/Version>.*/\1/p' platforms/windows/ChirpOS/ChirpOS.csproj)
+          VERSION=$(sed -n 's/.*<key>CFBundleShortVersionString<\/key><string>\([^<]*\)<\/string>.*/\1/p' scripts/build.sh)
           test "$RELEASE_TAG" = "v$VERSION"
           test -f "docs/releases/$RELEASE_TAG.md"
       - name: Configure Apple signing and notarization
@@ -53,25 +50,24 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
           security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
           xcrun notarytool store-credentials "$CHIRPOS_NOTARY_PROFILE" --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$API_KEY_ID" --issuer "$API_ISSUER"
-      - name: Test and build all platforms
+      - name: Test and build macOS
         env:
           CHIRPOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
         run: |
           test -n "$CHIRPOS_SIGNING_IDENTITY"
           bash scripts/test.sh
           bash scripts/release-macos.sh
-          bash scripts/build-windows.sh win-arm64 win-x64
-      - name: Publish one combined release
+      - name: Publish macOS release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd dist/releases
           VERSION=${RELEASE_TAG#v}
-          shasum -a 256 "ChirpOS-$VERSION-macOS-"*.zip "ChirpOS-$VERSION-win-arm64.zip" "ChirpOS-$VERSION-win-x64.zip" > SHA256SUMS.txt
+          shasum -a 256 "ChirpOS-$VERSION-macOS-"*.zip > SHA256SUMS.txt
           gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
-            --title "ChirpOS $RELEASE_TAG · macOS & Windows" \
+            --title "ChirpOS $RELEASE_TAG · macOS" \
             --notes-file "$GITHUB_WORKSPACE/docs/releases/$RELEASE_TAG.md"
-          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" "ChirpOS-$VERSION-macOS-"*.zip "ChirpOS-$VERSION-win-arm64.zip" "ChirpOS-$VERSION-win-x64.zip" SHA256SUMS.txt
+          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" "ChirpOS-$VERSION-macOS-"*.zip SHA256SUMS.txt
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
       - name: Clean up signing material
         if: always()

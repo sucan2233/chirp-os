@@ -38,7 +38,7 @@ enum ActivityRhythmSettingsVerification {
         // Unrelated edits must survive every rhythm, including dormant child
         // preferences while their master switches are disabled.
         w.hoverDelayField.stringValue="0.25";w.detailFields[0][2].stringValue="1.25"
-        w.sliders[0].doubleValue=35;w.sliderChanged(w.sliders[0]);w.locks[0].performClick(nil)
+        w.manualAdjustmentButton.performClick(nil);w.fields[0].stringValue="350";w.controlTextDidEndEditing(Notification(name:NSControl.textDidEndEditingNotification,object:w.fields[0]))
         for mode in ActivityRhythmMode.allCases {
             for perch in [false,true] {
                 for encounters in [false,true] {
@@ -65,7 +65,7 @@ enum ActivityRhythmSettingsVerification {
                             expected==stored && active==stored && saved.perchActions==perch &&
                             saved.pointerVisits==encounters && saved.visitorMemoryEnabled==memory &&
                             saved.hoverDelay==0.25 && saved.catalog.species[0].speed==1.25 &&
-                            saved.probabilities.entries[0].locked &&
+                            saved.probabilities.manualAdjustmentEnabled &&
                             w.message.stringValue==w.t("已保存 · 交互设置立即生效，鸟种参数用于新飞入的小鸟。","Saved · Interaction settings apply now; species settings affect new arrivals.")
                         let reloaded=isolatedDesktop(preferences:preferences,folder:evidence)
                         try reloaded.loadSpeciesConfig()
@@ -96,7 +96,7 @@ enum ActivityRhythmSettingsVerification {
             checks["activityRhythmDraftSurvivesLanguageChange-"+suffix] = w.draft.activityRhythm == .quiet &&
                 selectedMode(w) == .quiet && d.settings.activityRhythm == .localDayNight &&
                 w.hoverDelayField.stringValue=="0.75" && w.detailFields[0][2].stringValue=="1.5" &&
-                w.draft.probabilities.entries[0].locked &&
+                w.draft.probabilities.manualAdjustmentEnabled &&
                 (w.tabs.selectedTabViewItem?.identifier as? String)=="interaction"
             for mode in ActivityRhythmMode.allCases {
                 choose(mode,in:w);w.relocalize()
@@ -142,7 +142,7 @@ enum ActivityRhythmSettingsVerification {
         checks["activityRhythmResetOnlyEditsDraft"] = w.draft.activityRhythm == .steady &&
             selectedMode(w) == .steady && w.activityRhythmPopup.isEnabled &&
             d.settings.activityRhythm == .quiet && beforeReset==afterReset &&
-            w.message.stringValue==w.t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).")
+            w.message.stringValue==w.t("已恢复默认（尚未保存）。","Defaults restored (not saved).")
         w.cancel()
         let reset=SpeciesSettingsWindow(desktop:d);d.settingsWindow=reset;reset.showWindow(nil)
         defer {reset.cancel()}
@@ -179,10 +179,9 @@ enum ActivityRhythmSettingsVerification {
             d.legacyURL==folder.appendingPathComponent("legacy.json") && d.preferences === preferences
     }
 
-    // Normalize pending-species bookkeeping that applySettings intentionally
-    // clears, then compare every other setting, including future additions.
+    // Compare every setting except the behavior explicitly under test.
     private static func settingsData(_ value:BirdSettings,ignoringRhythm:Bool=false) throws -> Data {
-        var value=value;value.pendingSpecies=[]
+        var value=value
         if ignoringRhythm {value.activityRhythm = .steady}
         let encoder=JSONEncoder();encoder.outputFormatting = .sortedKeys
         return try encoder.encode(value)

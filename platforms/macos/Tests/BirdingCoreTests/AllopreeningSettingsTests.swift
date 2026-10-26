@@ -6,14 +6,14 @@ final class AllopreeningSettingsTests: XCTestCase {
     func testDefaultsEncodeEnabledWithoutChangingSchema() throws {
         let settings=BirdSettings(),json=try object(settings)
         XCTAssertTrue(settings.allopreeningEnabled)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,1)
-        XCTAssertEqual(json["schemaVersion"] as? Int,1)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(json["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(json["allopreeningEnabled"] as? Bool,true)
     }
 
     func testOldMissingAndNullSettingsDefaultOnWithoutLosingOtherPreferences() throws {
         let original=configuredSettings()
-        for version:Int? in [nil,0,1] {
+        for version:Int? in [BirdSettings.currentSchemaVersion] {
             for value:Any? in [nil,NSNull(),false,true] {
                 var json=try object(original)
                 json["schemaVersion"]=version
@@ -21,7 +21,7 @@ final class AllopreeningSettingsTests: XCTestCase {
                 let data=try JSONSerialization.data(withJSONObject:json)
                 for decoded in [try JSONDecoder().decode(BirdSettings.self,from:data),try BirdSettings.decode(data)] {
                     XCTAssertEqual(decoded.allopreeningEnabled,(value as? Bool) ?? true)
-                    XCTAssertEqual(decoded.schemaVersion,1)
+                    XCTAssertEqual(decoded.schemaVersion,BirdSettings.currentSchemaVersion)
                     try assertOtherSettingsEqual(decoded,original)
                 }
             }
@@ -109,8 +109,8 @@ final class AllopreeningSettingsTests: XCTestCase {
         settings.takeoffPreparationEnabled=false;settings.edgePeekEnabled=false
         settings.leafPlayEnabled=false;settings.ambientLeafPlayEnabled=false;settings.visitorMemoryEnabled=false
         settings.ambientFrequency = .high;settings.activityRhythm = .quiet
-        settings.probabilities.adjust(at:0,to:1234);settings.probabilities.setLocked(true,at:0)
-        settings.catalog.species[0].speed=1.25;settings.pendingSpecies=[.nightHeron]
+        settings.probabilities.setManualWeight(at:0,to:1234)
+        settings.catalog.species[0].speed=1.25
         return settings
     }
     private func object(_ settings:BirdSettings) throws -> [String:Any] {

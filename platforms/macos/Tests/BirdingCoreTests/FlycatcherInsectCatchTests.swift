@@ -237,7 +237,7 @@ final class FlycatcherInsectCatchTests:XCTestCase {
             case "disabled":settings.insectCatchEnabled=false;e.applySettings(settings);reason = .disabled
             case "speciesDisabled":
                 let index=try XCTUnwrap(settings.probabilities.entries.firstIndex{$0.id==F.species})
-                settings.probabilities.adjust(at:index,to:0);e.applySettings(settings);reason = .noSpecies
+                settings.probabilities.setManualWeight(at:index,to:0);e.applySettings(settings);reason = .noSpecies
             case "noBird":e.handle(.remove(try XCTUnwrap(e.id(of:bird))));reason = .noSpecies
             case "fixedPerch":
                 let host=Surface(id:2102,pid:42,rect:F.host().rect,isFixedPerch:true)

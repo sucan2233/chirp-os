@@ -69,7 +69,7 @@ enum NestMaterialSettingsVerification {
             rejection(f,build:false,reason:.noSpecies,key:key+"NoResident",into:&checks)
             try f.install();try f.place()
             value=d.settings
-            if let i=value.probabilities.entries.firstIndex(where:{$0.id == .spottedDove}) {value.probabilities.adjust(at:i,to:0)}
+            if let i=value.probabilities.entries.firstIndex(where:{$0.id == .spottedDove}) {value.probabilities.setManualWeight(at:i,to:0)}
             d.settings=value;rejection(f,build:false,reason:.noSpecies,key:key+"ProbabilityZero",into:&checks)
             try f.install();try f.place();d.frameCapabilities[.spottedDove]?.remove("carryGrip")
             rejection(f,build:false,reason:.missingFrames,key:key+"MissingFrame",into:&checks)

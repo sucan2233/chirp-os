@@ -1,0 +1,5392 @@
+{
+  "artifactType": "research_proposal_not_runtime_configuration",
+  "version": 2,
+  "researchedAt": "2026-10-26",
+  "scope": "中国全国综合体验；包含目录已有台湾、西北及青藏高原鸟种；全年综合，不按用户所在地自动过滤",
+  "catalogSha256": "7c6f55f92e953993f2ebd7a80d49fcf1efb642d01c3d8df33440d25e29798553",
+  "model": "P(i | eligible) = resolvedWeight(i) / sum(resolvedWeight(j) for j in eligible)",
+  "weightTiers": [
+    120,
+    90,
+    65,
+    45,
+    30,
+    18,
+    10
+  ],
+  "totalWeight": 5358,
+  "speciesCount": 100,
+  "limitations": [
+    "数值为人工游戏设计，不是全国实测出现率、种群数量或IUCN计算结果",
+    "大部分IUCN记录来自CERN汇编，未逐种核实最新评估年份；NR不转换为NE",
+    "国家名录与鸟类分类拆分存在差异，5项法定分类映射待核；未匹配不等于不受保护",
+    "不保证有限次抽样出现全部100种；实际刷新速度取决于人口调度与停留时间"
+  ],
+  "statistics": {
+    "weightTierCounts": {
+      "120": 5,
+      "90": 10,
+      "65": 31,
+      "45": 25,
+      "30": 19,
+      "18": 6,
+      "10": 4
+    },
+    "new54Share": 0.48040313549832026,
+    "protectionCounts": {
+      "three_values": 82,
+      "national_II": 11,
+      "taxonomy_mapping_pending": 5,
+      "not_found_in_checked_lists": 2
+    },
+    "expectedDistinctAfterDraws": {
+      "100": 59.29921643537586,
+      "500": 95.72589677625957,
+      "1000": 99.10017943231608
+    }
+  },
+  "sources": {
+    "national2021": {
+      "title": "国家重点保护野生动物名录：2021年第3号公告",
+      "url": "https://www.forestry.gov.cn/c/www/gkzfwj/546057.jhtml",
+      "publishedDate": "2021-02-01",
+      "role": "国家重点保护等级依据"
+    },
+    "nationalTable": {
+      "title": "上海市绿化和市容管理局：国家重点保护野生动物名录全文表",
+      "url": "https://lhsr.sh.gov.cn/gjzdbhysdwml/",
+      "role": "逐种核对国家重点名录"
+    },
+    "three2023": {
+      "title": "调整后的三有名录：2023年第17号公告",
+      "url": "https://www.forestry.gov.cn/c/www/gsgg/509640.jhtml",
+      "publishedDate": "2023-06-30",
+      "documentDate": "2023-06-26",
+      "role": "三有名录版本依据"
+    },
+    "threePDF": {
+      "title": "有重要生态、科学、社会价值的陆生野生动物名录全文，57页",
+      "url": "https://www.forestry.gov.cn/u/cms/www/202605/19143215z39s.pdf",
+      "sha256": "7f716a0f2fc10b5dbcdf846290d00d572f09c92520a34d54566ecb2c34919706",
+      "role": "逐种核对三有；URL中的202605不是名录修订日期"
+    },
+    "official2026": {
+      "title": "国家林草局2026年鸟类保护成果新闻发布会",
+      "url": "https://www.forestry.gov.cn/lyj/1/zxzb/20260702/679018.html",
+      "publishedDate": "2026-07-02",
+      "role": "交叉确认2021和2023两份保护名录的版本背景"
+    },
+    "ebirdMethod": {
+      "title": "Cornell eBird: Modeling Relative Abundance",
+      "url": "https://ebird.github.io/ebird-one-day-rel-abd-workshop/abundance.html",
+      "role": "解释标准清单遇见率与区域、季节、观察努力的关系；未取得全国原始数据作拟合"
+    },
+    "hkTit": {
+      "title": "HKBWS Japanese Tit / Parus minor",
+      "url": "https://avifauna.hkbws.org.hk/species/0270/034800",
+      "role": "独立分类；页面LC明确沿用广义P. major口径"
+    },
+    "hkCattle": {
+      "title": "HKBWS Eastern Cattle Egret",
+      "url": "https://avifauna.hkbws.org.hk/species/0170/023000",
+      "role": "补充Bubulcus coromandus资料与LC记录，保留与CERN NR的差异"
+    },
+    "hkSunbird": {
+      "title": "HKBWS Ornate Sunbird",
+      "url": "https://avifauna.hkbws.org.hk/species/0420/052300",
+      "role": "补充Cinnyris ornatus资料；旧广义分类资料不可直接等同新分类评估"
+    },
+    "cmsVulture": {
+      "title": "UNEP/CMS Gyps himalayensis",
+      "url": "https://www.cms.int/species/gyps-himalayensis",
+      "role": "高山兀鹫NT交叉核对；CMS附录不是中国保护等级"
+    },
+    "choughRange": {
+      "title": "Shanghai Birding: Red-billed Chough",
+      "url": "https://www.shanghaibirding.com/birds-of-china/red-billed-chough/",
+      "role": "补充CERN缺失的中国分布段落"
+    },
+    "cern:redWhiskeredBulbul": {
+      "title": "生物多样性知识平台：红耳鹎",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BA%A2%E8%80%B3%E9%B9%8E",
+      "revisionId": 23324,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:treeSparrow": {
+      "title": "生物多样性知识平台：麻雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BA%BB%E9%9B%80",
+      "revisionId": 23916,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:lightVentedBulbul": {
+      "title": "生物多样性知识平台：白头鹎",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%99%BD%E5%A4%B4%E9%B9%8E",
+      "revisionId": 23087,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:spottedDove": {
+      "title": "生物多样性知识平台：珠颈斑鸠",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%8F%A0%E9%A2%88%E6%96%91%E9%B8%A0",
+      "revisionId": 23039,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:chineseBlackbird": {
+      "title": "生物多样性知识平台：乌鸫",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E4%B9%8C%E9%B8%AB",
+      "revisionId": 22095,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:magpieRobin": {
+      "title": "生物多样性知识平台：鹊鸲",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%B9%8A%E9%B8%B2",
+      "revisionId": 23902,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:longTailedShrike": {
+      "title": "生物多样性知识平台：棕背伯劳",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%A3%95%E8%83%8C%E4%BC%AF%E5%8A%B3",
+      "revisionId": 22761,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:nightHeron": {
+      "title": "生物多样性知识平台：夜鹭",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%A4%9C%E9%B9%AD",
+      "revisionId": 22328,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:plumbeousWaterRedstart": {
+      "title": "生物多样性知识平台：红尾水鸲",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BA%A2%E5%B0%BE%E6%B0%B4%E9%B8%B2",
+      "revisionId": 23307,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:littleEgret": {
+      "title": "生物多样性知识平台：白鹭",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%99%BD%E9%B9%AD",
+      "revisionId": 23205,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:greyHeron": {
+      "title": "生物多样性知识平台：苍鹭",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E8%8B%8D%E9%B9%AD",
+      "revisionId": 23462,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:commonKestrel": {
+      "title": "生物多样性知识平台：红隼",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BA%A2%E9%9A%BC",
+      "revisionId": 23354,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:peregrineFalcon": {
+      "title": "生物多样性知识平台：游隼",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%B8%B8%E9%9A%BC",
+      "revisionId": 22900,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blackKite": {
+      "title": "生物多样性知识平台：黑鸢",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%91%E9%B8%A2",
+      "revisionId": 24091,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:commonBuzzard": {
+      "title": "生物多样性知识平台：普通鵟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%99%AE%E9%80%9A%E9%B5%9F",
+      "revisionId": 22649,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:orientalMagpie": {
+      "title": "生物多样性知识平台：喜鹊",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%96%9C%E9%B9%8A",
+      "revisionId": 22288,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:azureWingedMagpie": {
+      "title": "生物多样性知识平台：灰喜鹊",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%81%B0%E5%96%9C%E9%B9%8A",
+      "revisionId": 22927,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:largeBilledCrow": {
+      "title": "生物多样性知识平台：大嘴乌鸦",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%A4%A7%E5%98%B4%E4%B9%8C%E9%B8%A6",
+      "revisionId": 22335,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:hoopoe": {
+      "title": "生物多样性知识平台：戴胜",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%88%B4%E8%83%9C",
+      "revisionId": 22552,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:barnSwallow": {
+      "title": "生物多样性知识平台：家燕",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%AE%B6%E7%87%95",
+      "revisionId": 22407,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:mallard": {
+      "title": "生物多样性知识平台：绿头鸭",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BB%BF%E5%A4%B4%E9%B8%AD",
+      "revisionId": 23402,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:asianKoel": {
+      "title": "生物多样性知识平台：噪鹃",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%99%AA%E9%B9%83",
+      "revisionId": 22291,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:swinhoesWhiteEye": {
+      "title": "生物多样性知识平台：暗绿绣眼鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%9A%97%E7%BB%BF%E7%BB%A3%E7%9C%BC%E9%B8%9F",
+      "revisionId": 22656,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blackHeadedGull": {
+      "title": "生物多样性知识平台：红嘴鸥",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BA%A2%E5%98%B4%E9%B8%A5",
+      "revisionId": 23293,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:whimbrel": {
+      "title": "生物多样性知识平台：中杓鹬",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E4%B8%AD%E6%9D%93%E9%B9%AC",
+      "revisionId": 22072,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:piedKingfisher": {
+      "title": "生物多样性知识平台：斑鱼狗",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%96%91%E9%B1%BC%E7%8B%97",
+      "revisionId": 22610,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:eurasianWoodcock": {
+      "title": "生物多样性知识平台：丘鹬",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E4%B8%98%E9%B9%AC",
+      "revisionId": 22027,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blackDrongo": {
+      "title": "生物多样性知识平台：黑卷尾",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%91%E5%8D%B7%E5%B0%BE",
+      "revisionId": 23992,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:chinesePondHeron": {
+      "title": "生物多样性知识平台：池鹭",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%B1%A0%E9%B9%AD",
+      "revisionId": 22847,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:yellowRumpedFlycatcher": {
+      "title": "生物多样性知识平台：白眉姬鹟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%99%BD%E7%9C%89%E5%A7%AC%E9%B9%9F",
+      "revisionId": 23112,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:yellowBrowedWarbler": {
+      "title": "生物多样性知识平台：黄眉柳莺",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%84%E7%9C%89%E6%9F%B3%E8%8E%BA",
+      "revisionId": 23942,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:greatTit": {
+      "title": "生物多样性知识平台：远东山雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E8%BF%9C%E4%B8%9C%E5%B1%B1%E9%9B%80",
+      "revisionId": 23679,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:commonMoorhen": {
+      "title": "生物多样性知识平台：黑水鸡",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%91%E6%B0%B4%E9%B8%A1",
+      "revisionId": 24032,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:greatSpottedWoodpecker": {
+      "title": "生物多样性知识平台：大斑啄木鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%A4%A7%E6%96%91%E5%95%84%E6%9C%A8%E9%B8%9F",
+      "revisionId": 22342,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:vinousThroatedParrotbill": {
+      "title": "生物多样性知识平台：棕头鸦雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%A3%95%E5%A4%B4%E9%B8%A6%E9%9B%80",
+      "revisionId": 22748,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blackWingedStilt": {
+      "title": "生物多样性知识平台：黑翅长脚鹬",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%91%E7%BF%85%E9%95%BF%E8%84%9A%E9%B9%AC",
+      "revisionId": 24049,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:eurasianCoot": {
+      "title": "生物多样性知识平台：白骨顶",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%99%BD%E9%AA%A8%E9%A1%B6",
+      "revisionId": 24496,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:redBilledLeiothrix": {
+      "title": "生物多样性知识平台：红嘴相思鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BA%A2%E5%98%B4%E7%9B%B8%E6%80%9D%E9%B8%9F",
+      "revisionId": 23290,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blackCollaredStarling": {
+      "title": "生物多样性知识平台：黑领椋鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%91%E9%A2%86%E6%A4%8B%E9%B8%9F",
+      "revisionId": 24077,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:commonKingfisher": {
+      "title": "生物多样性知识平台：普通翠鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%99%AE%E9%80%9A%E7%BF%A0%E9%B8%9F",
+      "revisionId": 22647,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:littleRingedPlover": {
+      "title": "生物多样性知识平台：金眶鸻",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%87%91%E7%9C%B6%E9%B8%BB",
+      "revisionId": 23703,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:yellowBilledGrosbeak": {
+      "title": "生物多样性知识平台：黑尾蜡嘴雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%91%E5%B0%BE%E8%9C%A1%E5%98%B4%E9%9B%80",
+      "revisionId": 24024,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:redFlankedBluetail": {
+      "title": "生物多样性知识平台：红胁蓝尾鸲",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BA%A2%E8%83%81%E8%93%9D%E5%B0%BE%E9%B8%B2",
+      "revisionId": 23327,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:collaredScopsOwl": {
+      "title": "生物多样性知识平台：领角鸮",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%A2%86%E8%A7%92%E9%B8%AE",
+      "revisionId": 23834,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:asianBarredOwlet": {
+      "title": "生物多样性知识平台：斑头鸺鹠",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%96%91%E5%A4%B4%E9%B8%BA%E9%B9%A0",
+      "revisionId": 22579,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:littleOwl": {
+      "title": "生物多样性知识平台：纵纹腹小鸮",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BA%B5%E7%BA%B9%E8%85%B9%E5%B0%8F%E9%B8%AE",
+      "revisionId": 23371,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:silkyStarling": {
+      "title": "生物多样性知识平台：丝光椋鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E4%B8%9D%E5%85%89%E6%A4%8B%E9%B8%9F",
+      "revisionId": 22045,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:crestedMyna": {
+      "title": "生物多样性知识平台：八哥",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%85%AB%E5%93%A5",
+      "revisionId": 22140,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:greatCrestedGrebe": {
+      "title": "生物多样性知识平台：凤头鸊鷉",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%87%A4%E5%A4%B4%E9%B8%8A%E9%B7%89",
+      "revisionId": 22157,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:daurianRedstart": {
+      "title": "生物多样性知识平台：北红尾鸲",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%8C%97%E7%BA%A2%E5%B0%BE%E9%B8%B2",
+      "revisionId": 22187,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:taiwanBarbet": {
+      "title": "生物多样性知识平台：台湾拟啄木鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%8F%B0%E6%B9%BE%E6%8B%9F%E5%95%84%E6%9C%A8%E9%B8%9F",
+      "revisionId": 22239,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:groundTit": {
+      "title": "生物多样性知识平台：地山雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%9C%B0%E5%B1%B1%E9%9B%80",
+      "revisionId": 22310,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:greatEgret": {
+      "title": "生物多样性知识平台：大白鹭",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%A4%A7%E7%99%BD%E9%B9%AD",
+      "revisionId": 22359,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:uplandBuzzard": {
+      "title": "生物多样性知识平台：大鵟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%A4%A7%E9%B5%9F",
+      "revisionId": 22379,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:littleGrebe": {
+      "title": "生物多样性知识平台：小鸊鷉",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%B0%8F%E9%B8%8A%E9%B7%89",
+      "revisionId": 22455,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:carrionCrow": {
+      "title": "生物多样性知识平台：小嘴乌鸦",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%B0%8F%E5%98%B4%E4%B9%8C%E9%B8%A6",
+      "revisionId": 22422,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:plainLaughingthrush": {
+      "title": "生物多样性知识平台：山噪鹛",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%B1%B1%E5%99%AA%E9%B9%9B",
+      "revisionId": 22469,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:orientalTurtleDove": {
+      "title": "生物多样性知识平台：山斑鸠",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E5%B1%B1%E6%96%91%E9%B8%A0",
+      "revisionId": 22470,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:easternSpotBilledDuck": {
+      "title": "生物多样性知识平台：斑嘴鸭",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%96%91%E5%98%B4%E9%B8%AD",
+      "revisionId": 22574,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:eurasianNuthatch": {
+      "title": "生物多样性知识平台：普通䴓",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%99%AE%E9%80%9A%E4%B4%93",
+      "revisionId": 22640,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:rufousBreastedAccentor": {
+      "title": "生物多样性知识平台：棕胸岩鹨",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%A3%95%E8%83%B8%E5%B2%A9%E9%B9%A8",
+      "revisionId": 22766,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:eurasianMagpie": {
+      "title": "生物多样性知识平台：欧亚喜鹊",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%AC%A7%E4%BA%9A%E5%96%9C%E9%B9%8A",
+      "revisionId": 22819,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:eurasianGreatTit": {
+      "title": "生物多样性知识平台：欧亚大山雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%AC%A7%E4%BA%9A%E5%A4%A7%E5%B1%B1%E9%9B%80",
+      "revisionId": 24594,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:marshTit": {
+      "title": "生物多样性知识平台：沼泽山雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E6%B2%BC%E6%B3%BD%E5%B1%B1%E9%9B%80",
+      "revisionId": 22856,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:ashyDrongo": {
+      "title": "生物多样性知识平台：灰卷尾",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%81%B0%E5%8D%B7%E5%B0%BE",
+      "revisionId": 22922,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:eurasianCollaredDove": {
+      "title": "生物多样性知识平台：灰斑鸠",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%81%B0%E6%96%91%E9%B8%A0",
+      "revisionId": 22949,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:greyTreepie": {
+      "title": "生物多样性知识平台：灰树鹊",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%81%B0%E6%A0%91%E9%B9%8A",
+      "revisionId": 22955,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:whiteCheekedStarling": {
+      "title": "生物多样性知识平台：灰椋鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%81%B0%E6%A4%8B%E9%B8%9F",
+      "revisionId": 22956,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:henricsLaughingthrush": {
+      "title": "生物多样性知识平台：灰腹噪鹛",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%81%B0%E8%85%B9%E5%99%AA%E9%B9%9B",
+      "revisionId": 22980,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:indianWhiteEye": {
+      "title": "生物多样性知识平台：灰腹绣眼鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%81%B0%E8%85%B9%E7%BB%A3%E7%9C%BC%E9%B8%9F",
+      "revisionId": 22982,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:easternCattleEgret": {
+      "title": "生物多样性知识平台：牛背鹭",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%89%9B%E8%83%8C%E9%B9%AD",
+      "revisionId": 23009,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:commonPheasant": {
+      "title": "生物多样性知识平台：环颈雉",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%8E%AF%E9%A2%88%E9%9B%89",
+      "revisionId": 24448,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:sootyHeadedBulbul": {
+      "title": "生物多样性知识平台：白喉红臀鹎",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%99%BD%E5%96%89%E7%BA%A2%E8%87%80%E9%B9%8E",
+      "revisionId": 23079,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:whiteBrowedLaughingthrush": {
+      "title": "生物多样性知识平台：白颊噪鹛",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%99%BD%E9%A2%8A%E5%99%AA%E9%B9%9B",
+      "revisionId": 23190,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:whiteWagtail": {
+      "title": "生物多样性知识平台：白鹡鸰",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%99%BD%E9%B9%A1%E9%B8%B0",
+      "revisionId": 23203,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blueWhistlingThrush": {
+      "title": "生物多样性知识平台：紫啸鸫",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%B4%AB%E5%95%B8%E9%B8%AB",
+      "revisionId": 23265,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:redBilledChough": {
+      "title": "生物多样性知识平台：红嘴山鸦",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BA%A2%E5%98%B4%E5%B1%B1%E9%B8%A6",
+      "revisionId": 23287,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:redBilledBlueMagpie": {
+      "title": "生物多样性知识平台：红嘴蓝鹊",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BA%A2%E5%98%B4%E8%93%9D%E9%B9%8A",
+      "revisionId": 23291,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blackThroatedBushtit": {
+      "title": "生物多样性知识平台：红头长尾山雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BA%A2%E5%A4%B4%E9%95%BF%E5%B0%BE%E5%B1%B1%E9%9B%80",
+      "revisionId": 23301,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:greenBackedTit": {
+      "title": "生物多样性知识平台：绿背山雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E7%BB%BF%E8%83%8C%E5%B1%B1%E9%9B%80",
+      "revisionId": 23413,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blueThroatedBarbet": {
+      "title": "生物多样性知识平台：蓝喉拟啄木鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E8%93%9D%E5%96%89%E6%8B%9F%E5%95%84%E6%9C%A8%E9%B8%9F",
+      "revisionId": 23497,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blueFrontedRedstart": {
+      "title": "生物多样性知识平台：蓝额红尾鸲",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E8%93%9D%E9%A2%9D%E7%BA%A2%E5%B0%BE%E9%B8%B2",
+      "revisionId": 23526,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:greaterCoucal": {
+      "title": "生物多样性知识平台：褐翅鸦鹃",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E8%A4%90%E7%BF%85%E9%B8%A6%E9%B9%83",
+      "revisionId": 23589,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:hornedLark": {
+      "title": "生物多样性知识平台：角百灵",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E8%A7%92%E7%99%BE%E7%81%B5",
+      "revisionId": 23629,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:redThroatedThrush": {
+      "title": "生物多样性知识平台：赤颈鸫",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E8%B5%A4%E9%A2%88%E9%B8%AB",
+      "revisionId": 23666,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:ruddyShelduck": {
+      "title": "生物多样性知识平台：赤麻鸭",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E8%B5%A4%E9%BA%BB%E9%B8%AD",
+      "revisionId": 23669,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blackRedstart": {
+      "title": "生物多样性知识平台：赭红尾鸲",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E8%B5%AD%E7%BA%A2%E5%B0%BE%E9%B8%B2",
+      "revisionId": 23670,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:daurianJackdaw": {
+      "title": "生物多样性知识平台：达乌里寒鸦",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E8%BE%BE%E4%B9%8C%E9%87%8C%E5%AF%92%E9%B8%A6",
+      "revisionId": 23677,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:greyCappedGreenfinch": {
+      "title": "生物多样性知识平台：金翅雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%87%91%E7%BF%85%E9%9B%80",
+      "revisionId": 23707,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:silverThroatedBushtit": {
+      "title": "生物多样性知识平台：银喉长尾山雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%93%B6%E5%96%89%E9%95%BF%E5%B0%BE%E5%B1%B1%E9%9B%80",
+      "revisionId": 23733,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:commonTailorbird": {
+      "title": "生物多样性知识平台：长尾缝叶莺",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%95%BF%E5%B0%BE%E7%BC%9D%E5%8F%B6%E8%8E%BA",
+      "revisionId": 23769,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:collaredFinchbill": {
+      "title": "生物多样性知识平台：领雀嘴鹎",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%A2%86%E9%9B%80%E5%98%B4%E9%B9%8E",
+      "revisionId": 23835,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:himalayanVulture": {
+      "title": "生物多样性知识平台：高山兀鹫",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%AB%98%E5%B1%B1%E5%85%80%E9%B9%AB",
+      "revisionId": 23863,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:twite": {
+      "title": "生物多样性知识平台：黄嘴朱顶雀",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%84%E5%98%B4%E6%9C%B1%E9%A1%B6%E9%9B%80",
+      "revisionId": 23927,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:yellowBilledBlueMagpie": {
+      "title": "生物多样性知识平台：黄嘴蓝鹊",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%84%E5%98%B4%E8%93%9D%E9%B9%8A",
+      "revisionId": 23932,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:ornateSunbird": {
+      "title": "生物多样性知识平台：黄腹花蜜鸟",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%84%E8%85%B9%E8%8A%B1%E8%9C%9C%E9%B8%9F",
+      "revisionId": 23963,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:brownBreastedBulbul": {
+      "title": "生物多样性知识平台：黄臀鹎",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%84%E8%87%80%E9%B9%8E",
+      "revisionId": 23969,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:whiskeredYuhina": {
+      "title": "生物多样性知识平台：黄颈凤鹛",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%84%E9%A2%88%E5%87%A4%E9%B9%9B",
+      "revisionId": 23973,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blackTailedGull": {
+      "title": "生物多样性知识平台：黑尾鸥",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%91%E5%B0%BE%E9%B8%A5",
+      "revisionId": 24025,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "cern:blackBulbul": {
+      "title": "生物多样性知识平台：黑短脚鹎",
+      "url": "https://wiki.biodiversity.cern.ac.cn/index.php/%E9%BB%91%E7%9F%AD%E8%84%9A%E9%B9%8E",
+      "revisionId": 24045,
+      "role": "学名、分布、生境及来源记录的IUCN标签；不是逐种最新IUCN评估核验"
+    },
+    "annualRepost": {
+      "title": "中国鸟类观察2025年报相关转述（2026年发布）",
+      "url": "https://www.sohu.com/a/1067387857_121106875",
+      "publishedDate": "2026-08-25",
+      "role": "检索线索；文本存在名单矛盾，不作为逐种数值权重依据"
+    }
+  },
+  "species": [
+    {
+      "id": "redWhiskeredBulbul",
+      "name": "红耳鹎",
+      "scientificName": "Pycnonotus jocosus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Pycnonotus jocosus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1600,
+      "legacyCatalogPercent": 0.928882,
+      "addedIn54Expansion": false,
+      "rationale": "华南低海拔公园、庭院和灌丛常见；作为南方日常鸟，提升到中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:redWhiskeredBulbul"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 481,
+          "name": "红耳鹎",
+          "scientificName": "Pycnonotus jocosus",
+          "page": 17
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:redWhiskeredBulbul",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "treeSparrow",
+      "name": "麻雀",
+      "scientificName": "Passer montanus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Passer montanus",
+      "proposedWeight": 120,
+      "baselineShare": 0.022396416573348264,
+      "baselinePercent": 2.239642,
+      "legacyCatalogWeight": 6000,
+      "legacyCatalogPercent": 3.483309,
+      "addedIn54Expansion": false,
+      "rationale": "国内分布广、适应城镇与农田；全国日常体验的最高频基准。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:treeSparrow"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 912,
+          "name": "麻雀",
+          "scientificName": "Passer montanus",
+          "page": 28
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:treeSparrow",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "lightVentedBulbul",
+      "name": "白头鹎",
+      "scientificName": "Pycnonotus sinensis",
+      "catalogScientificName": null,
+      "sourceScientificName": "Pycnonotus sinensis",
+      "proposedWeight": 120,
+      "baselineShare": 0.022396416573348264,
+      "baselinePercent": 2.239642,
+      "legacyCatalogWeight": 5500,
+      "legacyCatalogPercent": 3.193033,
+      "addedIn54Expansion": false,
+      "rationale": "中东部与南方常见，适应公园及居民区；设为日常高频基准。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:lightVentedBulbul"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 483,
+          "name": "白头鹎",
+          "scientificName": "Pycnonotus sinensis",
+          "page": 17
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:lightVentedBulbul",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "spottedDove",
+      "name": "珠颈斑鸠",
+      "scientificName": "Spilopelia chinensis",
+      "catalogScientificName": null,
+      "sourceScientificName": "Spilopelia chinensis",
+      "proposedWeight": 120,
+      "baselineShare": 0.022396416573348264,
+      "baselinePercent": 2.239642,
+      "legacyCatalogWeight": 5200,
+      "legacyCatalogPercent": 3.018868,
+      "addedIn54Expansion": false,
+      "rationale": "中东部及南方开阔地、村庄常见；设为日常高频基准。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:spottedDove"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 66,
+          "name": "珠颈斑鸠",
+          "scientificName": "Streptopelia chinensis",
+          "page": 5
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "三有条目同中文名，使用学名Streptopelia chinensis；本表保留名称差异供复核。",
+      "sourceIds": [
+        "cern:spottedDove",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "chineseBlackbird",
+      "name": "乌鸫",
+      "scientificName": "Turdus mandarinus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Turdus mandarinus",
+      "proposedWeight": 90,
+      "baselineShare": 0.0167973124300112,
+      "baselinePercent": 1.679731,
+      "legacyCatalogWeight": 4000,
+      "legacyCatalogPercent": 2.322206,
+      "addedIn54Expansion": false,
+      "rationale": "中东部广布且常见；保持高频，但不给单一熟悉鸟过高份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:chineseBlackbird"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 757,
+          "name": "乌鸫",
+          "scientificName": "Turdus mandarinus",
+          "page": 24
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:chineseBlackbird",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "magpieRobin",
+      "name": "鹊鸲",
+      "scientificName": "Copsychus saularis",
+      "catalogScientificName": null,
+      "sourceScientificName": "Copsychus saularis",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2600,
+      "legacyCatalogPercent": 1.509434,
+      "addedIn54Expansion": false,
+      "rationale": "南方常见留鸟；保留高于特色山地鸟的出现频率。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:magpieRobin"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 793,
+          "name": "鹊鸲",
+          "scientificName": "Copsychus saularis",
+          "page": 24
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:magpieRobin",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "longTailedShrike",
+      "name": "棕背伯劳",
+      "scientificName": "Lanius schach",
+      "catalogScientificName": null,
+      "sourceScientificName": "Lanius schach",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2400,
+      "legacyCatalogPercent": 1.393324,
+      "addedIn54Expansion": false,
+      "rationale": "中东部和南方低海拔开阔地常见；列入中高频常见鸟。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:longTailedShrike"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 355,
+          "name": "棕背伯劳",
+          "scientificName": "Lanius schach",
+          "page": 13
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:longTailedShrike",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "nightHeron",
+      "name": "夜鹭",
+      "scientificName": "Nycticorax nycticorax",
+      "catalogScientificName": null,
+      "sourceScientificName": "Nycticorax nycticorax",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2200,
+      "legacyCatalogPercent": 1.277213,
+      "addedIn54Expansion": false,
+      "rationale": "适宜湿地分布广、较易遇见；按湿地常见鸟设置中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:nightHeron"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 249,
+          "name": "夜鹭",
+          "scientificName": "Nycticorax nycticorax",
+          "page": 10
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:nightHeron",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "plumbeousWaterRedstart",
+      "name": "红尾水鸲",
+      "scientificName": "Phoenicurus fuliginosus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Phoenicurus fuliginosus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 900,
+      "legacyCatalogPercent": 0.522496,
+      "addedIn54Expansion": false,
+      "rationale": "山地溪流中常见，但依赖水流生境；提高区域代表性而非按全国罕见处理。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:plumbeousWaterRedstart"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 804,
+          "name": "红尾水鸲",
+          "scientificName": "Rhyacornis fuliginosa",
+          "page": 25
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "三有条目同中文名，使用学名Rhyacornis fuliginosa；本表保留名称差异供复核。",
+      "sourceIds": [
+        "cern:plumbeousWaterRedstart",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "littleEgret",
+      "name": "白鹭",
+      "scientificName": "Egretta garzetta",
+      "catalogScientificName": null,
+      "sourceScientificName": "Egretta garzetta",
+      "proposedWeight": 90,
+      "baselineShare": 0.0167973124300112,
+      "baselinePercent": 1.679731,
+      "legacyCatalogWeight": 5000,
+      "legacyCatalogPercent": 2.902758,
+      "addedIn54Expansion": false,
+      "rationale": "南方及东部适宜湿地常见；设为高频湿地代表鸟。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:littleEgret"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 259,
+          "name": "白鹭",
+          "scientificName": "Egretta garzetta",
+          "page": 11
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:littleEgret",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "greyHeron",
+      "name": "苍鹭",
+      "scientificName": "Ardea cinerea",
+      "catalogScientificName": null,
+      "sourceScientificName": "Ardea cinerea",
+      "proposedWeight": 90,
+      "baselineShare": 0.0167973124300112,
+      "baselinePercent": 1.679731,
+      "legacyCatalogWeight": 3500,
+      "legacyCatalogPercent": 2.03193,
+      "addedIn54Expansion": false,
+      "rationale": "全国适宜湿地广布，部分种群迁徙；保持高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:greyHeron"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 255,
+          "name": "苍鹭",
+          "scientificName": "Ardea cinerea",
+          "page": 11
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:greyHeron",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "commonKestrel",
+      "name": "红隼",
+      "scientificName": "Falco tinnunculus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Falco tinnunculus",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 1000,
+      "legacyCatalogPercent": 0.580552,
+      "addedIn54Expansion": false,
+      "rationale": "国内较常见的猛禽，开阔地可见；与普通小型鸟拉开频率，保护等级不作扣分。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:commonKestrel"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:commonKestrel",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "peregrineFalcon",
+      "name": "游隼",
+      "scientificName": "Falco peregrinus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Falco peregrinus",
+      "proposedWeight": 10,
+      "baselineShare": 0.001866368047779022,
+      "baselinePercent": 0.186637,
+      "legacyCatalogWeight": 450,
+      "legacyCatalogPercent": 0.261248,
+      "addedIn54Expansion": false,
+      "rationale": "分布广但国内总体不常见；设特色低频，仍保留正权重。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:peregrineFalcon"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:peregrineFalcon",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "blackKite",
+      "name": "黑鸢",
+      "scientificName": "Milvus migrans",
+      "catalogScientificName": null,
+      "sourceScientificName": "Milvus migrans",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1600,
+      "legacyCatalogPercent": 0.928882,
+      "addedIn54Expansion": false,
+      "rationale": "国内部分种群广布常见；不能仅因是猛禽或二级保护而压到最低档。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blackKite"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blackKite",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "commonBuzzard",
+      "name": "普通鵟",
+      "scientificName": "Buteo japonicus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Buteo japonicus",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 900,
+      "legacyCatalogPercent": 0.522496,
+      "addedIn54Expansion": false,
+      "rationale": "东北繁殖、南方越冬；以季节性猛禽体验设中低频，分类名称另行核对。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:commonBuzzard"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "目录英文Common Buzzard容易指向Buteo buteo；中文普通鵟及本次来源为Buteo japonicus。建议补全学名、校正英文，保留稳定ID。",
+      "sourceIds": [
+        "cern:commonBuzzard",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "orientalMagpie",
+      "name": "喜鹊",
+      "scientificName": "Pica serica",
+      "catalogScientificName": null,
+      "sourceScientificName": "Pica serica",
+      "proposedWeight": 120,
+      "baselineShare": 0.022396416573348264,
+      "baselinePercent": 2.239642,
+      "legacyCatalogWeight": 4800,
+      "legacyCatalogPercent": 2.786647,
+      "addedIn54Expansion": false,
+      "rationale": "中东部及南方广布常见；设为日常高频基准，与欧亚喜鹊保留两个ID。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:orientalMagpie"
+        ]
+      },
+      "chinaProtection": {
+        "status": "taxonomy_mapping_pending",
+        "display": "三有映射待核",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 371,
+          "name": "喜鹊",
+          "scientificName": "Pica pica",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "目录喜鹊为Pica serica；三有371号喜鹊使用Pica pica，与本项目另一个欧亚喜鹊ID相关，拆分后的法定名录映射待核。",
+      "sourceIds": [
+        "cern:orientalMagpie",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "azureWingedMagpie",
+      "name": "灰喜鹊",
+      "scientificName": "Cyanopica cyanus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Cyanopica cyanus",
+      "proposedWeight": 90,
+      "baselineShare": 0.0167973124300112,
+      "baselinePercent": 1.679731,
+      "legacyCatalogWeight": 3300,
+      "legacyCatalogPercent": 1.91582,
+      "addedIn54Expansion": false,
+      "rationale": "华北、东北和华东多地常见；保持高频区域常见鸟地位。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:azureWingedMagpie"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 362,
+          "name": "灰喜鹊",
+          "scientificName": "Cyanopica cyanus",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:azureWingedMagpie",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "largeBilledCrow",
+      "name": "大嘴乌鸦",
+      "scientificName": "Corvus macrorhynchos",
+      "catalogScientificName": null,
+      "sourceScientificName": "Corvus macrorhynchos",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1400,
+      "legacyCatalogPercent": 0.812772,
+      "addedIn54Expansion": false,
+      "rationale": "国内大部分适宜地区常见；提高旧预设中偏低的相对优先级。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:largeBilledCrow"
+        ]
+      },
+      "chinaProtection": {
+        "status": "not_found_in_checked_lists",
+        "display": "两名录未匹配",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable",
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "未匹配本次核对的2021重点名录及2023三有名录；不推断为不受其他法律或地方规定保护。",
+      "sourceIds": [
+        "cern:largeBilledCrow",
+        "national2021",
+        "nationalTable",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "hoopoe",
+      "name": "戴胜",
+      "scientificName": "Upupa epops",
+      "catalogScientificName": null,
+      "sourceScientificName": "Upupa epops",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1400,
+      "legacyCatalogPercent": 0.812772,
+      "addedIn54Expansion": false,
+      "rationale": "国内大部分中低海拔地区有分布，较常见；作为开阔地代表鸟设中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:hoopoe"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 262,
+          "name": "戴胜",
+          "scientificName": "Upupa epops",
+          "page": 11
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:hoopoe",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "barnSwallow",
+      "name": "家燕",
+      "scientificName": "Hirundo rustica",
+      "catalogScientificName": null,
+      "sourceScientificName": "Hirundo rustica",
+      "proposedWeight": 90,
+      "baselineShare": 0.0167973124300112,
+      "baselinePercent": 1.679731,
+      "legacyCatalogWeight": 3800,
+      "legacyCatalogPercent": 2.206096,
+      "addedIn54Expansion": false,
+      "rationale": "繁殖期遍及国内大部地区；全国全年综合仍高频，不模拟严格冬季屏蔽。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:barnSwallow"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 467,
+          "name": "家燕",
+          "scientificName": "Hirundo rustica",
+          "page": 16
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:barnSwallow",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "mallard",
+      "name": "绿头鸭",
+      "scientificName": "Anas platyrhynchos",
+      "catalogScientificName": null,
+      "sourceScientificName": "Anas platyrhynchos",
+      "proposedWeight": 90,
+      "baselineShare": 0.0167973124300112,
+      "baselinePercent": 1.679731,
+      "legacyCatalogWeight": 3000,
+      "legacyCatalogPercent": 1.741655,
+      "addedIn54Expansion": false,
+      "rationale": "国内常见水鸟，北方繁殖、部分种群南迁；高频湿地代表。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:mallard"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 29,
+          "name": "绿头鸭",
+          "scientificName": "Anas platyrhynchos",
+          "page": 4
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "三有名录备注仅限野外种群。",
+      "sourceIds": [
+        "cern:mallard",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "asianKoel",
+      "name": "噪鹃",
+      "scientificName": "Eudynamys scolopaceus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Eudynamys scolopaceus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1300,
+      "legacyCatalogPercent": 0.754717,
+      "addedIn54Expansion": false,
+      "rationale": "国内南方为主，多地为夏候鸟；考虑季节性设置中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:asianKoel"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 90,
+          "name": "噪鹃",
+          "scientificName": "Eudynamys scolopaceus",
+          "page": 6
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:asianKoel",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "swinhoesWhiteEye",
+      "name": "暗绿绣眼鸟",
+      "scientificName": "Zosterops simplex",
+      "catalogScientificName": null,
+      "sourceScientificName": "Zosterops simplex",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2100,
+      "legacyCatalogPercent": 1.219158,
+      "addedIn54Expansion": false,
+      "rationale": "中东部及南方林缘、公园常见；设中高频，名录旧分类另标注。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:swinhoesWhiteEye"
+        ]
+      },
+      "chinaProtection": {
+        "status": "taxonomy_mapping_pending",
+        "display": "三有映射待核",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 610,
+          "name": "暗绿绣眼鸟",
+          "scientificName": "Zosterops japonicus",
+          "page": 20
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "CERN为Zosterops simplex，三有610号暗绿绣眼鸟列Zosterops japonicus；分类拆分与名录映射待核。",
+      "sourceIds": [
+        "cern:swinhoesWhiteEye",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "blackHeadedGull",
+      "name": "红嘴鸥",
+      "scientificName": "Chroicocephalus ridibundus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Chroicocephalus ridibundus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1700,
+      "legacyCatalogPercent": 0.986938,
+      "addedIn54Expansion": false,
+      "rationale": "迁徙和越冬期在湖河及海岸常见；提高季节性常见水鸟的可见度。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blackHeadedGull"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 187,
+          "name": "红嘴鸥",
+          "scientificName": "Chroicocephalus ridibundus",
+          "page": 9
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blackHeadedGull",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "whimbrel",
+      "name": "中杓鹬",
+      "scientificName": "Numenius phaeopus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Numenius phaeopus",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 450,
+      "legacyCatalogPercent": 0.261248,
+      "addedIn54Expansion": false,
+      "rationale": "沿海迁徙期可局部常见，但依赖潮滩和季节；不再因内陆少见置于最低档。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:whimbrel"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 150,
+          "name": "中杓鹬",
+          "scientificName": "Numenius phaeopus",
+          "page": 8
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:whimbrel",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "piedKingfisher",
+      "name": "斑鱼狗",
+      "scientificName": "Ceryle rudis",
+      "catalogScientificName": null,
+      "sourceScientificName": "Ceryle rudis",
+      "proposedWeight": 18,
+      "baselineShare": 0.0033594624860022394,
+      "baselinePercent": 0.335946,
+      "legacyCatalogWeight": 500,
+      "legacyCatalogPercent": 0.290276,
+      "addedIn54Expansion": false,
+      "rationale": "中南部水域分布，资料描述为偶见；设置低频水鸟特色。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:piedKingfisher"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 273,
+          "name": "斑鱼狗",
+          "scientificName": "Ceryle rudis",
+          "page": 11
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:piedKingfisher",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "eurasianWoodcock",
+      "name": "丘鹬",
+      "scientificName": "Scolopax rusticola",
+      "catalogScientificName": null,
+      "sourceScientificName": "Scolopax rusticola",
+      "proposedWeight": 10,
+      "baselineShare": 0.001866368047779022,
+      "baselinePercent": 0.186637,
+      "legacyCatalogWeight": 450,
+      "legacyCatalogPercent": 0.261248,
+      "addedIn54Expansion": false,
+      "rationale": "迁徙可经过多地，繁殖记录较少且活动隐蔽；采用低频体验。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:eurasianWoodcock"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 140,
+          "name": "丘鹬",
+          "scientificName": "Scolopax rusticola",
+          "page": 7
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:eurasianWoodcock",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "blackDrongo",
+      "name": "黑卷尾",
+      "scientificName": "Dicrurus macrocercus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Dicrurus macrocercus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1700,
+      "legacyCatalogPercent": 0.986938,
+      "addedIn54Expansion": false,
+      "rationale": "国内多地低海拔开阔地常见，部分为候鸟；设中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blackDrongo"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 338,
+          "name": "黑卷尾",
+          "scientificName": "Dicrurus macrocercus",
+          "page": 13
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blackDrongo",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "chinesePondHeron",
+      "name": "池鹭",
+      "scientificName": "Ardeola bacchus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Ardeola bacchus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2500,
+      "legacyCatalogPercent": 1.451379,
+      "addedIn54Expansion": false,
+      "rationale": "东部湿地和农田常见，西部较少；设中高频湿地代表。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:chinesePondHeron"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 251,
+          "name": "池鹭",
+          "scientificName": "Ardeola bacchus",
+          "page": 11
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:chinesePondHeron",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "yellowRumpedFlycatcher",
+      "name": "白眉姬鹟",
+      "scientificName": "Ficedula zanthopygia",
+      "catalogScientificName": null,
+      "sourceScientificName": "Ficedula zanthopygia",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 700,
+      "legacyCatalogPercent": 0.406386,
+      "addedIn54Expansion": false,
+      "rationale": "北部和中东部繁殖、南方迁徙过境；按季节性林鸟设中低频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:yellowRumpedFlycatcher"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 838,
+          "name": "白眉姬鹟",
+          "scientificName": "Ficedula zanthopygia",
+          "page": 26
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:yellowRumpedFlycatcher",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "yellowBrowedWarbler",
+      "name": "黄眉柳莺",
+      "scientificName": "Phylloscopus inornatus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Phylloscopus inornatus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1800,
+      "legacyCatalogPercent": 1.044993,
+      "addedIn54Expansion": false,
+      "rationale": "除西北外多地迁徙林地常见；保留迁徙小鸟的中高频体验。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:yellowBrowedWarbler"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 516,
+          "name": "黄眉柳莺",
+          "scientificName": "Phylloscopus inornatus",
+          "page": 18
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:yellowBrowedWarbler",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "greatTit",
+      "name": "大山雀",
+      "scientificName": "Parus minor",
+      "catalogScientificName": "Parus minor",
+      "sourceScientificName": "Parus minor",
+      "proposedWeight": 90,
+      "baselineShare": 0.0167973124300112,
+      "baselinePercent": 1.679731,
+      "legacyCatalogWeight": 3400,
+      "legacyCatalogPercent": 1.973875,
+      "addedIn54Expansion": false,
+      "rationale": "按目录Parus minor识别为远东山雀，中东部各类林地常见；高频，避免与Parus major混合。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "NR",
+        "display": "NR／LC*",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": true,
+        "sourceIds": [
+          "cern:greatTit",
+          "hkTit"
+        ]
+      },
+      "chinaProtection": {
+        "status": "taxonomy_mapping_pending",
+        "display": "三有映射待核",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 397,
+          "name": "大山雀",
+          "scientificName": "Parus cinereus",
+          "page": 15
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "目录为Parus minor，应与Parus major分开；CERN远东山雀页记NR，HKBWS的LC注明并入广义P. major。三有397号大山雀列Parus cinereus，不能只靠中文同名完成匹配。",
+      "sourceIds": [
+        "cern:greatTit",
+        "hkTit",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "commonMoorhen",
+      "name": "黑水鸡",
+      "scientificName": "Gallinula chloropus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Gallinula chloropus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2500,
+      "legacyCatalogPercent": 1.451379,
+      "addedIn54Expansion": false,
+      "rationale": "多数地区适宜淡水湿地常见；设置中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:commonMoorhen"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 117,
+          "name": "黑水鸡",
+          "scientificName": "Gallinula chloropus",
+          "page": 7
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:commonMoorhen",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "greatSpottedWoodpecker",
+      "name": "大斑啄木鸟",
+      "scientificName": "Dendrocopos major",
+      "catalogScientificName": null,
+      "sourceScientificName": "Dendrocopos major",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2000,
+      "legacyCatalogPercent": 1.161103,
+      "addedIn54Expansion": false,
+      "rationale": "国内分布较广的啄木鸟，林地及园林可见；设置中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:greatSpottedWoodpecker"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 297,
+          "name": "大斑啄木鸟",
+          "scientificName": "Dendrocopos major",
+          "page": 12
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:greatSpottedWoodpecker",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "vinousThroatedParrotbill",
+      "name": "棕头鸦雀",
+      "scientificName": "Sinosuthora webbiana",
+      "catalogScientificName": null,
+      "sourceScientificName": "Sinosuthora webbiana",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1700,
+      "legacyCatalogPercent": 0.986938,
+      "addedIn54Expansion": false,
+      "rationale": "多地灌丛、林缘常见留鸟；设置中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:vinousThroatedParrotbill"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 591,
+          "name": "棕头鸦雀",
+          "scientificName": "Sinosuthora webbiana",
+          "page": 19
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:vinousThroatedParrotbill",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "blackWingedStilt",
+      "name": "黑翅长脚鹬",
+      "scientificName": "Himantopus himantopus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Himantopus himantopus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1400,
+      "legacyCatalogPercent": 0.812772,
+      "addedIn54Expansion": false,
+      "rationale": "适宜湿地常见且具有迁徙性；设置中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blackWingedStilt"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 121,
+          "name": "黑翅长脚鹬",
+          "scientificName": "Himantopus himantopus",
+          "page": 7
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blackWingedStilt",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "eurasianCoot",
+      "name": "白骨顶",
+      "scientificName": "Fulica atra",
+      "catalogScientificName": null,
+      "sourceScientificName": "Fulica atra",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2000,
+      "legacyCatalogPercent": 1.161103,
+      "addedIn54Expansion": false,
+      "rationale": "国内多数地区适宜湖泊常见，南北季节流动；设置中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:eurasianCoot"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 118,
+          "name": "白骨顶",
+          "scientificName": "Fulica atra",
+          "page": 7
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:eurasianCoot",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "redBilledLeiothrix",
+      "name": "红嘴相思鸟",
+      "scientificName": "Leiothrix lutea",
+      "catalogScientificName": null,
+      "sourceScientificName": "Leiothrix lutea",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 600,
+      "legacyCatalogPercent": 0.348331,
+      "addedIn54Expansion": false,
+      "rationale": "中南部和西南山林分布，作为林下特色鸟设中低频；不因二级保护直接设最低档。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:redBilledLeiothrix"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:redBilledLeiothrix",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "blackCollaredStarling",
+      "name": "黑领椋鸟",
+      "scientificName": "Gracupica nigricollis",
+      "catalogScientificName": null,
+      "sourceScientificName": "Gracupica nigricollis",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1100,
+      "legacyCatalogPercent": 0.638607,
+      "addedIn54Expansion": false,
+      "rationale": "长江以南多地常见留鸟；提高南方区域常见鸟代表性。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blackCollaredStarling"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 731,
+          "name": "黑领椋鸟",
+          "scientificName": "Gracupica nigricollis",
+          "page": 23
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blackCollaredStarling",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "commonKingfisher",
+      "name": "普通翠鸟",
+      "scientificName": "Alcedo atthis",
+      "catalogScientificName": null,
+      "sourceScientificName": "Alcedo atthis",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1600,
+      "legacyCatalogPercent": 0.928882,
+      "addedIn54Expansion": false,
+      "rationale": "国内多数低海拔适宜水域常见；设中高频，保护元数据以官方名录为准。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:commonKingfisher"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 270,
+          "name": "普通翠鸟",
+          "scientificName": "Alcedo atthis",
+          "page": 11
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "CERN将其标为二级，与本次国家名录核对不一致；采用三有270号普通翠鸟Alcedo atthis，不沿用百科的二级标记。",
+      "sourceIds": [
+        "cern:commonKingfisher",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "littleRingedPlover",
+      "name": "金眶鸻",
+      "scientificName": "Charadrius dubius",
+      "catalogScientificName": null,
+      "sourceScientificName": "Charadrius dubius",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 900,
+      "legacyCatalogPercent": 0.522496,
+      "addedIn54Expansion": false,
+      "rationale": "国内多地淡水湿地分布，有季节差异；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:littleRingedPlover"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 132,
+          "name": "金眶鸻",
+          "scientificName": "Charadrius dubius",
+          "page": 7
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:littleRingedPlover",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "yellowBilledGrosbeak",
+      "name": "黑尾蜡嘴雀",
+      "scientificName": "Eophona migratoria",
+      "catalogScientificName": null,
+      "sourceScientificName": "Eophona migratoria",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 900,
+      "legacyCatalogPercent": 0.522496,
+      "addedIn54Expansion": false,
+      "rationale": "东北繁殖及中东部部分地区常见，季节迁移明显；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:yellowBilledGrosbeak"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 950,
+          "name": "黑尾蜡嘴雀",
+          "scientificName": "Eophona migratoria",
+          "page": 29
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:yellowBilledGrosbeak",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "redFlankedBluetail",
+      "name": "红胁蓝尾鸲",
+      "scientificName": "Tarsiger cyanurus",
+      "catalogScientificName": null,
+      "sourceScientificName": "Tarsiger cyanurus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1000,
+      "legacyCatalogPercent": 0.580552,
+      "addedIn54Expansion": false,
+      "rationale": "东北繁殖、南方越冬；设中频季节性林鸟。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:redFlankedBluetail"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 783,
+          "name": "红胁蓝尾鸲",
+          "scientificName": "Tarsiger cyanurus",
+          "page": 24
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:redFlankedBluetail",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "collaredScopsOwl",
+      "name": "领角鸮",
+      "scientificName": "Otus lettia",
+      "catalogScientificName": null,
+      "sourceScientificName": "Otus lettia",
+      "proposedWeight": 18,
+      "baselineShare": 0.0033594624860022394,
+      "baselinePercent": 0.335946,
+      "legacyCatalogWeight": 450,
+      "legacyCatalogPercent": 0.261248,
+      "addedIn54Expansion": false,
+      "rationale": "南方林地乃至城郊可见，夜行降低日常遇见机会；低频但不标成现实稀有。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:collaredScopsOwl"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:collaredScopsOwl",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "asianBarredOwlet",
+      "name": "斑头鸺鹠",
+      "scientificName": "Glaucidium cuculoides",
+      "catalogScientificName": null,
+      "sourceScientificName": "Glaucidium cuculoides",
+      "proposedWeight": 18,
+      "baselineShare": 0.0033594624860022394,
+      "baselinePercent": 0.335946,
+      "legacyCatalogWeight": 350,
+      "legacyCatalogPercent": 0.203193,
+      "addedIn54Expansion": false,
+      "rationale": "南方丘陵并非罕见；特色鸮类设低频，保留可遇见性。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:asianBarredOwlet"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:asianBarredOwlet",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "littleOwl",
+      "name": "纵纹腹小鸮",
+      "scientificName": "Athene noctua",
+      "catalogScientificName": null,
+      "sourceScientificName": "Athene noctua",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 350,
+      "legacyCatalogPercent": 0.203193,
+      "addedIn54Expansion": false,
+      "rationale": "国内北部和西部多地常见；提高区域代表性，不把所有鸮类设同一最低档。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:littleOwl"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:littleOwl",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "silkyStarling",
+      "name": "丝光椋鸟",
+      "scientificName": "Spodiopsar sericeus",
+      "catalogScientificName": "Spodiopsar sericeus",
+      "sourceScientificName": "Spodiopsar sericeus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 900,
+      "legacyCatalogPercent": 0.522496,
+      "addedIn54Expansion": true,
+      "rationale": "中东部及南方多地常见；提高旧预设相对份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:silkyStarling"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 729,
+          "name": "丝光椋鸟",
+          "scientificName": "Spodiopsar sericeus",
+          "page": 23
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:silkyStarling",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "crestedMyna",
+      "name": "八哥",
+      "scientificName": "Acridotheres cristatellus",
+      "catalogScientificName": "Acridotheres cristatellus",
+      "sourceScientificName": "Acridotheres cristatellus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2400,
+      "legacyCatalogPercent": 1.393324,
+      "addedIn54Expansion": true,
+      "rationale": "黄河以南多地常见留鸟；设中高频，以野生分布为依据。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:crestedMyna"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 721,
+          "name": "八哥",
+          "scientificName": "Acridotheres cristatellus",
+          "page": 23
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:crestedMyna",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "greatCrestedGrebe",
+      "name": "凤头䴙䴘",
+      "scientificName": "Podiceps cristatus",
+      "catalogScientificName": "Podiceps cristatus",
+      "sourceScientificName": "Podiceps cristatus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1700,
+      "legacyCatalogPercent": 0.986938,
+      "addedIn54Expansion": true,
+      "rationale": "较大湖泊地区性常见，南北季节迁移；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:greatCrestedGrebe"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 53,
+          "name": "凤头䴙䴘",
+          "scientificName": "Podiceps cristatus",
+          "page": 5
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:greatCrestedGrebe",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "daurianRedstart",
+      "name": "北红尾鸲",
+      "scientificName": "Phoenicurus auroreus",
+      "catalogScientificName": "Phoenicurus auroreus",
+      "sourceScientificName": "Phoenicurus auroreus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2800,
+      "legacyCatalogPercent": 1.625544,
+      "addedIn54Expansion": true,
+      "rationale": "国内多地较常见，繁殖与越冬区不同；设中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:daurianRedstart"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 802,
+          "name": "北红尾鸲",
+          "scientificName": "Phoenicurus auroreus",
+          "page": 25
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:daurianRedstart",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "taiwanBarbet",
+      "name": "台湾拟啄木鸟",
+      "scientificName": "Psilopogon nuchalis",
+      "catalogScientificName": "Psilopogon nuchalis",
+      "sourceScientificName": "Psilopogon nuchalis",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 350,
+      "legacyCatalogPercent": 0.203193,
+      "addedIn54Expansion": true,
+      "rationale": "台湾特有且当地森林、公园常见；给区域代表性额度，不按全国范围小直接判罕见。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:taiwanBarbet"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 279,
+          "name": "台湾拟啄木鸟",
+          "scientificName": "Psilopogon nuchalis",
+          "page": 11
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:taiwanBarbet",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "groundTit",
+      "name": "地山雀",
+      "scientificName": "Pseudopodoces humilis",
+      "catalogScientificName": "Pseudopodoces humilis",
+      "sourceScientificName": "Pseudopodoces humilis",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 450,
+      "legacyCatalogPercent": 0.261248,
+      "addedIn54Expansion": true,
+      "rationale": "青藏高原及邻近地区局部常见；给高原代表性额度。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:groundTit"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 395,
+          "name": "地山雀",
+          "scientificName": "Pseudopodoces humilis",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:groundTit",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "greatEgret",
+      "name": "大白鹭",
+      "scientificName": "Ardea alba",
+      "catalogScientificName": "Ardea alba",
+      "sourceScientificName": "Ardea alba",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2800,
+      "legacyCatalogPercent": 1.625544,
+      "addedIn54Expansion": true,
+      "rationale": "适宜湿地地区性常见，部分种群迁徙；设中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:greatEgret"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 257,
+          "name": "大白鹭",
+          "scientificName": "Ardea alba",
+          "page": 11
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:greatEgret",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "uplandBuzzard",
+      "name": "大鵟",
+      "scientificName": "Buteo hemilasius",
+      "catalogScientificName": "Buteo hemilasius",
+      "sourceScientificName": "Buteo hemilasius",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 500,
+      "legacyCatalogPercent": 0.290276,
+      "addedIn54Expansion": true,
+      "rationale": "北方和高原适宜地区常见、南方较少；给北方猛禽中低频份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:uplandBuzzard"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:uplandBuzzard",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "littleGrebe",
+      "name": "小䴙䴘",
+      "scientificName": "Tachybaptus ruficollis",
+      "catalogScientificName": "Tachybaptus ruficollis",
+      "sourceScientificName": "Tachybaptus ruficollis",
+      "proposedWeight": 90,
+      "baselineShare": 0.0167973124300112,
+      "baselinePercent": 1.679731,
+      "legacyCatalogWeight": 4300,
+      "legacyCatalogPercent": 2.496372,
+      "addedIn54Expansion": true,
+      "rationale": "国内多地淡水水域普遍常见；设高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:littleGrebe"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 52,
+          "name": "小䴙䴘",
+          "scientificName": "Tachybaptus ruficollis",
+          "page": 5
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:littleGrebe",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "carrionCrow",
+      "name": "小嘴乌鸦",
+      "scientificName": "Corvus corone",
+      "catalogScientificName": "Corvus corone",
+      "sourceScientificName": "Corvus corone",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1100,
+      "legacyCatalogPercent": 0.638607,
+      "addedIn54Expansion": true,
+      "rationale": "华北、华中等地繁殖，部分冬季南迁；作为北方常见鸦类设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:carrionCrow"
+        ]
+      },
+      "chinaProtection": {
+        "status": "not_found_in_checked_lists",
+        "display": "两名录未匹配",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable",
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "未匹配本次核对的2021重点名录及2023三有名录；不推断为不受其他法律或地方规定保护。",
+      "sourceIds": [
+        "cern:carrionCrow",
+        "national2021",
+        "nationalTable",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "plainLaughingthrush",
+      "name": "山噪鹛",
+      "scientificName": "Pterorhinus davidi",
+      "catalogScientificName": "Pterorhinus davidi",
+      "sourceScientificName": "Pterorhinus davidi",
+      "proposedWeight": 18,
+      "baselineShare": 0.0033594624860022394,
+      "baselinePercent": 0.335946,
+      "legacyCatalogWeight": 650,
+      "legacyCatalogPercent": 0.377358,
+      "addedIn54Expansion": true,
+      "rationale": "北部和中部特有山地灌丛鸟，资料记为偶见；设低频特色。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:plainLaughingthrush"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 668,
+          "name": "山噪鹛",
+          "scientificName": "Garrulax davidi",
+          "page": 21
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "三有条目同中文名，使用学名Garrulax davidi；本表保留名称差异供复核。",
+      "sourceIds": [
+        "cern:plainLaughingthrush",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "orientalTurtleDove",
+      "name": "山斑鸠",
+      "scientificName": "Streptopelia orientalis",
+      "catalogScientificName": "Streptopelia orientalis",
+      "sourceScientificName": "Streptopelia orientalis",
+      "proposedWeight": 90,
+      "baselineShare": 0.0167973124300112,
+      "baselinePercent": 1.679731,
+      "legacyCatalogWeight": 4200,
+      "legacyCatalogPercent": 2.438316,
+      "addedIn54Expansion": true,
+      "rationale": "全国多地广布常见，部分为候鸟；设高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:orientalTurtleDove"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 63,
+          "name": "山斑鸠",
+          "scientificName": "Streptopelia orientalis",
+          "page": 5
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:orientalTurtleDove",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "easternSpotBilledDuck",
+      "name": "斑嘴鸭",
+      "scientificName": "Anas zonorhyncha",
+      "catalogScientificName": "Anas zonorhyncha",
+      "sourceScientificName": "Anas zonorhyncha",
+      "proposedWeight": 90,
+      "baselineShare": 0.0167973124300112,
+      "baselinePercent": 1.679731,
+      "legacyCatalogWeight": 3500,
+      "legacyCatalogPercent": 2.03193,
+      "addedIn54Expansion": true,
+      "rationale": "国内常见水鸟，南北季节迁移；设高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:easternSpotBilledDuck"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 30,
+          "name": "斑嘴鸭",
+          "scientificName": "Anas zonorhyncha",
+          "page": 4
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:easternSpotBilledDuck",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "eurasianNuthatch",
+      "name": "普通䴓",
+      "scientificName": "Sitta europaea",
+      "catalogScientificName": "Sitta europaea",
+      "sourceScientificName": "Sitta europaea",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1500,
+      "legacyCatalogPercent": 0.870827,
+      "addedIn54Expansion": true,
+      "rationale": "国内多地林地常见；提高旧预设相对份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:eurasianNuthatch"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 708,
+          "name": "普通䴓",
+          "scientificName": "Sitta europaea",
+          "page": 22
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:eurasianNuthatch",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "rufousBreastedAccentor",
+      "name": "棕胸岩鹨",
+      "scientificName": "Prunella strophiata",
+      "catalogScientificName": "Prunella strophiata",
+      "sourceScientificName": "Prunella strophiata",
+      "proposedWeight": 10,
+      "baselineShare": 0.001866368047779022,
+      "baselinePercent": 0.186637,
+      "legacyCatalogWeight": 350,
+      "legacyCatalogPercent": 0.203193,
+      "addedIn54Expansion": true,
+      "rationale": "西部高海拔山地分布且资料记为不常见；设低频特色。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:rufousBreastedAccentor"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 898,
+          "name": "棕胸岩鹨",
+          "scientificName": "Prunella strophiata",
+          "page": 27
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:rufousBreastedAccentor",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "eurasianMagpie",
+      "name": "欧亚喜鹊",
+      "scientificName": "Pica pica",
+      "catalogScientificName": "Pica pica",
+      "sourceScientificName": "Pica pica",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 650,
+      "legacyCatalogPercent": 0.377358,
+      "addedIn54Expansion": true,
+      "rationale": "国内北部和西部的区域代表；给中低频份额，与喜鹊分别保留。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:eurasianMagpie"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 371,
+          "name": "喜鹊",
+          "scientificName": "Pica pica",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:eurasianMagpie",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "eurasianGreatTit",
+      "name": "欧亚大山雀",
+      "scientificName": "Parus major",
+      "catalogScientificName": "Parus major",
+      "sourceScientificName": "Parus major",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 500,
+      "legacyCatalogPercent": 0.290276,
+      "addedIn54Expansion": true,
+      "rationale": "国内西北和极东北适宜地区常见；给区域代表性额度，勿误认作大山雀同一条目。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:eurasianGreatTit"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 396,
+          "name": "欧亚大山雀",
+          "scientificName": "Parus major",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "Parus major与本项目greatTit的Parus minor分别保留；三有396号列欧亚大山雀Parus major。",
+      "sourceIds": [
+        "cern:eurasianGreatTit",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "marshTit",
+      "name": "沼泽山雀",
+      "scientificName": "Poecile palustris",
+      "catalogScientificName": "Poecile palustris",
+      "sourceScientificName": "Poecile palustris",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1500,
+      "legacyCatalogPercent": 0.870827,
+      "addedIn54Expansion": true,
+      "rationale": "东北及部分中东部、西南林地常见，分布不连续；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:marshTit"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 391,
+          "name": "沼泽山雀",
+          "scientificName": "Poecile palustris",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:marshTit",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "ashyDrongo",
+      "name": "灰卷尾",
+      "scientificName": "Dicrurus leucophaeus",
+      "catalogScientificName": "Dicrurus leucophaeus",
+      "sourceScientificName": "Dicrurus leucophaeus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1000,
+      "legacyCatalogPercent": 0.580552,
+      "addedIn54Expansion": true,
+      "rationale": "多地丘陵、林缘常见，部分为候鸟；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:ashyDrongo"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 339,
+          "name": "灰卷尾",
+          "scientificName": "Dicrurus leucophaeus",
+          "page": 13
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:ashyDrongo",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "eurasianCollaredDove",
+      "name": "灰斑鸠",
+      "scientificName": "Streptopelia decaocto",
+      "catalogScientificName": "Streptopelia decaocto",
+      "sourceScientificName": "Streptopelia decaocto",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2300,
+      "legacyCatalogPercent": 1.335269,
+      "addedIn54Expansion": true,
+      "rationale": "北方及西部常见、东南较少；全国预设应保留中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:eurasianCollaredDove"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 64,
+          "name": "灰斑鸠",
+          "scientificName": "Streptopelia decaocto",
+          "page": 5
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:eurasianCollaredDove",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "greyTreepie",
+      "name": "灰树鹊",
+      "scientificName": "Dendrocitta formosae",
+      "catalogScientificName": "Dendrocitta formosae",
+      "sourceScientificName": "Dendrocitta formosae",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 800,
+      "legacyCatalogPercent": 0.464441,
+      "addedIn54Expansion": true,
+      "rationale": "东南及南方丘陵森林局部常见；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:greyTreepie"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 368,
+          "name": "灰树鹊",
+          "scientificName": "Dendrocitta formosae",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:greyTreepie",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "whiteCheekedStarling",
+      "name": "灰椋鸟",
+      "scientificName": "Spodiopsar cineraceus",
+      "catalogScientificName": "Spodiopsar cineraceus",
+      "sourceScientificName": "Spodiopsar cineraceus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2400,
+      "legacyCatalogPercent": 1.393324,
+      "addedIn54Expansion": true,
+      "rationale": "北方繁殖、黄河以南多为越冬；设中高频季节性常见鸟。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:whiteCheekedStarling"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 730,
+          "name": "灰椋鸟",
+          "scientificName": "Spodiopsar cineraceus",
+          "page": 23
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:whiteCheekedStarling",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "henricsLaughingthrush",
+      "name": "灰腹噪鹛",
+      "scientificName": "Trochalopteron henrici",
+      "catalogScientificName": "Trochalopteron henrici",
+      "sourceScientificName": "Trochalopteron henrici",
+      "proposedWeight": 18,
+      "baselineShare": 0.0033594624860022394,
+      "baselinePercent": 0.335946,
+      "legacyCatalogWeight": 300,
+      "legacyCatalogPercent": 0.174165,
+      "addedIn54Expansion": true,
+      "rationale": "西藏南部和东南部山地局部常见；保留地域代表性，不因分布窄设最低档。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:henricsLaughingthrush"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 677,
+          "name": "灰腹噪鹛",
+          "scientificName": "Trochalopteron henrici",
+          "page": 22
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:henricsLaughingthrush",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "indianWhiteEye",
+      "name": "灰腹绣眼鸟",
+      "scientificName": "Zosterops palpebrosus",
+      "catalogScientificName": "Zosterops palpebrosus",
+      "sourceScientificName": "Zosterops palpebrosus",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 650,
+      "legacyCatalogPercent": 0.377358,
+      "addedIn54Expansion": true,
+      "rationale": "西南和华南西部适宜丘陵常见；设中低频区域代表。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:indianWhiteEye"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 612,
+          "name": "灰腹绣眼鸟",
+          "scientificName": "Zosterops palpebrosus",
+          "page": 20
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:indianWhiteEye",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "easternCattleEgret",
+      "name": "牛背鹭",
+      "scientificName": "Bubulcus coromandus",
+      "catalogScientificName": "Bubulcus coromandus",
+      "sourceScientificName": "Bubulcus coromandus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2100,
+      "legacyCatalogPercent": 1.219158,
+      "addedIn54Expansion": true,
+      "rationale": "南方低海拔常见且北方有夏候鸟；中高频，分类与IUCN来源冲突单列。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "NR",
+        "display": "NR／LC*",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": true,
+        "sourceIds": [
+          "cern:easternCattleEgret",
+          "hkCattle"
+        ]
+      },
+      "chinaProtection": {
+        "status": "taxonomy_mapping_pending",
+        "display": "三有映射待核",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 254,
+          "name": "牛背鹭",
+          "scientificName": "Bubulcus ibis",
+          "page": 11
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "目录和CERN使用Bubulcus coromandus；CERN记NR，HKBWS记LC并引用广义B. ibis资料。三有254号牛背鹭列Bubulcus ibis；保留来源口径差异。",
+      "sourceIds": [
+        "cern:easternCattleEgret",
+        "hkCattle",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "commonPheasant",
+      "name": "环颈雉",
+      "scientificName": "Phasianus colchicus",
+      "catalogScientificName": "Phasianus colchicus",
+      "sourceScientificName": "Phasianus colchicus",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2200,
+      "legacyCatalogPercent": 1.277213,
+      "addedIn54Expansion": true,
+      "rationale": "国内开阔地广布，但局部丰度有差异；中高频且不等同于各地都丰富。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:commonPheasant"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 13,
+          "name": "环颈雉",
+          "scientificName": "Phasianus colchicus",
+          "page": 4
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "三有名录备注仅限野外种群。",
+      "sourceIds": [
+        "cern:commonPheasant",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "sootyHeadedBulbul",
+      "name": "白喉红臀鹎",
+      "scientificName": "Pycnonotus aurigaster",
+      "catalogScientificName": "Pycnonotus aurigaster",
+      "sourceScientificName": "Pycnonotus aurigaster",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1100,
+      "legacyCatalogPercent": 0.638607,
+      "addedIn54Expansion": true,
+      "rationale": "华南、西南低海拔局部很常见；提高南方常见鸟份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:sootyHeadedBulbul"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 486,
+          "name": "白喉红臀鹎",
+          "scientificName": "Pycnonotus aurigaster",
+          "page": 17
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:sootyHeadedBulbul",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "whiteBrowedLaughingthrush",
+      "name": "白颊噪鹛",
+      "scientificName": "Pterorhinus sannio",
+      "catalogScientificName": "Pterorhinus sannio",
+      "sourceScientificName": "Pterorhinus sannio",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 2000,
+      "legacyCatalogPercent": 1.161103,
+      "addedIn54Expansion": true,
+      "rationale": "中南部、东南及西南适宜灌丛分布；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:whiteBrowedLaughingthrush"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 671,
+          "name": "白颊噪鹛",
+          "scientificName": "Garrulax sannio",
+          "page": 21
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "三有条目同中文名，使用学名Garrulax sannio；本表保留名称差异供复核。",
+      "sourceIds": [
+        "cern:whiteBrowedLaughingthrush",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "whiteWagtail",
+      "name": "白鹡鸰",
+      "scientificName": "Motacilla alba",
+      "catalogScientificName": "Motacilla alba",
+      "sourceScientificName": "Motacilla alba",
+      "proposedWeight": 120,
+      "baselineShare": 0.022396416573348264,
+      "baselinePercent": 2.239642,
+      "legacyCatalogWeight": 5200,
+      "legacyCatalogPercent": 3.018868,
+      "addedIn54Expansion": true,
+      "rationale": "国内多地常见、适应开阔地与水边；设最高档日常基准。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:whiteWagtail"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 929,
+          "name": "白鹡鸰",
+          "scientificName": "Motacilla alba",
+          "page": 28
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:whiteWagtail",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "blueWhistlingThrush",
+      "name": "紫啸鸫",
+      "scientificName": "Myophonus caeruleus",
+      "catalogScientificName": "Myophonus caeruleus",
+      "sourceScientificName": "Myophonus caeruleus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1300,
+      "legacyCatalogPercent": 0.754717,
+      "addedIn54Expansion": true,
+      "rationale": "国内多地山地适宜生境常见；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blueWhistlingThrush"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 809,
+          "name": "紫啸鸫",
+          "scientificName": "Myophonus caeruleus",
+          "page": 25
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blueWhistlingThrush",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "redBilledChough",
+      "name": "红嘴山鸦",
+      "scientificName": "Pyrrhocorax pyrrhocorax",
+      "catalogScientificName": "Pyrrhocorax pyrrhocorax",
+      "sourceScientificName": "Pyrrhocorax pyrrhocorax",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 900,
+      "legacyCatalogPercent": 0.522496,
+      "addedIn54Expansion": true,
+      "rationale": "西部高原及北方部分开阔山地分布；给中频区域代表份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:redBilledChough",
+          "choughRange"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 373,
+          "name": "红嘴山鸦",
+          "scientificName": "Pyrrhocorax pyrrhocorax",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "CERN页面缺完整分布段落，另以Shanghai Birding中国分布说明补充。",
+      "sourceIds": [
+        "cern:redBilledChough",
+        "choughRange",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "redBilledBlueMagpie",
+      "name": "红嘴蓝鹊",
+      "scientificName": "Urocissa erythroryncha",
+      "catalogScientificName": "Urocissa erythroryncha",
+      "sourceScientificName": "Urocissa erythroryncha",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2200,
+      "legacyCatalogPercent": 1.277213,
+      "addedIn54Expansion": true,
+      "rationale": "中南部及西南林缘、村镇常见；设中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:redBilledBlueMagpie"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 365,
+          "name": "红嘴蓝鹊",
+          "scientificName": "Urocissa erythroryncha",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:redBilledBlueMagpie",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "blackThroatedBushtit",
+      "name": "红头长尾山雀",
+      "scientificName": "Aegithalos concinnus",
+      "catalogScientificName": "Aegithalos concinnus",
+      "sourceScientificName": "Aegithalos concinnus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1500,
+      "legacyCatalogPercent": 0.870827,
+      "addedIn54Expansion": true,
+      "rationale": "中南部和西南开阔林地常见；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blackThroatedBushtit"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 568,
+          "name": "红头长尾山雀",
+          "scientificName": "Aegithalos concinnus",
+          "page": 19
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blackThroatedBushtit",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "greenBackedTit",
+      "name": "绿背山雀",
+      "scientificName": "Parus monticolus",
+      "catalogScientificName": "Parus monticolus",
+      "sourceScientificName": "Parus monticolus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1300,
+      "legacyCatalogPercent": 0.754717,
+      "addedIn54Expansion": true,
+      "rationale": "西南、中部和台湾山地林缘常见；设中频山林代表。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:greenBackedTit"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 399,
+          "name": "绿背山雀",
+          "scientificName": "Parus monticolus",
+          "page": 15
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:greenBackedTit",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "blueThroatedBarbet",
+      "name": "蓝喉拟啄木鸟",
+      "scientificName": "Psilopogon asiaticus",
+      "catalogScientificName": "Psilopogon asiaticus",
+      "sourceScientificName": "Psilopogon asiaticus",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 650,
+      "legacyCatalogPercent": 0.377358,
+      "addedIn54Expansion": true,
+      "rationale": "西藏东南部和云南适宜热带森林常见；给中低频区域代表份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blueThroatedBarbet"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 280,
+          "name": "蓝喉拟啄木鸟",
+          "scientificName": "Psilopogon asiaticus",
+          "page": 11
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blueThroatedBarbet",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "blueFrontedRedstart",
+      "name": "蓝额红尾鸲",
+      "scientificName": "Phoenicurus frontalis",
+      "catalogScientificName": "Phoenicurus frontalis",
+      "sourceScientificName": "Phoenicurus frontalis",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 650,
+      "legacyCatalogPercent": 0.377358,
+      "addedIn54Expansion": true,
+      "rationale": "中西部高海拔山地较常见，冬季下移；给中低频区域代表份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blueFrontedRedstart"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 798,
+          "name": "蓝额红尾鸲",
+          "scientificName": "Phoenicuropsis frontalis",
+          "page": 25
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "三有条目同中文名，使用学名Phoenicuropsis frontalis；本表保留名称差异供复核。",
+      "sourceIds": [
+        "cern:blueFrontedRedstart",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "greaterCoucal",
+      "name": "褐翅鸦鹃",
+      "scientificName": "Centropus sinensis",
+      "catalogScientificName": "Centropus sinensis",
+      "sourceScientificName": "Centropus sinensis",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1100,
+      "legacyCatalogPercent": 0.638607,
+      "addedIn54Expansion": true,
+      "rationale": "南方低海拔适宜地区常见；中频，二级保护不直接压低权重。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:greaterCoucal"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:greaterCoucal",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "hornedLark",
+      "name": "角百灵",
+      "scientificName": "Eremophila alpestris",
+      "catalogScientificName": "Eremophila alpestris",
+      "sourceScientificName": "Eremophila alpestris",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 800,
+      "legacyCatalogPercent": 0.464441,
+      "addedIn54Expansion": true,
+      "rationale": "北方、西北和高原适宜开阔地常见；给中频区域代表份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:hornedLark"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 415,
+          "name": "角百灵",
+          "scientificName": "Eremophila alpestris",
+          "page": 15
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:hornedLark",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "redThroatedThrush",
+      "name": "赤颈鸫",
+      "scientificName": "Turdus ruficollis",
+      "catalogScientificName": "Turdus ruficollis",
+      "sourceScientificName": "Turdus ruficollis",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 850,
+      "legacyCatalogPercent": 0.493469,
+      "addedIn54Expansion": true,
+      "rationale": "北方及西部繁殖或迁徙、部分越冬地较常见；设季节性中低频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:redThroatedThrush"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 765,
+          "name": "赤颈鸫",
+          "scientificName": "Turdus ruficollis",
+          "page": 24
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:redThroatedThrush",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "ruddyShelduck",
+      "name": "赤麻鸭",
+      "scientificName": "Tadorna ferruginea",
+      "catalogScientificName": "Tadorna ferruginea",
+      "sourceScientificName": "Tadorna ferruginea",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1700,
+      "legacyCatalogPercent": 0.986938,
+      "addedIn54Expansion": true,
+      "rationale": "北方、高原繁殖及多地越冬，适宜地区常见；设中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:ruddyShelduck"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 25,
+          "name": "赤麻鸭",
+          "scientificName": "Tadorna ferruginea",
+          "page": 4
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:ruddyShelduck",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "blackRedstart",
+      "name": "赭红尾鸲",
+      "scientificName": "Phoenicurus ochruros",
+      "catalogScientificName": "Phoenicurus ochruros",
+      "sourceScientificName": "Phoenicurus ochruros",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 350,
+      "legacyCatalogPercent": 0.203193,
+      "addedIn54Expansion": true,
+      "rationale": "西北、高原和西部山地多地常见；提高旧预设相对份额，保留区域代表性。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blackRedstart"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 799,
+          "name": "赭红尾鸲",
+          "scientificName": "Phoenicurus ochruros",
+          "page": 25
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blackRedstart",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "daurianJackdaw",
+      "name": "达乌里寒鸦",
+      "scientificName": "Coloeus dauuricus",
+      "catalogScientificName": "Coloeus dauuricus",
+      "sourceScientificName": "Coloeus dauuricus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1300,
+      "legacyCatalogPercent": 0.754717,
+      "addedIn54Expansion": true,
+      "rationale": "国内北方及部分中西部常见；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:daurianJackdaw"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 375,
+          "name": "达乌里寒鸦",
+          "scientificName": "Corvus dauuricus",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "三有条目同中文名，使用学名Corvus dauuricus；本表保留名称差异供复核。",
+      "sourceIds": [
+        "cern:daurianJackdaw",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "greyCappedGreenfinch",
+      "name": "金翅雀",
+      "scientificName": "Chloris sinica",
+      "catalogScientificName": "Chloris sinica",
+      "sourceScientificName": "Chloris sinica",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 2600,
+      "legacyCatalogPercent": 1.509434,
+      "addedIn54Expansion": true,
+      "rationale": "国内多地常见留鸟；设中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:greyCappedGreenfinch"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 989,
+          "name": "金翅雀",
+          "scientificName": "Chloris sinica",
+          "page": 30
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:greyCappedGreenfinch",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "silverThroatedBushtit",
+      "name": "银喉长尾山雀",
+      "scientificName": "Aegithalos glaucogularis",
+      "catalogScientificName": "Aegithalos glaucogularis",
+      "sourceScientificName": "Aegithalos glaucogularis",
+      "proposedWeight": 65,
+      "baselineShare": 0.012131392310563644,
+      "baselinePercent": 1.213139,
+      "legacyCatalogWeight": 1900,
+      "legacyCatalogPercent": 1.103048,
+      "addedIn54Expansion": true,
+      "rationale": "中国特有，多地林地常见；特有不等于稀有，设中高频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:silverThroatedBushtit"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 567,
+          "name": "银喉长尾山雀",
+          "scientificName": "Aegithalos glaucogularis",
+          "page": 19
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:silverThroatedBushtit",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "commonTailorbird",
+      "name": "长尾缝叶莺",
+      "scientificName": "Orthotomus sutorius",
+      "catalogScientificName": "Orthotomus sutorius",
+      "sourceScientificName": "Orthotomus sutorius",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1500,
+      "legacyCatalogPercent": 0.870827,
+      "addedIn54Expansion": true,
+      "rationale": "南方低海拔适宜地区常见；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:commonTailorbird"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 426,
+          "name": "长尾缝叶莺",
+          "scientificName": "Orthotomus sutorius",
+          "page": 15
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:commonTailorbird",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "collaredFinchbill",
+      "name": "领雀嘴鹎",
+      "scientificName": "Spizixos semitorques",
+      "catalogScientificName": "Spizixos semitorques",
+      "sourceScientificName": "Spizixos semitorques",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1500,
+      "legacyCatalogPercent": 0.870827,
+      "addedIn54Expansion": true,
+      "rationale": "东南、华南和台湾丘陵常见；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:collaredFinchbill"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 477,
+          "name": "领雀嘴鹎",
+          "scientificName": "Spizixos semitorques",
+          "page": 17
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:collaredFinchbill",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "himalayanVulture",
+      "name": "高山兀鹫",
+      "scientificName": "Gyps himalayensis",
+      "catalogScientificName": "Gyps himalayensis",
+      "sourceScientificName": "Gyps himalayensis",
+      "proposedWeight": 10,
+      "baselineShare": 0.001866368047779022,
+      "baselinePercent": 0.186637,
+      "legacyCatalogWeight": 350,
+      "legacyCatalogPercent": 0.203193,
+      "addedIn54Expansion": true,
+      "rationale": "西部高山高原大型猛禽，低地日常遇见机会有限；设低频，NT与二级仅作独立注记。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "NT",
+        "display": "来源NT",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:himalayanVulture",
+          "cmsVulture"
+        ]
+      },
+      "chinaProtection": {
+        "status": "national_II",
+        "display": "国家Ⅱ",
+        "nationalKeyLevel": "II",
+        "threeValuesEntry": null,
+        "sourceIds": [
+          "national2021",
+          "nationalTable"
+        ]
+      },
+      "notes": "CERN和CMS均记NT；近危不等于IUCN受威胁三类别，且不与中国二级保护相互换算。",
+      "sourceIds": [
+        "cern:himalayanVulture",
+        "cmsVulture",
+        "national2021",
+        "nationalTable"
+      ]
+    },
+    {
+      "id": "twite",
+      "name": "黄嘴朱顶雀",
+      "scientificName": "Linaria flavirostris",
+      "catalogScientificName": "Linaria flavirostris",
+      "sourceScientificName": "Linaria flavirostris",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 450,
+      "legacyCatalogPercent": 0.261248,
+      "addedIn54Expansion": true,
+      "rationale": "西北、高原及中西部适宜地区较常见；给中低频区域代表份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:twite"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 992,
+          "name": "黄嘴朱顶雀",
+          "scientificName": "Linaria flavirostris",
+          "page": 30
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:twite",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "yellowBilledBlueMagpie",
+      "name": "黄嘴蓝鹊",
+      "scientificName": "Urocissa flavirostris",
+      "catalogScientificName": "Urocissa flavirostris",
+      "sourceScientificName": "Urocissa flavirostris",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 650,
+      "legacyCatalogPercent": 0.377358,
+      "addedIn54Expansion": true,
+      "rationale": "喜马拉雅和西南山地森林常见；给中低频区域代表份额。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:yellowBilledBlueMagpie"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 364,
+          "name": "黄嘴蓝鹊",
+          "scientificName": "Urocissa flavirostris",
+          "page": 14
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:yellowBilledBlueMagpie",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "ornateSunbird",
+      "name": "黄腹花蜜鸟",
+      "scientificName": "Cinnyris ornatus",
+      "catalogScientificName": "Cinnyris ornatus",
+      "sourceScientificName": "Cinnyris jugularis",
+      "proposedWeight": 30,
+      "baselineShare": 0.005599104143337066,
+      "baselinePercent": 0.55991,
+      "legacyCatalogWeight": 650,
+      "legacyCatalogPercent": 0.377358,
+      "addedIn54Expansion": true,
+      "rationale": "国内南部热带地区分布，海南较常见；给中低频区域份额，旧广义分类单列。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "LC*（分类口径）",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": true,
+        "sourceIds": [
+          "cern:ornateSunbird",
+          "hkSunbird"
+        ]
+      },
+      "chinaProtection": {
+        "status": "taxonomy_mapping_pending",
+        "display": "三有映射待核",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 886,
+          "name": "黄腹花蜜鸟",
+          "scientificName": "Cinnyris jugularis",
+          "page": 27
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "目录为Cinnyris ornatus；CERN及三有886号黄腹花蜜鸟使用广义Cinnyris jugularis。HKBWS提供ornatus条目与LC记录，最新独立评估年未核实。",
+      "sourceIds": [
+        "cern:ornateSunbird",
+        "hkSunbird",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "brownBreastedBulbul",
+      "name": "黄臀鹎",
+      "scientificName": "Pycnonotus xanthorrhous",
+      "catalogScientificName": "Pycnonotus xanthorrhous",
+      "sourceScientificName": "Pycnonotus xanthorrhous",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1200,
+      "legacyCatalogPercent": 0.696662,
+      "addedIn54Expansion": true,
+      "rationale": "西南及部分中东部局部常见；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:brownBreastedBulbul"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 482,
+          "name": "黄臀鹎",
+          "scientificName": "Pycnonotus xanthorrhous",
+          "page": 17
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:brownBreastedBulbul",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "whiskeredYuhina",
+      "name": "黄颈凤鹛",
+      "scientificName": "Yuhina flavicollis",
+      "catalogScientificName": "Yuhina flavicollis",
+      "sourceScientificName": "Yuhina flavicollis",
+      "proposedWeight": 18,
+      "baselineShare": 0.0033594624860022394,
+      "baselinePercent": 0.335946,
+      "legacyCatalogWeight": 350,
+      "legacyCatalogPercent": 0.203193,
+      "addedIn54Expansion": true,
+      "rationale": "西藏东南部和云南部分山地不常见；设低频特色。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:whiskeredYuhina"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 604,
+          "name": "黄颈凤鹛",
+          "scientificName": "Yuhina flavicollis",
+          "page": 20
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:whiskeredYuhina",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "blackTailedGull",
+      "name": "黑尾鸥",
+      "scientificName": "Larus crassirostris",
+      "catalogScientificName": "Larus crassirostris",
+      "sourceScientificName": "Larus crassirostris",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1300,
+      "legacyCatalogPercent": 0.754717,
+      "addedIn54Expansion": true,
+      "rationale": "国内沿海常见，有季节迁移；设中频海岸代表。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blackTailedGull"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 193,
+          "name": "黑尾鸥",
+          "scientificName": "Larus crassirostris",
+          "page": 9
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blackTailedGull",
+        "three2023",
+        "threePDF"
+      ]
+    },
+    {
+      "id": "blackBulbul",
+      "name": "黑短脚鹎",
+      "scientificName": "Hypsipetes leucocephalus",
+      "catalogScientificName": "Hypsipetes leucocephalus",
+      "sourceScientificName": "Hypsipetes leucocephalus",
+      "proposedWeight": 45,
+      "baselineShare": 0.0083986562150056,
+      "baselinePercent": 0.839866,
+      "legacyCatalogWeight": 1000,
+      "legacyCatalogPercent": 0.580552,
+      "addedIn54Expansion": true,
+      "rationale": "南方和西南山地常绿林常见；设中频。",
+      "evidenceKind": "qualitative_distribution_and_editorial_balance",
+      "weightIsMeasuredOccurrence": false,
+      "iucn": {
+        "sourceReportedCategory": "LC",
+        "display": "来源LC",
+        "assessmentYear": null,
+        "latestIndependentAssessmentVerified": false,
+        "taxonCaution": false,
+        "sourceIds": [
+          "cern:blackBulbul"
+        ]
+      },
+      "chinaProtection": {
+        "status": "three_values",
+        "display": "三有",
+        "nationalKeyLevel": null,
+        "threeValuesEntry": {
+          "number": 495,
+          "name": "黑短脚鹎",
+          "scientificName": "Hypsipetes leucocephalus",
+          "page": 17
+        },
+        "sourceIds": [
+          "three2023",
+          "threePDF"
+        ]
+      },
+      "notes": "",
+      "sourceIds": [
+        "cern:blackBulbul",
+        "three2023",
+        "threePDF"
+      ]
+    }
+  ],
+  "defaultProfileId": "cn-national-balanced-v2-draft1",
+  "defaultProfileVersion": 1,
+  "allDefaultWeightsPositive": true,
+  "settingsContract": {
+    "manualAdjustmentEnabledByDefault": false,
+    "adjustmentPanelVisibleOnlyWhenManual": true,
+    "perSpeciesEnableSwitch": false,
+    "weightLocks": false,
+    "initialOverrides": {},
+    "weightResolution": "manualAdjustmentEnabled && overrides contains id ? overrides[id] : currentSystemDefaults[id]",
+    "zeroOverrideMeaning": "not_selected",
+    "uncheckManual": "use_system_defaults_and_retain_inactive_saved_overrides",
+    "resetToDefaults": {
+      "manualAdjustmentEnabled": false,
+      "overrides": {}
+    },
+    "legacyMigration": "replace_probability_domain_with_system_defaults_once",
+    "newSpecies": "use_system_default_weight_in_both_modes",
+    "defaultUpdates": "default_mode_follows_current_defaults; manual_mode_preserves_explicit_overrides",
+    "commitSemantics": "follow_settings_apply_cancel_transaction; visibility_tracks_draft; runtime_tracks_committed_settings"
+  }
+}

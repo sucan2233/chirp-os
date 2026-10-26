@@ -70,12 +70,7 @@ extension BehaviorEngine {
     /// Stable traversal and a separate stream keep optional ecology out of the
     /// population/flight RNG, and prevent the first registered bird monopolizing it.
     func ecologicalChoice<T>(_ values:[T],weight:(T)->Double) -> T? {
-        let weighted=values.map{($0,max(0,weight($0)))}.filter{$0.1.isFinite && $0.1>0}
-        let total=weighted.reduce(0){$0+$1.1}
-        guard total>0 else {return nil}
-        var ticket=ecologyRandom.unit()*total
-        for (value,weight) in weighted {ticket-=weight;if ticket<0 {return value}}
-        return weighted.last?.0
+        try? WeightedChoice(values, weight: weight).choose(using: ecologyRandom.unit)
     }
     private func attentionRejection(_ action:AttentionKind,id:BirdID,source:BehaviorSource) -> BehaviorReason? {
         guard let bird=bird(id),role(of:bird) == .resident,bird.state == .perched,bird.edge == .top,

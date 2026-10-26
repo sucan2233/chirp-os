@@ -17,7 +17,7 @@ final class FixedPerchSettingsTests: XCTestCase {
         var object=try settingsObject(original)
         object.removeValue(forKey:"fixedPerchesEnabled")
         object.removeValue(forKey:"fixedPerches")
-        object.removeValue(forKey:"schemaVersion")
+        object["schemaVersion"]=BirdSettings.currentSchemaVersion
         let data=try JSONSerialization.data(withJSONObject:object)
         for decoded in [try JSONDecoder().decode(BirdSettings.self,from:data),try BirdSettings.decode(data)] {
             XCTAssertTrue(decoded.fixedPerchesEnabled)

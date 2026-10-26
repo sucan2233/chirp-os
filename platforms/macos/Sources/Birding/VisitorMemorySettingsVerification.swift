@@ -14,7 +14,7 @@ enum VisitorMemorySettingsVerification {
         let d=isolatedDesktop(preferences:preferences,folder:evidence)
         let defaults=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
         checks["visitorMemoryDefaultsOnWithoutCreatingSettings"]=defaults.visitorMemoryEnabled &&
-            defaults.schemaVersion==1 && !FileManager.default.fileExists(atPath:d.settingsURL.path)
+            defaults.schemaVersion==BirdSettings.currentSchemaVersion && !FileManager.default.fileExists(atPath:d.settingsURL.path)
         try checkMigration(into:&checks)
 
         let cancelled=SpeciesSettingsWindow(desktop:d)
@@ -53,7 +53,7 @@ enum VisitorMemorySettingsVerification {
                 let object=try JSONSerialization.jsonObject(with:Data(contentsOf:d.settingsURL)) as? [String:Any]
                 checks["visitorMemorySaveAppliesExactCombination"+suffix]=saved.visitorMemoryEnabled==enabled &&
                     saved.perchActions==master && d.settings.visitorMemoryEnabled==enabled && d.settings.perchActions==master &&
-                    (object?["visitorMemoryEnabled"] as? Bool)==enabled && (object?["schemaVersion"] as? Int)==1
+                    (object?["visitorMemoryEnabled"] as? Bool)==enabled && (object?["schemaVersion"] as? Int)==BirdSettings.currentSchemaVersion
                 let reloaded=isolatedDesktop(preferences:preferences,folder:evidence)
                 try reloaded.loadSpeciesConfig()
                 checks["visitorMemoryReloadKeepsExactCombination"+suffix]=reloaded.settings.visitorMemoryEnabled==enabled &&
@@ -124,18 +124,17 @@ enum VisitorMemorySettingsVerification {
 
     private static func checkMigration(into checks:inout [String:Bool]) throws {
         var original=BirdSettings();original.visitorMemoryEnabled=false;original.perchActions=false
-        original.catalog.species[0].speed=1.25;original.probabilities.adjust(at:0,to:1234)
-        original.probabilities.setLocked(true,at:0)
-        for version:Int? in [nil,0,1] {
+        original.catalog.species[0].speed=1.25;original.probabilities.setManualWeight(at:0,to:1234)
+        for version:Int? in [BirdSettings.currentSchemaVersion] {
             for nullValue in [false,true] {
                 var object=try JSONSerialization.jsonObject(with:JSONEncoder().encode(original)) as! [String:Any]
                 if let version {object["schemaVersion"]=version}
-                else {object.removeValue(forKey:"schemaVersion")}
+                else {object["schemaVersion"]=BirdSettings.currentSchemaVersion}
                 if nullValue {object["visitorMemoryEnabled"]=NSNull()}
                 else {object.removeValue(forKey:"visitorMemoryEnabled")}
                 let migrated=try BirdSettings.decode(JSONSerialization.data(withJSONObject:object))
                 let suffix="-version-\(version.map{String($0)} ?? "missing")-null-\(nullValue)"
-                checks["visitorMemoryAdditiveMigration"+suffix]=migrated.visitorMemoryEnabled && migrated.schemaVersion==1 &&
+                checks["visitorMemoryAdditiveMigration"+suffix]=migrated.visitorMemoryEnabled && migrated.schemaVersion==BirdSettings.currentSchemaVersion &&
                     !migrated.perchActions && migrated.catalog.species==original.catalog.species &&
                     migrated.probabilities==original.probabilities
             }

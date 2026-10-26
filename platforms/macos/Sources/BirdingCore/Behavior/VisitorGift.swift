@@ -53,7 +53,7 @@ struct VisitorGiftPlan {
     func canBegin(in engine:BehaviorEngine) -> Bool {
         guard engine.settings.visitorGiftsEnabled,engine.settings.visitorMemoryEnabled,engine.settings.fixedPerchesEnabled,
               !engine.paused,!engine.world.buttonsDown,
-              engine.settings.probabilities.entries.contains(where:{$0.id == .azureWingedMagpie && $0.points>0}),
+              engine.settings.probabilities.participates(.azureWingedMagpie),
               worldValid(in:engine),let bird=engine.bird(id),bird.profile.id == .azureWingedMagpie,
               bird.motionRevision==initialRevision,bird.position==origin,bird.state == .perched,
               bird.stateTime>=1,!bird.isDeparting,bird.edge == .top,
@@ -84,7 +84,7 @@ struct VisitorGiftPlan {
               source == .automatic || source == .preview,
               engine.settings.visitorGiftsEnabled,engine.settings.visitorMemoryEnabled,
               engine.settings.fixedPerchesEnabled,engine.world.fixedPerchArtAvailable,engine.world.leafCarryArtAvailable,
-              engine.settings.probabilities.entries.contains(where:{$0.id == .azureWingedMagpie && $0.points>0}),
+              engine.settings.probabilities.participates(.azureWingedMagpie),
               BehaviorDefinitions.definition(for:.visitorGift).isEnabled(settings:engine.settings,source:source),
               source != .automatic || (engine.ambientEnabled && engine.settings.activityRhythm != .quiet),
               !engine.carriedObjects.objects.values.contains(where:{$0.isVisitorGift && $0.state != .retired}),
@@ -295,7 +295,7 @@ final class VisitorGiftExecution:BehaviorExecution {
     }
     func validate(in engine:BehaviorEngine) -> BehaviorCompletion? {
         guard engine.settings.visitorGiftsEnabled,engine.settings.visitorMemoryEnabled,engine.settings.fixedPerchesEnabled,
-              engine.settings.probabilities.entries.contains(where:{$0.id == .azureWingedMagpie && $0.points>0}) else {return .cancelled(.settingsChanged)}
+              engine.settings.probabilities.participates(.azureWingedMagpie) else {return .cancelled(.settingsChanged)}
         guard !engine.world.interruptingButtonsDown else {return .cancelled(.userInput)}
         guard let bird=engine.bird(plan.id) else {return .failed(.missingBird)}
         guard VisitorGiftPlan.requiredFrames.isSubset(of:engine.world.availableFrames[bird.profile.id] ?? []) else {return .failed(.missingFrames)}

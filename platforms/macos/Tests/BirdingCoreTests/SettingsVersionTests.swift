@@ -5,12 +5,12 @@ import BirdingCore
 final class SettingsVersionTests: XCTestCase {
     func testNewSettingsEncodeCurrentVersionAtTopLevel() throws {
         let settings=BirdSettings()
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,1)
-        XCTAssertEqual(settings.schemaVersion,1)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(settings.schemaVersion,2)
         let object=try settingsObject(settings)
-        XCTAssertEqual(object["schemaVersion"] as? Int,1)
+        XCTAssertEqual(object["schemaVersion"] as? Int,2)
         XCTAssertNotNil(object["catalog"])
-        XCTAssertNotNil(object["probabilities"])
+        XCTAssertNotNil(object["speciesProbability"]);XCTAssertNil(object["probabilities"])
     }
 
     func testCurrentVersionRoundTripsEverySetting() throws {
@@ -25,21 +25,24 @@ final class SettingsVersionTests: XCTestCase {
             try original.save(to:url)
             assertSettingsEqual(try BirdSettings.load(from:url,legacyURL:folder.appendingPathComponent("legacy.json")),original)
             let saved=try XCTUnwrap(JSONSerialization.jsonObject(with:Data(contentsOf:url)) as? [String:Any])
-            XCTAssertEqual(saved["schemaVersion"] as? Int,1)
+            XCTAssertEqual(saved["schemaVersion"] as? Int,2)
         }
     }
 
-    func testMissingAndZeroVersionsMigrateWithoutResettingAnySetting() throws {
+    func testLegacyVersionsReplaceOnlyProbabilitySettings() throws {
         for enabled in [false,true] {
             let original=configuredSettings(enabled:enabled)
-            for explicitZero in [false,true] {
-                let data=try oldSettingsData(original,explicitZero:explicitZero)
+            for sourceVersion:Int? in [nil,0,1] {
+                var object=try JSONSerialization.jsonObject(with:oldSettingsData(original)) as! [String:Any]
+                object["schemaVersion"]=sourceVersion
+                let data=try JSONSerialization.data(withJSONObject:object)
+                var expected=original;expected.probabilities.resetToDefaults()
                 let direct=try JSONDecoder().decode(BirdSettings.self,from:data)
                 let migrated=try BirdSettings.decode(data)
-                assertSettingsEqual(direct,original)
-                assertSettingsEqual(migrated,original)
+                assertSettingsEqual(direct,expected)
+                assertSettingsEqual(migrated,expected)
                 assertSettingsEqual(try BirdSettings.decode(JSONEncoder().encode(migrated)),migrated)
-                XCTAssertEqual(try settingsObject(migrated)["schemaVersion"] as? Int,1)
+                XCTAssertEqual(try settingsObject(migrated)["schemaVersion"] as? Int,2)
             }
         }
     }
@@ -47,7 +50,7 @@ final class SettingsVersionTests: XCTestCase {
     func testOldFilesMissingNewSwitchesReceiveTheirExistingDefaults() throws {
         var expected=configuredSettings()
         var object=try settingsObject(expected)
-        for key in ["schemaVersion","pointerVisits","pointerFollowEnabled","flockPasses",
+        for key in ["pointerVisits","pointerFollowEnabled","flockPasses",
                     "socialInteractions","perchActions","passiveAttentionEnabled",
                     "leafPlayEnabled","ambientLeafPlayEnabled"] {
             object.removeValue(forKey:key)
@@ -60,26 +63,19 @@ final class SettingsVersionTests: XCTestCase {
         assertSettingsEqual(try BirdSettings.decode(data),expected)
     }
 
-    func testOldSpeciesExpansionKeepsProbabilitiesLocksAndPreferencesOnRepeatedMigration() throws {
-        var original=configuredSettings()
-        original.catalog.species=Array(original.catalog.species.prefix(7))
-        original.probabilities=ProbabilityDistribution(catalog:original.catalog)
-        original.probabilities.adjust(at:0,to:1234)
-        original.probabilities.setLocked(true,at:0)
-        original.pendingSpecies=[]
-        let added=SpeciesCatalog.standard.species.filter { profile in
-            !original.catalog.species.contains(where:{$0.id==profile.id})
+    func testLegacySevenAnd46SpeciesExpandWithPositiveDefaults() throws {
+        for count in [7,46] {
+            var original=configuredSettings()
+            original.catalog.species=Array(original.catalog.species.prefix(count))
+            let migrated=try BirdSettings.decode(oldSettingsData(original))
+            var expected=original
+            expected.catalog.species += SpeciesCatalog.standard.species.dropFirst(count)
+            expected.probabilities.resetToDefaults()
+            assertSettingsEqual(migrated,expected)
+            XCTAssertTrue(migrated.probabilities.entries.allSatisfy{$0.weight>0})
+            XCTAssertEqual(migrated.migration?.fromSchemaVersion,0)
+            assertSettingsEqual(try BirdSettings.decode(JSONEncoder().encode(migrated)),migrated)
         }
-        let migrated=try BirdSettings.decode(oldSettingsData(original))
-        var expected=original
-        expected.catalog.species += added
-        try expected.probabilities.includeNewSpecies()
-        expected.pendingSpecies=added.map(\.id)
-        assertSettingsEqual(migrated,expected)
-        XCTAssertEqual(Array(migrated.probabilities.entries.prefix(original.probabilities.entries.count)),original.probabilities.entries)
-        XCTAssertTrue(migrated.probabilities.entries.dropFirst(original.probabilities.entries.count).allSatisfy{$0.points==0 && !$0.locked})
-        XCTAssertTrue(migrated.probabilities.isValid)
-        assertSettingsEqual(try BirdSettings.decode(JSONEncoder().encode(migrated)),migrated)
     }
 
     func testOldBehaviorDefaultsMigrateOnceWhileCustomValuesSurvive() throws {
@@ -95,7 +91,7 @@ final class SettingsVersionTests: XCTestCase {
         original.catalog.species[1].perchMax+=1
         original.catalog.species[0].flapFPS=27.125
         var expected=original
-        expected.perchDefaultsVersion=1
+        expected.perchDefaultsVersion=1;expected.probabilities.resetToDefaults()
         for i in expected.catalog.species.indices {
             let current=SpeciesCatalog.standard.profile(expected.catalog.species[i].id)
             if i>0 {expected.catalog.species[i].flapFPS=current.flapFPS}
@@ -110,7 +106,7 @@ final class SettingsVersionTests: XCTestCase {
     }
 
     func testFutureVersionsAreRejectedByBothDecodingEntrypoints() throws {
-        for version in [2,Int.max] {
+        for version in [BirdSettings.currentSchemaVersion+1,Int.max] {
             var object=try settingsObject(configuredSettings())
             object["schemaVersion"]=version
             let data=try JSONSerialization.data(withJSONObject:object)
@@ -137,7 +133,7 @@ final class SettingsVersionTests: XCTestCase {
         let legacy=folder.appendingPathComponent("species.json")
         let legacyData=try JSONEncoder().encode(SpeciesCatalog.standard)
         try legacyData.write(to:legacy)
-        for version in [2,Int.max] {
+        for version in [BirdSettings.currentSchemaVersion+1,Int.max] {
             var complete=try settingsObject(configuredSettings())
             complete["schemaVersion"]=version
             for object in [complete,["schemaVersion":version,"catalog":"future format"]] {
@@ -185,26 +181,32 @@ final class SettingsVersionTests: XCTestCase {
             let data=try oldSettingsData(original,explicitZero:explicitZero)
             try data.write(to:url)
             var loaded=try BirdSettings.load(from:url,legacyURL:folder.appendingPathComponent("legacy.json"))
-            assertSettingsEqual(loaded,original)
+            var expected=original;expected.probabilities.resetToDefaults()
+            assertSettingsEqual(loaded,expected)
             XCTAssertEqual(try Data(contentsOf:url),data)
             loaded.hoverDelay=0.75
             try loaded.save(to:url)
             let saved=try Data(contentsOf:url)
             let object=try XCTUnwrap(JSONSerialization.jsonObject(with:saved) as? [String:Any])
-            XCTAssertEqual(object["schemaVersion"] as? Int,1)
+            XCTAssertEqual(object["schemaVersion"] as? Int,2)
             assertSettingsEqual(try BirdSettings.decode(saved),loaded)
+            let backups=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="bak"}
+            XCTAssertTrue(try backups.contains{try Data(contentsOf:$0)==data})
+            let count=backups.count
+            try loaded.save(to:url)
+            XCTAssertEqual(try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="bak"}.count,count)
         }
     }
 
-    func testSaveChecksOnlyExistingVersionContractAndAllowsRepairingOtherFields() throws {
+    func testSaveRejectsMalformedExistingFilesWithoutOverwrite() throws {
         let folder=try temporaryFolder()
         defer {try? FileManager.default.removeItem(at:folder)}
         let url=folder.appendingPathComponent("settings.json")
         let original=configuredSettings()
         for json in ["{\"catalog\":false}","{\"schemaVersion\":0,\"catalog\":false}","{\"schemaVersion\":1}"] {
             try Data(json.utf8).write(to:url)
-            try original.save(to:url)
-            assertSettingsEqual(try BirdSettings.decode(Data(contentsOf:url)),original)
+            XCTAssertThrowsError(try original.save(to:url))
+            XCTAssertEqual(try Data(contentsOf:url),Data(json.utf8))
         }
     }
 
@@ -234,10 +236,10 @@ final class SettingsVersionTests: XCTestCase {
         let data=try JSONEncoder().encode(catalog)
         try data.write(to:legacy)
         let migrated=try BirdSettings.load(from:url,legacyURL:legacy)
-        XCTAssertEqual(migrated.schemaVersion,1)
+        XCTAssertEqual(migrated.schemaVersion,2)
         XCTAssertEqual(Array(migrated.catalog.species.prefix(catalog.species.count)),catalog.species)
-        XCTAssertEqual(Array(migrated.probabilities.entries.prefix(catalog.species.count)),ProbabilityDistribution(catalog:catalog).entries)
-        XCTAssertTrue(migrated.probabilities.entries.dropFirst(catalog.species.count).allSatisfy{$0.points==0 && !$0.locked})
+        XCTAssertEqual(migrated.probabilities,ProbabilityDistribution())
+        XCTAssertTrue(migrated.probabilities.entries.allSatisfy{$0.weight>0})
         XCTAssertTrue(migrated.pointerVisits);XCTAssertFalse(migrated.pointerFollowEnabled)
         XCTAssertTrue(migrated.flockPasses);XCTAssertTrue(migrated.socialInteractions)
         XCTAssertTrue(migrated.perchActions);XCTAssertTrue(migrated.passiveAttentionEnabled)
@@ -254,6 +256,22 @@ final class SettingsVersionTests: XCTestCase {
         XCTAssertFalse(try XCTUnwrap(BirdSettingsVersionError.invalidVersion.errorDescription).isEmpty)
     }
 
+    func testMalformedProbabilityPayloadsAreRejected() throws {
+        let invalid:[[String:Any]] = [[:], ["manualAdjustmentEnabled":true],
+            ["manualAdjustmentEnabled":"true","overrides":[:]],
+            ["manualAdjustmentEnabled":false,"overrides":["treeSparrow":-1]],
+            ["manualAdjustmentEnabled":false,"overrides":["treeSparrow":1e-7]],
+            ["manualAdjustmentEnabled":true,"overrides":["":1]],
+            ["manualAdjustmentEnabled":true,"overrides":["treeSparrow":1000001]]]
+        for payload in invalid {
+            var object=try settingsObject(BirdSettings());object["speciesProbability"]=payload
+            XCTAssertThrowsError(try BirdSettings.decode(JSONSerialization.data(withJSONObject:object)))
+        }
+        var legacy=try JSONSerialization.jsonObject(with:oldSettingsData(BirdSettings())) as! [String:Any]
+        legacy["probabilities"]=["entries":[["id":"treeSparrow","points":9999,"locked":false]]]
+        XCTAssertThrowsError(try BirdSettings.decode(JSONSerialization.data(withJSONObject:legacy)))
+    }
+
     private func temporaryFolder() throws -> URL {
         let url=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at:url,withIntermediateDirectories:true)
@@ -266,6 +284,10 @@ final class SettingsVersionTests: XCTestCase {
 
     private func oldSettingsData(_ settings:BirdSettings,explicitZero:Bool = false) throws -> Data {
         var object=try settingsObject(settings)
+        object.removeValue(forKey:"speciesProbability")
+        object["probabilities"]=["entries":settings.catalog.species.enumerated().map { index, bird in
+            ["id":bird.id.rawValue,"points":index==0 ? 10000 : 0,"locked":index==0] as [String:Any]
+        }]
         if explicitZero {object["schemaVersion"]=0}
         else {object.removeValue(forKey:"schemaVersion")}
         return try JSONSerialization.data(withJSONObject:object)
@@ -279,9 +301,7 @@ final class SettingsVersionTests: XCTestCase {
         settings.passiveAttentionEnabled=enabled;settings.leafPlayEnabled=enabled;settings.ambientLeafPlayEnabled=enabled
         settings.ambientFrequency = .high
         settings.catalog.species[0].speed=1.25
-        settings.probabilities.adjust(at:0,to:1234)
-        settings.probabilities.setLocked(true,at:0)
-        settings.pendingSpecies=[.nightHeron]
+        settings.probabilities.setManualWeight(at:0,to:1234)
         return settings
     }
 
@@ -298,7 +318,11 @@ final class SettingsVersionTests: XCTestCase {
     }
 
     private func assertSettingsEqual(_ actual:BirdSettings,_ expected:BirdSettings,file:StaticString = #filePath,line:UInt = #line) {
-        XCTAssertEqual(actual.schemaVersion,1,file:file,line:line)
+        if var a=try? settingsObject(actual),var e=try? settingsObject(expected) {
+            a.removeValue(forKey:"migration");e.removeValue(forKey:"migration")
+            XCTAssertEqual(NSDictionary(dictionary:a),NSDictionary(dictionary:e),file:file,line:line)
+        }
+        XCTAssertEqual(actual.schemaVersion,2,file:file,line:line)
         XCTAssertEqual(actual.schemaVersion,expected.schemaVersion,file:file,line:line)
         XCTAssertEqual(actual.catalog.species,expected.catalog.species,file:file,line:line)
         XCTAssertEqual(actual.probabilities,expected.probabilities,file:file,line:line)
@@ -313,6 +337,5 @@ final class SettingsVersionTests: XCTestCase {
         XCTAssertEqual(actual.ambientLeafPlayEnabled,expected.ambientLeafPlayEnabled,file:file,line:line)
         XCTAssertEqual(actual.ambientFrequency,expected.ambientFrequency,file:file,line:line)
         XCTAssertEqual(actual.perchDefaultsVersion,expected.perchDefaultsVersion,file:file,line:line)
-        XCTAssertEqual(actual.pendingSpecies,expected.pendingSpecies,file:file,line:line)
     }
 }

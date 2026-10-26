@@ -7,7 +7,7 @@ final class CourtshipRecordingTests:XCTestCase {
         let root=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let log=try BehaviorInputLog.load(from:root.appendingPathComponent("shared/behavior-fixtures/v1/courtship-display.json"))
-        XCTAssertEqual(log.simulationVersion,22)
+        XCTAssertEqual(log.simulationVersion,23)
         func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
             var partial=log;partial.inputs=Array(log.inputs.prefix(count));return try partial.replay(callbackHz:hz)
         }
@@ -51,7 +51,7 @@ final class CourtshipRecordingTests:XCTestCase {
     func testRealProductionRecordingPreservesSourceSuccessCancellationAndRejectsVersionSixteenEnvelope() throws {
         var settings=F.settings()
         let index=try XCTUnwrap(settings.probabilities.entries.firstIndex{$0.id==F.species})
-        settings.probabilities.adjust(at:index,to:10000)
+        for entry in settings.probabilities.entries { settings.probabilities.setWeight(0, for: entry.id) }; settings.probabilities.setManualWeight(at:index,to:1)
         let profileIndex=try XCTUnwrap(settings.catalog.species.firstIndex{$0.id==F.species})
         settings.catalog.species[profileIndex].perchMin=120;settings.catalog.species[profileIndex].perchMax=180
         let e=BehaviorEngine(seed:2701,settings:settings,recordInputs:true)
@@ -69,7 +69,7 @@ final class CourtshipRecordingTests:XCTestCase {
         e.handle(.pause(true));e.handle(.remove(try XCTUnwrap(e.id(of:e.birds[0]))))
         F.clean(e,cancelled);e.handle(.pause(false));F.advance(e,0.2)
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(BehaviorInputLog.engineVersion,22);XCTAssertEqual(log.simulationVersion,22)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,23);XCTAssertEqual(log.simulationVersion,23)
         let expected=try XCTUnwrap(log.expected);XCTAssertNil(log.failure);XCTAssertNil(log.fixtureBirds)
         XCTAssertEqual(expected.events.filter{$0.kind=="courtshipDisplay" && $0.type=="completed"}.map(\.source),["user"])
         XCTAssertEqual(expected.events.filter{$0.kind=="courtshipDisplay" && $0.type=="cancelled"}.map(\.source),["preview"])

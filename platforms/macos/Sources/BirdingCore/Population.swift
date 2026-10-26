@@ -38,7 +38,7 @@ public final class Population {
         if residents == range.lower && residents == range.upper { return nil }
         if residents <= range.lower { return total < range.upper ? .arrive : nil }
         if residents >= range.upper { return .depart }
-        if random() < 0.5 && total < range.upper { return .arrive }
+        if RandomChoice.chance(0.5, using: random) && total < range.upper { return .arrive }
         return .depart
     }
 }

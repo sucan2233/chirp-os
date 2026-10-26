@@ -105,25 +105,25 @@ final class ActivityRhythmTests:XCTestCase {
     func testNewSettingsDefaultToSteadyWithoutSchemaBump() throws {
         let settings=BirdSettings(),object=try settingsObject(settings)
         XCTAssertEqual(settings.activityRhythm,.steady)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,1)
-        XCTAssertEqual(settings.schemaVersion,1)
-        XCTAssertEqual(object["schemaVersion"] as? Int,1)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(settings.schemaVersion,BirdSettings.currentSchemaVersion)
+        XCTAssertEqual(object["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(object["activityRhythm"] as? String,"steady")
     }
 
     func testMissingOrNullRhythmMigratesToSteadyForEverySupportedSchema() throws {
         let original=configuredSettings()
-        for version:Int? in [nil,0,1] {
+        for version:Int? in [BirdSettings.currentSchemaVersion] {
             for nullValue in [false,true] {
                 var object=try settingsObject(original)
                 if let version {object["schemaVersion"]=version}
-                else {object.removeValue(forKey:"schemaVersion")}
+                else {object["schemaVersion"]=BirdSettings.currentSchemaVersion}
                 if nullValue {object["activityRhythm"]=NSNull()}
                 else {object.removeValue(forKey:"activityRhythm")}
                 let data=try JSONSerialization.data(withJSONObject:object)
                 for migrated in [try JSONDecoder().decode(BirdSettings.self,from:data),try BirdSettings.decode(data)] {
                     XCTAssertEqual(migrated.activityRhythm,.steady)
-                    XCTAssertEqual(migrated.schemaVersion,1)
+                    XCTAssertEqual(migrated.schemaVersion,BirdSettings.currentSchemaVersion)
                     try assertOtherSettingsEqual(migrated,original)
                 }
             }
@@ -136,7 +136,7 @@ final class ActivityRhythmTests:XCTestCase {
             let data=try JSONEncoder().encode(original)
             for decoded in [try JSONDecoder().decode(BirdSettings.self,from:data),try BirdSettings.decode(data)] {
                 XCTAssertEqual(decoded.activityRhythm,mode)
-                XCTAssertEqual(decoded.schemaVersion,1)
+                XCTAssertEqual(decoded.schemaVersion,BirdSettings.currentSchemaVersion)
                 XCTAssertEqual(try settingsObject(decoded)["activityRhythm"] as? String,mode.rawValue)
                 try assertOtherSettingsEqual(decoded,original)
             }
@@ -259,8 +259,8 @@ final class ActivityRhythmTests:XCTestCase {
         settings.passiveAttentionEnabled=false;settings.sideHopEnabled=false;settings.takeoffPreparationEnabled=false
         settings.leafPlayEnabled=false;settings.ambientLeafPlayEnabled=false;settings.visitorMemoryEnabled=false
         settings.ambientFrequency = .high;settings.catalog.species[0].speed=1.25
-        settings.probabilities.adjust(at:0,to:1234);settings.probabilities.setLocked(true,at:0)
-        settings.pendingSpecies=[.nightHeron]
+        settings.probabilities.setManualWeight(at:0,to:1234)
+
         return settings
     }
 

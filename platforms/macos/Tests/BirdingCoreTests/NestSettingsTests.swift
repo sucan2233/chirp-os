@@ -8,13 +8,13 @@ final class NestSettingsTests:XCTestCase {
         old.hoverDelay=0.3;old.pointerFollowEnabled=true;old.visitorGiftsEnabled=true
         old.visitorMemoryEnabled=false;old.activityRhythm = .quiet
         old.leafCarryEnabled=false;old.bathEnabled=false;old.insectCatchEnabled=false;old.courtshipEnabled=false
-        old.probabilities.adjust(at:0,to:1234);old.probabilities.setLocked(true,at:0)
+        old.probabilities.setManualWeight(at:0,to:1234)
         var raw=try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(old)) as? [String:Any])
         raw.removeValue(forKey:"nestBuildingEnabled")
         var expected=old;expected.nestBuildingEnabled=true
-        var migrated=expected;migrated.pendingSpecies=[]
+        var migrated=expected
         let encoder=JSONEncoder();encoder.outputFormatting = [.sortedKeys]
-        for version:Int? in [nil,0,1] {
+        for version:Int? in [BirdSettings.currentSchemaVersion] {
             raw["schemaVersion"]=version;let data=try JSONSerialization.data(withJSONObject:raw)
             XCTAssertEqual(try encoder.encode(BirdSettings.decode(data)),try encoder.encode(migrated))
             XCTAssertEqual(try encoder.encode(JSONDecoder().decode(BirdSettings.self,from:data)),try encoder.encode(expected))
@@ -40,7 +40,7 @@ final class NestSettingsTests:XCTestCase {
             XCTAssertThrowsError(try BirdSettings.decode(bytes))
             XCTAssertThrowsError(try JSONDecoder().decode(BirdSettings.self,from:bytes))
         }
-        raw["nestBuildingEnabled"]=true;raw["schemaVersion"]=2
+        raw["nestBuildingEnabled"]=true;raw["schemaVersion"]=BirdSettings.currentSchemaVersion+1
         let future=try JSONSerialization.data(withJSONObject:raw);try future.write(to:file)
         XCTAssertThrowsError(try BirdSettings.load(from:file,legacyURL:folder.appendingPathComponent("absent")))
         XCTAssertThrowsError(try BirdSettings().save(to:file));XCTAssertEqual(try Data(contentsOf:file),future)

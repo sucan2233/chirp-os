@@ -28,8 +28,7 @@ final class HoverTests:XCTestCase {
     func testHoverDelayPersistsWithoutChangingOtherSettings() throws {
         for delay in [0,0.25,1,10] {
             var original=BirdSettings();original.hoverDelay=delay
-            original.probabilities.adjust(at:0,to:1234)
-            original.probabilities.setLocked(true,at:0)
+            original.probabilities.setManualWeight(at:0,to:1234)
             let saved=try BirdSettings.decode(JSONEncoder().encode(original))
             XCTAssertEqual(saved.hoverDelay,delay)
             XCTAssertEqual(saved.probabilities,original.probabilities)

@@ -10,8 +10,7 @@ final class PerchSettingsTests: XCTestCase {
         var original=BirdSettings()
         original.hoverDelay=0.25;original.pointerVisits=false;original.flockPasses=false
         original.ambientFrequency = .high
-        original.probabilities.adjust(at:0,to:1234)
-        original.probabilities.setLocked(true,at:0)
+        original.probabilities.setManualWeight(at:0,to:1234)
         original.catalog.species[0].speed=1.25
         var object=try JSONSerialization.jsonObject(with:JSONEncoder().encode(original)) as! [String:Any]
         object.removeValue(forKey:"perchActions")
@@ -35,8 +34,7 @@ final class PerchSettingsTests: XCTestCase {
             var original=BirdSettings();original.perchActions=enabled
             original.hoverDelay=0.25;original.pointerVisits=false;original.flockPasses=false
             original.ambientFrequency = .high
-            original.probabilities.adjust(at:0,to:1234)
-            original.probabilities.setLocked(true,at:0)
+            original.probabilities.setManualWeight(at:0,to:1234)
             original.catalog.species[0].speed=1.25
             try original.save(to:url)
             let object=try JSONSerialization.jsonObject(with:Data(contentsOf:url)) as! [String:Any]

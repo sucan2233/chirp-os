@@ -145,9 +145,9 @@ public final class EngineRandom {
         value ^= value >> 31
         return Double(value >> 11) / 9007199254740992
     }
-    func value(in range:ClosedRange<Double>) -> Double {range.lowerBound+(range.upperBound-range.lowerBound)*unit()}
+    func value(in range:ClosedRange<Double>) -> Double {RandomChoice.value(in: range, using: unit)}
     func element<T>(_ values:[T]) -> T? {
-        values.isEmpty ? nil:values[min(values.count-1,Int(unit()*Double(values.count)))]
+        RandomChoice.index(count: values.count, using: unit).map { values[$0] }
     }
 }
 

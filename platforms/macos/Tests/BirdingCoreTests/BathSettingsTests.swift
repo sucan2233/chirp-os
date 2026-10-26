@@ -6,20 +6,20 @@ final class BathSettingsTests:XCTestCase {
         var value=BirdSettings();value.bathEnabled=enabled;value.hoverDelay=0.25
         value.pointerVisits=false;value.pointerFollowEnabled=true;value.foodTrayEnabled=false
         value.fixedPerchesEnabled=false;value.activityRhythm = .quiet;value.ambientFrequency = .high
-        value.probabilities.adjust(at:0,to:1234);value.probabilities.setLocked(true,at:0)
+        value.probabilities.setManualWeight(at:0,to:1234)
         return value
     }
 
     func testBathDefaultsTrueWithoutChangingTheSettingsSchemaOrAnyExistingPreference() throws {
-        XCTAssertTrue(BirdSettings().bathEnabled);XCTAssertEqual(BirdSettings.currentSchemaVersion,1)
+        XCTAssertTrue(BirdSettings().bathEnabled);XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
         let original=configured(false)
         var raw=try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(original)) as? [String:Any])
         raw.removeValue(forKey:"bathEnabled")
-        for schema:Int? in [nil,0,1] {
+        for schema:Int? in [BirdSettings.currentSchemaVersion] {
             raw["schemaVersion"]=schema
             let bytes=try JSONSerialization.data(withJSONObject:raw)
             for restored in [try BirdSettings.decode(bytes),try JSONDecoder().decode(BirdSettings.self,from:bytes)] {
-                XCTAssertTrue(restored.bathEnabled);XCTAssertEqual(restored.schemaVersion,1)
+                XCTAssertTrue(restored.bathEnabled);XCTAssertEqual(restored.schemaVersion,BirdSettings.currentSchemaVersion)
                 XCTAssertEqual(restored.hoverDelay,0.25);XCTAssertFalse(restored.pointerVisits)
                 XCTAssertTrue(restored.pointerFollowEnabled);XCTAssertFalse(restored.foodTrayEnabled)
                 XCTAssertFalse(restored.fixedPerchesEnabled);XCTAssertEqual(restored.activityRhythm,.quiet)

@@ -21,7 +21,7 @@ enum ChaseSettingsVerification {
         let d=isolatedDesktop(preferences:preferences,folder:evidence)
         let defaults=try BirdSettings.load(from:d.settingsURL,legacyURL:d.legacyURL)
         checks["chaseDefaultOnWithoutCreatingSettings"] = defaults.chaseEnabled && defaults.socialInteractions &&
-            defaults.schemaVersion==1 && !FileManager.default.fileExists(atPath:d.settingsURL.path)
+            defaults.schemaVersion==BirdSettings.currentSchemaVersion && !FileManager.default.fileExists(atPath:d.settingsURL.path)
 
         let cancelled=SpeciesSettingsWindow(desktop:d);cancelled.showWindow(nil)
         cancelled.chaseButton.performClick(nil);cancelled.socialInteractionsButton.performClick(nil)
@@ -37,7 +37,7 @@ enum ChaseSettingsVerification {
             w.chaseButton.state == .on && w.chaseButton.isEnabled
         w.tabs.selectTabViewItem(at:2)
         w.hoverDelayField.stringValue="0.25";w.detailFields[0][2].stringValue="1.25"
-        w.sliders[0].doubleValue=35;w.sliderChanged(w.sliders[0]);w.locks[0].performClick(nil)
+        w.manualAdjustmentButton.performClick(nil);w.fields[0].stringValue="350";w.controlTextDidEndEditing(Notification(name:NSControl.textDidEndEditingNotification,object:w.fields[0]))
 
         for child in [false,true] {
             configure(w,master:true,child:child)
@@ -66,8 +66,8 @@ enum ChaseSettingsVerification {
                 checks["chaseSaveAppliesExactPreferenceCombination"+suffix] =
                     matches(saved,master:master,child:child) && matches(d.settings,master:master,child:child) &&
                     (object?["chaseEnabled"] as? Bool)==child && (object?["socialInteractions"] as? Bool)==master &&
-                    (object?["schemaVersion"] as? Int)==1 && expected==stored && active==stored &&
-                    saved.hoverDelay==0.25 && saved.catalog.species[0].speed==1.25 && saved.probabilities.entries[0].locked &&
+                    (object?["schemaVersion"] as? Int)==BirdSettings.currentSchemaVersion && expected==stored && active==stored &&
+                    saved.hoverDelay==0.25 && saved.catalog.species[0].speed==1.25 && saved.probabilities.manualAdjustmentEnabled &&
                     w.chaseButton.isEnabled==master &&
                     w.message.stringValue==w.t("已保存 · 交互设置立即生效，鸟种参数用于新飞入的小鸟。","Saved · Interaction settings apply now; species settings affect new arrivals.")
                 let reloaded=isolatedDesktop(preferences:preferences,folder:evidence)
@@ -92,7 +92,7 @@ enum ChaseSettingsVerification {
             checks["chaseDraftAndRawEditsSurviveLanguageRebuild-"+suffix] = w.draft.chaseEnabled &&
                 w.chaseButton.state == .on && w.chaseButton.isEnabled && !d.settings.chaseEnabled &&
                 w.hoverDelayField.stringValue=="0.75" && w.detailFields[0][2].stringValue=="1.5" &&
-                w.draft.probabilities.entries[0].locked && (w.tabs.selectedTabViewItem?.identifier as? String)=="interaction"
+                w.draft.probabilities.manualAdjustmentEnabled && (w.tabs.selectedTabViewItem?.identifier as? String)=="interaction"
             checkRejection(w,reasons:[.disabled],suffix:"saved-child-off-"+suffix,checks:&checks)
             d.paused=true
             checkRejection(w,reasons:[.paused],suffix:"paused-"+suffix,checks:&checks)
@@ -137,7 +137,7 @@ enum ChaseSettingsVerification {
         checks["chaseResetOnlyChangesDraft"] = w.draft.chaseEnabled && w.draft.socialInteractions &&
             w.chaseButton.state == .on && w.chaseButton.isEnabled && !d.settings.chaseEnabled &&
             beforeReset==afterReset &&
-            w.message.stringValue==w.t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).")
+            w.message.stringValue==w.t("已恢复默认（尚未保存）。","Defaults restored (not saved).")
         w.cancel()
         let reset=SpeciesSettingsWindow(desktop:d);d.settingsWindow=reset;reset.showWindow(nil)
         defer {reset.cancel()}
@@ -175,7 +175,7 @@ enum ChaseSettingsVerification {
     }
 
     private static func settingsData(_ settings:BirdSettings,ignoringChase:Bool=false) throws -> Data {
-        var value=settings;value.pendingSpecies=[]
+        var value=settings
         if ignoringChase {value.chaseEnabled=true}
         let encoder=JSONEncoder();encoder.outputFormatting = .sortedKeys
         return try encoder.encode(value)

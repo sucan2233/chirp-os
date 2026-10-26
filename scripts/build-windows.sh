@@ -1,4 +1,5 @@
 #!/bin/bash
+# ARCHIVED: Windows is no longer maintained in this fork. See platforms/windows/README.md.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

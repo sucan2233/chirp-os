@@ -44,13 +44,7 @@ public struct SpeciesCatalog: Codable {
         return value
     }
     public func profile(_ id: SpeciesID) -> SpeciesProfile { species.first { $0.id == id }! }
-    public func choose(unit: Double = Double.random(in: 0..<1)) -> SpeciesProfile {
-        let enabled = species.filter { $0.weight > 0 }
-        var ticket = min(1-Double.ulpOfOne, max(0, unit.isFinite ? unit : 0)) * enabled.reduce(0) { $0 + $1.weight }
-        for profile in enabled {
-            if ticket < profile.weight { return profile }
-            ticket -= profile.weight
-        }
-        return enabled.last!
+    public func choose(unit: Double = Double.random(in: 0..<1)) -> SpeciesProfile? {
+        try? WeightedChoice(species, weight: { $0.weight }).choose(unit: unit)
     }
 }

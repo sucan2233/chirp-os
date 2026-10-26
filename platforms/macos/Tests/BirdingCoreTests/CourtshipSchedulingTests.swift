@@ -80,7 +80,7 @@ final class CourtshipSchedulingTests:XCTestCase {
             case "disabled":var s=e.settings;s.courtshipEnabled=false;e.applySettings(s)
             case "probability":
                 var s=e.settings;let index=try XCTUnwrap(s.probabilities.entries.firstIndex{$0.id==F.species})
-                s.probabilities.adjust(at:index,to:0);e.applySettings(s)
+                s.probabilities.setManualWeight(at:index,to:0);e.applySettings(s)
             default:break
             }
             let identities=e.birds.map(ObjectIdentifier.init),events=e.events.count

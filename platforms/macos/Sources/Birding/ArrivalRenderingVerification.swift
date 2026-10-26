@@ -7,7 +7,7 @@ enum ArrivalRenderingVerification {
         d.engine.ambientEnabled=false
         d.surfaces=d.groundSurfaces()
         var settings=d.settings
-        settings.probabilities.adjust(at:settings.probabilities.entries.firstIndex{$0.id == .treeSparrow}!,to:10000)
+        for entry in settings.probabilities.entries { settings.probabilities.setWeight(0, for: entry.id) }; settings.probabilities.setManualWeight(at:settings.probabilities.entries.firstIndex{$0.id == .treeSparrow}!,to:1)
         d.settings=settings
         let windows=NSScreen.screens.map { screen -> (OverlayPanel,DesktopView) in
             let panel=OverlayPanel(contentRect:screen.frame,styleMask:[.borderless,.nonactivatingPanel],backing:.buffered,defer:false)

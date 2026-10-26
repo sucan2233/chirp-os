@@ -1,4 +1,7 @@
-# 啾啾 ChirpOS · Windows
+# 啾啾 ChirpOS · Windows（历史存档）
+
+> 自 2026-10-26 起，本分支仅维护 macOS。Windows 源码、脚本和下方使用说明仅作历史参考，不再开发、测试、打包或发布；概率 V2 不在 Windows 实现或验收。当前共享资源可能与旧 Windows 消费者不兼容，不承诺该存档可构建运行。维护规则见 [CONTRIBUTING.md](../../CONTRIBUTING.md)。
+> This fork maintains macOS only. Windows code and the instructions below are archived and unsupported; compatibility with current shared resources is not guaranteed.
 
 [下载 / Download](https://github.com/billtt/chirp-os/releases/latest) · [项目介绍 / About ChirpOS](https://github.com/billtt/chirp-os#readme) · [开发指南 / Development](https://github.com/billtt/chirp-os/blob/main/docs/DEVELOPMENT.md)
 

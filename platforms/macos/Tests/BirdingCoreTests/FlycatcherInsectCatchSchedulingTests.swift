@@ -113,7 +113,7 @@ final class FlycatcherInsectCatchSchedulingTests:XCTestCase {
             let e=try automaticEngine(seed),bird=try XCTUnwrap(e.birds.first)
             if condition == "speciesDisabled" {
                 var s=e.settings;let index=try XCTUnwrap(s.probabilities.entries.firstIndex{$0.id==F.species})
-                s.probabilities.adjust(at:index,to:0);e.applySettings(s)
+                s.probabilities.setManualWeight(at:index,to:0);e.applySettings(s)
             } else {
                 var world=e.world
                 if condition == "missingFrames" {world.availableFrames[F.species]?.remove("catchOpen")}
