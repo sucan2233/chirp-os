@@ -35,8 +35,8 @@ jobs:
           [[ "$(uname -m)" == arm64 ]]
           [[ "$RELEASE_TAG" =~ ^pro-v(0|[1-9][0-9]{0,3})\.(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)$ ]]
           [[ "$RELEASE_TAG" != pro-v0.0.0 ]]
-          [[ "$GH_REPO" == sucan2233/chirp-os ]]
-          [[ "$(uname -m)" == arm64 ]]
+          xcodebuild -version
+          swift --version
 
       - uses: actions/checkout@v4
         with:

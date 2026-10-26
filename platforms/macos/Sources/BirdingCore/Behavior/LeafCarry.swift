@@ -21,11 +21,18 @@ struct LeafCarryJourney {
             let handle=min(distance/3,max(8*Double(worldScale),incoming*0.2))
             let first=CGPoint(x:start.x+velocity.x/incoming*handle,y:start.y+velocity.y/incoming*handle)
             let last=CGPoint(x:start.x+(end.x-start.x)*0.7,y:start.y+(end.y-start.y)*0.7)
-            let path=FlightPath(points:(0...512).map {index in
-                let t=Double(index)/512,s=1-t
-                return CGPoint(x:start.x*s*s*s+first.x*3*s*s*t+last.x*3*s*t*t+end.x*t*t*t,
-                               y:start.y*s*s*s+first.y*3*s*s*t+last.y*3*s*t*t+end.y*t*t*t)
-            })
+            let points: [CGPoint] = (0...512).map { index in
+                let t: CGFloat = CGFloat(index) / 512
+                let s: CGFloat = 1 - t
+                let w0 = s * s * s
+                let w1 = 3 * s * s * t
+                let w2 = 3 * s * t * t
+                let w3 = t * t * t
+                let x = start.x * w0 + first.x * w1 + last.x * w2 + end.x * w3
+                let y = start.y * w0 + first.y * w1 + last.y * w2 + end.y * w3
+                return CGPoint(x: x, y: y)
+            }
+            let path = FlightPath(points: points)
             // A short carry cannot pay for accelerating back to full species
             // cruise. Size the peak from the remaining path, keeping the actual
             // incoming speed fixed. If its ramps consume the path, shorten the

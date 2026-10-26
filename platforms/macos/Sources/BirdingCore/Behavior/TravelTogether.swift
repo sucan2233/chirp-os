@@ -76,9 +76,11 @@ struct TravelTogetherPlan {
         FlightPath(points:(0...256).map {index in
             if index==0 {return a}
             if index==256 {return d}
-            let t=Double(index)/256,s=1-t
+            let t:CGFloat=CGFloat(index)/256,s:CGFloat=1-t
             let w0=s*s*s,w1=3*s*s*t,w2=3*s*t*t,w3=t*t*t
-            return CGPoint(x:a.x*w0+b.x*w1+c.x*w2+d.x*w3,y:a.y*w0+b.y*w1+c.y*w2+d.y*w3)
+            let x=a.x*w0+b.x*w1+c.x*w2+d.x*w3
+            let y=a.y*w0+b.y*w1+c.y*w2+d.y*w3
+            return CGPoint(x:x,y:y)
         })
     }
 

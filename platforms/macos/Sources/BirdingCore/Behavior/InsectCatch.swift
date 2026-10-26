@@ -219,10 +219,11 @@ enum InsectCatchJourney {
         let b=CGPoint(x:a.x+direction.x*handle,y:a.y+direction.y*handle)
         let c=CGPoint(x:end.x,y:end.y-min(distance*0.30,80*Double(scale)))
         let path=FlightPath(points:[start]+(0...512).map {index in
-            let t=Double(index)/512,s=1-t
+            let t:CGFloat=CGFloat(index)/512,s:CGFloat=1-t
             let w0=s*s*s,w1=3*s*s*t,w2=3*s*t*t,w3=t*t*t
-            return CGPoint(x:a.x*w0+b.x*w1+c.x*w2+end.x*w3,
-                           y:a.y*w0+b.y*w1+c.y*w2+end.y*w3)
+            let x=a.x*w0+b.x*w1+c.x*w2+end.x*w3
+            let y=a.y*w0+b.y*w1+c.y*w2+end.y*w3
+            return CGPoint(x:x,y:y)
         })
         let cruise=preferredCruise ?? max(80*Double(scale),min(speed,300*Double(scale)))
         let ramps=(speed+cruise)*0.15/2+cruise*0.35/2
