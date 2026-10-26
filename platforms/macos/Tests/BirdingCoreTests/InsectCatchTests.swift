@@ -28,9 +28,11 @@ enum InsectCatchTestSupport {
             var value=surface;value.rect=value.rect.offsetBy(dx:displayOrigin.x,dy:displayOrigin.y);return value
         }
         let species:[SpeciesID]=[.lightVentedBulbul,.redWhiskeredBulbul,.magpieRobin,.swinhoesWhiteEye,.chineseBlackbird]
-        let hosts=(0..<max(0,residents-1)).map {index in
-            translated(Surface(id:UInt32(2000+index),pid:42,
-                rect:CGRect(x:140+CGFloat(index%8)*280,y:140+CGFloat(index/8)*110,width:180,height:30)))
+        let hosts:[Surface]=(0..<max(0,residents-1)).map { index -> Surface in
+            let x:CGFloat=140+CGFloat(index%8)*280
+            let y:CGFloat=140+CGFloat(index/8)*110
+            let rect=CGRect(x:x,y:y,width:180,height:30)
+            return translated(Surface(id:UInt32(2000+index),pid:42,rect:rect))
         }
         var manifest=Dictionary(uniqueKeysWithValues:species.map{($0,frames.subtracting(SpeciesBehaviorProfile.catchFrameNames))})
         manifest[.barnSwallow]=frames

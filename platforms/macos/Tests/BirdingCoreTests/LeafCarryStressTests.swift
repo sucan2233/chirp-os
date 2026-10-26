@@ -32,9 +32,11 @@ final class LeafCarryStressTests:XCTestCase {
         frames[.treeSparrow]=common.union(F.required)
         // Up to eight rows of separate ordinary windows. The carrier's route
         // stays in the lower part of this same display, clear of all peers.
-        let hosts=(0..<(residents-1)).map {index in
-            Surface(id:UInt32(1300+index),pid:42,
-                rect:CGRect(x:140+CGFloat(index%8)*280,y:140+CGFloat(index/8)*110,width:160,height:30))
+        let hosts:[Surface]=(0..<(residents-1)).map { index -> Surface in
+            let x:CGFloat=140+CGFloat(index%8)*280
+            let y:CGFloat=140+CGFloat(index/8)*110
+            let rect=CGRect(x:x,y:y,width:160,height:30)
+            return Surface(id:UInt32(1300+index),pid:42,rect:rect)
         }
         e.updateWorld(.init(screens:[display],displays:[display],surfaces:[carrierHost]+hosts,
             pointer:CGPoint(x:20,y:20),availableFrames:frames))

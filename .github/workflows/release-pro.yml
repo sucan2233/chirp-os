@@ -23,6 +23,8 @@ jobs:
       contents: write
     env:
       # User input enters shell scripts through the environment exclusively.
+      # Pin the compiler instead of inheriting the runner image default (Xcode 16.4).
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       RELEASE_TAG: ${{ inputs.tag }}
       GH_REPO: ${{ github.repository }}
     steps:
@@ -35,6 +37,7 @@ jobs:
           [[ "$(uname -m)" == arm64 ]]
           [[ "$RELEASE_TAG" =~ ^pro-v(0|[1-9][0-9]{0,3})\.(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)$ ]]
           [[ "$RELEASE_TAG" != pro-v0.0.0 ]]
+          [[ -d "$DEVELOPER_DIR" ]]
           xcodebuild -version
           swift --version
 

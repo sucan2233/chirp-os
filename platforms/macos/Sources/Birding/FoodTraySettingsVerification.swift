@@ -248,7 +248,8 @@ enum FoodTraySettingsVerification {
             crop.width==right-left+1 && crop.height==bottom-top+1
         let sourceContact=CGFloat(top)+art.contactY
         let center=(left+right)/2
-        let rearRim=(top...bottom).first(where:{source.alpha(center,$0)>=128}) ?? bottom
+        let firstOpaqueRow:Int?=(top...bottom).first(where:{source.alpha(center,$0)>=128})
+        let rearRim:Int=firstOpaqueRow ?? bottom
         checks["foodTraySeedContactBelowRearRim"] = (375...395).contains(sourceContact) && sourceContact>CGFloat(rearRim+60)
         var evidence=[[String:Any]]()
         for scale:CGFloat in [1,1.5,3] {

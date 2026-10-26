@@ -15,9 +15,11 @@ enum FlycatcherInsectCatchTestSupport {
         e.populationEnabled=false;e.ambientEnabled=false;e.autonomousRouting=false
         let area=display.offsetBy(dx:origin.x,dy:origin.y)
         let others:[SpeciesID]=[.lightVentedBulbul,.redWhiskeredBulbul,.magpieRobin,.swinhoesWhiteEye,.chineseBlackbird]
-        let hosts=(0..<max(0,residents-1)).map {index in
-            Surface(id:UInt32(2200+index),pid:43,
-                rect:CGRect(x:origin.x+140+CGFloat(index%8)*280,y:origin.y+140+CGFloat(index/8)*110,width:180,height:30))
+        let hosts:[Surface]=(0..<max(0,residents-1)).map { index -> Surface in
+            let x:CGFloat=origin.x+140+CGFloat(index%8)*280
+            let y:CGFloat=origin.y+140+CGFloat(index/8)*110
+            let rect=CGRect(x:x,y:y,width:180,height:30)
+            return Surface(id:UInt32(2200+index),pid:43,rect:rect)
         }
         var manifest=Dictionary(uniqueKeysWithValues:others.map{($0,frames.subtracting(["catchOpen","catchClose","catchRecover"]))})
         manifest[species]=frames

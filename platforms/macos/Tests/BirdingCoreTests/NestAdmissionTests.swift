@@ -24,7 +24,7 @@ final class NestAdmissionTests:XCTestCase {
     }
 
     func testFortyFiveUnlistedSpeciesAndNoResidentNeverSpawnOrReclaimMaterial() throws {
-        for species:SpeciesID? in [nil]+SpeciesID.allCases.filter{$0 != .spottedDove}.map(Optional.some) {
+        for species:SpeciesID? in [nil]+SpeciesID.allCases.filter({$0 != .spottedDove}).map(Optional.some) {
             let e=F.engine(residents:species==nil ? 0:1,species:species)
             XCTAssertEqual(e.handle(.placeNest(at:F.point(e))),.accepted)
             let before=e.nestSnapshot().map(RecordedNestState.init),birds=e.birds.map(ObjectIdentifier.init)

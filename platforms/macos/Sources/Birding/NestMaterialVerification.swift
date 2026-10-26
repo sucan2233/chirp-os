@@ -111,12 +111,19 @@ enum NestMaterialVerification {
             settings.insectCatchEnabled=false;settings.visitorGiftsEnabled=false;settings.visitorMemoryEnabled=false
             settings.courtshipEnabled=false;settings.hoverDelay=0;settings.fixedPerches=[];d.settings=settings
             d.frameCapabilities=d.arts.mapValues{Set($0.frames.keys)}
-            let effective=scale*d.catalog.profile(.spottedDove).relativeScale
-            let width=floor(work.width-32),left=ceil(work.minX+16),pointer=d.pointerPosition
-            let low=ceil(work.minY+129*effective+56),high=floor(work.maxY-max(100,24*scale+40))
-            let radius=max(100,72*effective)
+            let effective:CGFloat=scale*d.catalog.profile(.spottedDove).relativeScale
+            let width:CGFloat=floor(work.width-32)
+            let left:CGFloat=ceil(work.minX+16)
+            let pointer=d.pointerPosition
+            let birdHeight:CGFloat=129*effective
+            let low:CGFloat=ceil(work.minY+birdHeight+56)
+            let high:CGFloat=floor(work.maxY-max(100,24*scale+40))
+            let radius:CGFloat=max(100,72*effective)
+            let clearance:CGFloat=max(24*scale,9*effective)
             func area(_ y:CGFloat)->CGRect {
-                CGRect(x:left,y:y-129*effective-36,width:width,height:129*effective+max(24*scale,9*effective)+72)
+                let top:CGFloat=y-birdHeight-36
+                let height:CGFloat=birdHeight+clearance+72
+                return CGRect(x:left,y:top,width:width,height:height)
             }
             let ys=ground ? [Geometry.foot(on:Geometry.ground(id:7301,display:display,workArea:work),fraction:0.5,edge:.top,scale:effective).y]:[low,high]
             let candidates=ys.filter {y in

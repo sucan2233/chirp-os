@@ -26,8 +26,11 @@ enum CourtshipTestSupport {
         var surfaces=[host],birds:[Bird]=[]
         for (index,kind) in species.enumerated() {
             let x=xs[index%2]
-            let bird=Bird(position:.zero,fraction:(x-Geometry.perchX(0,rect:host.rect))/(host.rect.width-84),
-                profile:s.catalog.profile(kind),random:{0.5})
+            let perchStart:CGFloat=Geometry.perchX(0,rect:host.rect)
+            let perchWidth:CGFloat=host.rect.width-84
+            let fraction:CGFloat=(x-perchStart)/perchWidth
+            let profile=s.catalog.profile(kind)
+            let bird=Bird(position:.zero,fraction:fraction,profile:profile,random:{0.5})
             bird.perch(on:host,spriteScale:scale*bird.profile.relativeScale)
             bird.perchDuration=3600;bird.facingRight=right;birds.append(bird)
         }

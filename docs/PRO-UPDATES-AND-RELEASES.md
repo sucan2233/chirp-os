@@ -56,6 +56,10 @@ GitHub仓库进入 **Settings → Secrets and variables → Actions → New repo
 
 首次云端尝试 `pro-v0.8.0` 在 Swift 编译阶段失败，未进入签名或创建 Release；修复访客送礼曲线的类型推断超时后，以 `pro-v0.8.1` 重试，保留原标签。发布流水线改用 `swift test -c release` 运行完整核心测试，避免调试模式下行为仿真的额外耗时。发布脚本测试使用固定的隔离夹具版本，不依赖当前产品版本。
 
+`pro-v0.8.2` 的完整云端日志确认使用 Xcode 16.4 / Swift 6.1.2；本机为 Xcode 27.1。旧编译器在测试夹具和原生验收中的复杂表达式出现推断超时、CGFloat 运算歧义和可选整数推断错误，仍未进入签名或创建 Release。`pro-v0.8.3` 集中拆分这些表达式，并将 Pro 工作流的 `DEVELOPER_DIR` 固定为 `/Applications/Xcode_26.3.app/Contents/Developer`（GitHub macOS 15 arm64 镜像列出的版本），目录不可用时立即失败。后续调整工具链时应先核对 runner 镜像清单，不能仅凭本地测试通过认定云端兼容。
+
+0.8.3 修复后的独立工作区已统一验证：完整 Release 编译通过，核心测试 1102 项、0 失败（66.852 秒），Pro 发布检查 30 项、普通发布检查 11 项及鸟种数据一致性检查通过。云端发布及下载后验签另以实际运行结果记录。
+
 本地复查核心测试应使用完整 Xcode：
 
 ```sh

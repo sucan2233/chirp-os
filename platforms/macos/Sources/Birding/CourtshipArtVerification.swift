@@ -83,10 +83,16 @@ enum CourtshipArtVerification {
             }
         guard let initiator=PoseClip.courtship(species:id,role:.initiator),
               let observer=PoseClip.courtship(species:id,role:.observer) else {throw failure("Missing role clips")}
-        checks[prefix+"BothRolesRequireWholePackAndCurrentStateRecovery"]=[initiator,observer].allSatisfy {
-            $0.requiredFrames==Set(names+["stand"]) && $0.foot==PoseClip.footAnchor && $0.maximumLoops==1 &&
-                $0.recovery == .currentEngineState && abs($0.duration-4)<1e-9
-        } && Set(names).isSubset(of:SpeciesBehaviorProfile.profile(for:id).requiredFrames(for:.courtshipDisplay))
+        let requiredRoleFrames=Set(names+["stand"])
+        let roleClipsValid=[initiator,observer].allSatisfy { clip in
+            let framesValid=clip.requiredFrames==requiredRoleFrames
+            let anchorValid=clip.foot==PoseClip.footAnchor
+            let recoveryValid=clip.maximumLoops==1 && clip.recovery == .currentEngineState
+            let durationValid=abs(clip.duration-4)<1e-9
+            return framesValid && anchorValid && recoveryValid && durationValid
+        }
+        let profileFrames=SpeciesBehaviorProfile.profile(for:id).requiredFrames(for:.courtshipDisplay)
+        checks[prefix+"BothRolesRequireWholePackAndCurrentStateRecovery"]=roleClipsValid && Set(names).isSubset(of:profileFrames)
         checks[prefix+"ExactInitiatorSequence"]=initiator.frames.map(\.name)==["stand","courtRaise","courtBow0","courtBow1","courtBowRecover","courtBow0","courtBow1","courtBowRecover","courtBowRecover","courtBowRecover"] &&
             initiator.frames.map(\.duration)==[0.4,0.5,0.35,0.4,0.25,0.35,0.4,0.25,0.5,0.6]
         checks[prefix+"ObserverOnlyTurnsInOwnHalfSecond"]=observer.frames.map(\.name)==["stand","stand","stand","courtObserve","stand"] &&
