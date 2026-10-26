@@ -1,0 +1,1878 @@
+{
+  "analysisDate": "2026-10-26",
+  "timezone": "Asia/Shanghai",
+  "scope": "Tracked base-to-HEAD diff; this report and pre-existing untracked M8 plan excluded",
+  "branch": "fix/click-to-relocate-birds",
+  "base": "2b3c05caa8924eb0bf07f8c7757c75c4d4d43f07",
+  "head": "53680ae5738cdd5caabe460c4bf25e7090659ada",
+  "upstream": "6d2a9e2cd3bf68120b6335b9df092f5b2468ed69",
+  "baseDate": "2026-10-22T23:27:32+08:00",
+  "headDate": "2026-10-25T19:31:04+08:00",
+  "upstreamDate": "2026-10-25T23:40:12+08:00",
+  "commitDivergence": {
+    "ours": 42,
+    "upstream": 3
+  },
+  "totals": {
+    "changedFiles": 373,
+    "addedFiles": 328,
+    "modifiedFiles": 45,
+    "addedLines": 87119,
+    "deletedLines": 310,
+    "binaryFiles": 32
+  },
+  "groups": {
+    "包配置": {
+      "files": 1,
+      "newFiles": 0,
+      "modifiedFiles": 1,
+      "addedLines": 1,
+      "deletedLines": 1,
+      "binaryFiles": 0
+    },
+    "文档": {
+      "files": 23,
+      "newFiles": 20,
+      "modifiedFiles": 3,
+      "addedLines": 4145,
+      "deletedLines": 8,
+      "binaryFiles": 0
+    },
+    "macOS平台与渲染代码": {
+      "files": 30,
+      "newFiles": 20,
+      "modifiedFiles": 10,
+      "addedLines": 6559,
+      "deletedLines": 204,
+      "binaryFiles": 0
+    },
+    "macOS原生验收代码": {
+      "files": 59,
+      "newFiles": 54,
+      "modifiedFiles": 5,
+      "addedLines": 15784,
+      "deletedLines": 45,
+      "binaryFiles": 0
+    },
+    "核心运行时与诊断代码": {
+      "files": 76,
+      "newFiles": 71,
+      "modifiedFiles": 5,
+      "addedLines": 15091,
+      "deletedLines": 20,
+      "binaryFiles": 0
+    },
+    "PNG素材": {
+      "files": 32,
+      "newFiles": 19,
+      "modifiedFiles": 13,
+      "addedLines": 0,
+      "deletedLines": 0,
+      "binaryFiles": 32
+    },
+    "核心自动化测试": {
+      "files": 120,
+      "newFiles": 119,
+      "modifiedFiles": 1,
+      "addedLines": 24195,
+      "deletedLines": 27,
+      "binaryFiles": 0
+    },
+    "Windows验收兼容": {
+      "files": 1,
+      "newFiles": 0,
+      "modifiedFiles": 1,
+      "addedLines": 12,
+      "deletedLines": 1,
+      "binaryFiles": 0
+    },
+    "脚本": {
+      "files": 5,
+      "newFiles": 1,
+      "modifiedFiles": 4,
+      "addedLines": 213,
+      "deletedLines": 2,
+      "binaryFiles": 0
+    },
+    "共享清单与数据": {
+      "files": 4,
+      "newFiles": 2,
+      "modifiedFiles": 2,
+      "addedLines": 17173,
+      "deletedLines": 2,
+      "binaryFiles": 0
+    },
+    "回放JSON夹具": {
+      "files": 22,
+      "newFiles": 22,
+      "modifiedFiles": 0,
+      "addedLines": 3946,
+      "deletedLines": 0,
+      "binaryFiles": 0
+    }
+  },
+  "speciesCounts": {
+    "base": 46,
+    "ours": 46,
+    "upstream": 100
+  },
+  "speciesDataSemanticallyUnchanged": true,
+  "assets": {
+    "baseBirdFrames": 1564,
+    "currentBirdFrames": 1751,
+    "newBirdFrames": 187,
+    "earlierDedicatedFrames": 20,
+    "m6m7DedicatedFrames": 167,
+    "changedSpecies": [
+      {
+        "species": "azureWingedMagpie",
+        "name": "灰喜鹊",
+        "baseFrames": 34,
+        "currentFrames": 48,
+        "newFrames": 14,
+        "newFrameNames": [
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush",
+          "carryLook",
+          "carryLower",
+          "carryGrip",
+          "carryPlace"
+        ]
+      },
+      {
+        "species": "barnSwallow",
+        "name": "家燕",
+        "baseFrames": 34,
+        "currentFrames": 53,
+        "newFrames": 19,
+        "newFrameNames": [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2",
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush",
+          "catchOpen",
+          "catchClose",
+          "catchRecover"
+        ]
+      },
+      {
+        "species": "chineseBlackbird",
+        "name": "乌鸫",
+        "baseFrames": 34,
+        "currentFrames": 44,
+        "newFrames": 10,
+        "newFrameNames": [
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush"
+        ]
+      },
+      {
+        "species": "lightVentedBulbul",
+        "name": "白头鹎",
+        "baseFrames": 34,
+        "currentFrames": 54,
+        "newFrames": 20,
+        "newFrameNames": [
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush",
+          "peekLower",
+          "peekLook",
+          "peekRecover",
+          "bathInspect",
+          "bathTouch",
+          "bathLower",
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathRise"
+        ]
+      },
+      {
+        "species": "littleOwl",
+        "name": "纵纹腹小鸮",
+        "baseFrames": 34,
+        "currentFrames": 44,
+        "newFrames": 10,
+        "newFrameNames": [
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush"
+        ]
+      },
+      {
+        "species": "magpieRobin",
+        "name": "鹊鸲",
+        "baseFrames": 34,
+        "currentFrames": 47,
+        "newFrames": 13,
+        "newFrameNames": [
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush",
+          "peekLower",
+          "peekLook",
+          "peekRecover"
+        ]
+      },
+      {
+        "species": "nightHeron",
+        "name": "夜鹭",
+        "baseFrames": 34,
+        "currentFrames": 44,
+        "newFrames": 10,
+        "newFrameNames": [
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush"
+        ]
+      },
+      {
+        "species": "redBilledLeiothrix",
+        "name": "红嘴相思鸟",
+        "baseFrames": 34,
+        "currentFrames": 44,
+        "newFrames": 10,
+        "newFrameNames": [
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush"
+        ]
+      },
+      {
+        "species": "redWhiskeredBulbul",
+        "name": "红耳鹎",
+        "baseFrames": 34,
+        "currentFrames": 44,
+        "newFrames": 10,
+        "newFrameNames": [
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush"
+        ]
+      },
+      {
+        "species": "spottedDove",
+        "name": "珠颈斑鸠",
+        "baseFrames": 34,
+        "currentFrames": 61,
+        "newFrames": 27,
+        "newFrameNames": [
+          "feedLook",
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush",
+          "courtRaise",
+          "courtBow0",
+          "courtBow1",
+          "courtBowRecover",
+          "courtObserve",
+          "carryLook",
+          "carryLower",
+          "carryGrip",
+          "carryPlace",
+          "nestPlace",
+          "nestAdjust0",
+          "nestAdjust1",
+          "nestSettle"
+        ]
+      },
+      {
+        "species": "swinhoesWhiteEye",
+        "name": "暗绿绣眼鸟",
+        "baseFrames": 34,
+        "currentFrames": 50,
+        "newFrames": 16,
+        "newFrameNames": [
+          "allopreenGive0",
+          "allopreenGive1",
+          "allopreenGive2",
+          "allopreenReceive0",
+          "allopreenReceive1",
+          "allopreenReceive2",
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush"
+        ]
+      },
+      {
+        "species": "treeSparrow",
+        "name": "麻雀",
+        "baseFrames": 34,
+        "currentFrames": 59,
+        "newFrames": 25,
+        "newFrameNames": [
+          "feedLook",
+          "feedDown0",
+          "feedDown1",
+          "feedLift",
+          "lookNear",
+          "lookFar",
+          "alertRise",
+          "alertHold",
+          "alertRelax",
+          "restLower",
+          "restTuck",
+          "restWake",
+          "takeoffCrouch",
+          "takeoffPush",
+          "bathInspect",
+          "bathTouch",
+          "bathLower",
+          "bath0",
+          "bath1",
+          "bath2",
+          "bathRise",
+          "carryLook",
+          "carryLower",
+          "carryGrip",
+          "carryPlace"
+        ]
+      },
+      {
+        "species": "yellowRumpedFlycatcher",
+        "name": "白眉姬鹟",
+        "baseFrames": 34,
+        "currentFrames": 37,
+        "newFrames": 3,
+        "newFrameNames": [
+          "catchOpen",
+          "catchClose",
+          "catchRecover"
+        ]
+      }
+    ],
+    "legacyCommonPixelChecks": [
+      {
+        "species": "asianBarredOwlet",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "asianKoel",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "azureWingedMagpie",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "barnSwallow",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "blackCollaredStarling",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "blackDrongo",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "blackHeadedGull",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "blackKite",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "blackWingedStilt",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "chineseBlackbird",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "chinesePondHeron",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "collaredScopsOwl",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "commonBuzzard",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "commonKestrel",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "commonKingfisher",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "commonMoorhen",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "eurasianCoot",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "eurasianWoodcock",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "greatSpottedWoodpecker",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "greatTit",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "greyHeron",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "hoopoe",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "largeBilledCrow",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "lightVentedBulbul",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "littleEgret",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "littleOwl",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "littleRingedPlover",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "longTailedShrike",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "magpieRobin",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "mallard",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "nightHeron",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "orientalMagpie",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "peregrineFalcon",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "piedKingfisher",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "plumbeousWaterRedstart",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "redBilledLeiothrix",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "redFlankedBluetail",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "redWhiskeredBulbul",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "spottedDove",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "swinhoesWhiteEye",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "treeSparrow",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "vinousThroatedParrotbill",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "whimbrel",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "yellowBilledGrosbeak",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "yellowBrowedWarbler",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      },
+      {
+        "species": "yellowRumpedFlycatcher",
+        "commonFrameCount": 34,
+        "pixelsEqual": true,
+        "dimensionsMatch": true
+      }
+    ],
+    "newPropPNGs": [
+      "shared/art/props/bathBasin.png",
+      "shared/art/props/insect0.png",
+      "shared/art/props/insect1.png",
+      "shared/art/props/insect2.png",
+      "shared/art/props/insect3.png",
+      "shared/art/props/leafToken.png",
+      "shared/art/props/nestMaterialTray.png",
+      "shared/art/props/nestOverlay1.png",
+      "shared/art/props/nestOverlay2.png",
+      "shared/art/props/nestOverlay3.png",
+      "shared/art/props/nestPlatform.png",
+      "shared/art/props/splash0.png",
+      "shared/art/props/splash1.png",
+      "shared/art/props/splash2.png",
+      "shared/art/props/splash3.png",
+      "shared/art/props/twigToken.png"
+    ],
+    "newResourcePNGs": [
+      "platforms/macos/Sources/BirdingCore/Resources/fixed-perch.png",
+      "platforms/macos/Sources/BirdingCore/Resources/food-tray.png",
+      "platforms/macos/Sources/BirdingCore/Resources/leaf.png"
+    ]
+  },
+  "behaviors": [
+    {
+      "kind": "relocate",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "pointerVisit",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "flockPass",
+      "count": 8,
+      "species": [
+        "treeSparrow",
+        "lightVentedBulbul",
+        "azureWingedMagpie",
+        "barnSwallow",
+        "mallard",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "blackCollaredStarling"
+      ]
+    },
+    {
+      "kind": "rest",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "preen",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "socialGreeting",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "sideBySide",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "giveWay",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "pairedTakeoff",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "leafPlay",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "watch",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "alert",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "sideHop",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "takeoffPreparation",
+      "count": 46,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "chineseBlackbird",
+        "magpieRobin",
+        "longTailedShrike",
+        "nightHeron",
+        "plumbeousWaterRedstart",
+        "littleEgret",
+        "greyHeron",
+        "commonKestrel",
+        "peregrineFalcon",
+        "blackKite",
+        "commonBuzzard",
+        "orientalMagpie",
+        "azureWingedMagpie",
+        "largeBilledCrow",
+        "hoopoe",
+        "barnSwallow",
+        "mallard",
+        "asianKoel",
+        "swinhoesWhiteEye",
+        "blackHeadedGull",
+        "whimbrel",
+        "piedKingfisher",
+        "eurasianWoodcock",
+        "blackDrongo",
+        "chinesePondHeron",
+        "yellowRumpedFlycatcher",
+        "yellowBrowedWarbler",
+        "greatTit",
+        "commonMoorhen",
+        "greatSpottedWoodpecker",
+        "vinousThroatedParrotbill",
+        "blackWingedStilt",
+        "eurasianCoot",
+        "redBilledLeiothrix",
+        "blackCollaredStarling",
+        "commonKingfisher",
+        "littleRingedPlover",
+        "yellowBilledGrosbeak",
+        "redFlankedBluetail",
+        "collaredScopsOwl",
+        "asianBarredOwlet",
+        "littleOwl"
+      ]
+    },
+    {
+      "kind": "edgePeek",
+      "count": 6,
+      "species": [
+        "treeSparrow",
+        "lightVentedBulbul",
+        "chineseBlackbird",
+        "magpieRobin",
+        "hoopoe",
+        "whimbrel"
+      ]
+    },
+    {
+      "kind": "chase",
+      "count": 7,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "azureWingedMagpie",
+        "barnSwallow",
+        "swinhoesWhiteEye",
+        "blackCollaredStarling"
+      ]
+    },
+    {
+      "kind": "travelTogether",
+      "count": 7,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "spottedDove",
+        "azureWingedMagpie",
+        "barnSwallow",
+        "blackCollaredStarling"
+      ]
+    },
+    {
+      "kind": "allopreening",
+      "count": 2,
+      "species": [
+        "barnSwallow",
+        "swinhoesWhiteEye"
+      ]
+    },
+    {
+      "kind": "fixedPerchVisit",
+      "count": 7,
+      "species": [
+        "redWhiskeredBulbul",
+        "treeSparrow",
+        "lightVentedBulbul",
+        "magpieRobin",
+        "barnSwallow",
+        "swinhoesWhiteEye",
+        "redBilledLeiothrix"
+      ]
+    },
+    {
+      "kind": "foodTrayVisit",
+      "count": 2,
+      "species": [
+        "treeSparrow",
+        "spottedDove"
+      ]
+    },
+    {
+      "kind": "bathVisit",
+      "count": 2,
+      "species": [
+        "treeSparrow",
+        "lightVentedBulbul"
+      ]
+    },
+    {
+      "kind": "leafCarry",
+      "count": 1,
+      "species": [
+        "treeSparrow"
+      ]
+    },
+    {
+      "kind": "insectCatch",
+      "count": 2,
+      "species": [
+        "barnSwallow",
+        "yellowRumpedFlycatcher"
+      ]
+    },
+    {
+      "kind": "visitorGift",
+      "count": 1,
+      "species": [
+        "azureWingedMagpie"
+      ]
+    },
+    {
+      "kind": "courtshipDisplay",
+      "count": 1,
+      "species": [
+        "spottedDove"
+      ]
+    },
+    {
+      "kind": "nestMaterialCarry",
+      "count": 1,
+      "species": [
+        "spottedDove"
+      ]
+    },
+    {
+      "kind": "nestBuild",
+      "count": 1,
+      "species": [
+        "spottedDove"
+      ]
+    }
+  ],
+  "fixtureCount": 22,
+  "historicalReportsRechecked": [
+    {
+      "path": ".build/m7bc-nest-sixth/report.json",
+      "sha256": "639a0b9808f68eb1fb9d9eaad3d76c740da4a5fd9e45f032477493a1cbafeb17",
+      "checks": 1116,
+      "trueChecks": 1116,
+      "nonTrueChecks": [],
+      "passed": true,
+      "errors": {}
+    },
+    {
+      "path": ".build/m7bc-birds-first/report.json",
+      "sha256": "76759441d1635584d0e64647b6c8f4ca6054b4ecdd9ad45b4e0cfe7614700b18",
+      "checks": 4593,
+      "trueChecks": 4593,
+      "nonTrueChecks": [],
+      "passed": true,
+      "errors": []
+    },
+    {
+      "path": ".build/m7bc-settings-second/report.json",
+      "sha256": "847e822a0fde47dbff4174fe8a1dcc9863f854e2b82b118896e2d6d096542075",
+      "checks": 2190,
+      "trueChecks": 2190,
+      "nonTrueChecks": [],
+      "passed": true,
+      "errors": []
+    },
+    {
+      "path": ".build/m7-v03-native-first/report.json",
+      "sha256": "138c2a340fcdc76fd6d1cd90baac3f043672c816e6b4585cbfa15a56b28d4685",
+      "checks": 7546,
+      "trueChecks": 7546,
+      "nonTrueChecks": [],
+      "passed": true,
+      "errors": {}
+    }
+  ],
+  "historicalFullCoreTestLog": {
+    "path": ".build/m7bc-tests-full-sixth.log",
+    "sha256": "81226bf2fda4e4514adafe61d4391c70f4f7e0c4505b70c837817583a9220ee5",
+    "matchingLines": [
+      "Executed 992 tests, with 0 failures (0 unexpected) in 380.776 (380.832) seconds",
+      "Executed 992 tests, with 0 failures (0 unexpected) in 380.776 (380.832) seconds"
+    ]
+  },
+  "historicalSoakRechecked": {
+    "summaryPath": ".build/m7-final-soak-8h-first/summary.json",
+    "eventFile": ".build/m7-final-soak-8h-first/events.jsonl",
+    "wallSeconds": 28800.11295216666,
+    "awakeSeconds": 28800.112952249998,
+    "eventCountRead": 43836,
+    "eventTotalInSummary": 43836,
+    "sequenceConsecutive": true,
+    "eventCategoriesMatchSummary": true,
+    "completedByKind": {
+      "preen": 5271,
+      "rest": 7544,
+      "takeoffPreparation": 8229,
+      "socialGreeting": 7,
+      "leafPlay": 13,
+      "alert": 5,
+      "watch": 2,
+      "sideBySide": 1,
+      "flockPass": 29,
+      "giveWay": 2,
+      "pairedTakeoff": 7,
+      "pointerVisit": 1,
+      "edgePeek": 1
+    },
+    "failedByKind": {
+      "leafPlay": 2,
+      "giveWay": 1,
+      "rest": 5,
+      "preen": 6,
+      "takeoffPreparation": 1
+    },
+    "cleanupSucceeded": true,
+    "all28ResourcesZero": true,
+    "allLayersReleased": true,
+    "peakRSSMiB": 171.671875,
+    "sleepCount": 0,
+    "wakeCount": 0,
+    "knownLockedWallSeconds": 26445.430174083333
+  },
+  "upstreamOverlapFiles": [
+    "README.md",
+    "docs/DEVELOPMENT.md",
+    "platforms/macos/Sources/Birding/Desktop.swift",
+    "platforms/macos/Sources/Birding/DetailedBirdArt.swift",
+    "platforms/macos/Sources/Birding/HoverNames.swift",
+    "platforms/macos/Sources/Birding/PixelArt.swift",
+    "platforms/macos/Sources/Birding/SettingsVerification.swift",
+    "platforms/macos/Sources/Birding/SharedArt.swift",
+    "platforms/macos/Sources/Birding/SpeciesPreview.swift",
+    "platforms/macos/Sources/Birding/SpeciesSettingsWindow.swift",
+    "platforms/macos/Sources/Birding/main.swift",
+    "platforms/macos/Sources/BirdingCore/FlightBehavior.swift",
+    "platforms/macos/Sources/BirdingCore/Population.swift",
+    "platforms/windows/ChirpOS/DesktopVerification.cs",
+    "scripts/build.sh",
+    "shared/README.md",
+    "shared/art/azureWingedMagpie.png",
+    "shared/art/barnSwallow.png",
+    "shared/art/chineseBlackbird.png",
+    "shared/art/lightVentedBulbul.png",
+    "shared/art/littleOwl.png",
+    "shared/art/magpieRobin.png",
+    "shared/art/manifest.json",
+    "shared/art/nightHeron.png",
+    "shared/art/redBilledLeiothrix.png",
+    "shared/art/redWhiskeredBulbul.png",
+    "shared/art/spottedDove.png",
+    "shared/art/swinhoesWhiteEye.png",
+    "shared/art/treeSparrow.png",
+    "shared/art/yellowRumpedFlycatcher.png",
+    "shared/species.json"
+  ],
+  "preExistingUntracked": [
+    "docs/M8-SPECIES-ASSET-PLAN.md"
+  ],
+  "newRuntimeTestsExecuted": false,
+  "historicalReplaysRechecked": {
+    "summaryPath": ".build/m7bc-replays/summary.json",
+    "fixtureCount": 22,
+    "reportCount": 66,
+    "actualReportComparisons": [
+      {
+        "fixture": "activity-rhythm.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "allopreening.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "attention.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "bath.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "chase.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "courtship-display.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "edge-peek.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "fixed-perch.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "flycatcher-insect-catch.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "food-tray.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "insect-catch.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "interruptions.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "leaf-carry.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "leaf.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "nest-build.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "nest-material-carry.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "returning-visitor.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "side-hop.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "social.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "takeoff-preparation.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "travel-together.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "visitor-gift.json",
+        "fullReportsEqual": true
+      }
+    ],
+    "legacyComparisonPath": ".build/m7bc-delivery/legacy-replay-comparison.json",
+    "legacyReports": 20,
+    "legacyRecordedUnchanged": true,
+    "legacyIgnoredFields": [],
+    "actualLegacyComparisons": [
+      {
+        "fixture": "activity-rhythm-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "allopreening-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "attention-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "bath-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "chase-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "courtship-display-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "edge-peek-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "fixed-perch-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "flycatcher-insect-catch-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "food-tray-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "insect-catch-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "interruptions-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "leaf-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "leaf-carry-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "returning-visitor-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "side-hop-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "social-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "takeoff-preparation-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "travel-together-60.json",
+        "fullReportsEqual": true
+      },
+      {
+        "fixture": "visitor-gift-60.json",
+        "fullReportsEqual": true
+      }
+    ]
+  },
+  "otherWorktreeDocumentsObservedAtCompletion": [
+    {
+      "path": "docs/BEHAVIOR-CONTENT-SPEC.md",
+      "sha256": "ecc86159e57d4f9e5e23ba1d5aae288d41f88cf1bf4ef11b5add9f91ca918b40",
+      "includedInImplementedDiff": false
+    },
+    {
+      "path": "docs/MACOS-BEHAVIOR-ROADMAP.md",
+      "sha256": "e6e36c615667cc2df5aaef43be52f21eb7291396ada1cbd81c5ddef20e0206d8",
+      "includedInImplementedDiff": false
+    },
+    {
+      "path": "docs/M8-M9-ECOLOGY-PLAN.md",
+      "sha256": "7071f8dd07add287958f98f8110bfbc79db80c161d10eb076a2112d168bc6cef",
+      "includedInImplementedDiff": false
+    },
+    {
+      "path": "docs/M8-SPECIES-ASSET-PLAN.md",
+      "sha256": "f23c021bd0bf3edeb28cfcb67baf19534081ae0d8a81c96f5009c445e8b207d9",
+      "includedInImplementedDiff": false
+    }
+  ],
+  "lightweightValidation": {
+    "speciesParityScript": "scripts/test-species-parity.py",
+    "speciesParityPassed": true,
+    "sharedFrameCount": 34,
+    "speciesCount": 46,
+    "reportLocalLinksValid": true,
+    "newRuntimeTestsExecuted": false
+  }
+}
