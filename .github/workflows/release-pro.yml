@@ -46,6 +46,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Preserve current publication tooling before checking out source tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/test-pro-publish.py
+          cp scripts/publish-pro-release.py "$RUNNER_TEMP/publish-pro-release.py"
+
       - name: Check out existing tag and validate provenance
         shell: bash
         run: |
@@ -73,7 +80,7 @@ jobs:
               for release in page:
                   if release['tag_name'] == os.environ['RELEASE_TAG']:
                       state = 'draft' if release['draft'] else 'published'
-                      sys.exit(f'Refusing to overwrite existing {state} release. Review/delete a failed draft explicitly before retrying.')
+                      sys.exit(f'Refusing to overwrite existing {state} release. For an intact failed draft, use recover-pro.yml with its verified source run ID.')
           PY
 
       - name: Validate update signing key before compilation
@@ -140,57 +147,11 @@ jobs:
           [[ "$(cat scripts/pro-version.txt)" == "$PRO_VERSION" ]]
           cd dist/pro-release
           NAME="ChirpOS-Pro-$PRO_VERSION-macOS-$PRO_ARCH"
-          ASSETS=("$NAME.zip" "$NAME.zip.sig" "$NAME.dmg" SHA256SUMS.txt BUILD-INFO.txt 安装说明.txt)
           shasum -a 256 -c SHA256SUMS.txt
           swift "$GITHUB_WORKSPACE/scripts/pro-update-sign.swift" verify "$NAME.zip" "$PRO_VERSION" "$GITHUB_WORKSPACE/config/pro-update-public-key.txt"
-          # A race with another release fails here; no clobber or existing-release edit.
-          # The tag already exists and is verified above. Supplying its old commit
-          # as --target unnecessarily triggers workflow-file write checks against main.
-          gh release create "$RELEASE_TAG" --repo "$GH_REPO" --verify-tag --draft \
-            --title "ChirpOS Pro $PRO_VERSION · macOS $PRO_ARCH" \
-            --notes-file "$GITHUB_WORKSPACE/docs/releases/$RELEASE_TAG.md"
-          gh release upload "$RELEASE_TAG" --repo "$GH_REPO" "${ASSETS[@]}"
-          # Hash all uploaded assets locally; API checks below include the mandatory ZIP digest.
-          python3 - "${ASSETS[@]}" > "$RUNNER_TEMP/pro-expected-assets.json" <<'PY'
-          import hashlib, json, pathlib, sys
-          result = {}
-          for name in sys.argv[1:]:
-              path = pathlib.Path(name)
-              sha = hashlib.sha256()
-              with path.open('rb') as f:
-                  for chunk in iter(lambda: f.read(1024 * 1024), b''):
-                      sha.update(chunk)
-              result[name] = {'size': path.stat().st_size, 'digest': 'sha256:' + sha.hexdigest()}
-          json.dump(result, sys.stdout)
-          PY
-          READY=0
-          # Bounded wait for GitHub's asset digest; failure leaves an unpublished draft.
-          for ATTEMPT in 1 2 3 4 5 6; do
-            gh api "repos/$GH_REPO/releases/tags/$RELEASE_TAG" > "$RUNNER_TEMP/pro-uploaded-release.json"
-            if python3 - "$RUNNER_TEMP/pro-expected-assets.json" "$RUNNER_TEMP/pro-uploaded-release.json" <<'PY'
-          import json, os, sys
-          expected = json.load(open(sys.argv[1]))
-          release = json.load(open(sys.argv[2]))
-          if release.get('draft') is not True or release.get('tag_name') != os.environ['RELEASE_TAG']:
-              sys.exit('Expected an unpublished draft for the requested Pro tag')
-          assets = release.get('assets', [])
-          if len(assets) != len(expected) or {a['name'] for a in assets} != set(expected):
-              sys.exit('Uploaded assets do not exactly match the release manifest')
-          for asset in assets:
-              want = expected[asset['name']]
-              if asset.get('state') != 'uploaded' or asset.get('size') != want['size'] or asset.get('digest') != want['digest']:
-                  sys.exit(f"GitHub size/SHA-256 digest is missing or mismatched: {asset['name']}")
-          PY
-            then
-              READY=1
-              break
-            fi
-            if [[ "$ATTEMPT" != 6 ]]; then sleep 10; fi
-          done
-          [[ "$READY" == 1 ]]
-          REMOTE_COMMIT="$(gh api "repos/$GH_REPO/commits/$RELEASE_TAG" --jq .sha)"
-          [[ "$REMOTE_COMMIT" == "$SOURCE_COMMIT" ]]
-          gh release edit "$RELEASE_TAG" --repo "$GH_REPO" --draft=false --latest=false
+          python3 "$RUNNER_TEMP/publish-pro-release.py" \
+            --assets "$PWD" --tag "$RELEASE_TAG" --source "$SOURCE_COMMIT" --arch "$PRO_ARCH" \
+            --notes "$GITHUB_WORKSPACE/docs/releases/$RELEASE_TAG.md"
 
       - name: Remove temporary signing key
         if: always()

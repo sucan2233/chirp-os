@@ -1,0 +1,215 @@
+name: Recover ChirpOS Pro macOS release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing Pro tag with a draft release to recover (for example pro-v0.8.0)'
+        required: true
+        type: string
+      run_id:
+        description: 'Completed release-pro.yml run containing verified, signed assets'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release-pro-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      # Dispatch inputs enter shell scripts through the environment exclusively.
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      RELEASE_TAG: ${{ inputs.tag }}
+      SOURCE_RUN_ID: ${{ inputs.run_id }}
+      GH_REPO: ${{ github.repository }}
+      PRO_ARCH: arm64
+    steps:
+      - name: Validate manual input
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GH_REPO" == sucan2233/chirp-os ]]
+          [[ "$RELEASE_TAG" =~ ^pro-v(0|[1-9][0-9]{0,3})\.(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)$ ]]
+          [[ "$RELEASE_TAG" != pro-v0.0.0 ]]
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$(uname -m)" == "$PRO_ARCH" ]]
+          [[ -d "$DEVELOPER_DIR" ]]
+          printf 'PRO_VERSION=%s\n' "${RELEASE_TAG#pro-v}" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: sucan2233/chirp-os
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve existing tag and pin the update public key
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/test-pro-publish.py
+          SOURCE_COMMIT="$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}")"
+          [[ -s "docs/releases/$RELEASE_TAG.md" ]]
+          PUBLIC_KEY="$RUNNER_TEMP/pro-recovery-update-public-key.txt"
+          HEAD_PUBLIC_KEY="$RUNNER_TEMP/pro-recovery-head-public-key.txt"
+          git show "refs/tags/$RELEASE_TAG:config/pro-update-public-key.txt" > "$PUBLIC_KEY"
+          git show HEAD:config/pro-update-public-key.txt > "$HEAD_PUBLIC_KEY"
+          cmp "$PUBLIC_KEY" "$HEAD_PUBLIC_KEY"
+          [[ -s "$PUBLIC_KEY" ]]
+          printf 'SOURCE_COMMIT=%s\nPRO_UPDATE_PUBLIC_KEY=%s\n' "$SOURCE_COMMIT" "$PUBLIC_KEY" >> "$GITHUB_ENV"
+
+      - name: Validate source run and successful release preparation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/actions/runs/$SOURCE_RUN_ID" > "$RUNNER_TEMP/pro-recovery-run.json"
+          gh api --paginate --slurp "repos/$GH_REPO/actions/runs/$SOURCE_RUN_ID/jobs?filter=latest&per_page=100" > "$RUNNER_TEMP/pro-recovery-jobs.json"
+          python3 - "$RUNNER_TEMP/pro-recovery-run.json" "$RUNNER_TEMP/pro-recovery-jobs.json" <<'PY'
+          import json
+          import os
+          import re
+          import sys
+
+          with open(sys.argv[1], encoding='utf-8') as handle:
+              run = json.load(handle)
+          expected = {
+              'path': '.github/workflows/release-pro.yml',
+              'event': 'workflow_dispatch',
+              'status': 'completed',
+          }
+          for field, value in expected.items():
+              if run.get(field) != value:
+                  sys.exit(f'Unexpected source run {field}: {run.get(field)!r}')
+          if run.get('id') != int(os.environ['SOURCE_RUN_ID']):
+              sys.exit('Source run ID does not match the requested run')
+          if (run.get('head_repository') or {}).get('full_name') != 'sucan2233/chirp-os':
+              sys.exit('Source run must originate from sucan2233/chirp-os')
+          if run.get('conclusion') not in ('failure', 'success'):
+              sys.exit('Source run conclusion must be failure or success')
+          head_sha = run.get('head_sha', '')
+          if not isinstance(head_sha, str) or re.fullmatch(r'[0-9a-f]{40}', head_sha) is None:
+              sys.exit('Source run has an invalid head SHA')
+
+          with open(sys.argv[2], encoding='utf-8') as handle:
+              jobs = [job for page in json.load(handle) for job in page['jobs']]
+          required_steps = (
+              'Check scripts and test core',
+              'Build ad-hoc Pro release with independent update signature',
+              'Preserve verified release assets for recovery',
+          )
+          matching_jobs = []
+          for job in jobs:
+              if job.get('run_id') != run['id'] or job.get('run_attempt') != run.get('run_attempt'):
+                  continue
+              steps = job.get('steps', [])
+              if all(
+                  len(matches := [step for step in steps if step.get('name') == name]) == 1
+                  and matches[0].get('conclusion') == 'success'
+                  for name in required_steps
+              ):
+                  matching_jobs.append(job)
+          if len(matching_jobs) != 1:
+              sys.exit('Expected exactly one source job with all three preparation steps successful')
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as handle:
+              handle.write(f'SOURCE_RUN_HEAD_SHA={head_sha}\n')
+          PY
+
+      - name: Validate source ancestry and unique unexpired artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$SOURCE_RUN_HEAD_SHA" HEAD
+          gh api --paginate --slurp "repos/$GH_REPO/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" > "$RUNNER_TEMP/pro-recovery-artifacts.json"
+          python3 - "$RUNNER_TEMP/pro-recovery-artifacts.json" <<'PY'
+          from datetime import datetime, timezone
+          import json
+          import os
+          import sys
+
+          name = f"{os.environ['RELEASE_TAG']}-{os.environ['SOURCE_COMMIT']}-verified-assets"
+          with open(sys.argv[1], encoding='utf-8') as handle:
+              artifacts = [artifact for page in json.load(handle) for artifact in page['artifacts']]
+          matches = [artifact for artifact in artifacts if artifact.get('name') == name]
+          if len(matches) != 1:
+              sys.exit('Expected exactly one artifact with the exact tag and peeled source commit')
+          artifact = matches[0]
+          if artifact.get('expired') is not False:
+              sys.exit('The verified release artifact is expired or has unknown expiration state')
+          expires_at = datetime.fromisoformat(artifact['expires_at'].replace('Z', '+00:00'))
+          if expires_at <= datetime.now(timezone.utc):
+              sys.exit('The verified release artifact has passed its expiration time')
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as handle:
+              handle.write(f'RECOVERY_ARTIFACT_NAME={name}\n')
+          PY
+
+      - name: Download verified release assets from the source run
+        uses: actions/download-artifact@v4
+        with:
+          repository: sucan2233/chirp-os
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          name: ${{ env.RECOVERY_ARTIFACT_NAME }}
+          path: dist/pro-release
+
+      - name: Verify recovered build metadata and signed assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          import sys
+
+          expected = {
+              'Version': os.environ['PRO_VERSION'],
+              'Architecture': os.environ['PRO_ARCH'],
+              'Source commit': os.environ['SOURCE_COMMIT'],
+              'Source tag': os.environ['RELEASE_TAG'],
+              'Source tag commit': os.environ['SOURCE_COMMIT'],
+              'Source tree': 'clean',
+              'Pro updates enabled': '1',
+          }
+          fields = {}
+          for line in Path('dist/pro-release/BUILD-INFO.txt').read_text(encoding='utf-8').splitlines():
+              key, separator, value = line.partition(': ')
+              if separator and key in expected:
+                  if key in fields:
+                      sys.exit(f'Duplicate BUILD-INFO field: {key}')
+                  fields[key] = value
+          for key, value in expected.items():
+              if fields.get(key) != value:
+                  sys.exit(f'BUILD-INFO mismatch for {key}: expected {value!r}, got {fields.get(key)!r}')
+          PY
+          NAME="ChirpOS-Pro-$PRO_VERSION-macOS-$PRO_ARCH"
+          swift scripts/pro-update-sign.swift verify "dist/pro-release/$NAME.zip" "$PRO_VERSION" "$PRO_UPDATE_PUBLIC_KEY"
+          (
+            cd dist/pro-release
+            shasum -a 256 -c SHA256SUMS.txt
+            hdiutil verify "$NAME.dmg"
+          )
+
+      - name: Resume the existing draft using verified release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/publish-pro-release.py \
+            --assets dist/pro-release \
+            --tag "$RELEASE_TAG" \
+            --source "$SOURCE_COMMIT" \
+            --arch arm64 \
+            --notes "docs/releases/$RELEASE_TAG.md" \
+            --resume-draft

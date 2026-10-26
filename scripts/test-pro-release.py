@@ -22,8 +22,12 @@ for script in ['build.sh', 'package-pro-macos.sh', 'release-pro-macos.sh']:
     run(['bash', '-n', str(ROOT/'scripts'/script)])
     check('shell syntax: '+script)
 workflow=(ROOT/'.github/workflows/release-pro.yml').read_text()
-for marker in ['persist-credentials: false','CHIRPOS_UPDATE_PRIVATE_KEY','--draft','--latest=false',"asset.get('digest') != want['digest']",'--verify-tag','refs/tags/$RELEASE_TAG^{commit}']:
+publisher=(ROOT/'scripts/publish-pro-release.py').read_text()
+for marker in ['persist-credentials: false','CHIRPOS_UPDATE_PRIVATE_KEY','refs/tags/$RELEASE_TAG^{commit}', 'publish-pro-release.py']:
     check('workflow contract: '+marker,marker in workflow)
+for marker in ["'draft': True", "'make_latest': 'false'", "asset['digest'] != want['digest']", "endpoint = f'{base}/releases/{release_id}'"]:
+    check('publisher contract: '+marker,marker in publisher)
+check('draft verification never uses published-tag endpoint', '/releases/tags/' not in publisher.replace('# /releases/tags/{tag} only returns published releases. Drafts must use ID.', ''))
 # Validate each literal shell block without executing CI/network operations.
 lines=workflow.splitlines();i=0
 while i<len(lines):

@@ -86,6 +86,21 @@ GitHub Release API 对显式 `target_commitish` 所指提交与默认分支之�
 
 签名打包成功后，流水线先保存 `pro-vX.Y.Z-源码SHA-verified-assets` Actions artifact（7 天），再创建 Release；仅包含公开安装包、独立签名和构建说明，不含私钥。发布端失败时可下载已验证材料恢复，避免丢失整轮构建。安装包来源仍是指定标签，主线后续概率系统变更不会进入 0.8.5。
 
+运行 `40323236452` 已通过密钥检查、完整核心测试、签名打包和 artifact 归档。移除重复 `target_commitish` 后，草稿创建及六资产上传成功；随后校验草稿时请求 `/releases/tags/pro-v0.8.5` 返回 404。该接口只查询已公开 Release，不能用于发布前的草稿校验；这次不再是编译、密钥或权限失败。官方说明见同页的 [Get a release by tag name](https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name) 与 [Get a release](https://docs.github.com/en/rest/releases/releases#get-a-release)。
+
+GitHub CLI 自身的 [草稿查询实现](https://github.com/cli/cli/blob/trunk/pkg/cmd/release/shared/fetch.go) 也专门处理此差异：先通过 GraphQL 按待发布标签取得草稿 ID，再走 REST 按 ID 读取完整资产。这解释了 `gh release upload` 已成功而后续直接调用 tags REST 接口仍失败；单纯重试 404 或继续扩大权限不能修复接口用错。
+
+发布逻辑改为 `scripts/publish-pro-release.py`：保留创建响应中的 Release ID，按 `/releases/{id}` 核对草稿、六资产集合、大小及 SHA-256，之后仍按同一个 ID 公开并复查。普通发布拒绝任何已存在 Release；恢复模式只接受唯一未公开草稿，要求资产全部已上传且与原构建逐字节匹配，不覆盖文件、不删除草稿、不改标签。缺失 digest 最多等待六次，真实 hash 或资产集合不匹配立即停止。正常发布工作流在切换到旧标签前保存当前发布脚本，确保旧产品标签也能使用修复后的发布协议。
+
+### 已构建成功、仅发布失败时恢复
+
+1. 打开 Actions 的 **Recover ChirpOS Pro macOS release**，从 `main` 运行，填写原标签及成功归档产物的运行 ID；本次为 `pro-v0.8.5`、`40323236452`。
+2. 恢复流程核对原工作流、仓库、源码祖先关系和测试/打包/归档步骤成功状态，下载该标签与源码 SHA 唯一对应、尚未过期的 artifact。
+3. 核对构建说明、标签 SHA、签名公钥、ZIP 独立签名、SHA256SUMS 和 DMG；按 Release ID 复查已有草稿的六资产后公开。不重新编译、不需要再次使用更新私钥。
+4. 下载公开文件再次验签，并核对客户端能选中此版本。恢复 workflow 成功不等于实际桌面退出、重启和 Gatekeeper 已验收。
+
+不要直接重跑旧 workflow 或删除正确草稿；旧定义仍有原来的接口错误，普通完整发布也会拒绝已存在草稿。artifact 过期、来源不匹配或资产不完整时先排查，不强行覆盖公开版本。离线协议回归入口为 `python3 scripts/test-pro-publish.py`，覆盖草稿 ID、恢复、漂移标签、错误资产及 digest 等待行为。
+
 ## 本地构建与发布材料
 
 ```sh
