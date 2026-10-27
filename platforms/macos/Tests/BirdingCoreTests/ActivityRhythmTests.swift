@@ -105,7 +105,7 @@ final class ActivityRhythmTests:XCTestCase {
     func testNewSettingsDefaultToSteadyWithoutSchemaBump() throws {
         let settings=BirdSettings(),object=try settingsObject(settings)
         XCTAssertEqual(settings.activityRhythm,.steady)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,3)
         XCTAssertEqual(settings.schemaVersion,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(object["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(object["activityRhythm"] as? String,"steady")

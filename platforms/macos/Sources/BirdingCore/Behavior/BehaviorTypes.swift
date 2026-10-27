@@ -162,6 +162,7 @@ public struct BirdRenderState {
     public let frameName: String
     public let blockers: [CGRect]
     public let hoverable: Bool
+    public var opacity:Double=1
     public var rect: CGRect {
         CGRect(x:position.x-(facingRight ? 29:19)*scale,y:position.y+(hopOffset-39)*scale,width:48*scale,height:48*scale)
     }

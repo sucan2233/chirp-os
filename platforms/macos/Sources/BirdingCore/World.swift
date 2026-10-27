@@ -157,6 +157,18 @@ public final class Bird {
     private var target: CGPoint
     private var arc: CGFloat = 90
     private var flightAge: Double = 0
+    public private(set) var continuousFlightAge:Double=0
+    public private(set) var flightEpisodeID:UInt64=0
+    public var ordinaryOrbitLimit:Double?
+    public var preferNearbyDestinations=false
+    public var episodeRetainsFlightClock=false
+    func advanceEpisodeClock(_ dt:Double) {
+        if state != .perched || episodeRetainsFlightClock {
+            if continuousFlightAge==0 {flightEpisodeID &+= 1}
+            continuousFlightAge+=dt
+        }
+        else if stateTime>=0.5 {continuousFlightAge=0}
+    }
     private var destinationInvalidated = false
     /// A hop has its own short ballistic clock, never a flight acceleration path.
     private struct SideHopMotion {
@@ -265,7 +277,7 @@ public final class Bird {
         let m = FlightBehavior.motion(profile.id)
         urgentFlight = urgent
         transitDuration = max(0.3, duration) / (Self.flightSpeedMultiplier * profile.speed)
-        orbitDuration = urgent || !allowsOrbit ? 0 : m.orbit
+        orbitDuration = urgent || !allowsOrbit ? 0 : min(m.orbit,ordinaryOrbitLimit ?? m.orbit)
         flightDuration = transitDuration + orbitDuration
         self.arc = arc
         let normalCruise=FlightBehavior.cruiseSpeed(profile.id,multiplier:profile.speed)*Self.flightSpeedMultiplier/2
@@ -418,6 +430,10 @@ public final class Bird {
         transitPath=plan.path
         transitTiming=FlightTiming(distance:plan.path.length,speed:plan.speed,acceleration:0,deceleration:0)
         transitDuration=transitTiming!.duration;flightDuration=transitDuration;cruiseSpeed=plan.speed
+    }
+    func redirectPass(to destination:CGPoint) {
+        let plan=FlockMemberPlan(delay:0,path:FlightPath(points:[position,destination]),speed:cruiseSpeed,wingPhase:flightAge+wingPhase)
+        passThrough(plan)
     }
     public var departureFinished: Bool { isDeparting && flightAge >= flightDuration }
     public func perch(on host: Surface, spriteScale:CGFloat=1) {

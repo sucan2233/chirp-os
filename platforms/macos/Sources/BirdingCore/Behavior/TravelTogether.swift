@@ -264,6 +264,7 @@ final class TravelTogetherExecution:BehaviorExecution {
     let kind:BehaviorKind = .travelTogether
     var participants:[BirdID] {plan.participants}
     var landingReservations:[LandingReservation] {plan.destinations}
+    var plannedDuration:Double {plan.duration}
     var timeout:Double {plan.duration+1.5}
     private var revisions:[BirdID:UInt64]=[:]
     private var age=0.0

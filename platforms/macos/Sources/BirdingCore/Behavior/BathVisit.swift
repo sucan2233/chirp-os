@@ -59,10 +59,10 @@ struct BathVisitPlan {
         guard !engine.paused,!engine.world.buttonsDown,!engine.ambientBusy,
               engine.settings.bathEnabled,engine.world.bathArtAvailable,
               BehaviorDefinitions.definition(for:.bathVisit).isEnabled(settings:engine.settings,source:source),
-              source != .automatic || (engine.ambientEnabled && engine.settings.activityRhythm != .quiet)
+              source != .automatic || (engine.ambientEnabled && (engine.settings.companion != nil || engine.settings.activityRhythm != .quiet))
         else {return []}
         let objects=engine.habitatObjects.objects.values.filter {
-            $0.kind == .bath && !$0.retiring && !engine.runtime.habitatReservations.contains($0.id)
+            $0.kind == .bath && $0.remainingUses>0 && (engine.sceneCandidateID == nil || $0.id==engine.sceneCandidateID) && !$0.retiring && !engine.runtime.habitatReservations.contains($0.id)
         }.sorted{$0.id<$1.id}
         let birds=engine.birds.filter {bird in
             guard let id=engine.id(of:bird),target==nil || target==id,
@@ -112,6 +112,7 @@ final class BathVisitExecution:BehaviorExecution {
     var participants:[BirdID] {[plan.id]}
     var habitatReservations:[HabitatObjectID] {[plan.object.id]}
     var landingReservations:[LandingReservation] {[plan.destination,plan.home]}
+    var plannedDuration:Double {plan.maximumPlannedDuration}
     var timeout:Double {BathGeometry.visitTimeout}
     private(set) var phase:Phase = .approach
     private(set) var phaseAge=0.0

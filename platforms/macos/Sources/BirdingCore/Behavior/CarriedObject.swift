@@ -24,6 +24,7 @@ public struct CarriedObject {
     public let kind:CarriedObjectKind
     public let worldScale:CGFloat
     public let facingRight:Bool
+    var persistentID:UUID?=nil
     public fileprivate(set) var state:CarriedObjectState
     public fileprivate(set) var owner:BirdID?
     public fileprivate(set) var reservedByRun:BehaviorRunID?
@@ -35,6 +36,8 @@ public struct CarriedObject {
     public var giftReceiverRevision:UInt64? {giftDelivery?.receiverRevision}
     fileprivate var reservedBird:BirdID?
     fileprivate var cachedSnapshot:ScenePropRenderState
+    fileprivate var effect:SceneLeafEffect?
+    fileprivate var effectAllowance:Double=0
     fileprivate var fadeRemaining=CarriedObjectGeometry.fadeDuration
     fileprivate var fadeOpacity=1.0
     fileprivate let screens:[CGRect]
@@ -45,14 +48,33 @@ public struct CarriedObject {
 /// Persistent scene entities only. Runtime borrows prop IDs as leases but does
 /// not emit another copy. All transitions run on the engine's simulation thread.
 final class CarriedObjectStore {
-    private(set) var objects:[ScenePropID:CarriedObject]=[:]
+    var objects:[ScenePropID:CarriedObject]=[:]
 
+    var commitResource:((UUID,SceneResource)->Bool)?
+    func makePersistent(_ id:ScenePropID,instance:UUID) {
+        guard var object=objects[id] else {return}
+        object.persistentID=instance;object.remainingLifetime=1e12;objects[id]=object
+    }
+    @discardableResult func restoreEffect(id:ScenePropID,instance:UUID,effect:SceneLeafEffect,in engine:BehaviorEngine)->Bool {
+        let item=SceneInstance(id:instance,kind:.leaf,anchor:effect.anchor)
+        guard effect.support == .ground,effect.remaining>0,let point=item.point(in:engine.world),
+              placeLeaf(id:id,at:point,facingRight:effect.facingRight,in:engine).accepted,var object=objects[id],object.surfaceAnchor.isGround else {return false}
+        object.persistentID=instance;object.state = .placed;object.remainingLifetime=effect.remaining
+        object.effect=effect;object.effectAllowance=0;objects[id]=object;return true
+    }
+    private func reserveEffectTime(_ object:inout CarriedObject)->Bool {
+        guard let id=object.persistentID,var effect=object.effect,effect.remaining>0 else {return false}
+        let allowance=min(2,effect.remaining);effect.remaining-=allowance
+        var resource=SceneResource(kind:.leaf);resource.leafConsumed=true;resource.leafEffect=effect
+        guard commitResource?(id,resource) == true else {return false}
+        object.effect=effect;object.effectAllowance=allowance;return true
+    }
     func placeLeaf(id:ScenePropID,at point:CGPoint,facingRight:Bool=true,in engine:BehaviorEngine) -> BehaviorResult {
         guard !engine.paused else {return .rejected(.paused)}
         guard engine.settings.leafCarryEnabled else {return .rejected(.disabled)}
         guard engine.world.leafCarryArtAvailable else {return .rejected(.missingFrames)}
         guard !engine.world.buttonsDown else {return .rejected(.userInput)}
-        guard objects.isEmpty,!engine.runtime.propIDs.contains(id),id.rawValue>0 else {return .rejected(.busy)}
+        guard (engine.settings.companion != nil ? objects.count<3:objects.isEmpty),!engine.runtime.propIDs.contains(id),id.rawValue>0 else {return .rejected(.busy)}
         let world=engine.world
         let scale=world.scale*CGFloat(engine.settings.catalog.profile(.treeSparrow).relativeScale)
         guard let anchor=SurfaceAnchor.placement(at:point,in:world,groundScale:scale),
@@ -83,6 +105,11 @@ final class CarriedObjectStore {
               contact.id==id,Geometry.distance(contact.rect.origin,object.cachedSnapshot.rect.origin)<0.001,
               abs(contact.rect.width-object.cachedSnapshot.rect.width)<0.001,
               abs(contact.rect.height-object.cachedSnapshot.rect.height)<0.001 else {return false}
+        if let instance=object.persistentID {
+            var resource=SceneResource(kind:.leaf);resource.leafConsumed=true
+            guard commitResource?(instance,resource) == true else {return false}
+        }
+        object.effect=nil;object.effectAllowance=0
         object.state = .attached;object.owner=bird;object.remainingLifetime=0
         object.cachedSnapshot=contact;objects[id]=object;return true
     }
@@ -100,6 +127,12 @@ final class CarriedObjectStore {
         object.state = .placed;object.owner=nil;object.surfaceAnchor=anchor
         object.remainingLifetime=engine.settings.visitorGiftsEnabled ? CarriedObjectGeometry.giftMaterialLifetime:CarriedObjectGeometry.placedLifetime
         object.cachedSnapshot=snapshot
+        if object.persistentID != nil {
+            guard let saved=FixedPerchAnchor.capture(slot:1,point:point,displayIDs:engine.world.displayIDs,displays:engine.world.displays) else {return false}
+            object.effect=SceneLeafEffect(anchor:saved,support:anchor.isGround ? .ground:.window,
+                remaining:object.remainingLifetime,facingRight:object.facingRight)
+            guard reserveEffectTime(&object) else {return false}
+        }
         objects[id]=object
         engine.scheduler.endFocus(matching:SceneFocus(leafID:id),frequency:engine.settings.ambientFrequency)
         return true
@@ -211,7 +244,13 @@ final class CarriedObjectStore {
                 }
                 objects[id]=object
             } else if object.state == .available || object.state == .placed {
-                object.remainingLifetime=max(0,object.remainingLifetime-dt);objects[id]=object
+                if object.persistentID != nil,object.state == .placed,!object.isVisitorGift {
+                    if object.effectAllowance+1e-10<dt {
+                        guard reserveEffectTime(&object) else {retire(id,in:engine);retired.append(id);continue}
+                    }
+                    object.effectAllowance=max(0,object.effectAllowance-dt)
+                }
+                if object.persistentID == nil || object.state != .available {object.remainingLifetime=max(0,object.remainingLifetime-dt)};objects[id]=object
                 if object.remainingLifetime<=1e-10 {
                     // Placed presentation already faded during its final .2s.
                     // Do not restart an opaque retirement after the 8s deadline.
@@ -240,7 +279,8 @@ final class CarriedObjectStore {
             guard let object=objects[id] else {return nil}
             let value=liveSnapshot(object,in:engine) ?? object.cachedSnapshot
             let opacity:Double
-            if object.state == .retired {opacity=object.fadeOpacity*object.fadeRemaining/CarriedObjectGeometry.fadeDuration}
+            if object.persistentID != nil,object.state == .placed,!object.isVisitorGift,object.effectAllowance<=0 {opacity=0}
+            else if object.state == .retired {opacity=object.fadeOpacity*object.fadeRemaining/CarriedObjectGeometry.fadeDuration}
             else if object.state == .placed,object.giftDelivery?.arrived != false {opacity=min(1,object.remainingLifetime/CarriedObjectGeometry.fadeDuration)}
             else {opacity=1}
             return CarriedObjectGeometry.render(id:id,position:value.position,
@@ -263,6 +303,13 @@ final class CarriedObjectStore {
     @discardableResult func reserveGift(_ id:ScenePropID,run:BehaviorRunID,bird:BirdID,in engine:BehaviorEngine) -> Bool {
         guard giftIsAvailable(id,in:engine),var object=objects[id],
               !objects.values.contains(where:{$0.isVisitorGift && $0.state != .retired || $0.reservedBird==bird || $0.owner==bird}) else {return false}
+        if let instance=object.persistentID {
+            // Claim once before changing lifecycle. A crash cannot restore the old
+            // placed effect while a gift has already claimed the same material.
+            var resource=SceneResource(kind:.leaf);resource.leafConsumed=true
+            guard commitResource?(instance,resource) == true else {return false}
+            object.effect=nil;object.effectAllowance=0
+        }
         object.isVisitorGift=true;object.reservedByRun=run;object.reservedBird=bird;objects[id]=object
         engine.scheduler.endFocus(matching:SceneFocus(leafID:id),frequency:engine.settings.ambientFrequency)
         return true

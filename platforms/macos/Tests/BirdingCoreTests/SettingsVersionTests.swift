@@ -5,10 +5,10 @@ import BirdingCore
 final class SettingsVersionTests: XCTestCase {
     func testNewSettingsEncodeCurrentVersionAtTopLevel() throws {
         let settings=BirdSettings()
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
-        XCTAssertEqual(settings.schemaVersion,2)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,3)
+        XCTAssertEqual(settings.schemaVersion,3)
         let object=try settingsObject(settings)
-        XCTAssertEqual(object["schemaVersion"] as? Int,2)
+        XCTAssertEqual(object["schemaVersion"] as? Int,3)
         XCTAssertNotNil(object["catalog"])
         XCTAssertNotNil(object["speciesProbability"]);XCTAssertNil(object["probabilities"])
     }
@@ -25,7 +25,7 @@ final class SettingsVersionTests: XCTestCase {
             try original.save(to:url)
             assertSettingsEqual(try BirdSettings.load(from:url,legacyURL:folder.appendingPathComponent("legacy.json")),original)
             let saved=try XCTUnwrap(JSONSerialization.jsonObject(with:Data(contentsOf:url)) as? [String:Any])
-            XCTAssertEqual(saved["schemaVersion"] as? Int,2)
+            XCTAssertEqual(saved["schemaVersion"] as? Int,3)
         }
     }
 
@@ -36,13 +36,13 @@ final class SettingsVersionTests: XCTestCase {
                 var object=try JSONSerialization.jsonObject(with:oldSettingsData(original)) as! [String:Any]
                 object["schemaVersion"]=sourceVersion
                 let data=try JSONSerialization.data(withJSONObject:object)
-                var expected=original;expected.probabilities.resetToDefaults()
+                var expected=original;expected.probabilities.resetToDefaults();expected.companion=CompanionPreferences.migrate(original)
                 let direct=try JSONDecoder().decode(BirdSettings.self,from:data)
                 let migrated=try BirdSettings.decode(data)
                 assertSettingsEqual(direct,expected)
                 assertSettingsEqual(migrated,expected)
                 assertSettingsEqual(try BirdSettings.decode(JSONEncoder().encode(migrated)),migrated)
-                XCTAssertEqual(try settingsObject(migrated)["schemaVersion"] as? Int,2)
+                XCTAssertEqual(try settingsObject(migrated)["schemaVersion"] as? Int,3)
             }
         }
     }
@@ -70,7 +70,7 @@ final class SettingsVersionTests: XCTestCase {
             let migrated=try BirdSettings.decode(oldSettingsData(original))
             var expected=original
             expected.catalog.species += SpeciesCatalog.standard.species.dropFirst(count)
-            expected.probabilities.resetToDefaults()
+            expected.probabilities.resetToDefaults();expected.companion=CompanionPreferences.migrate(original)
             assertSettingsEqual(migrated,expected)
             XCTAssertTrue(migrated.probabilities.entries.allSatisfy{$0.weight>0})
             XCTAssertEqual(migrated.migration?.fromSchemaVersion,0)
@@ -91,7 +91,7 @@ final class SettingsVersionTests: XCTestCase {
         original.catalog.species[1].perchMax+=1
         original.catalog.species[0].flapFPS=27.125
         var expected=original
-        expected.perchDefaultsVersion=1;expected.probabilities.resetToDefaults()
+        expected.perchDefaultsVersion=1;expected.probabilities.resetToDefaults();expected.companion=CompanionPreferences.migrate(original)
         for i in expected.catalog.species.indices {
             let current=SpeciesCatalog.standard.profile(expected.catalog.species[i].id)
             if i>0 {expected.catalog.species[i].flapFPS=current.flapFPS}
@@ -181,14 +181,14 @@ final class SettingsVersionTests: XCTestCase {
             let data=try oldSettingsData(original,explicitZero:explicitZero)
             try data.write(to:url)
             var loaded=try BirdSettings.load(from:url,legacyURL:folder.appendingPathComponent("legacy.json"))
-            var expected=original;expected.probabilities.resetToDefaults()
+            var expected=original;expected.probabilities.resetToDefaults();expected.companion=CompanionPreferences.migrate(original)
             assertSettingsEqual(loaded,expected)
             XCTAssertEqual(try Data(contentsOf:url),data)
             loaded.hoverDelay=0.75
             try loaded.save(to:url)
             let saved=try Data(contentsOf:url)
             let object=try XCTUnwrap(JSONSerialization.jsonObject(with:saved) as? [String:Any])
-            XCTAssertEqual(object["schemaVersion"] as? Int,2)
+            XCTAssertEqual(object["schemaVersion"] as? Int,3)
             assertSettingsEqual(try BirdSettings.decode(saved),loaded)
             let backups=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="bak"}
             XCTAssertTrue(try backups.contains{try Data(contentsOf:$0)==data})
@@ -236,7 +236,7 @@ final class SettingsVersionTests: XCTestCase {
         let data=try JSONEncoder().encode(catalog)
         try data.write(to:legacy)
         let migrated=try BirdSettings.load(from:url,legacyURL:legacy)
-        XCTAssertEqual(migrated.schemaVersion,2)
+        XCTAssertEqual(migrated.schemaVersion,3)
         XCTAssertEqual(Array(migrated.catalog.species.prefix(catalog.species.count)),catalog.species)
         XCTAssertEqual(migrated.probabilities,ProbabilityDistribution())
         XCTAssertTrue(migrated.probabilities.entries.allSatisfy{$0.weight>0})
@@ -322,7 +322,7 @@ final class SettingsVersionTests: XCTestCase {
             a.removeValue(forKey:"migration");e.removeValue(forKey:"migration")
             XCTAssertEqual(NSDictionary(dictionary:a),NSDictionary(dictionary:e),file:file,line:line)
         }
-        XCTAssertEqual(actual.schemaVersion,2,file:file,line:line)
+        XCTAssertEqual(actual.schemaVersion,3,file:file,line:line)
         XCTAssertEqual(actual.schemaVersion,expected.schemaVersion,file:file,line:line)
         XCTAssertEqual(actual.catalog.species,expected.catalog.species,file:file,line:line)
         XCTAssertEqual(actual.probabilities,expected.probabilities,file:file,line:line)

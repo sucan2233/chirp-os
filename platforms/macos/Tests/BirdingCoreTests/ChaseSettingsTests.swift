@@ -6,7 +6,7 @@ final class ChaseSettingsTests: XCTestCase {
     func testDefaultIsEncodedInSchemaOne() throws {
         let settings=BirdSettings(),object=try settingsObject(settings)
         XCTAssertTrue(settings.chaseEnabled)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,3)
         XCTAssertEqual(object["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(object["chaseEnabled"] as? Bool,true)
     }

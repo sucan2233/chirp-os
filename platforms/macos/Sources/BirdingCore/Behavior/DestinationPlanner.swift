@@ -52,6 +52,18 @@ enum DestinationPlanner {
                     for range in Geometry.sideRanges(on:host,edge:edge,surfaces:surfaces,screen:screen,scale:scale,occupied:occupied) { sides.append((host,edge,range)) }
                 }}
             }
+            if bird.preferNearbyDestinations,avoiding == nil,let choice=sides.min(by:{a,b in
+                func distance(_ c:(Surface,PerchEdge,ClosedRange<CGFloat>))->CGFloat {
+                    let y=min(c.2.upperBound,max(c.2.lowerBound,bird.position.y))
+                    return Geometry.distance(bird.position,CGPoint(x:c.1 == .left ? c.0.rect.minX:c.0.rect.maxX,y:y))
+                }
+                return distance(a)<distance(b)
+            }) {
+                let y=min(choice.2.upperBound,max(choice.2.lowerBound,bird.position.y))
+                let fraction=(y-choice.0.rect.minY-42)/(choice.0.rect.height-84)
+                let point=Geometry.foot(on:choice.0,fraction:fraction,edge:choice.1)
+                return DestinationPlan(point:point,host:choice.0,fraction:fraction,edge:choice.1,duration:duration(to:point),arc:40,airspace:airspace(point),urgent:false)
+            }
             let length=sides.reduce(CGFloat.zero){$0+$1.2.upperBound-$1.2.lowerBound}
             var ticket=CGFloat(random.unit()) * max(0,length)
             for (host,edge,range) in sides {
@@ -77,6 +89,20 @@ enum DestinationPlanner {
                     for range in Geometry.landingRanges(on:host,surfaces:surfaces,screen:screen,scale:scale,occupied:occupied) { choices.append((host,range)) }
                 }
             }
+        }
+        if bird.preferNearbyDestinations,avoiding == nil,
+           let (host,range)=choices.min(by:{a,b in
+               func distance(_ c:(Surface,ClosedRange<CGFloat>))->CGFloat {
+                   let x=min(c.1.upperBound,max(c.1.lowerBound,bird.position.x))
+                   let y=Geometry.foot(on:c.0,fraction:0.5,edge:.top,scale:scale).y
+                   return Geometry.distance(bird.position,CGPoint(x:x,y:y))
+               }
+               return distance(a)<distance(b)
+           }) {
+            let foot=CGPoint(x:min(range.upperBound,max(range.lowerBound,bird.position.x)),y:Geometry.foot(on:host,fraction:0.5,edge:.top,scale:scale).y)
+            let start=Geometry.perchX(0,rect:host.rect),end=Geometry.perchX(1,rect:host.rect)
+            return DestinationPlan(point:foot,host:host,fraction:(foot.x-start)/(end-start),edge:.top,
+                duration:duration(to:foot),arc:40,airspace:airspace(foot),urgent:false)
         }
         let total = choices.reduce(CGFloat.zero) { $0 + $1.1.upperBound - $1.1.lowerBound }
         if total > 0 {

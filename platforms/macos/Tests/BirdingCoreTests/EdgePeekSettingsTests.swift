@@ -6,7 +6,7 @@ final class EdgePeekSettingsTests: XCTestCase {
     func testDefaultsEnableEdgePeekWithinSchemaOne() throws {
         let settings=BirdSettings(),object=try settingsObject(settings)
         XCTAssertTrue(settings.edgePeekEnabled)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,3)
         XCTAssertEqual(settings.schemaVersion,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(object["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(object["edgePeekEnabled"] as? Bool,true)

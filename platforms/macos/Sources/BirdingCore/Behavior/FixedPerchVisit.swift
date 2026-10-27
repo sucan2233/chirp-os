@@ -90,7 +90,7 @@ struct FixedPerchVisitPlan {
         guard !engine.paused,!engine.world.buttonsDown,!engine.ambientBusy,
               engine.world.scale.isFinite,engine.world.scale>0,
               BehaviorDefinitions.definition(for:.fixedPerchVisit).isEnabled(settings:engine.settings,source:source),
-              source != .automatic || engine.settings.activityRhythm != .quiet else {return []}
+              source != .automatic || (engine.settings.companion != nil || engine.settings.activityRhythm != .quiet) else {return []}
         let birds=engine.birds.filter {bird in
             guard let id=engine.id(of:bird),target==nil || target==id,engine.role(of:bird) == .resident,
                   engine.runtime.owners[id]==nil,FixedPerchVisitBehavior.supportedSpecies.contains(bird.profile.id),
@@ -108,7 +108,7 @@ struct FixedPerchVisitPlan {
             }
             return true
         }.sorted{engine.id(of:$0)!<engine.id(of:$1)!}.prefix(8)
-        let perches=engine.fixedPerchSnapshot().sorted{$0.slot<$1.slot}.prefix(3)
+        let perches=engine.fixedPerchSnapshot().filter{engine.scenePerchCandidateSlot == nil || $0.slot==engine.scenePerchCandidateSlot}.sorted{$0.slot<$1.slot}.prefix(3)
         var result:[Self]=[]
         for bird in birds {
             guard let id=engine.id(of:bird),let originHost=engine.world.surfaces.first(where:{$0.id==bird.hostID}) else {continue}
@@ -142,6 +142,7 @@ final class FixedPerchVisitExecution:BehaviorExecution {
     let occupiesEncounter=false
     var participants:[BirdID] {[plan.id]}
     var landingReservations:[LandingReservation] {[plan.destination]}
+    var plannedDuration:Double {plan.duration+Self.restDuration+0.6}
     var timeout:Double {plan.duration+Self.restDuration+2}
     private(set) var phase:Phase = .approach
     private var revision:UInt64?

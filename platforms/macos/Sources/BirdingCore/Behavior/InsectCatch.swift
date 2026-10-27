@@ -256,6 +256,14 @@ final class InsectCatchExecution:InsectCatchMotionExecution {
     var source:BehaviorSource {plan.source}
     var participants:[BirdID] {[plan.id]}
     var propIDs:[ScenePropID] {[insectID]}
+    func estimatedDuration(in engine:BehaviorEngine)->Double {
+        guard let target=plan.originalDestination.point(in:engine) else {return .infinity}
+        let end=plan.route.position(at:plan.route.duration)
+        let previous=plan.route.position(at:max(0,plan.route.duration-0.01))
+        let velocity=CGPoint(x:(end.x-previous.x)/0.01,y:(end.y-previous.y)/0.01)
+        guard let leg=InsectCatchJourney.leg(from:end,velocity:velocity,to:target,scale:plan.spriteScale) else {return .infinity}
+        return plan.route.duration+leg.timing.duration+(PoseClip.insectCatchRecovery(species:plan.species)?.duration ?? 0)+0.6
+    }
     var timeout:Double {35}
     var landingReservations:[LandingReservation] {reservation.map{[$0]} ?? []}
     private var reservation:LandingReservation?

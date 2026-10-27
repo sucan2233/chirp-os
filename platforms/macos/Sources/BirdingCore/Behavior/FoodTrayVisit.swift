@@ -31,7 +31,7 @@ struct FoodTrayVisitPlan {
     static func candidates(in engine:BehaviorEngine,source:BehaviorSource,target:BirdID?=nil)->[Self] {
         guard !engine.paused,!engine.world.buttonsDown,!engine.ambientBusy,
               BehaviorDefinitions.definition(for:.foodTrayVisit).isEnabled(settings:engine.settings,source:source),
-              let object=engine.habitatObjects.objects.values.sorted(by:{$0.id<$1.id}).first(where:{$0.kind == .foodTray}),
+              let object=engine.habitatObjects.objects.values.sorted(by:{$0.id<$1.id}).first(where:{$0.kind == .foodTray && $0.remainingUses>0 && (engine.sceneCandidateID == nil || $0.id==engine.sceneCandidateID)}),
               !object.retiring,!engine.runtime.habitatReservations.contains(object.id) else {return []}
         var result:[Self]=[]
         let candidates=engine.birds.filter {bird in
@@ -73,6 +73,7 @@ final class FoodTrayVisitExecution:BehaviorExecution {
     var participants:[BirdID] {[plan.id]}
     var habitatReservations:[HabitatObjectID] {[plan.object.id]}
     var landingReservations:[LandingReservation] {[plan.destination,plan.home]}
+    var plannedDuration:Double {plan.approach.route.duration+plan.departure.route.duration+5.6}
     var timeout:Double {plan.approach.route.duration+plan.departure.route.duration+12}
     private(set) var phase:Phase = .observe
     private(set) var phaseAge=0.0
@@ -131,7 +132,7 @@ final class FoodTrayVisitExecution:BehaviorExecution {
             if phaseAge+1e-10>=3.6 {
                 // Consume once on finishing the feeding clip, never on approach
                 // or again during cancellation/cleanup callbacks.
-                engine.habitatObjects.consume(plan.object.id)
+                guard engine.habitatObjects.consume(plan.object.id) else {return .failed(.targetInvalid)}
                 bird.finishCoordinatedFlight()
                 guard bird.beginCoordinatedFlight(plan.departure.route,on:plan.origin,fraction:plan.fraction,spriteScale:plan.scale,allowExpiredPerch:true) else {return .failed(.targetInvalid)}
                 revision=bird.motionRevision;phase = .departure;phaseAge=0;flightAge=dt

@@ -14,7 +14,7 @@ final class LeafCarrySettingsTests:XCTestCase {
 
     func testMissingLeafCarrySettingDefaultsTrueWhileOldPreferencesAndSchemaRemainIntact() throws {
         XCTAssertTrue(BirdSettings().leafCarryEnabled)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,3)
         let original=configured(false)
         var raw=try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(original)) as? [String:Any])
         raw.removeValue(forKey:"leafCarryEnabled")

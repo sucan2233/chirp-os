@@ -7,7 +7,7 @@ final class CourtshipRecordingTests:XCTestCase {
         let root=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let log=try BehaviorInputLog.load(from:root.appendingPathComponent("shared/behavior-fixtures/v1/courtship-display.json"))
-        XCTAssertEqual(log.simulationVersion,23)
+        XCTAssertEqual(log.simulationVersion,24)
         func prefix(_ count:Int,_ hz:Int=60)throws->BehaviorReplayReport {
             var partial=log;partial.inputs=Array(log.inputs.prefix(count));return try partial.replay(callbackHz:hz)
         }
@@ -69,7 +69,7 @@ final class CourtshipRecordingTests:XCTestCase {
         e.handle(.pause(true));e.handle(.remove(try XCTUnwrap(e.id(of:e.birds[0]))))
         F.clean(e,cancelled);e.handle(.pause(false));F.advance(e,0.2)
         let log=try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(e.recordedInputs()))
-        XCTAssertEqual(BehaviorInputLog.engineVersion,23);XCTAssertEqual(log.simulationVersion,23)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,24);XCTAssertEqual(log.simulationVersion,24)
         let expected=try XCTUnwrap(log.expected);XCTAssertNil(log.failure);XCTAssertNil(log.fixtureBirds)
         XCTAssertEqual(expected.events.filter{$0.kind=="courtshipDisplay" && $0.type=="completed"}.map(\.source),["user"])
         XCTAssertEqual(expected.events.filter{$0.kind=="courtshipDisplay" && $0.type=="cancelled"}.map(\.source),["preview"])

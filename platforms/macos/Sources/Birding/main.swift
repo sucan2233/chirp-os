@@ -244,6 +244,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 print(error);exit(1)
             }
         }
+        if let path = argument("--verify-companion-scenes") {CompanionSceneVerification.run(to:URL(fileURLWithPath:path));return}
         if let path = argument("--verify-settings") { SettingsVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--fixture") {
             fixture = FixtureController(folder:URL(fileURLWithPath:path)); fixture?.start()

@@ -212,7 +212,7 @@ struct NestVisitSchedule {
               engine.settings.nestBuildingEnabled,engine.world.nestArtAvailable,
               engine.settings.probabilities.participates(.spottedDove),
               BehaviorDefinitions.definition(for:kind).isEnabled(settings:engine.settings,source:source),
-              source != .automatic || (engine.ambientEnabled && engine.settings.activityRhythm != .quiet)
+              source != .automatic || (engine.ambientEnabled && (engine.settings.companion != nil || engine.settings.activityRhythm != .quiet))
         else {return []}
         let isCarry=kind == .nestMaterialCarry
         let objects=engine.habitatObjects.objects.values.filter {

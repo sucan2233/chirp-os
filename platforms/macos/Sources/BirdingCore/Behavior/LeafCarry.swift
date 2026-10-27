@@ -141,8 +141,8 @@ struct LeafCarryPlan {
         guard !engine.paused,!engine.world.buttonsDown,!engine.ambientBusy,engine.settings.leafCarryEnabled,
               engine.world.leafCarryArtAvailable,
               BehaviorDefinitions.definition(for:.leafCarry).isEnabled(settings:engine.settings,source:source),
-              source != .automatic || (engine.ambientEnabled && engine.settings.activityRhythm != .quiet) else {return []}
-        let objects=engine.carriedObjects.objects.values.filter{$0.state == .available && $0.reservedByRun==nil && $0.remainingLifetime>0}.sorted{$0.id<$1.id}
+              source != .automatic || (engine.ambientEnabled && (engine.settings.companion != nil || engine.settings.activityRhythm != .quiet)) else {return []}
+        let objects=engine.carriedObjects.objects.values.filter{$0.state == .available && (engine.sceneLeafCandidateID == nil || $0.id==engine.sceneLeafCandidateID) && $0.reservedByRun==nil && $0.remainingLifetime>0}.sorted{$0.id<$1.id}
         let birds=engine.birds.filter {bird in
             guard let id=engine.id(of:bird),target==nil || target==id,engine.role(of:bird) == .resident,
                   engine.runtime.owners[id]==nil,LeafCarryBehavior.supportedSpecies.contains(bird.profile.id),
@@ -198,6 +198,7 @@ final class LeafCarryExecution:BehaviorExecution {
     let plan:LeafCarryPlan
     var participants:[BirdID] {[plan.id]}
     var propIDs:[ScenePropID] {[plan.objectID]}
+    var plannedDuration:Double {plan.maximumPlannedDuration}
     var timeout:Double {CarriedObjectGeometry.timeout}
     var landingReservations:[LandingReservation] {
         guard let slots else {return []}

@@ -199,6 +199,7 @@ final class CourtshipDisplayExecution:LedgeTraversalExecution {
     let occupiesEncounter=true
     var participants:[BirdID] {plan.participants}
     var landingReservations:[LandingReservation] {[plan.reservation]}
+    var plannedDuration:Double {plan.duration}
     var timeout:Double {CourtshipGeometry.timeout}
     private(set) var age=0.0
     private var runID:BehaviorRunID?

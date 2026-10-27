@@ -6,7 +6,7 @@ final class AllopreeningSettingsTests: XCTestCase {
     func testDefaultsEncodeEnabledWithoutChangingSchema() throws {
         let settings=BirdSettings(),json=try object(settings)
         XCTAssertTrue(settings.allopreeningEnabled)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,3)
         XCTAssertEqual(json["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(json["allopreeningEnabled"] as? Bool,true)
     }

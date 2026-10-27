@@ -301,7 +301,7 @@ for row in support:
 
 recording_source = (ROOT / 'platforms/macos/Sources/BirdingCore/Behavior/BehaviorRecording.swift').read_text()
 version_match = re.search(r'\bengineVersion\s*=\s*(\d+)', recording_source)
-assert version_match and int(version_match.group(1)) == 23, 'Probability V2 simulation version must be 23; fixtures must be re-exported from source'
+assert version_match and int(version_match.group(1)) == 24, 'Companion/scene simulation version must be 24; fixtures must be re-exported from source'
 
 prop_manifest = json.loads((ROOT / 'shared/art/props/manifest.json').read_text())
 leaf = prop_manifest['leafToken']

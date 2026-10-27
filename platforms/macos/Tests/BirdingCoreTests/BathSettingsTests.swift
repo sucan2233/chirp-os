@@ -11,7 +11,7 @@ final class BathSettingsTests:XCTestCase {
     }
 
     func testBathDefaultsTrueWithoutChangingTheSettingsSchemaOrAnyExistingPreference() throws {
-        XCTAssertTrue(BirdSettings().bathEnabled);XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertTrue(BirdSettings().bathEnabled);XCTAssertEqual(BirdSettings.currentSchemaVersion,3)
         let original=configured(false)
         var raw=try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(original)) as? [String:Any])
         raw.removeValue(forKey:"bathEnabled")

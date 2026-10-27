@@ -54,7 +54,8 @@ public struct BehaviorDefinition {
     /// Settings eligibility only; pause state and automatic scheduling eligibility
     /// (including ambientEnabled) are evaluated by the engine separately.
     public func isEnabled(settings:BirdSettings,source:BehaviorSource) -> Bool {
-        if source == .automatic,settings.activityRhythm == .quiet,occupiesEncounter {return false}
+        if let p=settings.companion,!p.allows(kind,source:source) {return false}
+        if source == .automatic,settings.companion == nil,settings.activityRhythm == .quiet,occupiesEncounter {return false}
         switch kind {
         case .relocate:return true
         case .nestMaterialCarry,.nestBuild:return settings.nestBuildingEnabled
@@ -62,9 +63,9 @@ public struct BehaviorDefinition {
         case .visitorGift:return settings.visitorGiftsEnabled && settings.visitorMemoryEnabled && settings.fixedPerchesEnabled
         case .insectCatch:return settings.insectCatchEnabled
         case .leafCarry:return settings.leafCarryEnabled
-        case .bathVisit:return settings.bathEnabled && (source != .automatic || settings.activityRhythm != .quiet)
-        case .foodTrayVisit:return settings.foodTrayEnabled && (source != .automatic || settings.activityRhythm != .quiet)
-        case .fixedPerchVisit:return settings.fixedPerchesEnabled && (source != .automatic || settings.activityRhythm != .quiet)
+        case .bathVisit:return settings.bathEnabled && (source != .automatic || settings.companion != nil || settings.activityRhythm != .quiet)
+        case .foodTrayVisit:return settings.foodTrayEnabled && (source != .automatic || settings.companion != nil || settings.activityRhythm != .quiet)
+        case .fixedPerchVisit:return settings.fixedPerchesEnabled && (source != .automatic || settings.companion != nil || settings.activityRhythm != .quiet)
         case .pointerVisit:return settings.pointerVisits
         case .flockPass:return settings.flockPasses
         case .rest,.preen:return settings.perchActions

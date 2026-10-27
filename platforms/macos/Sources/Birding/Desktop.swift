@@ -46,6 +46,7 @@ final class DesktopView: NSView {
         }
         for (index,bird) in snapshot.enumerated() {
             let container = sprites[index]
+            container.opacity=Float(bird.opacity)
             container.name="bird-sprite-\(bird.id.rawValue)"
             let scale = bird.scale
             let side = 48*scale
@@ -108,7 +109,7 @@ final class DesktopController: NSObject {
     lazy var frameCapabilities=arts.mapValues{Set($0.frames.keys)}
     let engine:BehaviorEngine
     override init() {
-        engine=BehaviorEngine(recordInputs:CommandLine.arguments.contains("--record-behavior"))
+        engine=BehaviorEngine(settings:.companionDefaults,recordInputs:CommandLine.arguments.contains("--record-behavior"))
         super.init()
         installGiftAuthorizationObserver()
     }
@@ -150,6 +151,9 @@ final class DesktopController: NSObject {
     var gallery:SpeciesGallery?
     var updater:UpdateController?
     var settingsWindow: SpeciesSettingsWindow?
+    var sceneEditor:SceneEditorWindow?
+    var scenePersistence:ScenePersistence?
+    var sceneLayoutLoaded=false
     var settingsURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Birding/settings.json")
     var legacyURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Birding/species.json")
     var visitorMemoryPersistenceEnabled=VisitorMemoryPersistence.automaticEnabled(arguments:CommandLine.arguments)
@@ -177,7 +181,8 @@ final class DesktopController: NSObject {
         settings = try BirdSettings.load(from:settingsURL,legacyURL:legacyURL)
     }
     func applySettings(_ value:BirdSettings) throws {
-        let saved=value
+        var saved=value
+        if sceneLayoutLoaded {saved.fixedPerches=engine.sceneArchive.layout.instances.filter{$0.kind == .perch}.map(\.anchor)}
         try saved.save(to:settingsURL)
         settings = saved
         hoverTracker=HoverTracker<BirdID>();hoveredBird=nil
@@ -272,6 +277,7 @@ final class DesktopController: NSObject {
             population = Population(range:saved)
         }
         do { try loadSpeciesConfig() } catch { NSLog("Birding species configuration: %@; using bundled defaults",error.localizedDescription) }
+        loadSceneLayout()
         loadVisitorMemory()
         loadObservationJournal()
         loadObservationMode()
@@ -290,10 +296,11 @@ final class DesktopController: NSObject {
         t.tolerance = 0.003
         RunLoop.main.add(t, forMode: .common); timer = t
     }
-    @objc func sleeping() { hideObservationOverlays();cancelGiftAuthorization();engine.handle(.cancelAmbient(.sleep));timer?.invalidate() }
+    @objc func sleeping() { sceneEditor?.cancel(); hideObservationOverlays();cancelGiftAuthorization();engine.handle(.cancelAmbient(.sleep));timer?.invalidate() }
     @objc func waking() { lastSample = 0; startTimer() }
-    @objc func spaceChanged() { hideObservationOverlays();cancelGiftAuthorization();engine.handle(.cancelAmbient(.spaceChanged));lastSample = 0; sampleWindows(dt: 1); for v in views { v.needsDisplay = true } }
+    @objc func spaceChanged() { sceneEditor?.cancel(); hideObservationOverlays();cancelGiftAuthorization();engine.handle(.cancelAmbient(.spaceChanged));lastSample = 0; sampleWindows(dt: 1); for v in views { v.needsDisplay = true } }
     @objc func rebuildScreens() {
+        sceneEditor?.cancel()
         hideObservationOverlays()
         cancelGiftAuthorization()
         engine.handle(.cancelFoodTrayPlacement)
@@ -326,7 +333,7 @@ final class DesktopController: NSObject {
         // Software masking is only needed for windows that the floating overlay covers.
         let own = ProcessInfo.processInfo.processIdentifier
         let overlays=Set(NSApp.windows.compactMap { window -> UInt32? in
-            guard window is OverlayPanel,window.windowNumber>0 else {return nil}
+            guard (window is OverlayPanel || window is SceneEditingPanel || window===sceneEditor?.window),window.windowNumber>0 else {return nil}
             return UInt32(window.windowNumber)
         })
         surfaces = list.compactMap { info in
@@ -368,14 +375,15 @@ final class DesktopController: NSObject {
         settingsWindow?.refreshNestControls()
     }
     func tick() {
+        sceneEditor?.refresh()
         let now = ProcessInfo.processInfo.systemUptime
         let rawDT=max(0,now-lastTick)
-        let dt = min(0.05, rawDT); lastTick = now
+        lastTick = now
         defer {tickObserver?(now,rawDT)}
         if now-lastSample >= 1.0/30 {
             sampleWindows(dt: lastSample>0 ? now-lastSample:1); lastSample = now
         }
-        advanceBirds(dt)
+        advanceBirds(rawDT)
         persistVisitorMemoryIfNeeded(now:now)
         persistObservationJournalIfNeeded(now:now)
         updateHover(now:now)
@@ -401,6 +409,9 @@ final class DesktopController: NSObject {
             "residentCount":residentCount,"departingCount":engine.departingCount,
             "passingCount":engine.passingCount,"pendingCount":engine.pendingCount,
             "behaviorSeed":String(engine.seed),"behaviorTime":engine.time,
+            "companionMetrics":(try? JSONSerialization.jsonObject(with:JSONEncoder().encode(engine.companionMetrics))) ?? [:],
+            "companionOpportunities":engine.companionOpportunityCounts,"companionDue":engine.companionDueCounts,
+            "maximumFlockWait":engine.companionMaximumFlockWait,
             "activityRhythm":settings.activityRhythm.rawValue,"localMinuteOfDay":engine.world.localMinuteOfDay ?? -1,
             "activeBehaviors":engine.activeRunCount,"leasedBirds":engine.leasedBirdCount,"reservedLandings":engine.reservedLandingCount,
             "sceneProps":engine.scenePropCount,"pendingLeafPlay":engine.hasLeafPreview,
@@ -456,6 +467,7 @@ final class DesktopController: NSObject {
         menu.delegate = self
         statusLine = NSMenuItem(title: t("桌面鸟群 · 等待第一只鸟飞来","Birds · Waiting for the first arrival"), action: nil, keyEquivalent: "")
         menu.addItem(statusLine); menu.addItem(.separator())
+        addCompanionMenu(to:menu)
         add(menu,paused ? t("继续动画","Resume animation") : t("暂停动画","Pause animation"),#selector(togglePause),"p")
         add(menu,t("让小鸟飞一会儿","Let the birds fly"),#selector(scatter),"f")
         add(menu,t("大小：1× / 1.5×","Size: 1× / 1.5×"),#selector(toggleScale),"")
@@ -549,6 +561,7 @@ final class DesktopController: NSObject {
         NSWorkspace.shared.open(root.appendingPathComponent("README.md"))
     }
     @objc func quit() {
+        sceneEditor?.cancel()
         hideObservationOverlays()
         if isolatedSession {NSApp.terminate(nil);return}
         cancelGiftAuthorization();engine.handle(.cancelAmbient(.shutdown));stopMouseMonitoring();NSApp.terminate(nil)

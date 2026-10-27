@@ -154,6 +154,7 @@ final class ChaseExecution:BehaviorExecution {
     let kind:BehaviorKind = .chase
     var participants:[BirdID] {plan.participants}
     var landingReservations:[LandingReservation] {plan.destinations}
+    var plannedDuration:Double {plan.duration}
     var timeout:Double {plan.duration+1.5}
     private struct Actor {let revision:UInt64}
     private var actors:[BirdID:Actor]=[:]

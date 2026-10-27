@@ -107,9 +107,9 @@ final class BehaviorRecordingTests:XCTestCase {
         let e=fixture();e.bringInBird();advance(e,1)
         let current=try e.recordedInputs()
         XCTAssertEqual(BehaviorInputLog.currentVersion,1)
-        XCTAssertEqual(BehaviorInputLog.engineVersion,23)
-        XCTAssertEqual(current.simulationVersion,23)
-        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,23)
+        XCTAssertEqual(BehaviorInputLog.engineVersion,24)
+        XCTAssertEqual(current.simulationVersion,24)
+        XCTAssertEqual(try BehaviorInputLog.decode(BehaviorInputLog.encoder().encode(current)).simulationVersion,24)
 
         // Exercise the compatibility boundary with a well-formed old envelope.
         // Never promote its version and replay it under the newly expanded lists.
@@ -262,7 +262,7 @@ final class BehaviorRecordingTests:XCTestCase {
         XCTAssertEqual(Set(files.map(\.lastPathComponent)),["attention.json","leaf.json","social.json","interruptions.json","side-hop.json","takeoff-preparation.json","returning-visitor.json","activity-rhythm.json","edge-peek.json","chase.json","travel-together.json","allopreening.json","fixed-perch.json","food-tray.json","bath.json","leaf-carry.json","insect-catch.json","flycatcher-insect-catch.json","visitor-gift.json","courtship-display.json","nest-material-carry.json","nest-build.json"])
         for file in files {
             let log=try BehaviorInputLog.load(from:file),reference=try log.replay(callbackHz:60)
-            XCTAssertEqual(log.simulationVersion,23,file.lastPathComponent)
+            XCTAssertEqual(log.simulationVersion,24,file.lastPathComponent)
             XCTAssertEqual(try XCTUnwrap(log.expected),reference,file.lastPathComponent)
             XCTAssertEqual(try log.replay(callbackHz:30),reference,file.lastPathComponent)
             XCTAssertEqual(try log.replay(callbackHz:120),reference,file.lastPathComponent)

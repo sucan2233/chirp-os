@@ -191,6 +191,26 @@ final class SocialMotionExecution:BehaviorExecution {
     var participants:[BirdID] {plan.participants}
     var landingReservations:[LandingReservation] {plan.destinations}
     let timeout=30.0
+    func estimatedDuration(in engine:BehaviorEngine)->Double {
+        let models=participants.compactMap {id -> Bird? in
+            guard let bird=engine.bird(id),let host=engine.world.surfaces.first(where:{$0.id==bird.hostID}) else {return nil}
+            let copy=Bird(position:bird.position,fraction:bird.fraction,profile:bird.profile,random:{0.5})
+            copy.perch(on:host,spriteScale:engine.spriteScale(for:bird));copy.perchDuration=600;return copy
+        }
+        guard models.count==2 else {return .infinity}
+        var launched=[false,false]
+        let movers=plan.action == .sideBySide ? [1]:[0,1]
+        for tick in 1...1800 {
+            let t=Double(tick)*BehaviorEngine.step
+            for i in movers where !launched[i] {
+                let ready=plan.action == .giveWay && i==1 ? launched[0] && models[0].state == .perched:t>=((plan.action == .pairedTakeoff && i==1) ? 1.1:0.45)
+                if ready {guard SocialMotionFlight.launch(models[i],index:i,plan:plan,in:engine,random:{0.5}) else {return .infinity};launched[i]=true}
+            }
+            models.forEach{$0.tick(BehaviorEngine.step)}
+            if movers.allSatisfy({launched[$0] && models[$0].state == .perched}) {return t+1.2}
+        }
+        return .infinity
+    }
     private struct Actor {
         var revision:UInt64
         let origin:LandingReservation

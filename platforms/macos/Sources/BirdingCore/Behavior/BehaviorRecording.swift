@@ -209,6 +209,8 @@ public struct RecordedCommand:Codable {
 }
 public struct RecordedInput:Codable {
     public var kind:String
+    public var sceneArchive:SceneArchive?,sceneLayout:SceneLayout?
+    public var sceneBaseRevision:UInt64?,sceneInstance:UUID?
     public var world:RecordedWorld?,settings:BirdSettings?,command:RecordedCommand?,options:RecordedSimulationOptions?
     public var visitorMemory:VisitorMemoryArchive?
     public var giftAuthorization:GiftAuthorizationResult?
@@ -261,9 +263,11 @@ public struct RecordedBirdState:Codable,Equatable {
     public var id:String,species:String,position:RecordedPoint,facingRight:Bool,frame:String,hop:Double,scale:Double
     public var state:String,behavior:String?,disturbance:Double?,cooldowns:[String:Double]?
     public var visitorID:String?,familiarity:Double?
+    public var opacity:Double?
     init(_ value:BirdRenderState,engine:BehaviorEngine) {
         id=String(value.id.rawValue);species=value.species.rawValue;position=RecordedPoint(value.position)
         facingRight=value.facingRight;frame=value.frameName;hop=Double(value.hopOffset);scale=Double(value.scale)
+        opacity=value.opacity==1 ? nil:value.opacity
         let bird=engine.bird(value.id)!
         state=bird.state.rawValue;behavior=engine.behavior(of:bird)?.rawValue
         let ecology=engine.ecology(of:bird);disturbance=ecology?.disturbance
@@ -468,7 +472,7 @@ public struct BehaviorReplayReport:Codable,Equatable {
 /// Files are local, opt-in recordings of geometry and input only. They contain
 /// no window titles, document text or screenshots, and are never uploaded.
 public struct BehaviorInputLog:Codable {
-    public static let currentVersion=1,engineVersion=23,maximumInputs=60_000,maximumBytes=32*1024*1024
+    public static let currentVersion=1,engineVersion=24,maximumInputs=60_000,maximumBytes=32*1024*1024
     public var version:Int=Self.currentVersion
     public var simulationVersion:Int=Self.engineVersion
     public var seed:String
@@ -476,6 +480,7 @@ public struct BehaviorInputLog:Codable {
     public var initialWorld:RecordedWorld?
     public var initialVisitorMemory:VisitorMemoryArchive?
     public var fixtureBirds:[RecordedFixtureBird]?
+    public var sceneWrites:[SceneWriteDecision]?
     public var inputs:[RecordedInput]=[]
     public var expected:BehaviorReplayReport?
     public var failure:String?
@@ -515,6 +520,14 @@ public struct BehaviorInputLog:Codable {
         try validateEnvelope()
         if let hz=callbackHz,![30,60,120].contains(hz) {throw BehaviorRecordingError.invalid("callbackHz must be 30, 60 or 120")}
         let engine=BehaviorEngine(seed:UInt64(seed)!,settings:try BirdSettings.decode(JSONEncoder().encode(settings)))
+        var writes=ArraySlice(sceneWrites ?? [])
+        var writeMismatch=false
+        engine.sceneWriter={ archive in
+            guard let decision=writes.popFirst(),decision.archive==archive else {
+                writeMismatch=true;throw SceneError.invalid("scene replay write mismatch")
+            }
+            if !decision.accepted {throw SceneError.invalid("recorded scene write failure")}
+        }
         var events:[RecordedEvent]=[]
         engine.eventObserver={events.append(RecordedEvent($0))}
         if let initialWorld {engine.updateWorld(try initialWorld.validated())}
@@ -524,6 +537,17 @@ public struct BehaviorInputLog:Codable {
         for (index,input) in inputs.enumerated() {
             func bad() -> BehaviorRecordingError {.invalid("invalid input \(index): \(input.kind)")}
             switch input.kind {
+            case "sceneRestore":
+                guard let archive=input.sceneArchive else {throw bad()};try engine.restoreScene(archive)
+            case "sceneBegin":_=engine.beginSceneEditing()
+            case "sceneCancel":engine.cancelSceneEditing()
+            case "sceneApply":
+                guard let layout=input.sceneLayout,let revision=input.sceneBaseRevision else {throw bad()}
+                _=engine.applySceneLayout(layout,baseRevision:revision)
+            case "scenePreview":
+                guard let id=input.sceneInstance else {throw bad()};_=engine.previewSceneInstance(id)
+            case "sceneReplenish":
+                guard let id=input.sceneInstance else {throw bad()};_=engine.replenishSceneInstance(id)
             case "giftAuthorization":
                 guard let result=input.giftAuthorization,result.isValid else {throw bad()}
                 engine.receiveGiftAuthorization(result)
@@ -567,6 +591,7 @@ public struct BehaviorInputLog:Codable {
             default:throw bad()
             }
         }
+        guard !writeMismatch,writes.isEmpty else {throw BehaviorRecordingError.invalid("scene write decisions did not match") }
         return BehaviorReplayReport(engine:engine,events:events)
     }
 }
@@ -589,6 +614,10 @@ final class BehaviorInputRecorder {
             else {lastFrames=world.availableFrames}
         }
         log.inputs.append(compact)
+    }
+    func sceneWrite(_ decision:SceneWriteDecision) {
+        if log.sceneWrites==nil {log.sceneWrites=[]}
+        log.sceneWrites?.append(decision)
     }
     func event(_ event:BehaviorEvent) {
         guard events.count<120_000 else {log.failure="recording event limit reached";return}

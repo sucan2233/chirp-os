@@ -45,6 +45,7 @@ class NestActivityExecution:NestMotionExecution {
     var kind:BehaviorKind {visit.kind}
     var participants:[BirdID] {[visit.id]}
     let occupiesEncounter=true
+    var plannedDuration:Double {visit.maximumPlannedDuration}
     var timeout:Double {visit.timeout}
     var habitatReservations:[HabitatObjectID] {[visit.object.id]}
     var landingReservations:[LandingReservation] {visit.slots}

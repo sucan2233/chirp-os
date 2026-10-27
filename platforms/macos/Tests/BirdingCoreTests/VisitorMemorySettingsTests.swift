@@ -6,7 +6,7 @@ final class VisitorMemorySettingsTests: XCTestCase {
     func testNewSettingsEnableMemoryWithoutChangingSchemaVersion() throws {
         let settings=BirdSettings()
         XCTAssertTrue(settings.visitorMemoryEnabled)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,3)
         XCTAssertEqual(settings.schemaVersion,BirdSettings.currentSchemaVersion)
         let object=try settingsObject(settings)
         XCTAssertEqual(object["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)

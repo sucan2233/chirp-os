@@ -169,6 +169,7 @@ final class AllopreeningExecution:LedgeTraversalExecution {
     let kind:BehaviorKind = .allopreening
     var participants:[BirdID] {plan.participants}
     var landingReservations:[LandingReservation] {[plan.reservation]}
+    var plannedDuration:Double {plan.duration}
     var timeout:Double {plan.duration+1}
     private enum Phase {case approaching,settling,grooming,retreating,finished}
     private var phase:Phase = .approaching

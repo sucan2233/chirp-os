@@ -10,6 +10,8 @@ protocol BehaviorExecution: AnyObject {
     var occupiesEncounter: Bool {get}
     var runsWhilePaused: Bool {get}
     var timeout: Double {get}
+    var plannedDuration:Double {get}
+    func estimatedDuration(in engine:BehaviorEngine)->Double
     var landingReservations: [LandingReservation] {get}
     var propIDs:[ScenePropID] {get}
     var habitatReservations:[HabitatObjectID] {get}
@@ -24,6 +26,8 @@ protocol BehaviorExecution: AnyObject {
 }
 
 extension BehaviorExecution {
+    var plannedDuration:Double {timeout}
+    func estimatedDuration(in engine:BehaviorEngine)->Double {plannedDuration}
     var occupiesEncounter:Bool {BehaviorDefinitions.definition(for:kind).occupiesEncounter}
     var runsWhilePaused:Bool {BehaviorDefinitions.definition(for:kind).runsWhilePaused}
     var propIDs:[ScenePropID] {[]}
@@ -83,6 +87,7 @@ final class BehaviorRuntime {
         runs[id]=run
     }
     func start(_ execution:BehaviorExecution,source:BehaviorSource,in engine:BehaviorEngine) -> BehaviorResult {
+        if let reason=engine.companionAdmission(execution,source:source) {return .rejected(reason)}
         guard execution.participants.allSatisfy({id in
             guard let bird=engine.bird(id) else {return true}
             return !SpeciesBehaviorProfile.profile(for:bird.profile.id).isExpansionSpecies ||
@@ -116,6 +121,7 @@ final class BehaviorRuntime {
             engine.prepareLivelyHandoff(bird)
             owners[bird]=id;engine.perchPlanner.didStart(bird,kind:execution.kind)
         }
+        engine.companionDidStart(execution,source:source)
         execution.start(in:engine)
         captureObservationSpecies(id,in:engine)
         engine.emit(.started,run:id,kind:execution.kind,source:source,participants:execution.participants)
@@ -183,6 +189,7 @@ final class BehaviorRuntime {
         if run.execution.kind == .courtshipDisplay {engine.scheduler.didFinishCourtship()}
         if run.execution.kind.isNestActivity {engine.scheduler.didFinishNest()}
         engine.releaseGiftAuthorization(run:id)
+        engine.companionDidFinish(run.execution,source:run.source)
         runs.removeValue(forKey:id)
         for bird in run.execution.participants where owners[bird]==id {owners.removeValue(forKey:bird)}
         for bird in run.execution.participants {engine.perchPlanner.didFinish(bird,kind:run.execution.kind)}

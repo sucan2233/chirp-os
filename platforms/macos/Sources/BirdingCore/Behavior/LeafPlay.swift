@@ -160,6 +160,12 @@ struct LeafPlayPlan {
 final class LeafPlayExecution:BehaviorExecution {
     let kind:BehaviorKind = .leafPlay
     let timeout=35.0
+    func estimatedDuration(in engine:BehaviorEngine)->Double {
+        guard let bird=engine.bird(plan.id) else {return .infinity}
+        let copy=Bird(position:bird.position,fraction:bird.fraction,profile:bird.profile,random:{0.5})
+        copy.fly(to:plan.origin,host:plan.host,airspace:plan.airspace,allowsOrbit:false,pointerOrbit:plan.orbit,random:{0.5})
+        return copy.flightDuration+LeafPlayPlan.observeDuration+LeafPlayPlan.settleDuration+0.6
+    }
     let plan:LeafPlayPlan
     let propID:ScenePropID
     var participants:[BirdID] {[plan.id]}

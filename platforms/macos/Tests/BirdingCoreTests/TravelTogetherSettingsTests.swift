@@ -6,7 +6,7 @@ final class TravelTogetherSettingsTests: XCTestCase {
     func testDefaultsEncodeEnabledWithoutChangingSchema() throws {
         let settings=BirdSettings(),json=try object(settings)
         XCTAssertTrue(settings.travelTogetherEnabled)
-        XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertEqual(BirdSettings.currentSchemaVersion,3)
         XCTAssertEqual(json["schemaVersion"] as? Int,BirdSettings.currentSchemaVersion)
         XCTAssertEqual(json["travelTogetherEnabled"] as? Bool,true)
     }

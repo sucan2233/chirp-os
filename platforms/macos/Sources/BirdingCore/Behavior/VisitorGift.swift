@@ -86,7 +86,7 @@ struct VisitorGiftPlan {
               engine.settings.fixedPerchesEnabled,engine.world.fixedPerchArtAvailable,engine.world.leafCarryArtAvailable,
               engine.settings.probabilities.participates(.azureWingedMagpie),
               BehaviorDefinitions.definition(for:.visitorGift).isEnabled(settings:engine.settings,source:source),
-              source != .automatic || (engine.ambientEnabled && engine.settings.activityRhythm != .quiet),
+              source != .automatic || (engine.ambientEnabled && (engine.settings.companion != nil || engine.settings.activityRhythm != .quiet)),
               !engine.carriedObjects.objects.values.contains(where:{$0.isVisitorGift && $0.state != .retired}),
               let pickupClip=PoseClip.visitorGiftPickup(species:.azureWingedMagpie),
               let releaseClip=PoseClip.visitorGiftRelease(species:.azureWingedMagpie) else {return []}
@@ -239,6 +239,7 @@ final class VisitorGiftExecution:BehaviorExecution {
     let token:GiftAuthorizationToken
     var participants:[BirdID] {[plan.id]}
     var propIDs:[ScenePropID] {[plan.leafID]}
+    var plannedDuration:Double {plan.maximumPlannedDuration}
     var timeout:Double {GiftReceiverGeometry.timeout}
     var landingReservations:[LandingReservation] {phase == .approach || phase == .pickup ? [plan.pickupReservation,plan.destinationReservation]:[plan.destinationReservation]}
     var giftReceiverReservations:[GiftReceiverReservation] {[plan.receiverReservation]}

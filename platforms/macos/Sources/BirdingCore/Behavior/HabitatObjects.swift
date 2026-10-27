@@ -33,16 +33,24 @@ struct HabitatObject {
     var retirementAge:Double?=nil
     var retirementReason:BehaviorReason?=nil
     var completedVisitRuns:Set<UInt64>=[]
+    var persistentID:UUID?=nil
     var nest:NestState?=nil
-    var retiring:Bool {retirementReason != nil || (kind != .nest && remainingUses<=0) || remainingLifetime<=0}
+    var retiring:Bool {retirementReason != nil || (persistentID == nil && kind != .nest && remainingUses<=0) || remainingLifetime<=0}
     var foot:CGPoint {
         if kind == .nest {return CGPoint(x:rect.midX,y:rect.minY+NestGeometry.contactY*scale)}
         return kind == .bath ? BathGeometry.foot(in:rect,scale:scale):CGPoint(x:rect.midX,y:rect.minY)
     }
 }
 final class HabitatObjectStore {
-    private(set) var objects:[HabitatObjectID:HabitatObject]=[:]
-    private var nextID:UInt64=1
+    var objects:[HabitatObjectID:HabitatObject]=[:]
+    var nextID:UInt64=1
+    var commitResource:((UUID,SceneResource)->Bool)?
+    private func authorize(_ object:HabitatObject)->Bool {
+        guard let id=object.persistentID else {return true}
+        var resource=SceneResource(kind:object.kind == .nest ? .nest:object.kind == .bath ? .bath:.foodTray)
+        resource.remainingUses=object.remainingUses;resource.materials=object.nest?.materials.map(\.state) ?? []
+        return commitResource?(id,resource) ?? false
+    }
     static let foodLifetime=180.0
     static let foodPortions=3
     static let bathLifetime=300.0
@@ -57,7 +65,7 @@ final class HabitatObjectStore {
 
     func placeFood(at point:CGPoint,in engine:BehaviorEngine)->Bool {
         let world=engine.world,scale=world.scale
-        guard objects.isEmpty,scale.isFinite,scale>0,point.x.isFinite,point.y.isFinite,
+        guard (engine.settings.companion != nil ? objects.count<3:objects.isEmpty),scale.isFinite,scale>0,point.x.isFinite,point.y.isFinite,
               world.foodTrayArtAvailable,engine.settings.foodTrayEnabled,
               let display=world.displays.first(where:{$0.contains(point)}) else {return false}
         let rect=CGRect(x:point.x-64*scale,y:point.y,width:128*scale,height:24*scale)
@@ -68,9 +76,9 @@ final class HabitatObjectStore {
               !engine.fixedPerchSnapshot().contains(where:{$0.rect.insetBy(dx:-50*scale,dy:-80*scale).intersects(clearance)}),
               !engine.birds.contains(where:{engine.bounds(of:$0).intersects(clearance)}),
               !engine.runtime.landingReservations.contains(where:{$0.footprint(in:engine)?.intersects(clearance) ?? true}),
-              !world.surfaces.contains(where:{$0.id==Self.surfaceID}) else {return false}
+              !objects.values.contains(where:{$0.rect.insetBy(dx:-16,dy:-48).intersects(clearance)}) else {return false}
         let id=HabitatObjectID(nextID);nextID+=1
-        let surface=Surface(id:Self.surfaceID,pid:Int32.min+19,
+        let surface=Surface(id:engine.settings.companion == nil ? Self.surfaceID:0xFE100000+UInt32(id.rawValue),pid:Int32.min+19,
             rect:CGRect(x:point.x-64*scale,y:point.y,width:128*scale,height:1),habitatKind:.foodTray)
         objects[id]=HabitatObject(id:id,kind:.foodTray,rect:rect,display:display,screens:world.screens,
             displays:world.displays,scale:scale,surface:surface,remainingUses:Self.foodPortions,remainingLifetime:Self.foodLifetime)
@@ -84,11 +92,11 @@ final class HabitatObjectStore {
         guard engine.settings.nestBuildingEnabled else {return .rejected(.disabled)}
         guard world.nestArtAvailable else {return .rejected(.missingFrames)}
         guard !world.buttonsDown else {return .rejected(.userInput)}
-        guard objects.isEmpty else {return .rejected(.busy)}
+        guard (engine.settings.companion != nil ? objects.count<3:objects.isEmpty) else {return .rejected(.busy)}
         guard materialIDs.count==3,Set(materialIDs).count==3,materialIDs.allSatisfy({$0.rawValue>0}),
               !materialIDs.contains(where:{engine.runtime.propIDs.contains($0) || engine.carriedObjects.objects[$0] != nil}),
               !engine.propSnapshot().contains(where:{materialIDs.contains($0.id)}),
-              !world.surfaces.contains(where:{$0.id==Self.nestSurfaceID}) else {return .rejected(.busy)}
+              (engine.settings.companion != nil || !world.surfaces.contains(where:{$0.id==Self.nestSurfaceID})) else {return .rejected(.busy)}
         guard scale.isFinite,scale>0 else {return .rejected(.noSpace)}
         let birdScale=scale*CGFloat(engine.settings.catalog.profile(.spottedDove).relativeScale)
         let groundScale=max(birdScale,(NestGeometry.size.height-NestGeometry.contactY)*scale/9)
@@ -106,9 +114,10 @@ final class HabitatObjectStore {
                   !engine.fixedPerchSnapshot().contains(where:{$0.rect.insetBy(dx:-50*scale,dy:-80*scale).intersects(area)}),
                   !engine.birds.contains(where:{engine.bounds(of:$0).intersects(area)}),
                   !engine.runtime.landingReservations.contains(where:{$0.footprint(in:engine)?.intersects(area) ?? true}),
-                  !engine.propSnapshot().contains(where:{$0.opacity>0 && $0.rect.intersects(area)}) else {continue}
+                  !engine.propSnapshot().contains(where:{$0.opacity>0 && $0.rect.intersects(area)}),
+                  !objects.values.contains(where:{$0.rect.union($0.nest?.trayRect ?? $0.rect).insetBy(dx:-16,dy:-48).intersects(area)}) else {continue}
             // 材料盘与巢台共用接触线、同一个habitat单鸟预约；不是额外场景或普通落点。
-            let surface=Surface(id:Self.nestSurfaceID,pid:Int32.min+21,
+            let surface=Surface(id:engine.settings.companion == nil ? Self.nestSurfaceID:0xFE100000+UInt32(nextID),pid:Int32.min+21,
                 rect:support,habitatKind:.nest)
             let blockers=Geometry.blockers(on:host,surfaces:world.surfaces).map(\.rect)
             let materials=materialIDs.sorted().enumerated().map {slot,id in
@@ -134,7 +143,7 @@ final class HabitatObjectStore {
         guard world.bathArtAvailable else {return .rejected(.missingFrames)}
         guard !world.buttonsDown else {return .rejected(.userInput)}
         // Retiring objects continue to own capacity until their surface is gone.
-        guard objects.isEmpty else {return .rejected(.busy)}
+        guard (engine.settings.companion != nil ? objects.count<3:objects.isEmpty) else {return .rejected(.busy)}
         let maxScale=BathVisitBehavior.supportedSpecies.map{engine.settings.catalog.profile($0).relativeScale}.max() ?? 1
         guard let area=BathGeometry.clearance(foot:point,worldScale:scale,spriteScale:scale*maxScale),
               let display=world.displays.first(where:{$0.contains(area)}),
@@ -143,10 +152,10 @@ final class HabitatObjectStore {
               !engine.fixedPerchSnapshot().contains(where:{$0.rect.insetBy(dx:-50*scale,dy:-80*scale).intersects(area)}),
               !engine.birds.contains(where:{engine.bounds(of:$0).intersects(area)}),
               !engine.runtime.landingReservations.contains(where:{$0.footprint(in:engine)?.intersects(area) ?? true}),
-              !world.surfaces.contains(where:{$0.id==Self.bathSurfaceID}) else {return .rejected(.noSpace)}
+              !objects.values.contains(where:{$0.rect.insetBy(dx:-16,dy:-48).intersects(area)}) else {return .rejected(.noSpace)}
         let id=HabitatObjectID(nextID);nextID+=1
         let rect=BathGeometry.rect(foot:point,scale:scale)
-        let surface=Surface(id:Self.bathSurfaceID,pid:Int32.min+20,
+        let surface=Surface(id:engine.settings.companion == nil ? Self.bathSurfaceID:0xFE100000+UInt32(id.rawValue),pid:Int32.min+20,
             rect:CGRect(x:rect.minX,y:point.y,width:rect.width,height:1),habitatKind:.bath)
         objects[id]=HabitatObject(id:id,kind:.bath,rect:rect,display:display,screens:world.screens,
             displays:world.displays,scale:scale,surface:surface,remainingUses:Self.bathVisits,remainingLifetime:Self.bathLifetime)
@@ -168,13 +177,16 @@ final class HabitatObjectStore {
         guard var object=objects[id],object.kind == .bath,!object.retiring,
               runID.rawValue>0,!object.completedVisitRuns.contains(runID.rawValue) else {return false}
         object.completedVisitRuns.insert(runID.rawValue);object.remainingUses-=1
+        guard authorize(object) else {return false}
         objects[id]=object
-        if object.remainingUses==0 {beginRetirement(id,reason:.removed)}
+        if object.remainingUses==0 && object.persistentID == nil {beginRetirement(id,reason:.removed)}
         return true
     }
-    func consume(_ id:HabitatObjectID) {
-        guard var object=objects[id],object.kind == .foodTray,object.remainingUses>0 else {return}
-        object.remainingUses-=1;objects[id]=object
+    @discardableResult func consume(_ id:HabitatObjectID)->Bool {
+        guard var object=objects[id],object.kind == .foodTray,object.remainingUses>0 else {return false}
+        object.remainingUses-=1
+        guard authorize(object) else {return false}
+        objects[id]=object;return true
     }
     func advance(_ dt:Double) {
         guard dt.isFinite,dt>0 else {return}
@@ -182,7 +194,7 @@ final class HabitatObjectStore {
             guard var object=objects[id] else {continue}
             object.nest?.advance(dt)
             let previousLifetime=object.remainingLifetime
-            object.remainingLifetime=max(0,previousLifetime-dt)
+            if object.persistentID == nil {object.remainingLifetime=max(0,previousLifetime-dt)}
             if object.retiring {
                 // A newly expired lifetime contributes only the portion of this
                 // step after expiry; an already-retiring object uses all of dt.
@@ -203,7 +215,13 @@ final class HabitatObjectStore {
     @discardableResult func withNest(_ id:HabitatObjectID,_ body:(inout HabitatObject,inout NestState)->Bool) -> Bool {
         guard var object=objects[id],object.kind == .nest,var nest=object.nest else {return false}
         guard body(&object,&nest) else {return false}
-        object.nest=nest;object.remainingUses=nest.available;objects[id]=object;return true
+        object.nest=nest;object.remainingUses=nest.available
+        if let old=objects[id]?.nest?.materials.map(\.state),old != nest.materials.map(\.state),!authorize(object) {
+            // Failed cleanup writes may release an attached token locally. The durable
+            // attached state recovers as spent; delivery/arrangement never gets this exception.
+            guard zip(old,nest.materials.map(\.state)).allSatisfy({$0 == $1 || ($0 == .attached && $1 == .spent)}) else {return false}
+        }
+        objects[id]=object;return true
     }
     func snapshot(in engine:BehaviorEngine)->[HabitatObjectRenderState] {
         objects.keys.sorted().compactMap {id in

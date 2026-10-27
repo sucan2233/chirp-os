@@ -3,7 +3,7 @@ import XCTest
 
 final class InsectCatchSettingsTests:XCTestCase {
     func testMissingSwitchDefaultsTrueAcrossOldSchemasAndRetainsExistingUserPreferences() throws {
-        XCTAssertTrue(BirdSettings().insectCatchEnabled);XCTAssertEqual(BirdSettings.currentSchemaVersion,2)
+        XCTAssertTrue(BirdSettings().insectCatchEnabled);XCTAssertEqual(BirdSettings.currentSchemaVersion,3)
         var original=BirdSettings();original.insectCatchEnabled=false
         original.hoverDelay=0.3;original.pointerFollowEnabled=true
         original.leafCarryEnabled=false;original.bathEnabled=false;original.foodTrayEnabled=false

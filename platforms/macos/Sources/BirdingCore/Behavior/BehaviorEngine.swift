@@ -78,6 +78,41 @@ public final class BehaviorEngine {
     var attentionRanges:Set<BirdID>=[]
     var clickHandled=false
     var scheduler=AmbientScheduler()
+    let companionScheduler:CompanionOpportunityScheduler
+    let companionRandom:EngineRandom
+    var companionRecovering=Set<BirdID>()
+    var companionOrbit:BirdID?
+    var companionEscapeStarted:[BirdID:Double]=[:]
+    var companionMicroNext:[BirdID:Double]=[:]
+    var companionFlightAges:[BirdID:Double]=[:]
+    var sceneCandidateID:HabitatObjectID?
+    var sceneLeafCandidateID:ScenePropID?
+    var scenePerchCandidateSlot:Int?
+    var sceneLastVisit:[String:Double]=[:]
+    public var companionDiagnostics:[OpportunityDiagnostic] {companionScheduler.diagnostics}
+    public private(set) var companionMetrics=CompanionMetrics()
+    public var companionOpportunityCounts:[String:Int] {companionScheduler.counts}
+    public var companionDueCounts:[String:Int] {["flock":companionScheduler.flockDueCount,"encounter":companionScheduler.encounterDueCount]}
+    public var companionMaximumFlockWait:Double {companionScheduler.maximumFlockWait}
+    private var companionRunStarts:[BehaviorRunID:(Double,Double)]=[:]
+    private var companionMotionRevisions:[BirdID:UInt64]=[:]
+
+
+    public private(set) var sceneArchive=SceneArchive()
+    public private(set) var sceneEditPhase:SceneEditPhase = .idle
+    public private(set) var sceneError:String?
+    public var sceneWriter:((SceneArchive)throws->Void)?
+    private var sceneEnabled=false
+    public private(set) var sceneNeedsPlacement=Set<UUID>()
+    private var sceneProposed:SceneLayout?
+    private var sceneAffected=Set<UUID>()
+    private var sceneRecovery=Set<BirdID>()
+    private var sceneRecoveryAge=0.0
+    private var sceneExcludedSurfaces=Set<UInt32>()
+    private var sceneLastWorld:BehaviorWorld?
+    private var sceneRetryRemaining=0.0
+    public var sceneEditing:Bool {[SceneEditPhase.editing,.applying,.failed].contains(sceneEditPhase)}
+
     private struct ScheduledEncounter {let kind:BehaviorKind;var remaining:Double}
     private var scheduledEncounter:ScheduledEncounter?
     private var nextPropID:UInt64=1
@@ -103,6 +138,8 @@ public final class BehaviorEngine {
 
     public init(seed:UInt64=UInt64.random(in:0...UInt64.max),settings:BirdSettings=BirdSettings(),recordInputs:Bool=false) {
         self.seed=seed;self.random=EngineRandom(seed:seed);self.settings=settings
+        companionScheduler=CompanionOpportunityScheduler(seed:seed)
+        companionRandom=EngineRandom(seed:seed ^ 0x434F4D5043484F49)
         self.inputRecorder=recordInputs ? BehaviorInputRecorder(seed:seed,settings:settings):nil
         self.perchPlanner=PerchActivityPlanner(seed:seed)
         self.visitorMemory=VisitorMemory(seed:seed)
@@ -219,6 +256,7 @@ public final class BehaviorEngine {
     public func spriteScale(for bird:Bird) -> CGFloat {world.scale*bird.profile.relativeScale}
 
     @discardableResult func register(_ bird:Bird,role:BirdRole = .resident,visible:Bool=true) -> BirdID {
+        if let p=settings.companion {bird.ordinaryOrbitLimit=0;bird.preferNearbyDestinations=p.mode != .lively}
         if let id=id(of:bird) {return id}
         let id=BirdID(nextBirdID);nextBirdID+=1
         records[id]=Record(bird:bird,role:role,visible:visible)
@@ -248,6 +286,8 @@ public final class BehaviorEngine {
         guard let record=records.removeValue(forKey:id) else {return}
         identities.removeValue(forKey:ObjectIdentifier(record.bird));order.removeAll{$0==id}
         if let visitorID=visitorIDs.removeValue(forKey:id) {visitorMemory.release(visitorID)}
+        companionMicroNext.removeValue(forKey:id);companionFlightAges.removeValue(forKey:id);companionEscapeStarted.removeValue(forKey:id)
+        companionMotionRevisions.removeValue(forKey:id)
         fixedPerchDepartureAttempts.removeValue(forKey:id)
         foodDepartureAttempts.removeValue(forKey:id)
         recoveringHabitatBirds.remove(id)
@@ -260,6 +300,16 @@ public final class BehaviorEngine {
     @discardableResult func emit(_ type:BehaviorEventType,run:BehaviorRunID?=nil,kind:BehaviorKind?=nil,
               source:BehaviorSource = .automatic,participants:[BirdID]=[],reason:BehaviorReason?=nil) -> BehaviorEvent {
         let event=BehaviorEvent(sequence:nextEvent,time:time,runID:run,kind:kind,source:source,type:type,participants:participants,reason:reason)
+        if settings.companion != nil,let run {
+            if type == .started {
+                companionRunStarts[run]=(companionMetrics.simulatedElapsed,companionMetrics.unpausedElapsed)
+                companionScheduler.record(time:time,kind:kind,state:.started,reason:source.rawValue,run:run.rawValue)
+            } else if [.completed,.cancelled,.failed].contains(type) {
+                let start=companionRunStarts.removeValue(forKey:run)
+                companionScheduler.record(time:time,kind:kind,state:type == .completed ? .completed:type == .cancelled ? .cancelled:.failed,reason:reason?.rawValue ?? "finished",run:run.rawValue,
+                    elapsed:start.map{companionMetrics.simulatedElapsed-$0.0},wallElapsed:start.map{companionMetrics.unpausedElapsed-$0.1})
+            }
+        }
         if (kind == .bathVisit || kind == .leafCarry),[BehaviorEventType.completed,.cancelled,.failed].contains(type) {scheduler.didFinishScene()}
         if kind == .insectCatch,[BehaviorEventType.completed,.cancelled,.failed].contains(type) {
             scheduler.didFinishInsectCatch()
@@ -279,6 +329,11 @@ public final class BehaviorEngine {
             cancelInsectPreview(.screensChanged)
         }
         let previousPerches=world.surfaces.filter(\.isFixedPerch)
+        if sceneEditing {
+            sceneLastWorld=value
+            if world.displays != value.displays || world.displayIDs != value.displayIDs || world.scale != value.scale {cancelSceneEditing()}
+            else {return}
+        }
         world=value
         refreshFixedPerches(previous:previousPerches)
         refreshHabitatObjects(sampleDT:sampleDT)
@@ -304,7 +359,10 @@ public final class BehaviorEngine {
         if value.pointerFollowEnabled != settings.pointerFollowEnabled {
             runtime.cancel(where:{$0.kind == .pointerVisit},reason:.settingsChanged,in:self)
         }
-        settings=value;scheduler.reset(value.ambientFrequency)
+        let previousCompanion=settings.companion
+        settings=value
+        if value.companion == nil {scheduler.reset(value.ambientFrequency)}
+        configureCompanion(previous:previousCompanion)
         cancelIneligibleLivelyMotion()
         if !value.insectCatchEnabled {clearInsects(reason:.settingsChanged)}
         if let pending=pendingInsectPreview,!insectSpeciesEnabled(pending.species) {cancelInsectPreview(.settingsChanged)}
@@ -331,8 +389,12 @@ public final class BehaviorEngine {
         // runs and retire invalid gift entities in this settings transaction.
         if carriedObjects.objects.values.contains(where:{$0.isVisitorGift}) {
             runtime.validate(in:self,where:{$0.kind == .visitorGift})
+            let identities=carriedObjects.objects.mapValues(\.persistentID)
             let invalid=carriedObjects.synchronizeVisitorGifts(in:self)
-            if !invalid.isEmpty {removeCarriedObjects(reason:.targetInvalid,ids:invalid)}
+            if !invalid.isEmpty {
+                markInvalidSceneSupports(invalid,identities:identities)
+                removeCarriedObjects(reason:.targetInvalid,ids:invalid)
+            }
         }
         for id in visitorIDs.keys {
             let familiarity=value.visitorMemoryEnabled ? visitorIDs[id].flatMap{visitorMemory.profile($0)?.familiarity} ?? 0:0
@@ -381,6 +443,9 @@ public final class BehaviorEngine {
         }
     }
     @discardableResult public func handle(_ command:EngineCommand) -> BehaviorResult {
+        if sceneEditing {
+            switch command {case .pause:break;case .cancelAmbient:cancelSceneEditing();default:return .rejected(.busy)}
+        }
         beginRecordingInput(.command(command));defer {endRecordingInput()}
         switch command {
         case .placeNest(let point):return placeNest(at:point)
@@ -482,6 +547,7 @@ public final class BehaviorEngine {
             if !nests.isEmpty {removeHabitatObjects(reason:.removed,ids:nests)}
             return .accepted
         case .pointerClick:
+            companionScheduler.clicked()
             livelyMotion.cancelAll()
             cancelGiftRequest(.userInput)
             cancelInsectPreview(.userInput)
@@ -493,11 +559,13 @@ public final class BehaviorEngine {
             guard paused != value else {return .accepted}
             paused=value;accumulator=0;resetPerception()
             if value {
+                companionScheduler.discardPending()
                 cancelGiftRequest(.paused)
                 cancelPreview(.paused)
                 runtime.cancel(where:{$0.kind == .pointerVisit},reason:.paused,in:self)
             }
         case .cancelAmbient(let reason):
+            companionScheduler.discardPending()
             livelyMotion.cancelAll()
             cancelGiftRequest(reason)
             cancelInsectPreview(reason)
@@ -609,6 +677,7 @@ public final class BehaviorEngine {
     }
     private func requestFlock(_ source:BehaviorSource) -> BehaviorResult {
         guard !paused else {return reject(.flockPass,source,.paused)}
+        if source == .automatic,settings.companion != nil,companionScheduler.permit != .flockPass {return .rejected(.busy)}
         guard BehaviorDefinitions.definition(for:.flockPass).isEnabled(settings:settings,source:source) else {return reject(.flockPass,source,.disabled)}
         guard !encounterUnavailable,scheduledEncounter == nil else {return reject(.flockPass,source,.busy)}
         guard let screen=random.element(world.displays) else {return reject(.flockPass,source,.noSpace)}
@@ -619,8 +688,8 @@ public final class BehaviorEngine {
         let species = selected.id
         let profile=settings.catalog.profile(species),scale=world.scale*profile.relativeScale
         let left=world.displays.map(\.minX).min()!,right=world.displays.map(\.maxX).max()!
-        let corridor=CGRect(x:left,y:screen.minY,width:right-left,height:screen.height)
-        let plans=AmbientFlock.plan(screen:corridor,rightward:RandomChoice.chance(0.5, using: random.unit),count:3+Int(random.unit()*3),spriteScale:scale,
+        let corridor=settings.companion == nil ? CGRect(x:left,y:screen.minY,width:right-left,height:screen.height):screen
+        let plans=settings.companion != nil ? companionFlockPlans(screen:screen,profile:profile,scale:scale) : AmbientFlock.plan(screen:corridor,rightward:RandomChoice.chance(0.5, using: random.unit),count:3+Int(random.unit()*3),spriteScale:scale,
                                     speed:FlightBehavior.cruiseSpeed(species,multiplier:profile.speed),random:random.unit)
         guard !plans.isEmpty else {return reject(.flockPass,source,.noSpace)}
         let members=plans.map {plan -> (BirdID,FlockMemberPlan) in
@@ -780,7 +849,7 @@ public final class BehaviorEngine {
     private func refreshFixedPerches(previous:[Surface]) {
         let old=fixedPerches
         world.surfaces.removeAll(where: \.isFixedPerch)
-        fixedPerches=settings.fixedPerchesEnabled && world.fixedPerchArtAvailable ? FixedPerchLayout.resolve(anchors:settings.fixedPerches,world:world):[]
+        fixedPerches=settings.fixedPerchesEnabled && world.fixedPerchArtAvailable ? FixedPerchLayout.resolve(anchors:sceneEnabled ? settings.fixedPerches.filter{anchor in SceneInstance(kind:.perch,anchor:anchor).point(in:world) != nil}:settings.fixedPerches,world:world):[]
         let live=Set(fixedPerches.map(\.slot))
         giftReceiverRevisions=giftReceiverRevisions.filter{live.contains($0.key)}
         for perch in fixedPerches {
@@ -988,7 +1057,7 @@ public final class BehaviorEngine {
     private func requestInsectCatch(species:SpeciesID,source:BehaviorSource) -> BehaviorResult {
         guard pendingInsectPreview==nil else {return reject(.insectCatch,source,.busy)}
         if let reason=insectAdmissionReason(species:species,source:source) {return reject(.insectCatch,source,reason)}
-        if source == .automatic,!scheduler.canAttemptInsectCatch {return reject(.insectCatch,source,.busy)}
+        if source == .automatic,settings.companion == nil,!scheduler.canAttemptInsectCatch {return reject(.insectCatch,source,.busy)}
         let candidates=insectCandidates(species:species,source:source)
         if let plan=insectRandom.element(candidates) {
             let result=startInsectCatch(plan,source:source)
@@ -1040,7 +1109,7 @@ public final class BehaviorEngine {
         if pending.remaining<=1e-10 {cancelInsectPreview(.timedOut)}
     }
     private func requestAutomaticInsectCatch() {
-        guard pendingInsectPreview==nil,scheduler.sceneFocus==nil,scheduler.canAttemptInsectCatch else {return}
+        guard pendingInsectPreview==nil,(settings.companion != nil || scheduler.sceneFocus==nil),(settings.companion != nil || scheduler.canAttemptInsectCatch) else {return}
         // A disabled or unqualified fixed 8% opportunity remains empty.
         let candidates=SpeciesBehaviorProfile.species(for:.insectCatch).flatMap {species -> [InsectCandidate] in
             guard insectAdmissionReason(species:species,source:.automatic)==nil else {return []}
@@ -1104,17 +1173,17 @@ public final class BehaviorEngine {
         guard !world.buttonsDown else {return reject(kind,source,.userInput)}
         guard !encounterUnavailable,scheduledEncounter==nil,!hasNestPlacement,!hasInsectCatchPreview else {return reject(kind,source,.busy)}
         guard world.nestArtAvailable else {return reject(kind,source,.missingFrames)}
-        guard let nest=nestSnapshot().first(where:{!$0.retiring}) else {return reject(kind,source,.noSpace)}
-        guard source != .automatic || scheduler.canAttemptScene(SceneFocus(nestID:nest.id)) else {return reject(kind,source,.busy)}
+        guard let nest=nestSnapshot().first(where:{!$0.retiring && (sceneCandidateID == nil || $0.id==sceneCandidateID)}) else {return reject(kind,source,.noSpace)}
+        guard source != .automatic || settings.companion != nil || scheduler.canAttemptScene(SceneFocus(nestID:nest.id)) else {return reject(kind,source,.busy)}
         guard birds.contains(where:{role(of:$0) == .resident && $0.profile.id == .spottedDove}) else {return reject(kind,source,.noSpecies)}
         guard BehaviorDefinitions.definition(for:kind).requiredFrames.isSubset(of:world.availableFrames[.spottedDove] ?? []) else {return reject(kind,source,.missingFrames)}
         let result:BehaviorResult
         if kind == .nestBuild {
-            guard nest.delivered>0,let plan=nestRandom.element(NestBuildPlan.candidates(in:self,source:source)),plan.canBegin(in:self)
+            guard nest.delivered>0,let plan=nestRandom.element(NestBuildPlan.candidates(in:self,source:source,target:sceneCandidateID)),plan.canBegin(in:self)
             else {return reject(kind,source,.noSpace)}
             result=runtime.start(NestBuildExecution(plan:plan),source:source,in:self)
         } else {
-            guard nest.available>0,let plan=nestRandom.element(NestMaterialCarryPlan.candidates(in:self,source:source)),plan.canBegin(in:self)
+            guard nest.available>0,let plan=nestRandom.element(NestMaterialCarryPlan.candidates(in:self,source:source,target:sceneCandidateID)),plan.canBegin(in:self)
             else {return reject(kind,source,.noSpace)}
             result=runtime.start(NestMaterialCarryExecution(plan:plan),source:source,in:self)
         }
@@ -1162,7 +1231,7 @@ public final class BehaviorEngine {
         guard world.leafCarryArtAvailable else {return reject(.leafCarry,source,.missingFrames)}
         guard let object=carriedObjects.objects.values.filter({$0.state == .available && $0.reservedByRun==nil}).sorted(by:{$0.id<$1.id}).first
         else {return reject(.leafCarry,source,.noSpace)}
-        if source == .automatic,!scheduler.canAttemptScene(SceneFocus(leafID:object.id)) {return reject(.leafCarry,source,.busy)}
+        if source == .automatic,settings.companion == nil,!scheduler.canAttemptScene(SceneFocus(leafID:object.id)) {return reject(.leafCarry,source,.busy)}
         let candidates=LeafCarryPlan.candidates(in:self,source:source)
         guard let plan=leafCarryRandom.element(candidates) else {
             let supported=birds.filter{role(of:$0) == .resident && SpeciesBehaviorProfile.profile(for:$0.profile.id).allows(.leafCarry)}
@@ -1183,8 +1252,19 @@ public final class BehaviorEngine {
             guard let execution=runtime.runs[runID]?.execution as? LeafCarryExecution else {continue}
             if let result=execution.reconcileWorld(in:self,sampleDT:sampleDT) {runtime.finish(runID,result:result,in:self)}
         }
+        let identities=carriedObjects.objects.mapValues(\.persistentID)
         let invalid=carriedObjects.synchronize(in:self)
-        if !invalid.isEmpty {removeCarriedObjects(reason:.targetInvalid,ids:invalid)}
+        if !invalid.isEmpty {
+            markInvalidSceneSupports(invalid,identities:identities)
+            removeCarriedObjects(reason:.targetInvalid,ids:invalid)
+        }
+    }
+    private func markInvalidSceneSupports(_ ids:[ScenePropID],identities:[ScenePropID:UUID?]) {
+        // Synchronization can remove a paused object immediately; capture identity
+        // before that call so an unrelated window at the same position cannot claim it.
+        for id in ids {
+            if let uuid=identities[id] ?? nil,sceneArchive.layout.instances.first(where:{$0.id==uuid})?.requiresWindowPlacement == true {sceneNeedsPlacement.insert(uuid)}
+        }
     }
     private func removeCarriedObjects(reason:BehaviorReason,ids:[ScenePropID]?=nil) {
         let targets=Set(ids ?? Array(carriedObjects.objects.keys))
@@ -1229,7 +1309,7 @@ public final class BehaviorEngine {
               !runtime.runs.values.contains(where:{[BehaviorKind.fixedPerchVisit,.foodTrayVisit].contains($0.execution.kind)}) else {return reject(.bathVisit,source,.busy)}
         guard world.bathArtAvailable else {return reject(.bathVisit,source,.missingFrames)}
         guard let object=habitatIDs(.bath).first,habitatObjects.objects[object]?.retiring==false else {return reject(.bathVisit,source,.noSpace)}
-        if source == .automatic,!scheduler.canAttemptScene(object) {return reject(.bathVisit,source,.busy)}
+        if source == .automatic,settings.companion == nil,!scheduler.canAttemptScene(object) {return reject(.bathVisit,source,.busy)}
         let candidates=BathVisitPlan.candidates(in:self,source:source,target:target)
         guard let plan=bathRandom.element(candidates) else {
             let supported=birds.filter{role(of:$0) == .resident && SpeciesBehaviorProfile.profile(for:$0.profile.id).allows(.bathVisit)}
@@ -1292,7 +1372,7 @@ public final class BehaviorEngine {
         guard !paused else {return}
         guard let bird=bird(id),runtime.owners[id]==nil,!bird.isDeparting else {recoveringHabitatBirds.remove(id);return}
         var recoveryWorld=world
-        recoveryWorld.surfaces.removeAll{$0.isHabitat}
+        recoveryWorld.surfaces.removeAll{$0.isHabitat || sceneExcludedSurfaces.contains($0.id)}
         let reserved=runtime.landingReservations.filter{$0.bird != id}.compactMap{$0.footprint(in:self)}+giftObstacleRects(excluding:[id])
         if let destination=DestinationPlanner.plan(for:bird,birds:birds,world:recoveryWorld,reserved:reserved,random:random),
            destination.host != nil {
@@ -1346,6 +1426,7 @@ public final class BehaviorEngine {
                 world.surfaces.contains(where:{$0.id==object.surface.id && $0 != object.surface}) ||
                 fixedPerches.contains(where:{$0.rect.insetBy(dx:-50*world.scale,dy:-80*world.scale).intersects(object.rect)})
         }.map(\.id)
+        for id in invalid {if let uuid=habitatObjects.objects[id]?.persistentID,sceneArchive.layout.instances.first(where:{$0.id==uuid})?.requiresWindowPlacement == true {sceneNeedsPlacement.insert(uuid)}}
         removeHabitatObjects(reason:.targetInvalid,ids:invalid)
         world.surfaces.removeAll{$0.habitatKind == .foodTray || $0.habitatKind == .bath || $0.habitatKind == .nest}
         world.surfaces.append(contentsOf:habitatObjects.objects.keys.sorted().compactMap{habitatObjects.objects[$0]?.surface})
@@ -1401,7 +1482,7 @@ public final class BehaviorEngine {
         guard settings.probabilities.participates(.spottedDove) else {return reject(.courtshipDisplay,source,.noSpecies)}
         guard !encounterUnavailable,scheduledEncounter==nil else {return reject(.courtshipDisplay,source,.busy)}
         guard !world.buttonsDown else {return reject(.courtshipDisplay,source,.userInput)}
-        guard source != .automatic || scheduler.canAttemptCourtship else {return reject(.courtshipDisplay,source,.busy)}
+        guard source != .automatic || settings.companion != nil || scheduler.canAttemptCourtship else {return reject(.courtshipDisplay,source,.busy)}
         let residents=birds.filter{role(of:$0) == .resident && !$0.isDeparting && $0.profile.id == .spottedDove}
         guard residents.count>=2 else {return reject(.courtshipDisplay,source,.noCompanion)}
         guard CourtshipDisplayPlan.requiredFrames.isSubset(of:world.availableFrames[.spottedDove] ?? []) else {return reject(.courtshipDisplay,source,.missingFrames)}
@@ -1514,9 +1595,9 @@ public final class BehaviorEngine {
             guard let record=records[id],record.visible,record.role == .resident else {continue}
             let bird=record.bird
             let enabled=ambientEnabled && settings.perchActions && PerchActionKind.allCases.contains{supports($0,bird:bird)}
-            if let action=perchPlanner.candidate(id,bird:bird,dt:dt,enabled:enabled,occupied:runtime.owners[id] != nil,
+            if let action=perchPlanner.candidate(id,bird:bird,dt:dt*(settings.companion.map{$0.mode == .focus ? 0.5:$0.mode == .natural ? 0.8:1} ?? 1),enabled:enabled,occupied:runtime.owners[id] != nil,
                 quiet:!world.buttonsDown && !pointerNear(bird),
-                restRate:ActivityRhythmPolicy.restRate(mode:settings.activityRhythm,minute:world.localMinuteOfDay,species:bird.profile.id)),enabled,perchRejection(action,bird:bird)==nil {
+                restRate:ActivityRhythmPolicy.restRate(mode:settings.companion.map{$0.followLocalDayNight ? .localDayNight:.steady} ?? settings.activityRhythm,minute:world.localMinuteOfDay,species:bird.profile.id)),enabled,perchRejection(action,bird:bird)==nil {
                 candidates.append((id,action))
             }
         }
@@ -1542,13 +1623,13 @@ public final class BehaviorEngine {
     private func routeAutonomously(_ bird:Bird,id:BirdID) {
         // One optional choice at the existing departure opportunity. No new
         // timer, resident, or forced takeoff is created by placing a perch.
-        if ambientEnabled,!habitatIDs(.foodTray).isEmpty,bird.state == .perched,
+        if settings.companion == nil,ambientEnabled,!habitatIDs(.foodTray).isEmpty,bird.state == .perched,
            foodDepartureAttempts[id] != bird.motionRevision,
            BehaviorDefinitions.definition(for:.foodTrayVisit).isEnabled(settings:settings,source:.automatic) {
             foodDepartureAttempts[id]=bird.motionRevision
             if RandomChoice.chance(0.25, using: foodRandom.unit),requestFoodTrayVisit(source:.automatic,target:id).accepted {return}
         }
-        if ambientEnabled,!fixedPerches.isEmpty,bird.state == .perched,
+        if settings.companion == nil,ambientEnabled,!fixedPerches.isEmpty,bird.state == .perched,
            fixedPerchDepartureAttempts[id] != bird.motionRevision,
            BehaviorDefinitions.definition(for:.fixedPerchVisit).isEnabled(settings:settings,source:.automatic) {
             fixedPerchDepartureAttempts[id]=bird.motionRevision
@@ -1596,6 +1677,7 @@ public final class BehaviorEngine {
     public func advance(_ elapsed:Double) {
         guard elapsed.isFinite,elapsed>=0 else {return}
         beginRecordingInput(.advance(elapsed,in:self));defer {endRecordingInput()}
+        if settings.companion != nil,!paused,!sceneEditing {companionMetrics.unpausedElapsed+=elapsed}
         accumulator+=min(0.05,elapsed)
         var steps=0
         while accumulator+1e-10>=Self.step && steps<3 {
@@ -1603,7 +1685,10 @@ public final class BehaviorEngine {
         }
     }
     private func step(_ dt:Double) {
+        if sceneEditing {advanceSceneEditing(dt);return}
         time+=dt
+        if sceneEnabled {sceneRetryRemaining-=dt;if sceneRetryRemaining<=0 {sceneRetryRemaining=2;restoreMissingSceneObjects()}}
+        if !paused {advanceCompanionEpisodes(dt)}
         if !paused {
             for id in recoveringHabitatBirds.sorted() {resumeHabitatRecovery(id)}
             habitatObjects.advance(dt)
@@ -1737,7 +1822,8 @@ public final class BehaviorEngine {
         }
         reconcileNestFocus()
         let encounterRate=ActivityRhythmPolicy.ambientRate(mode:settings.activityRhythm,minute:world.localMinuteOfDay)
-        if !paused,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
+        if !paused,settings.companion != nil {advanceCompanionOpportunities(dt)}
+        if !paused,settings.companion == nil,let event=scheduler.tick(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
             pointerEnabled:settings.pointerVisits,flockEnabled:settings.flockPasses,socialEnabled:settings.socialInteractions,leafEnabled:settings.leafPlayEnabled && settings.ambientLeafPlayEnabled,insectEnabled:settings.insectCatchEnabled,giftEnabled:settings.visitorGiftsEnabled && settings.visitorMemoryEnabled,courtshipEnabled:settings.courtshipEnabled,frequency:settings.ambientFrequency,
             busy:encounterUnavailable || scheduledEncounter != nil || hasInsectCatchPreview,cadenceRate:ambientEnabled ? encounterRate:0,leafRandom:ecologyRandom.unit,random:random.unit) {
             switch event {
@@ -1790,11 +1876,21 @@ public final class BehaviorEngine {
         let names=LivelyMotion.frameNames(for:bird.profile.id)
         guard let rhythm=perchPlanner.rhythms[id],rhythm.quietTime>=0.5,rhythm.disturbance<0.35,
               [BehaviorKind.watch,.alert,.rest,.preen].allSatisfy({(rhythm.cooldowns[$0] ?? 0)<=0}) else {return false}
+        if let p=settings.companion {
+            guard p.allows(.preen,source:.automatic) else {return false}
+            let cycle=Int(bird.stateTime/max(1,LivelyMotion.window(bird.profile.id).cycle))
+            if p.mode == .natural && (cycle+Int(id.rawValue%3))%3 != 0 {return false}
+            let active=birds.filter {other in
+                guard other !== bird,let otherID=self.id(of:other) else {return false}
+                return livelyMotion.frame(id:otherID,bird:other,seed:seed,eligible:true) != nil
+            }.count
+            if active >= (p.mode == .lively ? 3:1),livelyMotion.frame(id:id,bird:bird,seed:seed,eligible:true)==nil {return false}
+        }
         return !names.isEmpty && bird.state == .perched && !bird.isDeparting && !bird.needsDestination &&
             !bird.isSideHopping && runtime.owners[id]==nil && role(of:bird) == .resident &&
             world.surfaces.contains(where:{$0.id==bird.hostID}) &&
             LivelyMotion.isSideMotion(bird.profile.id) == (bird.edge != .top) &&
-            settings.perchActions && settings.activityRhythm != .quiet && !world.buttonsDown && !pointerNear(bird) &&
+            settings.perchActions && (settings.companion?.mode != .focus) && (settings.companion != nil || settings.activityRhythm != .quiet) && !world.buttonsDown && !pointerNear(bird) &&
             Set(names).isSubset(of:world.availableFrames[bird.profile.id] ?? [])
     }
     private func livelyFrame(_ id:BirdID,bird:Bird) -> String? {
@@ -1834,7 +1930,525 @@ public final class BehaviorEngine {
             let pose=runtime.presentation(for:id,in:self)
             return BirdRenderState(id:id,species:bird.profile.id,position:bird.position,facingRight:pose?.facingRight ?? bird.facingRight,
                 scale:spriteScale(for:bird),hopOffset:pose?.hopOffset ?? baseHop(for:id,bird:bird),frameName:drawableFrame(pose?.frameName ?? livelyFrame(id,bird:bird) ?? bird.frameName,for:bird),
-                blockers:bird.blockers(in:world.surfaces),hoverable:isHoverable(bird))
+                blockers:bird.blockers(in:world.surfaces),hoverable:isHoverable(bird),opacity:companionEscapeStarted[id].map{max(0,min(1,16-(time-$0)))} ?? 1)
         }
+    }
+}
+
+// Companion orchestration lives on the simulation owner, including every legacy entry point.
+extension BehaviorEngine {
+    func configureCompanion(previous:CompanionPreferences?) {
+        guard let p=settings.companion else {return}
+        companionScheduler.configure(p.policy,flockEnabled:settings.flockPasses && p.allows(.flockPass,source:.automatic))
+        for bird in birds {bird.ordinaryOrbitLimit=0;bird.preferNearbyDestinations=p.mode != .lively}
+        if previous?.mode != p.mode,p.mode != .lively {
+            if let id=companionOrbit,let bird=bird(id) {bird.requestFlightRecovery();_=route(bird);companionOrbit=nil}
+            for id in runtime.runs.keys.sorted() {
+                guard let run=runtime.runs[id],run.source == .automatic,run.execution.kind.isSignificant else {continue}
+                if !p.allows(run.execution.kind,source:.automatic) || run.execution.estimatedDuration(in:self)>p.policy.target(for:run.execution.kind) {
+                    runtime.cancel(id,reason:.settingsChanged,in:self)
+                }
+            }
+        }
+    }
+    func companionAdmission(_ execution:BehaviorExecution,source:BehaviorSource)->BehaviorReason? {
+        guard let p=settings.companion else {return nil}
+        guard p.allows(execution.kind,source:source) else {return .disabled}
+        guard source == .automatic else {return nil}
+        if execution.kind.isSignificant {
+            guard !runtime.runs.values.contains(where:{$0.execution.kind.isSignificant}),companionScheduler.permit==execution.kind,companionRecovering.isEmpty,companionOrbit==nil else {return .busy}
+            if execution.kind != .flockPass,execution.estimatedDuration(in:self)+(execution.participants.compactMap{bird($0)?.continuousFlightAge}.max() ?? 0)>p.policy.target(for:execution.kind) {return .unavailableBird}
+        } else if execution.kind != .relocate {
+            if execution.participants.contains(where:{(companionMicroNext[$0] ?? 0)>time}) {return .busy}
+            let count=runtime.runs.values.filter{!$0.execution.kind.isSignificant && $0.source == .automatic}.count
+            if count >= (p.mode == .lively ? 3:p.mode == .natural ? 2:1) {return .busy}
+        }
+        return nil
+    }
+    func companionDidStart(_ execution:BehaviorExecution,source:BehaviorSource) {
+        guard let p=settings.companion else {return}
+        if !execution.kind.isSignificant {
+            if source == .automatic {for id in execution.participants {companionMicroNext[id]=time+(p.mode == .focus ? 24:p.mode == .natural ? 12:4)/p.policy.weight(for:execution.kind)}}
+            return
+        }
+        for id in execution.participants {bird(id)?.episodeRetainsFlightClock=true}
+        if source == .automatic {companionScheduler.didStart(execution.kind)}
+        let habitatIDs=execution.habitatReservations.compactMap{habitatObjects.objects[$0]?.persistentID}
+        let leafIDs=execution.propIDs.compactMap{carriedObjects.objects[$0]?.persistentID}
+        for id in Set(habitatIDs+leafIDs) {companionMetrics.sceneVisits[id.uuidString,default:0]+=1}
+    }
+    func companionDidFinish(_ execution:BehaviorExecution,source:BehaviorSource) {
+        guard settings.companion != nil,execution.kind.isSignificant else {return}
+        for id in execution.participants {bird(id)?.episodeRetainsFlightClock=false;companionRecovering.insert(id)}
+        // The recovery set is resolved on the next step, after execution.cancel().
+        companionScheduler.didSettle()
+    }
+    private func advanceCompanionEpisodes(_ dt:Double) {
+        guard let p=settings.companion else {return}
+        companionMetrics.simulatedElapsed+=dt
+        var visibleMotion=false,nearPointer=false
+        for id in order {
+            guard let bird=bird(id) else {continue}
+            if bird.continuousFlightAge>0,let previous=companionMotionRevisions[id],previous != bird.motionRevision {companionMetrics.replans+=1}
+            companionMotionRevisions[id]=bird.motionRevision
+            bird.advanceEpisodeClock(dt)
+            companionMetrics.maximumContinuousFlight=max(companionMetrics.maximumContinuousFlight,bird.continuousFlightAge)
+            if bird.state != .perched,records[id]?.visible == true,world.displays.contains(where:{$0.intersects(bounds(of:bird))}) {
+                visibleMotion=true
+                if bounds(of:bird).insetBy(dx:-90,dy:-90).contains(world.pointer) {nearPointer=true}
+            }
+            companionFlightAges[id]=max(companionFlightAges[id] ?? 0,bird.continuousFlightAge)
+            if bird.continuousFlightAge>=90,companionEscapeStarted[id]==nil {
+                runtime.cancel(bird:id,reason:.timedOut,in:self)
+                bird.ordinaryOrbitLimit=0;sendAway(bird);companionEscapeStarted[id]=time
+                companionScheduler.record(time:time,kind:nil,state:.failed,reason:"continuousFlightLimit")
+            }
+            if let began=companionEscapeStarted[id],time-began>=16 {removeRecord(id);companionEscapeStarted.removeValue(forKey:id)}
+        }
+        if visibleMotion {companionMetrics.visibleMotionTime+=dt}
+        if nearPointer {companionMetrics.pointerNearbyMotionTime+=dt}
+        let settled=companionRecovering.filter {id in
+            guard let b=bird(id) else {return true}
+            return b.state == .perched && b.stateTime>=0.5
+        }
+        if !settled.isEmpty {companionRecovering.subtract(settled);if companionRecovering.isEmpty {companionScheduler.didSettle()}}
+        if let id=companionOrbit {
+            if bird(id)==nil || bird(id).map({$0.state == .perched && $0.stateTime>=0.5}) == true {
+                companionOrbit=nil;companionScheduler.didSettle()
+            }
+        }
+        companionScheduler.configure(p.policy,flockEnabled:settings.flockPasses && p.allows(.flockPass,source:.automatic))
+    }
+    private func advanceCompanionOpportunities(_ dt:Double) {
+        guard let p=settings.companion,ambientEnabled else {return}
+        let due=companionScheduler.advance(dt,pointer:world.pointer,buttonsDown:world.buttonsDown,
+            cadence:p.policy.cadence(minute:world.localMinuteOfDay),flockEnabled:settings.flockPasses && p.allows(.flockPass,source:.automatic))
+        guard !encounterUnavailable,scheduledEncounter==nil,companionRecovering.isEmpty,companionOrbit==nil,!world.buttonsDown else {
+            if due.flock {companionScheduler.record(time:time,kind:.flockPass,state:.deferred,reason:"busy")};return
+        }
+        if due.flock {attemptCompanion(.flockPass);return}
+        guard due.encounter else {return}
+        var kinds:[BehaviorKind]=[.pointerVisit,.socialGreeting,.sideBySide,.giveWay,.pairedTakeoff,.chase,.travelTogether,.allopreening,.courtshipDisplay,.leafPlay,.insectCatch,.visitorGift]
+        if !fixedPerches.isEmpty {kinds.append(.fixedPerchVisit)}
+        let scenes=habitatObjects.objects.values.filter{!$0.retiring && $0.remainingUses>0 || $0.kind == .nest && !$0.retiring && ($0.nest?.materials.contains{[NestMaterialState.available,.delivered].contains($0.state)} ?? false)}.sorted {
+            let a=sceneLastVisit["h\($0.id.rawValue)"] ?? -1,b=sceneLastVisit["h\($1.id.rawValue)"] ?? -1
+            return a==b ? $0.id<$1.id:a<b
+        }
+        let leaves=carriedObjects.objects.values.filter {object in
+            guard !object.isVisitorGift,object.state == .available else {return false}
+            sceneLeafCandidateID=object.id;defer {sceneLeafCandidateID=nil}
+            return !LeafCarryPlan.candidates(in:self,source:.automatic).isEmpty
+        }.sorted{$0.id<$1.id}
+        // One scene slot irrespective of object count; select its oldest eligible instance afterwards.
+        let availableScenes=scenes.filter {obj in
+            let kind:BehaviorKind=obj.kind == .bath ? .bathVisit:obj.kind == .foodTray ? .foodTrayVisit:obj.nest?.materials.contains{$0.state == .delivered} == true ? .nestBuild:.nestMaterialCarry
+            guard BehaviorDefinitions.definition(for:kind).isEnabled(settings:settings,source:.automatic) else {return false}
+            sceneCandidateID=obj.id;defer {sceneCandidateID=nil}
+            switch kind {
+            case .foodTrayVisit:return !FoodTrayVisitPlan.candidates(in:self,source:.automatic).isEmpty
+            case .bathVisit:return !BathVisitPlan.candidates(in:self,source:.automatic).isEmpty
+            case .nestBuild:return !NestBuildPlan.candidates(in:self,source:.automatic,target:obj.id).isEmpty
+            default:return !NestMaterialCarryPlan.candidates(in:self,source:.automatic,target:obj.id).isEmpty
+            }
+        }
+        kinds=kinds.filter {BehaviorDefinitions.definition(for:$0).isEnabled(settings:settings,source:.automatic)}
+        if companionScheduler.pointerStill<p.policy.pointerQuiet {kinds.removeAll{$0 == .pointerVisit}}
+        let hasScene = !availableScenes.isEmpty || (!leaves.isEmpty && p.allows(.leafCarry,source:.automatic))
+        let canOrbit=p.mode != .focus && p.allows(.pointerVisit,source:.automatic) && settings.pointerVisits && birds.contains{$0.state == .perched && FlightBehavior.motion($0.profile.id).orbit>0 && id(of:$0).map{runtime.owners[$0]==nil} == true}
+        let count=kinds.count+(hasScene ? 1:0)+(canOrbit ? 1:0)
+        guard count>0 else {return}
+        let weights=kinds.map{p.policy.weight(for:$0)}+(hasScene ? [p.policy.weight(for:.bathVisit)]:[])+(canOrbit ? [p.policy.weight(for:.pointerVisit)]:[])
+        var ticket=companionRandom.unit()*weights.reduce(0,+),choice=weights.count-1
+        for index in weights.indices {ticket-=weights[index];if ticket<0 {choice=index;break}}
+        if choice<kinds.count {attemptCompanion(kinds[choice]);return}
+        if hasScene,choice==kinds.count {
+            let oldestLeaf=leaves.filter{_ in p.allows(.leafCarry,source:.automatic)}.min {
+                let a=sceneLastVisit["l\($0.id.rawValue)"] ?? -1,b=sceneLastVisit["l\($1.id.rawValue)"] ?? -1
+                return a==b ? $0.id<$1.id:a<b
+            }
+            let leafFirst=oldestLeaf.map {leaf in availableScenes.first.map{(sceneLastVisit["l\(leaf.id.rawValue)"] ?? -1)<(sceneLastVisit["h\($0.id.rawValue)"] ?? -1)} ?? true} ?? false
+            if !leafFirst,let object=availableScenes.first {
+                sceneCandidateID=object.id
+                let kind:BehaviorKind=object.kind == .bath ? .bathVisit:object.kind == .foodTray ? .foodTrayVisit:object.nest?.materials.contains{$0.state == .delivered} == true ? .nestBuild:.nestMaterialCarry
+                attemptCompanion(kind);sceneLastVisit["h\(object.id.rawValue)"]=time;sceneCandidateID=nil
+            } else if let leaf=oldestLeaf {
+                sceneLeafCandidateID=leaf.id;attemptCompanion(.leafCarry);sceneLastVisit["l\(leaf.id.rawValue)"]=time;sceneLeafCandidateID=nil
+            }
+        } else if canOrbit,let bird=birds.first(where:{$0.state == .perched && FlightBehavior.motion($0.profile.id).orbit>0 && id(of:$0).map{runtime.owners[$0]==nil} == true}),let id=id(of:bird) {
+            bird.ordinaryOrbitLimit=p.policy.orbitDuration
+            if route(bird) {companionOrbit=id;companionScheduler.record(time:time,kind:nil,state:.started,reason:"decorativeOrbit")}
+            bird.ordinaryOrbitLimit=0
+        }
+    }
+    private func attemptCompanion(_ kind:BehaviorKind) {
+        companionScheduler.permit=kind
+        companionScheduler.record(time:time,kind:kind,state:.candidate,reason:"opportunityDue")
+        let result:BehaviorResult
+        switch kind {
+        case .flockPass:result=requestFlock(.automatic)
+        case .pointerVisit:result=requestPointer(.automatic)
+        case .socialGreeting:result=requestSocialGreeting(.automatic)
+        case .sideBySide:result=requestSocialMotion(.sideBySide,source:.automatic)
+        case .giveWay:result=requestSocialMotion(.giveWay,source:.automatic)
+        case .pairedTakeoff:result=requestSocialMotion(.pairedTakeoff,source:.automatic)
+        case .chase:result=requestChase(source:.automatic)
+        case .travelTogether:result=requestTravelTogether(source:.automatic)
+        case .allopreening:result=requestAllopreening(source:.automatic)
+        case .courtshipDisplay:result=requestCourtship(source:.automatic)
+        case .foodTrayVisit:result=requestFoodTrayVisit(source:.automatic)
+        case .fixedPerchVisit:result=requestFixedPerchVisit(source:.automatic)
+        case .bathVisit:result=requestBathVisit(source:.automatic)
+        case .leafCarry:result=requestLeafCarry(source:.automatic)
+        case .nestMaterialCarry,.nestBuild:result=requestNest(kind:kind,source:.automatic)
+        case .visitorGift:result=requestVisitorGift(source:.automatic)
+        case .insectCatch:requestAutomaticInsectCatch();result = .accepted
+        case .leafPlay:requestAutomaticLeaf();result = .accepted
+        default:result = .rejected(.disabled)
+        }
+        if case .rejected(let reason)=result {companionScheduler.record(time:time,kind:kind,state:.suppressed,reason:reason.rawValue)}
+        if !(kind == .visitorGift && pendingGift != nil) {companionScheduler.permit=nil}
+    }
+    private func companionFlockPlans(screen:CGRect,profile:SpeciesProfile,scale:CGFloat)->[FlockMemberPlan] {
+        guard let p=settings.companion,screen.width>200,screen.height>200 else {return []}
+        let speed=FlightBehavior.cruiseSpeed(profile.id,multiplier:profile.speed)
+        let desired=companionRandom.value(in:p.policy.flockDuration)
+        let sampledCount=3+Int(companionRandom.unit()*3)
+        let count=Double(screen.width)/speed<4 ? 5:sampledCount
+        let margin=max(80,80*scale),right=companionRandom.unit()<0.5
+        let phases=(0..<count).map{_ in companionRandom.unit()*3}
+        var spacing=0.25
+        func plans(_ extent:Double)->[FlockMemberPlan] {
+            (0..<count).map {index in
+                let y=screen.minY+margin+CGFloat(index%3)*12*scale
+                let start=CGPoint(x:right ? screen.minX-margin:screen.maxX+margin,y:y)
+                let end=CGPoint(x:start.x+(right ? extent:-extent),y:screen.minY-margin)
+                let path=FlightPath(start,CGPoint(x:start.x+(end.x-start.x)*0.3,y:y),CGPoint(x:end.x,y:y),end)
+                return FlockMemberPlan(delay:Double(index)*spacing,path:path,speed:speed,wingPhase:phases[index])
+            }
+        }
+        // Measure the complete visible group at the real cruise speed. Offscreen
+        // approach and exit must not count toward the mode's presentation target.
+        func visibleDuration(_ values:[FlockMemberPlan])->Double {
+            var first=Double.infinity,last=0.0
+            for value in values {
+                for sample in 0...256 {
+                    let progress=Double(sample)/256,point=value.path.point(progress)
+                    let rect=CGRect(x:point.x-(right ? 29:19)*scale,y:point.y-39*scale,width:48*scale,height:48*scale)
+                    if screen.intersects(rect) {
+                        let time=value.delay+progress*value.path.length/speed
+                        first=min(first,time);last=max(last,time)
+                    }
+                }
+            }
+            return first.isFinite ? last-first:0
+        }
+        var low=Double(margin),high=Double(screen.width+margin*0.7)
+        let baseMaximum=visibleDuration(plans(high))
+        if baseMaximum<desired {
+            // Longer formations on a small display keep cruise speed unchanged.
+            // Bound spacing below each member's visible span to avoid empty gaps.
+            spacing=0
+            let span=visibleDuration(plans(high))
+            spacing=max(0.25,min(span*0.8,(desired-span)/Double(count-1)))
+        }
+        let maximum=visibleDuration(plans(high)),minimum=visibleDuration(plans(low))
+        guard maximum>=p.policy.flockDuration.lowerBound,minimum<=p.policy.flockDuration.upperBound else {return []}
+        let target=min(maximum-0.05,max(minimum,desired))
+        for _ in 0..<20 {
+            let mid=(low+high)/2
+            if visibleDuration(plans(mid))<target {low=mid}else{high=mid}
+        }
+        return plans((low+high)/2)
+    }
+}
+
+// Scene transactions stay on the simulation executor. The tiny atomic ledger
+// write acknowledges a transition before an executor can report its success.
+extension BehaviorEngine {
+    public func restoreScene(_ archive:SceneArchive) throws {
+        try archive.validate()
+        var input=RecordedInput(kind:"sceneRestore");input.sceneArchive=archive
+        beginRecordingInput(input);defer {endRecordingInput()}
+        sceneArchive=archive;sceneEnabled=true
+        sceneNeedsPlacement=Set(archive.layout.instances.filter{$0.requiresWindowPlacement}.map(\.id))
+        for id in archive.resources.keys.sorted(by:{$0.uuidString<$1.uuidString}) {
+            guard let resource=archive.resources[id],resource.recovered != resource else {continue}
+            guard commitSceneResource(id,resource.recovered) else {throw SceneError.invalid(sceneError ?? "无法恢复资源账本")}
+        }
+        habitatObjects.commitResource={ [weak self] id,value in self?.commitSceneResource(id,value) ?? false }
+        carriedObjects.commitResource={ [weak self] id,value in self?.commitSceneResource(id,value) ?? false }
+        restoreMissingSceneObjects()
+    }
+    private func persistScene(_ value:SceneArchive)->Bool {
+        do {
+            try value.validate();try sceneWriter?(value)
+            inputRecorder?.sceneWrite(SceneWriteDecision(archive:value,accepted:true))
+            sceneArchive=value;sceneError=nil;return true
+        } catch {
+            inputRecorder?.sceneWrite(SceneWriteDecision(archive:value,accepted:false))
+            sceneError=error.localizedDescription;return false
+        }
+    }
+    private func commitSceneResource(_ id:UUID,_ value:SceneResource)->Bool {
+        guard let old=sceneArchive.resources[id] else {return false}
+        var resource=value;resource.revision=old.revision
+        if resource==old {return true}
+        // There is no refund API here. Replenishment is an explicit editor operation.
+        guard resource.remainingUses<=old.remainingUses,!old.leafConsumed || resource.leafConsumed,
+              old.materials.count==resource.materials.count,
+              (resource.leafEffect?.remaining ?? 0)<=(old.leafEffect?.remaining ?? 120),
+              zip(old.materials,resource.materials).allSatisfy({a,b in
+                  a==b || (a == .available && b == .attached) || (a == .attached && [.delivered,.spent].contains(b)) || (a == .delivered && b == .arranged)
+              }) else {return false}
+        guard resource.revision<UInt64.max-1 else {return false}
+        resource.revision+=1
+        var archive=sceneArchive;archive.resources[id]=resource;archive.ledgerRevision+=1
+        return persistScene(archive)
+    }
+    /// Preview the selected committed instance through the normal executor and gates.
+    @discardableResult public func previewSceneInstance(_ id:UUID)->BehaviorResult {
+        var input=RecordedInput(kind:"scenePreview");input.sceneInstance=id
+        beginRecordingInput(input);defer {endRecordingInput()}
+        guard !sceneEditing else {return .rejected(.busy)}
+        guard !paused else {return .rejected(.paused)}
+        guard let item=sceneArchive.layout.instances.first(where:{$0.id==id}),
+              item.point(in:world) != nil,!sceneNeedsPlacement.contains(id) else {return .rejected(.noSpace)}
+        defer {sceneCandidateID=nil;sceneLeafCandidateID=nil;scenePerchCandidateSlot=nil}
+        switch item.kind {
+        case .perch:
+            scenePerchCandidateSlot=item.anchor.slot
+            return requestFixedPerchVisit(source:.preview)
+        case .leaf:
+            guard let prop=carriedObjects.objects.values.first(where:{$0.persistentID==id}) else {return .rejected(.noSpace)}
+            sceneLeafCandidateID=prop.id
+            return requestLeafCarry(source:.preview)
+        case .foodTray,.bath,.nest:
+            guard let object=habitatObjects.objects.values.first(where:{$0.persistentID==id}) else {return .rejected(.noSpace)}
+            sceneCandidateID=object.id
+            if item.kind == .foodTray {return requestFoodTrayVisit(source:.preview)}
+            if item.kind == .bath {return requestBathVisit(source:.preview)}
+            return requestNest(kind:sceneArchive.resources[id]?.materials.contains(.delivered) == true ? .nestBuild:.nestMaterialCarry,source:.preview)
+        }
+    }
+    public func beginSceneEditing()->SceneDraft {
+        if !sceneEnabled {
+            sceneArchive.layout = .migrate(anchors:settings.fixedPerches)
+            for item in sceneArchive.layout.instances {sceneArchive.resources[item.id]=SceneResource(kind:item.kind)}
+            sceneEnabled=true
+            habitatObjects.commitResource={ [weak self] id,value in self?.commitSceneResource(id,value) ?? false }
+            carriedObjects.commitResource={ [weak self] id,value in self?.commitSceneResource(id,value) ?? false }
+        }
+        beginRecordingInput(RecordedInput(kind:"sceneBegin"));defer {endRecordingInput()}
+        sceneEditPhase = .editing;sceneError=nil;companionScheduler.discardPending()
+        return SceneDraft(sceneArchive.layout)
+    }
+    public func cancelSceneEditing() {
+        guard sceneEditing else {return}
+        beginRecordingInput(RecordedInput(kind:"sceneCancel"));defer {endRecordingInput()}
+        sceneEditPhase = .cancelled;sceneProposed=nil;sceneAffected=[];sceneRecovery=[]
+        sceneExcludedSurfaces=[];companionScheduler.didSettle()
+        if let latest=sceneLastWorld {sceneLastWorld=nil;updateWorld(latest)}
+    }
+    public func scenePlacementError(_ layout:SceneLayout)->String? {
+        do {_=try sceneProjection(layout);return nil} catch {return error.localizedDescription}
+    }
+    public func applySceneLayout(_ layout:SceneLayout,baseRevision:UInt64)->Bool {
+        var input=RecordedInput(kind:"sceneApply");input.sceneLayout=layout;input.sceneBaseRevision=baseRevision
+        beginRecordingInput(input);defer {endRecordingInput()}
+        if let latest=sceneLastWorld,latest.surfaces.filter({!$0.isHabitat && !$0.isFixedPerch}) != world.surfaces.filter({!$0.isHabitat && !$0.isFixedPerch}) {
+            sceneError="窗口位置已变化，请取消后重新打开布置桌面。";return false
+        }
+        guard sceneEditing,sceneEditPhase != .applying,baseRevision==sceneArchive.layout.revision else {
+            sceneError="布局已变化，请重新打开编辑器。";return false
+        }
+        do {
+            try layout.validate()
+            let previous=Dictionary(uniqueKeysWithValues:sceneArchive.layout.instances.map{($0.id,$0)})
+            let proposed=Dictionary(uniqueKeysWithValues:layout.instances.map{($0.id,$0)})
+            guard !previous.contains(where:{id,item in proposed[id].map{$0.kind != item.kind} ?? false}) else {throw SceneError.invalid("已有物件不能更改类型，请收回后重新放置。")}
+            sceneAffected=Set(previous.keys).union(proposed.keys).filter{previous[$0] != proposed[$0]}
+            sceneExcludedSurfaces=Set(habitatObjects.objects.values.filter{$0.persistentID.map{sceneAffected.contains($0)} ?? false}.map{$0.surface.id})
+            for item in sceneArchive.layout.instances where item.kind == .perch && sceneAffected.contains(item.id) {
+                sceneExcludedSurfaces.insert(0xFF000000+UInt32(item.anchor.slot))
+            }
+            let props=Set(carriedObjects.objects.values.filter{$0.persistentID.map{sceneAffected.contains($0)} ?? false}.map(\.id))
+            let habitats=Set(habitatObjects.objects.values.filter{$0.persistentID.map{sceneAffected.contains($0)} ?? false}.map(\.id))
+            let runs=runtime.runs.values.filter {run in
+                !Set(run.execution.habitatReservations).isDisjoint(with:habitats) || !Set(run.execution.propIDs).isDisjoint(with:props) ||
+                run.execution.landingReservations.contains{sceneExcludedSurfaces.contains($0.hostID)} ||
+                run.execution.giftReceiverReservations.contains{reservation in
+                    sceneArchive.layout.instances.contains{$0.kind == .perch && sceneAffected.contains($0.id) && $0.anchor.slot==reservation.slot}
+                }
+            }.map(\.id).sorted()
+            sceneRecovery=Set(runs.flatMap{runtime.runs[$0]?.execution.participants ?? []})
+            sceneRecovery.formUnion(birds.filter{$0.hostID.map{sceneExcludedSurfaces.contains($0)} == true}.compactMap{id(of:$0)})
+            if paused && !sceneRecovery.isEmpty {throw SceneError.invalid("物件正在使用中，请先继续动画，再应用布局。草稿已保留。")}
+            _=try sceneProjection(layout)
+            sceneProposed=layout;sceneEditPhase = .applying;sceneRecoveryAge=0
+            if let slot=pendingGift?.request.binding.receiverSlot,
+               sceneArchive.layout.instances.contains(where:{$0.kind == .perch && sceneAffected.contains($0.id) && $0.anchor.slot==slot}) {
+                cancelGiftRequest(.settingsChanged)
+            }
+            for id in runs {runtime.cancel(id,reason:.settingsChanged,in:self)}
+            for id in sceneRecovery.sorted() {
+                guard let bird=bird(id) else {continue}
+                bird.requestFlightRecovery();recoveringHabitatBirds.insert(id);resumeHabitatRecovery(id)
+            }
+            if sceneRecovery.isEmpty {finishSceneApply()}
+            return sceneEditPhase == .applying || sceneEditPhase == .committed
+        } catch {sceneError=error.localizedDescription;sceneEditPhase = .failed;sceneExcludedSurfaces=[];return false}
+    }
+    private struct SceneProjection {
+        var habitats:[HabitatObjectID:HabitatObject]
+        var leaves:[ScenePropID:CarriedObject]
+        var nextHabitat:UInt64
+        var nextProp:UInt64
+        var anchors:[FixedPerchAnchor]
+    }
+    private func sceneProjection(_ layout:SceneLayout,restoring:Bool=false) throws -> SceneProjection {
+        try layout.validate()
+        let sandbox=BehaviorEngine(seed:seed,settings:settings)
+        sandbox.settings.companion=sandbox.settings.companion ?? CompanionPreferences()
+        sandbox.settings.fixedPerches=layout.instances.filter{$0.kind == .perch && $0.point(in:world) != nil}.map(\.anchor)
+        var sceneWorld=world;sceneWorld.buttonsDown=false
+        sceneWorld.surfaces.removeAll{$0.isHabitat || $0.isFixedPerch}
+        sandbox.updateWorld(sceneWorld)
+        sandbox.habitatObjects.nextID=habitatObjects.nextID
+        var prop=nextPropID
+        // Preserve the actual runtime identity of every unchanged object.
+        let old=Dictionary(uniqueKeysWithValues:sceneArchive.layout.instances.map{($0.id,$0)})
+        for item in layout.instances.filter({$0.kind != .perch}).sorted(by:{$0.id.uuidString<$1.id.uuidString}) {
+            guard let point=item.point(in:world),!sceneNeedsPlacement.contains(item.id) || item != old[item.id] else {continue} // parked until explicitly repositioned
+            if item==old[item.id],let object=habitatObjects.objects.values.first(where:{$0.persistentID==item.id && !$0.retiring}) {
+                sandbox.habitatObjects.objects[object.id]=object;sandbox.world.surfaces.append(object.surface);continue
+            }
+            if item==old[item.id],let object=carriedObjects.objects.values.first(where:{$0.persistentID==item.id}) {
+                sandbox.carriedObjects.objects[object.id]=object;continue
+            }
+            let resource=(sceneArchive.resources[item.id] ?? SceneResource(kind:item.kind)).recovered
+            if item.kind == .leaf && resource.leafConsumed {
+                if let effect=resource.leafEffect,effect.remaining>0,effect.support == .ground {
+                    let id=ScenePropID(prop);prop+=1
+                    _=sandbox.carriedObjects.restoreEffect(id:id,instance:item.id,effect:effect,in:sandbox)
+                }
+                continue
+            }
+            let before=Set(sandbox.habitatObjects.objects.keys)
+            let result:BehaviorResult
+            switch item.kind {
+            case .foodTray:result=sandbox.habitatObjects.placeFood(at:point,in:sandbox) ? .accepted:.rejected(.noSpace)
+            case .bath:result=sandbox.habitatObjects.placeBath(at:point,in:sandbox)
+            case .nest:
+                let ids=(0..<3).map{ScenePropID(prop+UInt64($0))};prop+=3
+                result=sandbox.habitatObjects.placeNest(at:point,materialIDs:ids,in:sandbox)
+            case .leaf:
+                let id=ScenePropID(prop);prop+=1
+                result=sandbox.carriedObjects.placeLeaf(id:id,at:point,in:sandbox)
+                if result.accepted {sandbox.carriedObjects.makePersistent(id,instance:item.id)}
+            case .perch:continue
+            }
+            if !result.accepted {
+                if restoring {continue}
+                throw SceneError.invalid("\(item.kind.rawValue)：位置被遮挡、空间不足或对应行为尚未开启。叶片与巢台请靠近窗口顶部或地面边缘。")
+            }
+            if let id=Set(sandbox.habitatObjects.objects.keys).subtracting(before).first,var object=sandbox.habitatObjects.objects[id] {
+                object.persistentID=item.id;object.remainingLifetime=1e12;object.remainingUses=resource.remainingUses
+                if var nest=object.nest {
+                    for i in nest.materials.indices {nest.materials[i].state=resource.materials[i]}
+                    object.nest=nest;object.remainingUses=nest.available
+                }
+                sandbox.habitatObjects.objects[id]=object;sandbox.world.surfaces.append(object.surface)
+            }
+        }
+        let rectangles=sandbox.habitatObjects.objects.values.map{$0.rect.union($0.nest?.trayRect ?? $0.rect)} +
+            sandbox.carriedObjects.snapshot(in:sandbox).map(\.rect)+sandbox.fixedPerchSnapshot().map(\.rect)
+        if !restoring {
+            for i in rectangles.indices {
+                if rectangles.indices.contains(where:{$0 != i && rectangles[$0].insetBy(dx:-8,dy:-8).intersects(rectangles[i])}) {
+                    throw SceneError.invalid("物件间需要留出安全间距。")
+                }
+                let unchanged=habitatObjects.objects.values.contains{object in object.rect.union(object.nest?.trayRect ?? object.rect)==rectangles[i] && object.persistentID.flatMap{old[$0]} .map{layout.instances.contains($0)} == true} ||
+                    fixedPerches.contains{perch in perch.rect==rectangles[i] && layout.instances.contains{old[$0.id]==$0 && $0.kind == .perch && $0.anchor.slot==perch.slot}}
+                if !unchanged && birds.contains(where:{id(of:$0).map{!sceneRecovery.contains($0)} == true && bounds(of:$0).intersects(rectangles[i])}) {
+                    throw SceneError.invalid("此位置有小鸟，请选择空位或等待它离开。")
+                }
+            }
+            if sandbox.fixedPerchSnapshot().count != sandbox.settings.fixedPerches.count {throw SceneError.invalid("栖木间距或屏幕可用空间不足。")}
+        }
+        return SceneProjection(habitats:sandbox.habitatObjects.objects,leaves:sandbox.carriedObjects.objects,
+            nextHabitat:sandbox.habitatObjects.nextID,nextProp:prop,anchors:layout.instances.filter{$0.kind == .perch}.map(\.anchor))
+    }
+    private func installSceneProjection(_ projection:SceneProjection) {
+        let transientHabitat=habitatObjects.objects.filter{$0.value.persistentID==nil}
+        let transientLeaves=carriedObjects.objects.filter{$0.value.persistentID==nil || ($0.value.state != .available && $0.value.state != .retired)}
+        habitatObjects.objects=projection.habitats.merging(transientHabitat,uniquingKeysWith:{a,_ in a})
+        carriedObjects.objects=projection.leaves.merging(transientLeaves,uniquingKeysWith:{a,_ in a})
+        habitatObjects.nextID=max(habitatObjects.nextID,projection.nextHabitat);nextPropID=max(nextPropID,projection.nextProp)
+        settings.fixedPerches=projection.anchors
+        refreshFixedPerches(previous:world.surfaces.filter(\.isFixedPerch));refreshHabitatObjects()
+    }
+    private func finishSceneApply() {
+        guard var proposed=sceneProposed else {return}
+        do {
+            let projection=try sceneProjection(proposed)
+            var archive=sceneArchive;proposed.revision=archive.layout.revision+1;archive.layout=proposed
+            archive.resources=archive.resources.filter {id,_ in proposed.instances.contains{$0.id==id}}
+            for item in proposed.instances where archive.resources[item.id]==nil {archive.resources[item.id]=SceneResource(kind:item.kind)}
+            guard persistScene(archive) else {sceneEditPhase = .failed;return}
+            sceneNeedsPlacement.subtract(sceneAffected)
+            installSceneProjection(projection);sceneEditPhase = .committed;sceneProposed=nil
+            sceneRecovery=[];sceneAffected=[];sceneExcludedSurfaces=[];companionScheduler.didSettle()
+            if let latest=sceneLastWorld {sceneLastWorld=nil;updateWorld(latest)}
+        } catch {sceneError=error.localizedDescription;sceneEditPhase = .failed}
+    }
+    private func advanceSceneEditing(_ dt:Double) {
+        guard sceneEditPhase == .applying,!paused else {return}
+        if let latest=sceneLastWorld,latest.surfaces.filter({!$0.isHabitat && !$0.isFixedPerch}) != world.surfaces.filter({!$0.isHabitat && !$0.isFixedPerch}) {
+            sceneError="恢复期间窗口位置变化，布局未提交。请取消后重试。";sceneEditPhase = .failed;return
+        }
+        sceneRecoveryAge+=dt
+        for id in sceneRecovery.sorted() {
+            guard let bird=bird(id) else {continue}
+            bird.tick(dt)
+            if bird.departureFinished && !world.displays.contains(where:{$0.intersects(bounds(of:bird))}) {removeRecord(id)}
+        }
+        sceneRecovery=sceneRecovery.filter {id in
+            guard let bird=bird(id) else {return false}
+            return bird.state != .perched || bird.stateTime<0.5 || bird.hostID.map{sceneExcludedSurfaces.contains($0)} == true
+        }
+        if sceneRecovery.isEmpty {finishSceneApply()}
+        else if sceneRecoveryAge>=20 {
+            sceneError="小鸟尚未安全离开，布局没有改变。请取消编辑，让动画继续后重试。";sceneEditPhase = .failed
+        }
+    }
+    private func restoreMissingSceneObjects() {
+        guard sceneEnabled,!sceneEditing,!world.displays.isEmpty else {return}
+        let missing=sceneArchive.layout.instances.contains {item in
+            guard item.point(in:world) != nil,!sceneNeedsPlacement.contains(item.id) else {return false}
+            if item.kind == .perch {return settings.fixedPerches != sceneArchive.layout.instances.filter{$0.kind == .perch}.map(\.anchor)}
+            if item.kind == .leaf {
+                let r=sceneArchive.resources[item.id]
+                let remaining=r?.leafEffect.map{$0.support == .ground && $0.remaining>0} ?? false
+                return (r?.leafConsumed != true || remaining) && !carriedObjects.objects.values.contains{$0.persistentID==item.id}
+            }
+            return !habitatObjects.objects.values.contains{$0.persistentID==item.id}
+        }
+        guard missing else {return}
+        if let projection=try? sceneProjection(sceneArchive.layout,restoring:true) {installSceneProjection(projection)}
+    }
+    public func replenishSceneInstance(_ id:UUID)->Bool {
+        guard sceneEditPhase != .applying,let item=sceneArchive.layout.instances.first(where:{$0.id==id}),item.kind != .perch,
+              !habitatObjects.objects.values.contains(where:{$0.persistentID==id && runtime.habitatReservations.contains($0.id)}),
+              !carriedObjects.objects.values.contains(where:{$0.persistentID==id && $0.reservedByRun != nil}),
+              !habitatObjects.objects.values.contains(where:{object in object.persistentID==id && birds.contains{$0.hostID==object.surface.id}}) else {return false}
+        var input=RecordedInput(kind:"sceneReplenish");input.sceneInstance=id
+        beginRecordingInput(input);defer {endRecordingInput()}
+        var archive=sceneArchive;var resource=SceneResource(kind:item.kind)
+        resource.revision=(archive.resources[id]?.revision ?? 0)+1;archive.resources[id]=resource;archive.ledgerRevision+=1
+        guard persistScene(archive) else {return false}
+        habitatObjects.objects=habitatObjects.objects.filter{$0.value.persistentID != id}
+        carriedObjects.objects=carriedObjects.objects.filter{$0.value.persistentID != id}
+        // The editor displays refreshed inventory immediately; geometry is restored on exit.
+        return true
     }
 }

@@ -100,7 +100,7 @@ public enum BirdSettingsVersionError: Error, Equatable, LocalizedError {
 }
 
 public struct BirdSettings: Codable {
-    public static let currentSchemaVersion = 2
+    public static let currentSchemaVersion = 3
     public let schemaVersion: Int
     public static let hoverDelayRange:ClosedRange<Double> = 0...10
     public var catalog: SpeciesCatalog
@@ -132,6 +132,9 @@ public struct BirdSettings: Codable {
     public var foodTrayEnabled = true
     public var ambientFrequency: AmbientFrequency = .low
     public var activityRhythm: ActivityRhythmMode = .steady
+    /// nil is the legacy core adapter, retained for old fixtures and explicit compatibility.
+    public var companion:CompanionPreferences? = nil
+    public static var companionDefaults:BirdSettings {var s=BirdSettings();s.companion=CompanionPreferences();return s}
     public var perchDefaultsVersion: Int? = nil
     public var migration: ProbabilityMigration? = nil
     public init(catalog:SpeciesCatalog = .standard) {
@@ -144,6 +147,7 @@ public struct BirdSettings: Codable {
         case probabilities = "speciesProbability"
         case pointerVisits,pointerFollowEnabled,flockPasses,ambientFrequency,perchActions,socialInteractions,leafPlayEnabled
         case passiveAttentionEnabled,ambientLeafPlayEnabled,sideHopEnabled,takeoffPreparationEnabled
+        case companion
         case visitorMemoryEnabled,activityRhythm,edgePeekEnabled,chaseEnabled,travelTogetherEnabled,allopreeningEnabled
         case fixedPerchesEnabled,fixedPerches
         case foodTrayEnabled,bathEnabled,leafCarryEnabled,insectCatchEnabled,visitorGiftsEnabled,courtshipEnabled,nestBuildingEnabled
@@ -217,7 +221,10 @@ public struct BirdSettings: Codable {
         }
         ambientFrequency=try values.decodeIfPresent(AmbientFrequency.self,forKey:.ambientFrequency) ?? .low
         activityRhythm=try values.decodeIfPresent(ActivityRhythmMode.self,forKey:.activityRhythm) ?? .steady
+        companion=try values.decodeIfPresent(CompanionPreferences.self,forKey:.companion)
+        try companion?.validate()
         perchDefaultsVersion=try values.decodeIfPresent(Int.self,forKey:.perchDefaultsVersion)
+        if sourceVersion<3 {companion=CompanionPreferences.migrate(self)}
         guard hoverDelay.isFinite,Self.hoverDelayRange.contains(hoverDelay) else {
             throw DecodingError.dataCorruptedError(forKey:.hoverDelay,in:values,debugDescription:"Hover delay must be between 0 and 10 seconds.")
         }
@@ -271,7 +278,7 @@ public struct BirdSettings: Codable {
         _ = try Self.decode(data)
         try FileManager.default.createDirectory(at:url.deletingLastPathComponent(),withIntermediateDirectories:true)
         if let existing, let previousVersion, previousVersion < Self.currentSchemaVersion {
-            let backup = url.appendingPathExtension("pre-probability-v2-" + UUID().uuidString + ".bak")
+            let backup = url.appendingPathExtension("pre-schema-\(previousVersion)-" + UUID().uuidString + ".bak")
             try existing.write(to: backup, options: .withoutOverwriting)
         }
         try data.write(to:url,options:.atomic)
@@ -288,9 +295,10 @@ public struct BirdSettings: Codable {
             var result=BirdSettings(catalog:try SpeciesCatalog.decode(JSONEncoder().encode(catalog)))
             result.migration = ProbabilityMigration(fromSchemaVersion: 0)
             result.perchDefaultsVersion=nil
+            result.companion=CompanionPreferences.migrate(result)
             // The original legacy file remains intact as the rollback copy.
             return try decode(JSONEncoder().encode(result))
         }
-        return BirdSettings()
+        return BirdSettings.companionDefaults
     }
 }

@@ -18,6 +18,13 @@ final class DebugUnlockView:NSView {
 }
 final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     unowned let desktop: DesktopController
+    var companionModePopup:NSPopUpButton!
+    var companionDayNight:NSButton!
+    var companionManual:NSButton!
+    var companionCategoryControls:[(NSButton,NSPopUpButton,NSPopUpButton)]=[]
+    var companionExceptions:NSTextField!
+    var companionBaseline:CompanionPreferences?
+    var companionConflict=false
     var draft: BirdSettings
     var fields:[NSTextField] = [], shares:[NSTextField] = []
     var manualAdjustmentButton:NSButton!
@@ -122,7 +129,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var language: AppLanguage { desktop.language }
     func t(_ zh:String,_ en:String) -> String { language.text(zh,en) }
     init(desktop:DesktopController) {
-        self.desktop = desktop; self.draft = desktop.settings
+        self.desktop = desktop; self.draft = desktop.settings;companionBaseline=desktop.settings.companion
         foodTrayEngine=desktop.engine
         let window = NSWindow(contentRect:NSRect(x:0,y:0,width:840,height:690),styleMask:[.titled,.closable,.miniaturizable],backing:.buffered,defer:false)
         window.isReleasedWhenClosed = false
@@ -359,7 +366,25 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
         label(t("模拟更新会显示通知和图标红点。点击通知或菜单中的安装更新可查看确认框；选择安装后结束模拟，选择晚点再说则保留提示。不会下载、安装或重启。","Simulate a ready update with a notification and icon badge. Click the notification or install menu item to review it. Confirm to end the simulation, or choose Later to keep the prompt. No download, installation or restart occurs."),NSRect(x:20,y:64,width:710,height:95),in:debugView)
         _=button(t("模拟有更新","Simulate update"),#selector(simulateUpdate),NSRect(x:20,y:172,width:180,height:32),in:debugView)
-        tabs.selectTabViewItem(at:min(selected,debugEnabled ? 3:2))
+        let individual=NSTabViewItem(identifier:"individual");individual.label=t("单项开关与体验","Individual switches and previews");individual.view=interaction.view;tabs.addTabViewItem(individual)
+        interaction.view=buildCompanionSettings()
+        // Placement is now exclusively managed by the transactional editor.
+        for control in [placeFixedPerchButton,removeFixedPerchButton,fixedPerchSlotPopup,
+            placeFoodTrayButton,removeFoodTrayButton,cancelFoodTrayPlacementButton,
+            placeBathButton,removeBathButton,cancelBathPlacementButton,clearCurrentSceneButton,
+            placeCarryLeafButton,removeCarryLeafButton,cancelCarryLeafPlacementButton,
+            placeNestButton,removeNestButton,cancelNestPlacementButton,clearNestSceneButton] as [NSView?] {control?.isHidden=true}
+        // Compact the individual controls, keeping support/previews accessible without obsolete placement text.
+        let hiddenIDs:Set<String>=["activityRhythmHelp","fixedPerchHelp","foodTrayHelp","bathHelp","leafCarryHelp","nestHelp","fixedPerchSlotLabel"]
+        for child in interactionView.subviews where child.identifier.map({hiddenIDs.contains($0.rawValue)}) == true {child.isHidden=true}
+        activityRhythmPopup.isHidden=true;ambientFrequencyPopup.isHidden=true
+        let back=button(t("返回陪伴模式","Back to companion mode"),#selector(selectPage(_:)),NSRect(x:20,y:0,width:240,height:32),in:interactionView);back.tag=2
+        var top:CGFloat=48
+        for child in interactionView.subviews.filter({!$0.isHidden && $0 !== back}).sorted(by:{$0.frame.minY==$1.frame.minY ? $0.frame.minX<$1.frame.minX:$0.frame.minY<$1.frame.minY}) {
+            child.setFrameOrigin(NSPoint(x:20,y:top));child.setFrameSize(NSSize(width:min(710,child.frame.width),height:child.frame.height));top+=child.frame.height+12
+        }
+        interactionView.setFrameSize(NSSize(width:754,height:top+20))
+        tabs.selectTabViewItem(at:selected==4 ? 4:min(selected,debugEnabled ? 3:2))
         message=label("",NSRect(x:26,y:603,width:784,height:34),in:root,size:12)
         // This initially empty label later receives bilingual support lists.
         // Keep word wrapping explicit and reserve two full text lines above
@@ -548,7 +573,10 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         removeFoodTrayButton.isEnabled=pending || tray != nil
         // These actions read saved settings, even if the checkbox draft is off.
         previewFoodTrayButton.isEnabled=true
-        if pending {
+        if desktop.settings.companion != nil {
+            let trays=desktop.engine.habitatSnapshot().filter{$0.kind == .foodTray && !$0.retiring}
+            foodTrayStatus.stringValue=t("已布置食盘：\(trays.count) · 剩余 \(trays.reduce(0){$0+$1.remainingUses}) 份；在「布置桌面」中移动或补充。","Food trays: \(trays.count) · \(trays.reduce(0){$0+$1.remainingUses}) portions. Move or replenish in Arrange Desktop.")
+        } else if pending {
             foodTrayStatus.stringValue=t("等待引擎计时：请移动鼠标到目标位置；暂停时倒计时冻结。","Waiting on the engine clock: move the pointer to the target. Pausing freezes the countdown.")
         } else if let tray {
             let seconds=Int(ceil(min(180,max(0,tray.remainingLifetime))))
@@ -656,7 +684,10 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         removeBathButton.isEnabled=pending || bath != nil
         clearCurrentSceneButton.isEnabled=pending || desktop.engine.hasFoodTrayPlacement || desktop.engine.hasCarryLeafPlacement || desktop.engine.hasInsectCatchPreview || desktop.engine.hasNestPlacement || !objects.isEmpty || desktop.engine.scenePropCount>0
         previewBathButton.isEnabled=true
-        if pending {bathStatus.stringValue=t("等待 3 秒采样鼠标位置；暂停冻结倒计时。","Waiting to sample the pointer after 3 seconds; pausing freezes the countdown.")}
+        if desktop.settings.companion != nil {
+            let baths=objects.filter{$0.kind == .bath && !$0.retiring}
+            bathStatus.stringValue=t("已布置浴盆：\(baths.count) · 剩余 \(baths.reduce(0){$0+$1.remainingUses}) 次；等待访问时不会过期。","Baths: \(baths.count) · \(baths.reduce(0){$0+$1.remainingUses}) visits. They do not expire while waiting.")
+        } else if pending {bathStatus.stringValue=t("等待 3 秒采样鼠标位置；暂停冻结倒计时。","Waiting to sample the pointer after 3 seconds; pausing freezes the countdown.")}
         else if let bath {
             bathStatus.stringValue=bath.retiring ? t("浴盆正在收回，小鸟将安全离开。","Bath is retiring; the bird will leave safely."):
                 t("浴盆已放置 · 剩余 \(bath.remainingUses) / 3 次 · \(Int(ceil(max(0,bath.remainingLifetime)))) 秒","Bath placed · \(bath.remainingUses) / 3 visits · \(Int(ceil(max(0,bath.remainingLifetime)))) seconds remaining")
@@ -1430,6 +1461,7 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         return true
     }
     @objc func save() {
+        guard !companionConflict else {message.stringValue=t("菜单模式与草稿冲突，请重新选择要保存的模式。","Select the intended mode to resolve the menu/draft conflict.");return}
         cancelFixedPerchCapture()
         cancelFoodTrayPlacement()
         cancelBathPlacement()
@@ -1440,10 +1472,10 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         window?.makeFirstResponder(nil)
         guard readInteraction() else {tabs.selectTabViewItem(at:2);message.stringValue=t("请输入 0–10 秒之间的有效等待时间。","Enter a valid hover delay between 0 and 10 seconds.");return}
         guard readDetails() else { tabs.selectTabViewItem(at:1); message.stringValue=t("请检查体型与动作数值：最长停留不能小于最短停留。","Check size and behavior ranges; maximum perch time must not be below minimum."); return }
-        do { try desktop.applySettings(draft); message.stringValue=t("已保存 · 交互设置立即生效，鸟种参数用于新飞入的小鸟。","Saved · Interaction settings apply now; species settings affect new arrivals.") }
+        do { try desktop.applySettings(draft);companionBaseline=draft.companion;desktop.makeMenu(); message.stringValue=t("已保存 · 交互设置立即生效，鸟种参数用于新飞入的小鸟。","Saved · Interaction settings apply now; species settings affect new arrivals.") }
         catch { message.stringValue=t("保存失败，请重试。当前设置未改变。","Could not save. Try again; active settings are unchanged.") }
     }
-    @objc func resetDefaults() { cancelFixedPerchCapture();window?.makeFirstResponder(nil); draft=BirdSettings();selectedFixedPerchSlot=1; build(); message.stringValue=t("已恢复默认（尚未保存）。","Defaults restored (not saved).") }
+    @objc func resetDefaults() { cancelFixedPerchCapture();window?.makeFirstResponder(nil); draft=BirdSettings.companionDefaults;selectedFixedPerchSlot=1; build(); message.stringValue=t("已恢复默认（尚未保存）。","Defaults restored (not saved).") }
     @objc func cancel() { cancelFixedPerchCapture();cancelFoodTrayPlacement();cancelBathPlacement();cancelCarryLeafPlacement();cancelInsectCatchPreview();cancelVisitorGiftRequest();cancelNestPlacement();window?.close() }
     func relocalize() {
         cancelFixedPerchCapture()
